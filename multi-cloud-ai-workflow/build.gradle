@@ -1,0 +1,29 @@
+task build {}
+
+// build.dependsOn("services:build")
+// build.dependsOn("workflows:build")
+// build.dependsOn("website:build")
+
+subprojects {
+    task npmUpdate(type: Exec) {
+        inputs.file "package.json"
+        inputs.property("todaysDate", new Date().clearTime() )
+        outputs.upToDateWhen { true }
+        commandLine "cmd", "/c", "npm"
+        args "update"
+    }
+}
+
+afterEvaluate {
+    // avoiding simultanous connections to npmjs.com
+    def prevNpmUpdateTask = null
+    project.subprojects.each {
+        def npmUpdateTask = it.tasks.find { task -> task.name.contains('npmUpdate') }
+        if (npmUpdateTask != null) {
+            if (prevNpmUpdateTask != null) {
+                npmUpdateTask.mustRunAfter(prevNpmUpdateTask)
+            }
+            prevNpmUpdateTask = npmUpdateTask;
+        }
+    }
+}

@@ -1,0 +1,67 @@
+task terraformInit(type: Exec) {
+    inputs.property("terraformInitialized", true)
+    outputs.upToDateWhen { file(".terraform").exists() }
+    commandLine "cmd", "/c", "terraform"
+    args "init"
+}
+
+task terraformPlan(type: Exec) {
+    commandLine "cmd", "/c", "terraform"
+    args "plan"
+}
+
+terraformPlan.dependsOn(terraformInit)
+terraformPlan.dependsOn(":build")
+
+task terraformApply(type: Exec) {
+    commandLine "cmd", "/c", "terraform"
+    args "apply", "-auto-approve"
+}
+terraformApply.mustRunAfter(terraformPlan)
+
+task terraformDestroy(type: Exec) {
+    commandLine "cmd", "/c", "terraform"
+    args "destroy", "-force"
+}
+
+task terraformOutput(type: Exec) {
+    inputs.file("terraform.tfstate")
+    outputs.file("terraform.output")
+    commandLine "cmd", "/c", "terraform"
+    args "output"
+    doFirst {
+        standardOutput new FileOutputStream("${projectDir}/terraform.output")
+    }
+}
+terraformOutput.mustRunAfter(terraformApply)
+
+// task updateServiceRegistry(type: Exec) {
+//     inputs.file("terraform.output")
+//     inputs.file("../service-registry/register.js")
+//     outputs.upToDateWhen { true }
+//     commandLine "cmd", "/c", "node"
+//     args "../service-registry/register.js"
+//     doFirst {
+//         standardInput new FileInputStream("${projectDir}/terraform.output")
+//     }
+// }
+// updateServiceRegistry.dependsOn(terraformOutput)
+
+task clean(type: Delete) {
+    delete "${projectDir}/terraform.output"
+}
+
+task plan {}
+plan.dependsOn(terraformPlan)
+
+task apply {}
+apply.dependsOn(terraformApply)
+// apply.dependsOn(updateServiceRegistry)
+
+task deploy {}
+deploy.dependsOn(plan)
+deploy.dependsOn(apply)
+
+task destroy {}
+destroy.dependsOn(terraformDestroy)
+destroy.dependsOn(clean)
