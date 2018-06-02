@@ -5,9 +5,9 @@ task generateTerraformTFVars {
     inputs.property("AWS_ACCESS_KEY", "${awsAccessKey}")
     inputs.property("AWS_SECRET_KEY", "${awsSecretKey}")
     inputs.property("AWS_REGION", "${awsRegion}")
-    outputs.file("terraform.tfvars")
+    outputs.file("${projectDir}/terraform.tfvars")
     doLast {
-        def targetFile = new File("terraform.tfvars")
+        def targetFile = new File("${projectDir}/terraform.tfvars")
         targetFile.write("environment_name = \"${environmentName}\"\r\n")
         targetFile.append("environment_type = \"${environmentType}\"\r\n")
         targetFile.append("aws_account_id = \"${awsAccountId}\"\r\n")
@@ -21,12 +21,12 @@ task generateTerraformTFVars {
 task generateTerraformWebsiteTF {
     dependsOn ":build";
     inputs.dir "../website/dist"
-    outputs.file "storage/website.tf"
+    outputs.file "${projectDir}/storage/website.tf"
 
     doLast {
         def idx = 1;
-        def targetFile = new File("storage/website.tf");
-        targetFile.write("")
+        def targetFile = new File("${projectDir}/storage/website.tf");
+        targetFile.text = ""
 
         fileTree(dir: "../website/dist/website").visit {f -> 
             def mimeType = ""
@@ -79,6 +79,8 @@ task terraformApply(type: Exec) {
 terraformApply.mustRunAfter(terraformPlan)
 
 task terraformDestroy(type: Exec) {
+    dependsOn generateTerraformTFVars
+    dependsOn generateTerraformWebsiteTF
     commandLine "cmd", "/c", "terraform"
     args "destroy", "-force"
 }
@@ -108,6 +110,7 @@ terraformOutput.mustRunAfter(terraformApply)
 
 task clean(type: Delete) {
     delete "${projectDir}/terraform.output"
+    delete "${projectDir}/storage/website.tf"
 }
 
 task plan {}

@@ -2,7 +2,7 @@ task build {}
 
 // build.dependsOn("services:build")
 // build.dependsOn("workflows:build")
-// build.dependsOn("website:build")
+build.dependsOn("website:build")
 
 subprojects {
     task npmUpdate(type: Exec) {
