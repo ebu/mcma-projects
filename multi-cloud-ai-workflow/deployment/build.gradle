@@ -14,6 +14,9 @@ task generateTerraformTFVars {
         targetFile.append("aws_access_key = \"${awsAccessKey}\"\r\n")
         targetFile.append("aws_secret_key = \"${awsSecretKey}\"\r\n")
         targetFile.append("aws_region = \"${awsRegion}\"\r\n")
+        targetFile.append("upload_bucket = \"${environmentName}.${environmentType}.upload\"\r\n")
+        targetFile.append("temp_bucket = \"${environmentName}.${environmentType}.temp\"\r\n")
+        targetFile.append("repository_bucket = \"${environmentName}.${environmentType}.repository\"\r\n")
         targetFile.append("website_bucket = \"${environmentName}.${environmentType}.website\"\r\n")
     }
 }
