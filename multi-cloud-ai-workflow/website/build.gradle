@@ -78,7 +78,7 @@ task build (type: Exec) {
     inputs.dir("src")
     outputs.dir("dist")
     commandLine "cmd", "/c", "ng"
-    args "build", "--prod", "--progress", "false"
+    args "build", "--prod", "--base-href", "./", "--progress", "false"
 }
 
 task clean (type:Delete) {

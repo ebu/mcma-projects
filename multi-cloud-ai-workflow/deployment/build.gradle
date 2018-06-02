@@ -1,3 +1,60 @@
+task generateTerraformTFVars {
+    inputs.property("ENVIRONMENT_NAME", "${environmentName}")
+    inputs.property("ENVIRONMENT_TYPE", "${environmentType}")
+    inputs.property("AWS_ACCOUNT_ID", "${awsAccountId}")
+    inputs.property("AWS_ACCESS_KEY", "${awsAccessKey}")
+    inputs.property("AWS_SECRET_KEY", "${awsSecretKey}")
+    inputs.property("AWS_REGION", "${awsRegion}")
+    outputs.file("terraform.tfvars")
+    doLast {
+        def targetFile = new File("terraform.tfvars")
+        targetFile.write("environment_name = \"${environmentName}\"\r\n")
+        targetFile.append("environment_type = \"${environmentType}\"\r\n")
+        targetFile.append("aws_account_id = \"${awsAccountId}\"\r\n")
+        targetFile.append("aws_access_key = \"${awsAccessKey}\"\r\n")
+        targetFile.append("aws_secret_key = \"${awsSecretKey}\"\r\n")
+        targetFile.append("aws_region = \"${awsRegion}\"\r\n")
+        targetFile.append("website_bucket = \"${environmentName}.${environmentType}.website\"\r\n")
+    }
+}
+
+task generateTerraformWebsiteTF {
+    dependsOn ":build";
+    inputs.dir "../website/dist"
+    outputs.file "storage/website.tf"
+
+    doLast {
+        def idx = 1;
+        def targetFile = new File("storage/website.tf");
+        targetFile.write("")
+
+        fileTree(dir: "../website/dist/website").visit {f -> 
+            def mimeType = ""
+            if (f.path.endsWith(".html")) {
+                mimeType = "text/html"
+            } else if (f.path.endsWith(".css")) {
+                mimeType = "text/css"
+            } else if (f.path.endsWith(".js")) {
+                mimeType = "application/javascript"
+            } else if (f.path.endsWith(".json")) {
+                mimeType = "application/json"
+            } else if (f.path.endsWith(".ico")) {
+                mimeType = "image/x-icon"
+            } else if (f.path.endsWith(".txt")) {
+                mimeType = "text/plain"
+            }
+            
+            targetFile.append("resource \"aws_s3_bucket_object\" \"file_" + idx++ + "\" {\r\n" )
+            targetFile.append("  bucket       = \"\${aws_s3_bucket.website.bucket}\"\r\n")
+            targetFile.append("  key          = \"" + f.relativePath + "\"\r\n")
+            targetFile.append("  source       = \"" + f.file.path.replace("\\", "/") + "\"\r\n")
+            targetFile.append("  content_type = \"" + mimeType + "\"\r\n")
+            targetFile.append("  etag         = \"\${md5(file(\"" + f.file.path.replace("\\", "/") + "\"))}\"\r\n")
+            targetFile.append("}\r\n\r\n")
+        }
+    }
+}
+
 task terraformInit(type: Exec) {
     inputs.property("terraformInitialized", true)
     outputs.upToDateWhen { file(".terraform").exists() }
@@ -6,6 +63,8 @@ task terraformInit(type: Exec) {
 }
 
 task terraformPlan(type: Exec) {
+    dependsOn generateTerraformTFVars
+    dependsOn generateTerraformWebsiteTF
     commandLine "cmd", "/c", "terraform"
     args "plan"
 }
