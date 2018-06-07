@@ -5,3 +5,5 @@ terraform.tfstate
 terraform.tfstate.backup
 node_modules/
 dist/
+gradle.properties
+/multi-cloud-ai-workflow/deployment/storage/website.tf
