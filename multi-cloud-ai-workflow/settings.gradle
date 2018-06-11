@@ -1,2 +1,5 @@
 include "deployment",
-        "website"
+        "website",
+        "workflows",
+        "workflows:conform",
+        "workflows:conform:01-validate-workflow-input"

@@ -1,0 +1,18 @@
+task copyNodeModules (type: Copy) {
+    dependsOn npmInstall
+    from "node_modules"
+    into "dist/staging/node_modules"
+    exclude awsAvailableLibraries
+}
+
+task copySource (type: Copy) {
+    from "src"
+    into "dist/staging/"
+}
+
+task build (type: Zip) {
+    dependsOn copySource, copyNodeModules
+    archiveName "lambda.zip"
+    destinationDir file("dist")
+    from "dist/staging"
+}

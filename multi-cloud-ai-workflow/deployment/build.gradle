@@ -18,6 +18,7 @@ task generateTerraformTFVars {
         targetFile.append("temp_bucket = \"${environmentName}.${environmentType}.temp\"\r\n")
         targetFile.append("repository_bucket = \"${environmentName}.${environmentType}.repository\"\r\n")
         targetFile.append("website_bucket = \"${environmentName}.${environmentType}.website\"\r\n")
+        targetFile.append(("global_prefix = \"${environmentName}.${environmentType}\"\r\n").replace(".", "_"))
     }
 }
 
@@ -59,16 +60,17 @@ task generateTerraformWebsiteTF {
 }
 
 task terraformInit(type: Exec) {
-    inputs.property("terraformInitialized", true)
+    inputs.file "main.tf"
     outputs.upToDateWhen { file(".terraform").exists() }
-    commandLine "cmd", "/c", "terraform"
+    commandLine terraformExecutable
     args "init"
 }
 
 task terraformPlan(type: Exec) {
+    dependsOn terraformInit
     dependsOn generateTerraformTFVars
     dependsOn generateTerraformWebsiteTF
-    commandLine "cmd", "/c", "terraform"
+    commandLine terraformExecutable
     args "plan"
 }
 
@@ -76,7 +78,7 @@ terraformPlan.dependsOn(terraformInit)
 terraformPlan.dependsOn(":build")
 
 task terraformApply(type: Exec) {
-    commandLine "cmd", "/c", "terraform"
+    commandLine terraformExecutable
     args "apply", "-auto-approve"
 }
 terraformApply.mustRunAfter(terraformPlan)
@@ -84,14 +86,14 @@ terraformApply.mustRunAfter(terraformPlan)
 task terraformDestroy(type: Exec) {
     dependsOn generateTerraformTFVars
     dependsOn generateTerraformWebsiteTF
-    commandLine "cmd", "/c", "terraform"
+    commandLine terraformExecutable
     args "destroy", "-force"
 }
 
 task terraformOutput(type: Exec) {
     inputs.file("terraform.tfstate")
     outputs.file("terraform.output")
-    commandLine "cmd", "/c", "terraform"
+    commandLine terraformExecutable
     args "output"
     doFirst {
         standardOutput new FileOutputStream("${projectDir}/terraform.output")
@@ -111,7 +113,7 @@ terraformOutput.mustRunAfter(terraformApply)
 // }
 // updateServiceRegistry.dependsOn(terraformOutput)
 
-task clean(type: Delete) {
+clean {
     delete "${projectDir}/terraform.output"
     delete "${projectDir}/storage/website.tf"
 }

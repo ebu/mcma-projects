@@ -5,6 +5,8 @@
 variable "environment_name" {}
 variable "environment_type" {}
 
+variable "global_prefix" {}
+
 #########################
 # AWS Variables
 #########################

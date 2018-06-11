@@ -1,30 +1,14 @@
 def packageJsonFile = file('package.json');
 def packageJson = new groovy.json.JsonSlurper().parseText(packageJsonFile.text);
 
-def requiredVersionNodeJS = "8.10.0"
 def requiredVersionAngularCLI = packageJson.devDependencies["@angular/cli"]
-
-def getVersionNodeJS = { ->
-    def stdout = new ByteArrayOutputStream();
-    def stderr = new ByteArrayOutputStream();
-    try {
-        exec {
-            commandLine "node"
-            args "--version"
-            standardOutput stdout
-            errorOutput stderr
-        }
-    } catch (Exception ex) {}
-
-    return stdout.toString().trim().replace("v", "")
-}
 
 def getVersionAngularCLI = { ->
     def stdout = new ByteArrayOutputStream();
     def stderr = new ByteArrayOutputStream();
     try {
         exec {
-            commandLine "cmd", "/c", "npm"
+            commandLine npmExecutable
             args "list", "-g", "@angular/cli"
             standardOutput stdout
             errorOutput stderr
@@ -37,18 +21,7 @@ def getVersionAngularCLI = { ->
     return ""
 }
 
-task installNodeJS {
-    inputs.property("VERSION_NODE_JS", requiredVersionNodeJS)
-    outputs.upToDateWhen { getVersionNodeJS() == requiredVersionNodeJS }
-    doLast {
-        if (getVersionNodeJS() != requiredVersionNodeJS) {
-            throw new Exception("Required Node version " + requiredVersionNodeJS + " not installed");
-        }      
-    }
-}
-
 task installAngularCLI {
-    dependsOn installNodeJS
     inputs.property("VERSION_ANGULAR_CLI", requiredVersionAngularCLI);
     outputs.upToDateWhen { getVersionAngularCLI() == requiredVersionAngularCLI }
     doLast {
@@ -57,31 +30,21 @@ task installAngularCLI {
             println "is not equal to" + requiredVersionAngularCLI
 
             exec {
-                commandLine "cmd", "/c", "npm"
+                commandLine npmExecutable
                 args "install", "-g", "@angular/cli@$requiredVersionAngularCLI"
             }
         }
     }
 }
 
-task npmInstall (type: Exec) {
-    dependsOn installNodeJS
-    inputs.file("package.json")
-    inputs.file("package-lock.json")
-    outputs.dir("node_modules")
-    commandLine "cmd", "/c", "npm"
-    args "install"
-}
-
 task build (type: Exec) {
     dependsOn npmInstall, installAngularCLI
     inputs.dir("src")
     outputs.dir("dist")
-    commandLine "cmd", "/c", "ng"
+    commandLine ngExecutable
     args "build", "--prod", "--base-href", "./", "--progress", "false"
 }
 
-task clean (type:Delete) {
+clean {
     delete "dist"
-    delete "node_modules"
 }
