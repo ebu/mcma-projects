@@ -7,7 +7,7 @@
     "engines": {
         "node": "~8.10.0"
     },
-    "main": "src/lambda.js",
+    "main": "src/index.js",
     "license": "Apache-2.0",
     "dependencies": {
         "async": "^2.6.1",
