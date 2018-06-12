@@ -39,7 +39,7 @@ resource "aws_lambda_function" "01-validate-workflow-input" {
   filename         = "./../workflows/conform/01-validate-workflow-input/dist/lambda.zip"
   function_name    = "${var.global_prefix}_${var.aws_region}-01-validate-workflow-input"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
-  handler          = "lambda.handler"
+  handler          = "index.handler"
   source_code_hash = "${base64sha256(file("./../workflows/conform/01-validate-workflow-input/dist/lambda.zip"))}"
   runtime          = "nodejs8.10"
   timeout          = "30"
