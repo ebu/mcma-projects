@@ -11,6 +11,7 @@
     "license": "Apache-2.0",
     "dependencies": {
         "async": "^2.6.1",
-        "aws-sdk": "^2.254.1"
+        "aws-sdk": "^2.254.1",
+        "underscore": "^1.9.1"
     }
 }
