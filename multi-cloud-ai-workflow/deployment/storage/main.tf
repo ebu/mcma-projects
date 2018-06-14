@@ -18,6 +18,16 @@ resource "aws_s3_bucket" "upload" {
   policy = "${data.template_file.s3_public_read_write_policy_upload.rendered}"
 }
 
+resource "aws_s3_bucket" "media-repo" {
+  bucket = "${var.repository_bucket}"
+  acl    = "private"
+}
+
+resource "aws_s3_bucket" "temp" {
+  bucket = "${var.temp_bucket}"
+  acl    = "private"
+}
+
 data "template_file" "s3_public_read_policy_website" {
   template = "${file("policies/s3-public-read.json")}"
 
