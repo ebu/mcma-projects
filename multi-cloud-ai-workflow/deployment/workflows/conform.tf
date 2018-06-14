@@ -4,7 +4,7 @@
 
 resource "aws_lambda_function" "conform-01-validate-workflow-input" {
   filename         = "./../workflows/conform/01-validate-workflow-input/dist/lambda.zip"
-  function_name    = "${format("%.64s", "${var.global_prefix}_${var.aws_region}-conform-01-validate-workflow-input")}"
+  function_name    = "${format("%.64s", "${var.global_prefix}-conform-01-validate-workflow-input")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
   source_code_hash = "${base64sha256(file("./../workflows/conform/01-validate-workflow-input/dist/lambda.zip"))}"
@@ -15,7 +15,7 @@ resource "aws_lambda_function" "conform-01-validate-workflow-input" {
 
 resource "aws_lambda_function" "conform-02-move-content-to-file-repository" {
   filename         = "./../workflows/conform/02-move-content-to-file-repository/dist/lambda.zip"
-  function_name    = "${format("%.64s", "${var.global_prefix}_${var.aws_region}-conform-02-move-content-to-file-repository")}"
+  function_name    = "${format("%.64s", "${var.global_prefix}-conform-02-move-content-to-file-repository")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
   source_code_hash = "${base64sha256(file("./../workflows/conform/02-move-content-to-file-repository/dist/lambda.zip"))}"
@@ -26,7 +26,7 @@ resource "aws_lambda_function" "conform-02-move-content-to-file-repository" {
 
 resource "aws_lambda_function" "conform-03-create-media-asset" {
   filename         = "./../workflows/conform/03-create-media-asset/dist/lambda.zip"
-  function_name    = "${format("%.64s", "${var.global_prefix}_${var.aws_region}-conform-03-create-media-asset")}"
+  function_name    = "${format("%.64s", "${var.global_prefix}-conform-03-create-media-asset")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
   source_code_hash = "${base64sha256(file("./../workflows/conform/03-create-media-asset/dist/lambda.zip"))}"
@@ -37,7 +37,7 @@ resource "aws_lambda_function" "conform-03-create-media-asset" {
 
 resource "aws_lambda_function" "conform-04-extract-technical-metadata" {
   filename         = "./../workflows/conform/04-extract-technical-metadata/dist/lambda.zip"
-  function_name    = "${format("%.64s", "${var.global_prefix}_${var.aws_region}-conform-04-extract-technical-metadata")}"
+  function_name    = "${format("%.64s", "${var.global_prefix}-conform-04-extract-technical-metadata")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
   source_code_hash = "${base64sha256(file("./../workflows/conform/04-extract-technical-metadata/dist/lambda.zip"))}"
@@ -48,7 +48,7 @@ resource "aws_lambda_function" "conform-04-extract-technical-metadata" {
 
 resource "aws_lambda_function" "conform-05-register-technical-metadata" {
   filename         = "./../workflows/conform/05-register-technical-metadata/dist/lambda.zip"
-  function_name    = "${format("%.64s", "${var.global_prefix}_${var.aws_region}-conform-05-register-technical-metadata")}"
+  function_name    = "${format("%.64s", "${var.global_prefix}-conform-05-register-technical-metadata")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
   source_code_hash = "${base64sha256(file("./../workflows/conform/05-register-technical-metadata/dist/lambda.zip"))}"
@@ -59,7 +59,7 @@ resource "aws_lambda_function" "conform-05-register-technical-metadata" {
 
 resource "aws_lambda_function" "conform-06-decide-transcode-requirements" {
   filename         = "./../workflows/conform/06-decide-transcode-requirements/dist/lambda.zip"
-  function_name    = "${format("%.64s", "${var.global_prefix}_${var.aws_region}-conform-06-decide-transcode-requirements")}"
+  function_name    = "${format("%.64s", "${var.global_prefix}-conform-06-decide-transcode-requirements")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
   source_code_hash = "${base64sha256(file("./../workflows/conform/06-decide-transcode-requirements/dist/lambda.zip"))}"
@@ -70,7 +70,7 @@ resource "aws_lambda_function" "conform-06-decide-transcode-requirements" {
 
 resource "aws_lambda_function" "conform-07a-short-transcode" {
   filename         = "./../workflows/conform/07a-short-transcode/dist/lambda.zip"
-  function_name    = "${format("%.64s", "${var.global_prefix}_${var.aws_region}-conform-07a-short-transcode")}"
+  function_name    = "${format("%.64s", "${var.global_prefix}-conform-07a-short-transcode")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
   source_code_hash = "${base64sha256(file("./../workflows/conform/07a-short-transcode/dist/lambda.zip"))}"
@@ -81,7 +81,7 @@ resource "aws_lambda_function" "conform-07a-short-transcode" {
 
 resource "aws_lambda_function" "conform-07b-long-transcode" {
   filename         = "./../workflows/conform/07b-long-transcode/dist/lambda.zip"
-  function_name    = "${format("%.64s", "${var.global_prefix}_${var.aws_region}-conform-07b-long-transcode")}"
+  function_name    = "${format("%.64s", "${var.global_prefix}-conform-07b-long-transcode")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
   source_code_hash = "${base64sha256(file("./../workflows/conform/07b-long-transcode/dist/lambda.zip"))}"
@@ -92,7 +92,7 @@ resource "aws_lambda_function" "conform-07b-long-transcode" {
 
 resource "aws_lambda_function" "conform-08-register-proxy-essence" {
   filename         = "./../workflows/conform/08-register-proxy-essence/dist/lambda.zip"
-  function_name    = "${format("%.64s", "${var.global_prefix}_${var.aws_region}-conform-08-register-proxy-essence")}"
+  function_name    = "${format("%.64s", "${var.global_prefix}-conform-08-register-proxy-essence")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
   source_code_hash = "${base64sha256(file("./../workflows/conform/08-register-proxy-essence/dist/lambda.zip"))}"
@@ -103,7 +103,7 @@ resource "aws_lambda_function" "conform-08-register-proxy-essence" {
 
 resource "aws_lambda_function" "conform-09-copy-proxy-to-website-storage" {
   filename         = "./../workflows/conform/09-copy-proxy-to-website-storage/dist/lambda.zip"
-  function_name    = "${format("%.64s", "${var.global_prefix}_${var.aws_region}-conform-09-copy-proxy-to-website-storage")}"
+  function_name    = "${format("%.64s", "${var.global_prefix}-conform-09-copy-proxy-to-website-storage")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
   source_code_hash = "${base64sha256(file("./../workflows/conform/09-copy-proxy-to-website-storage/dist/lambda.zip"))}"
@@ -114,7 +114,7 @@ resource "aws_lambda_function" "conform-09-copy-proxy-to-website-storage" {
 
 resource "aws_lambda_function" "conform-10-register-proxy-website-locator" {
   filename         = "./../workflows/conform/10-register-proxy-website-locator/dist/lambda.zip"
-  function_name    = "${format("%.64s", "${var.global_prefix}_${var.aws_region}-conform-10-register-proxy-website-locator")}"
+  function_name    = "${format("%.64s", "${var.global_prefix}-conform-10-register-proxy-website-locator")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
   source_code_hash = "${base64sha256(file("./../workflows/conform/10-register-proxy-website-locator/dist/lambda.zip"))}"
@@ -125,7 +125,7 @@ resource "aws_lambda_function" "conform-10-register-proxy-website-locator" {
 
 resource "aws_lambda_function" "conform-11-start-ai-workflow" {
   filename         = "./../workflows/conform/11-start-ai-workflow/dist/lambda.zip"
-  function_name    = "${format("%.64s", "${var.global_prefix}_${var.aws_region}-conform-11-start-ai-workflow")}"
+  function_name    = "${format("%.64s", "${var.global_prefix}-conform-11-start-ai-workflow")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
   source_code_hash = "${base64sha256(file("./../workflows/conform/11-start-ai-workflow/dist/lambda.zip"))}"
@@ -138,26 +138,19 @@ resource "aws_lambda_function" "conform-11-start-ai-workflow" {
 #  Step Functions : Conform Workflow
 #################################
 
-resource "aws_sfn_state_machine" "conform-workflow" {
-  name     = "${var.global_prefix}_${var.aws_region}-conform-workflow"
-  role_arn = "${aws_iam_role.iam_for_state_machine_execution.arn}"
+data "template_file" "conform-workflow" {
+  template = "${file("workflows/conform.json")}"
 
-  definition = <<EOF
-{
-  "Comment": "Conform Workflow",
-  "StartAt": "01-validate-workflow-input",
-  "States": {
-    "01-validate-workflow-input": {
-      "Type": "Task",
-          "Resource": "${aws_lambda_function.conform-01-validate-workflow-input.arn}",
-      "Next": "02-move-content-to-file-repository"
-    },
-    "02-move-content-to-file-repository": {
-      "Type": "Task",
-      "Resource": "${aws_lambda_function.conform-02-move-content-to-file-repository.arn}",
-      "End": true
-    }
+  vars {
+    lambda-01-validate-workflow-input         = "${aws_lambda_function.conform-01-validate-workflow-input.arn}"
+    lambda-02-move-content-to-file-repository = "${aws_lambda_function.conform-02-move-content-to-file-repository.arn}"
+    lambda-03-create-media-asset              = "${aws_lambda_function.conform-03-create-media-asset.arn}"
+    job-completion-activity                   = "${aws_sfn_activity.job_completion_activity.id}"
   }
 }
-EOF
+
+resource "aws_sfn_state_machine" "conform-workflow" {
+  name       = "${var.global_prefix}-conform-workflow"
+  role_arn   = "${aws_iam_role.iam_for_state_machine_execution.arn}"
+  definition = "${data.template_file.conform-workflow.rendered}"
 }

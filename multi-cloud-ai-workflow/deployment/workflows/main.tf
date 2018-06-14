@@ -58,3 +58,11 @@ resource "aws_iam_role_policy_attachment" "role-policy-steps" {
   role       = "${aws_iam_role.iam_for_state_machine_execution.name}"
   policy_arn = "${aws_iam_policy.policy_steps_invoke_lambda.arn}"
 }
+
+##############################
+#  Step activity task to handle async service response 
+##############################
+
+resource "aws_sfn_activity" "job_completion_activity" {
+  name = "${var.global_prefix}-workflows-job-completion-activity"
+}

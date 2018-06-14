@@ -1,0 +1,44 @@
+{
+    "Comment": "Conform Workflow",
+    "StartAt": "01-validate-workflow-input",
+    "States": {
+        "01-validate-workflow-input": {
+            "Type": "Task",
+            "Resource": "${lambda-01-validate-workflow-input}",
+            "Next": "02-move-content-to-file-repository-parent"
+        },
+        "02-move-content-to-file-repository-parent": {
+            "Type": "Parallel",
+            "Branches": [
+                {
+                    "StartAt": "02-move-content-to-file-repository",
+                    "States": {
+                        "02-move-content-to-file-repository": {
+                            "Type": "Task",
+                            "Resource": "${lambda-02-move-content-to-file-repository}",
+                            "End": true
+                        }
+                    }
+                },
+                {
+                    "StartAt": "02-wait-for-job-completion",
+                    "States": {
+                        "02-wait-for-job-completion": {
+                            "Type": "Task",
+                            "Resource": "${job-completion-activity}",
+                            "TimeoutSeconds": 3600,
+                            "HeartbeatSeconds": 1800,
+                            "End": true
+                        }
+                    }
+                }
+            ],
+            "Next": "03-create-media-asset"
+        },
+        "03-create-media-asset": {
+            "Type": "Task",
+            "Resource": "${lambda-03-create-media-asset}",
+            "End": true
+        }
+    }
+}
