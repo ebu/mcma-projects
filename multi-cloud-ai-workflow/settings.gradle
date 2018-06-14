@@ -3,4 +3,5 @@ include "deployment",
         "workflows",
         "workflows:conform",
         "workflows:conform:01-validate-workflow-input",
-        "workflows:conform:02-move-content-to-file-repository"
+        "workflows:conform:02-move-content-to-file-repository",
+        "workflows:conform:03-create-media-asset"

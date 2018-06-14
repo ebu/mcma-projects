@@ -1,7 +1,7 @@
 {
     "name": "01-validate-workflow-input",
     "version": "0.0.0",
-    "description": "Validating input for conform workflow",
+    "description": "Validating input for conform workflow. Check if required metadata (name, description) is defined and if Locator points to a media file",
     "private": true,
     "engines": {
         "node": "~8.10.0"

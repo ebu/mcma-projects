@@ -1,7 +1,7 @@
 {
-    "name": "02-move-content-to-file-repository",
+    "name": "03-create-media-asset",
     "version": "0.0.0",
-    "description": "Moving file into media repository and passing Locator to next step",
+    "description": "With Locator received from previous step, create an asset in the Media Repository",
     "private": true,
     "engines": {
         "node": "~8.10.0"

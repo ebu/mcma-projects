@@ -1,6 +1,7 @@
 task build {
     dependsOn "01-validate-workflow-input:build"
     dependsOn "02-move-content-to-file-repository:build"
+    dependsOn "03-create-media-asset:build"
 }
 
 subprojects {
