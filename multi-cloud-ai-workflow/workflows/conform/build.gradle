@@ -2,6 +2,15 @@ task build {
     dependsOn "01-validate-workflow-input:build"
     dependsOn "02-move-content-to-file-repository:build"
     dependsOn "03-create-media-asset:build"
+    dependsOn "04-extract-technical-metadata:build"
+    dependsOn "05-register-technical-metadata:build"
+    dependsOn "06-decide-transcode-requirements:build"
+    dependsOn "07a-short-transcode:build"
+    dependsOn "07b-long-transcode:build"
+    dependsOn "08-register-proxy-essence:build"
+    dependsOn "09-copy-proxy-to-website-storage:build"
+    dependsOn "10-register-proxy-website-locator:build"
+    dependsOn "11-start-ai-workflow:build"
 }
 
 subprojects {

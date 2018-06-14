@@ -26,9 +26,6 @@ task installAngularCLI {
     outputs.upToDateWhen { getVersionAngularCLI() == requiredVersionAngularCLI }
     doLast {
         if (getVersionAngularCLI() != requiredVersionAngularCLI) {
-            println getVersionAngularCLI()
-            println "is not equal to" + requiredVersionAngularCLI
-
             exec {
                 commandLine npmExecutable
                 args "install", "-g", "@angular/cli@$requiredVersionAngularCLI"
@@ -43,8 +40,4 @@ task build (type: Exec) {
     outputs.dir("dist")
     commandLine ngExecutable
     args "build", "--prod", "--base-href", "./", "--progress", "false"
-}
-
-clean {
-    delete "dist"
 }

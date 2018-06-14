@@ -1,7 +1,7 @@
 {
-    "name": "03-create-media-asset",
+    "name": "08-register-proxy-essence",
     "version": "0.0.0",
-    "description": "With Locator received from previous step, create a BMContent with provided metadata and BMEssence with Locator to file in the Media Repository",
+    "description": "Move generated proxy to file repository and register asset as a new BMEssence in media repository",
     "private": true,
     "engines": {
         "node": "~8.10.0"

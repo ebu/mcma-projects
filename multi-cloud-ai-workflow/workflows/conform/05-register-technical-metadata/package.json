@@ -1,7 +1,7 @@
 {
-    "name": "03-create-media-asset",
+    "name": "05-register-technical-metadata",
     "version": "0.0.0",
-    "description": "With Locator received from previous step, create a BMContent with provided metadata and BMEssence with Locator to file in the Media Repository",
+    "description": "Add the technical metadata obtained in previous step to the BMEssence that points to the media file",
     "private": true,
     "engines": {
         "node": "~8.10.0"
