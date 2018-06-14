@@ -1,5 +1,5 @@
 {
-    "name": "01-validate-workflow-input",
+    "name": "02-move-content-to-file-repository",
     "version": "0.0.0",
     "description": "Validating input for conform workflow",
     "private": true,
@@ -10,7 +10,6 @@
     "license": "Apache-2.0",
     "dependencies": {
         "async": "^2.6.1",
-        "aws-sdk": "^2.257.1",
-        "underscore": "^1.9.1"
+        "aws-sdk": "^2.257.1"
     }
 }
