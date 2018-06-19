@@ -14,7 +14,8 @@ var s3 = new AWS.S3();
 exports.handler = (event, context, callback) => {
     console.log("S3 api version = " + s3.apiVersion);
     // Read options from the event.
-    console.log("event:", JSON.stringify(event));
+    console.log("Event:");
+    console.log(JSON.stringify(event, null, 2));
     // Read bucket name
     var srcBucket = event.Records[0].s3.bucket.name;
     console.log("bucket name = " + srcBucket);
