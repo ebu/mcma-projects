@@ -6,6 +6,20 @@ const _ = require('underscore');
 var s3 = new AWS.S3();
 
 /**
+ * Retrieve the value of the specified element
+ * @param {*} jsonld Metadata Json
+ * @param {*} propertyName Target Element Name
+ */
+function getElementValue(jsonld, propertyName) {
+    var graph = jsonld["@graph"];
+    var pluck = _.pluck(graph, propertyName);
+    var value = pluck.filter(function (element) {
+        return !!element;
+    });
+    return value;
+}
+
+/**
  * Lambda function handler
  * @param {*} event event
  * @param {*} context context
@@ -103,22 +117,9 @@ exports.handler = (event, context, callback) => {
     ], (err, result) => {
         // Process results
         if (err) {
+            console.error("Error:");
             console.error(err);
         }
         callback(err, result);
     });
-};
-
-/**
- * Retrieve the value of the specified element
- * @param {*} jsonld Metadata Json
- * @param {*} propertyName Target Element Name
- */
-function getElementValue(jsonld, propertyName) {
-    var graph = jsonld["@graph"];
-    var pluck = _.pluck(graph, propertyName);
-    var value = pluck.filter(function (element) {
-        return !!element;
-    });
-    return value;
 }

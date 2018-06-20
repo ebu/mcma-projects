@@ -92,13 +92,14 @@ exports.handler = (event, context, callback) => {
 
             // return core.postResource("fims:JobProcess", jobProcess, callback);
 
-            callback(null, transferJob);
+            callback();
         }
-    ], (err, result) => {
+    ], (err) => {
         // Process results
         if (err) {
+            console.error("Error:");
             console.error(err);
         }
-        callback(err, result);
+        callback(err, event);
     });
-};
+}
