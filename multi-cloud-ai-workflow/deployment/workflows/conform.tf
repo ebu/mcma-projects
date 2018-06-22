@@ -145,6 +145,15 @@ data "template_file" "conform-workflow" {
     lambda-01-validate-workflow-input         = "${aws_lambda_function.conform-01-validate-workflow-input.arn}"
     lambda-02-move-content-to-file-repository = "${aws_lambda_function.conform-02-move-content-to-file-repository.arn}"
     lambda-03-create-media-asset              = "${aws_lambda_function.conform-03-create-media-asset.arn}"
+    lambda-04-extract-technical-metadata      = "${aws_lambda_function.conform-04-extract-technical-metadata.arn}"
+    lambda-05-register-technical-metadata     = "${aws_lambda_function.conform-05-register-technical-metadata.arn}"
+    lambda-06-decide-transcode-requirements   = "${aws_lambda_function.conform-06-decide-transcode-requirements.arn}"
+    lambda-07a-short-transcode                = "${aws_lambda_function.conform-07a-short-transcode.arn}"
+    lambda-07b-long-transcode                 = "${aws_lambda_function.conform-07b-long-transcode.arn}"
+    lambda-08-register-proxy-essence          = "${aws_lambda_function.conform-08-register-proxy-essence.arn}"
+    lambda-09-copy-proxy-to-website-storage   = "${aws_lambda_function.conform-09-copy-proxy-to-website-storage.arn}"
+    lambda-10-register-proxy-website-locator  = "${aws_lambda_function.conform-10-register-proxy-website-locator.arn}"
+    lambda-11-start-ai-workflow               = "${aws_lambda_function.conform-11-start-ai-workflow.arn}"
     job-completion-activity                   = "${aws_sfn_activity.job_completion_activity.id}"
   }
 }
