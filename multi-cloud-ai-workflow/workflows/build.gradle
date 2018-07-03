@@ -1,3 +1,4 @@
 task build {
     dependsOn "conform:build"
+    dependsOn "ai:build"
 }
