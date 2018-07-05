@@ -1,3 +1,6 @@
+#################################
+#  aws_lambda_function : service-registry-api-handler
+#################################
 
 resource "aws_lambda_function" "service-registry-api-handler" {
   filename         = "./../services/service-registry/dist/lambda.zip"
@@ -8,4 +11,29 @@ resource "aws_lambda_function" "service-registry-api-handler" {
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
+}
+
+##################################
+# aws_dynamodb_table : repo_service_table
+##################################
+
+resource "aws_dynamodb_table" "repo_service_table" {
+  name           = "${var.global_prefix}-service-registry"
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "resource_type"
+  range_key      = "resource_id"
+
+  attribute {
+    name = "resource_type"
+    type = "S"
+  }
+
+  attribute {
+    name = "resource_id"
+    type = "S"
+  }
+
+  stream_enabled   = true
+  stream_view_type = "NEW_IMAGE"
 }
