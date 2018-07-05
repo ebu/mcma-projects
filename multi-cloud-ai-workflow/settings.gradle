@@ -1,4 +1,6 @@
 include "deployment",
+        "services",
+        "services:service-registry",
         "website",
         "workflows",
         "workflows:conform",
