@@ -9,7 +9,6 @@
     "main": "src/index.js",
     "license": "Apache-2.0",
     "dependencies": {
-        "async": "^2.6.1",
         "aws-sdk": "^2.257.1"
     }
 }
