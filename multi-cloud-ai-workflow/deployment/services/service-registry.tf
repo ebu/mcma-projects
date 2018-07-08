@@ -14,10 +14,10 @@ resource "aws_lambda_function" "service-registry-api-handler" {
 }
 
 ##################################
-# aws_dynamodb_table : repo_service_table
+# aws_dynamodb_table : service_registry_table
 ##################################
 
-resource "aws_dynamodb_table" "repo_service_table" {
+resource "aws_dynamodb_table" "service_registry_table" {
   name           = "${var.global_prefix}-service-registry"
   read_capacity  = 1
   write_capacity = 1
