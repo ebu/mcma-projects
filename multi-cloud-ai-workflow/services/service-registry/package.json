@@ -1,7 +1,7 @@
 {
     "name": "service-registry-api-handler",
     "version": "0.0.0",
-    "description": "Validating input for conform workflow. Check if required metadata (name, description) is defined and if Locator points to a media file",
+    "description": "API gateway request handler for Service Registry",
     "private": true,
     "engines": {
         "node": "~8.10.0"
@@ -9,6 +9,7 @@
     "main": "src/index.js",
     "license": "Apache-2.0",
     "dependencies": {
-        "aws-sdk": "^2.257.1"
+        "aws-sdk": "^2.270.1",
+        "mcma-aws": "0.0.0"
     }
 }

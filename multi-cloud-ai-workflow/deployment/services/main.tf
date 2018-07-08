@@ -30,3 +30,14 @@ resource "aws_iam_role_policy_attachment" "role-policy-S3" {
   role       = "${aws_iam_role.iam_for_exec_lambda.name}"
   policy_arn = "${aws_iam_policy.S3_policy.arn}"
 }
+
+resource "aws_iam_policy" "DynamoDB_policy" {
+  name        = "${var.global_prefix}.${var.aws_region}.services.policy_dynamodb"
+  description = "Policy to Access DynamoDB"
+  policy      = "${file("policies/lambda-allow-dynamodb-access.json")}"
+}
+
+resource "aws_iam_role_policy_attachment" "role-policy-DynamoDB" {
+  role       = "${aws_iam_role.iam_for_exec_lambda.name}"
+  policy_arn = "${aws_iam_policy.DynamoDB_policy.arn}"
+}
