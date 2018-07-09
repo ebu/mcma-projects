@@ -1,6 +1,7 @@
 include "deployment",
         "services",
-        "services:ame-service",
+        "services:ame-service:api-handler",
+        "services:ame-service:worker",
         "services:job-processor-service",
         "services:job-repository",
         "services:service-registry",
