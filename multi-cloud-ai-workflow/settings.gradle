@@ -1,5 +1,6 @@
 include "deployment",
         "services",
+        "services:job-processor-service",
         "services:job-repository",
         "services:service-registry",
         "website",

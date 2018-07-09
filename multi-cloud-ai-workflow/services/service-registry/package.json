@@ -1,5 +1,5 @@
 {
-    "name": "service-registry-api-handler",
+    "name": "service-registry",
     "version": "0.0.0",
     "description": "API gateway request handler for Service Registry",
     "private": true,
