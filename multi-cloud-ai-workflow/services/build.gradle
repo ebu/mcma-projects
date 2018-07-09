@@ -1,4 +1,5 @@
 task build {
+    dependsOn "ame-service:build"
     dependsOn "job-processor-service:build"
     dependsOn "job-repository:build"
     dependsOn "service-registry:build"
