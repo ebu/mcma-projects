@@ -1,22 +1,27 @@
 //"use strict";
 
+const util = require('util');
+
 const AWS = require("aws-sdk");
+var Lambda = new AWS.Lambda({ apiVersion: "2015-03-31" });
+var LambdaInvoke = util.promisify(Lambda.invoke.bind(Lambda));
+
 const MCMA_AWS = require("mcma-aws");
 const uuidv4 = require('uuid/v4');
 
 // async functions to handle the different routes.
 
-async function getJobAssignments (request, response) {
+async function getJobAssignments(request, response) {
     console.log("getJobAssignments()", JSON.stringify(request, null, 2));
 
     let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
 
     response.body = await table.getAll("JobAssignment");
-    
+
     console.log(JSON.stringify(response, null, 2));
 }
 
-async function addJobAssignment (request, response) {
+async function addJobAssignment(request, response) {
     console.log("addJobAssignment()", JSON.stringify(request, null, 2));
 
     let jobAssignment = request.body;
@@ -39,13 +44,23 @@ async function addJobAssignment (request, response) {
     response.body = jobAssignment;
 
     console.log(JSON.stringify(response, null, 2));
+
+    // invoking worker lambda
+    var params = {
+        FunctionName: request.stageVariables.WorkerLambdaFunctionName,
+        InvocationType: "Event",
+        LogType: "None",
+        Payload: JSON.stringify({ "request": request, "jobAssignment": jobAssignment })
+    };
+
+    await LambdaInvoke(params);
 }
 
-async function getJobAssignment (request, response) {
+async function getJobAssignment(request, response) {
     console.log("getJobAssignment()", JSON.stringify(request, null, 2));
 
     let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
-    
+
     response.body = await table.get("JobAssignment", request.pathVariables.id);
 
     if (response.body === null) {
@@ -54,28 +69,7 @@ async function getJobAssignment (request, response) {
     }
 }
 
-async function putJobAssignment (request, response) {
-    console.log("putJobAssignment()", JSON.stringify(request, null, 2));
-
-    let jobAssignment = request.body;
-    if (!jobAssignment) {
-        response.statusCode = MCMA_AWS.HTTP_BAD_REQUEST;
-        response.statusMessage = "Missing request body.";
-        return;
-    }
-
-    let jobAssignmentId = request.pathVariables.id;
-    jobAssignment["@type"] = "JobAssignment";
-    jobAssignment.id = request.stageVariables.PublicUrl + "/job-assignments/" + jobAssignmentId;
-
-    let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
-
-    await table.put("JobAssignment", jobAssignmentId, jobAssignment);
-
-    response.body = jobAssignment;
-}
-
-async function deleteJobAssignment (request, response) {
+async function deleteJobAssignment(request, response) {
     console.log("deleteJobAssignment()", JSON.stringify(request, null, 2));
 
     let jobAssignmentId = request.pathVariables.id;
@@ -86,7 +80,7 @@ async function deleteJobAssignment (request, response) {
         response.statusCode = MCMA_AWS.HTTP_NOT_FOUND;
         response.statusMessage = "No resource found on path '" + request.path + "'.";
         return;
-    } 
+    }
 
     await table.delete("JobAssignment", jobAssignmentId);
 }
@@ -98,7 +92,6 @@ let restController = new MCMA_AWS.RestController();
 restController.addRoute("GET", "/job-assignments", getJobAssignments);
 restController.addRoute("POST", "/job-assignments", addJobAssignment);
 restController.addRoute("GET", "/job-assignments/{id}", getJobAssignment);
-restController.addRoute("PUT", "/job-assignments/{id}", putJobAssignment);
 restController.addRoute("DELETE", "/job-assignments/{id}", deleteJobAssignment);
 
 exports.handler = async (event, context) => {
