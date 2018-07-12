@@ -92,3 +92,7 @@ resource "aws_api_gateway_deployment" "job_processor_service_deployment" {
     "PublicUrl" = "https://${aws_api_gateway_rest_api.job_processor_service_api.id}.execute-api.${var.aws_region}.amazonaws.com/${var.environment_type}"
   }
 }
+
+output "job_processor_service_url" {
+  value = "https://${aws_api_gateway_rest_api.job_processor_service_api.id}.execute-api.${var.aws_region}.amazonaws.com/${var.environment_type}"
+}

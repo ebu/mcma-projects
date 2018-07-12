@@ -108,3 +108,7 @@ resource "aws_api_gateway_deployment" "ame_service_deployment" {
     "WorkerLambdaFunctionName" = "${aws_lambda_function.ame-service-worker.function_name}"
   }
 }
+
+output "ame_service_url" {
+  value = "https://${aws_api_gateway_rest_api.ame_service_api.id}.execute-api.${var.aws_region}.amazonaws.com/${var.environment_type}"
+}

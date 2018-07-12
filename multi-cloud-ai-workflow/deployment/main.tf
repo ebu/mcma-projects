@@ -56,3 +56,19 @@ module "workflows" {
 output "website_url" {
   value = "${module.storage.website_url}"
 }
+
+output "service_registry_url" {
+  value = "${module.services.service_registry_url}"
+}
+
+output "job_repository_url" {
+  value = "${module.services.job_repository_url}"
+}
+
+output "job_processor_service_url" {
+  value = "${module.services.job_processor_service_url}"
+}
+
+output "ame_service_url" {
+  value = "${module.services.ame_service_url}"
+}
