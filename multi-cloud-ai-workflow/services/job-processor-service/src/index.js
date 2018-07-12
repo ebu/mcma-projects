@@ -6,17 +6,17 @@ const uuidv4 = require('uuid/v4');
 
 // async functions to handle the different routes.
 
-async function getJobProcesses (request, response) {
+const getJobProcesses = async (request, response) => {
     console.log("getJobProcesss()", JSON.stringify(request, null, 2));
 
     let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
 
     response.body = await table.getAll("JobProcess");
-    
+
     console.log(JSON.stringify(response, null, 2));
 }
 
-async function addJobProcess (request, response) {
+const addJobProcess = async (request, response) => {
     console.log("addJobProcess()", JSON.stringify(request, null, 2));
 
     let jobProcess = request.body;
@@ -26,9 +26,9 @@ async function addJobProcess (request, response) {
         return;
     }
 
-    let jobProcessId = uuidv4();
+    let jobProcessId = request.stageVariables.PublicUrl + "/job-processes/" + uuidv4();
     jobProcess["@type"] = "JobProcess";
-    jobProcess.id = request.stageVariables.PublicUrl + "/job-processes/" + jobProcessId;
+    jobProcess.id = jobProcessId;
 
     let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
 
@@ -41,12 +41,14 @@ async function addJobProcess (request, response) {
     console.log(JSON.stringify(response, null, 2));
 }
 
-async function getJobProcess (request, response) {
+const getJobProcess = async (request, response) => {
     console.log("getJobProcess()", JSON.stringify(request, null, 2));
 
     let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
-    
-    response.body = await table.get("JobProcess", request.pathVariables.id);
+
+    let jobProcessId = request.stageVariables.PublicUrl + request.path;
+
+    response.body = await table.get("JobProcess", jobProcessId);
 
     if (response.body === null) {
         response.statusCode = MCMA_AWS.HTTP_NOT_FOUND;
@@ -54,7 +56,7 @@ async function getJobProcess (request, response) {
     }
 }
 
-async function putJobProcess (request, response) {
+const putJobProcess = async (request, response) => {
     console.log("putJobProcess()", JSON.stringify(request, null, 2));
 
     let jobProcess = request.body;
@@ -64,9 +66,9 @@ async function putJobProcess (request, response) {
         return;
     }
 
-    let jobProcessId = request.pathVariables.id;
+    let jobProcessId = request.stageVariables.PublicUrl + request.path;
     jobProcess["@type"] = "JobProcess";
-    jobProcess.id = request.stageVariables.PublicUrl + "/job-processes/" + jobProcessId;
+    jobProcess.id = jobProcessId;
 
     let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
 
@@ -75,24 +77,25 @@ async function putJobProcess (request, response) {
     response.body = jobProcess;
 }
 
-async function deleteJobProcess (request, response) {
+const deleteJobProcess = async (request, response) => {
     console.log("deleteJobProcess()", JSON.stringify(request, null, 2));
 
-    let jobProcessId = request.pathVariables.id;
     let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
+
+    let jobProcessId = request.stageVariables.PublicUrl + request.path;
 
     let jobProcess = await table.get("JobProcess", jobProcessId);
     if (!jobProcess) {
         response.statusCode = MCMA_AWS.HTTP_NOT_FOUND;
         response.statusMessage = "No resource found on path '" + request.path + "'.";
         return;
-    } 
+    }
 
     await table.delete("JobProcess", jobProcessId);
 }
 
 // Initializing rest controller for API Gateway Endpoint
-let restController = new MCMA_AWS.RestController();
+const restController = new MCMA_AWS.RestController();
 
 // adding routes
 restController.addRoute("GET", "/job-processes", getJobProcesses);

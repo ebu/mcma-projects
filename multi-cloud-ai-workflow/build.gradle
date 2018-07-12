@@ -15,7 +15,7 @@ allprojects {
             terraformExecutable = ["terraform"]
         }
 
-        awsAvailableLibraries = [".bin", "aws-sdk", "base64-js", "buffer", "events", "ieee754", "isarray", "jmespath", "lodash", "punycode", "querystring", "sax", "url", "uuid", "xml2js", "xmlbuilder"]
+        awsAvailableLibraries = [".bin", "aws-sdk", "base64-js", "buffer", "dynamodb-doc", "events", "ieee754", "isarray", "jmespath", "lodash", "punycode", "querystring", "sax", "url", "uuid", "xml2js", "xmlbuilder"]
     }
 }
 

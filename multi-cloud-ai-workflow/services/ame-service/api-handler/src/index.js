@@ -3,15 +3,14 @@
 const util = require('util');
 
 const AWS = require("aws-sdk");
-var Lambda = new AWS.Lambda({ apiVersion: "2015-03-31" });
-var LambdaInvoke = util.promisify(Lambda.invoke.bind(Lambda));
+const Lambda = new AWS.Lambda({ apiVersion: "2015-03-31" });
+const LambdaInvoke = util.promisify(Lambda.invoke.bind(Lambda));
 
 const MCMA_AWS = require("mcma-aws");
 const uuidv4 = require('uuid/v4');
 
 // async functions to handle the different routes.
-
-async function getJobAssignments(request, response) {
+const getJobAssignments = async (request, response) => {
     console.log("getJobAssignments()", JSON.stringify(request, null, 2));
 
     let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
@@ -21,7 +20,21 @@ async function getJobAssignments(request, response) {
     console.log(JSON.stringify(response, null, 2));
 }
 
-async function addJobAssignment(request, response) {
+const deleteJobAssignments = async (request, response) => {
+    console.log("deleteJobAssignments()", JSON.stringify(request, null, 2));
+
+    let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
+
+    let jobAssignments = await table.getAll("JobAssignment");
+
+    for (let i = 0; i < jobAssignments.length; i++) {
+        await table.delete("JobAssignment", jobAssignments[i].id);
+    }
+
+    console.log(JSON.stringify(response, null, 2));
+}
+
+const addJobAssignment = async (request, response) => {
     console.log("addJobAssignment()", JSON.stringify(request, null, 2));
 
     let jobAssignment = request.body;
@@ -31,9 +44,12 @@ async function addJobAssignment(request, response) {
         return;
     }
 
-    let jobAssignmentId = uuidv4();
+    let jobAssignmentId = request.stageVariables.PublicUrl + "/job-assignments/" + uuidv4();
     jobAssignment["@type"] = "JobAssignment";
-    jobAssignment.id = request.stageVariables.PublicUrl + "/job-assignments/" + jobAssignmentId;
+    jobAssignment.id = jobAssignmentId;
+    jobAssignment.status = "NEW";
+    jobAssignment.dateCreated = new Date().toISOString();
+    jobAssignment.dateModified = jobAssignment.dateCreated;
 
     let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
 
@@ -50,18 +66,20 @@ async function addJobAssignment(request, response) {
         FunctionName: request.stageVariables.WorkerLambdaFunctionName,
         InvocationType: "Event",
         LogType: "None",
-        Payload: JSON.stringify({ "request": request, "jobAssignment": jobAssignment })
+        Payload: JSON.stringify({ "request": request, "jobAssignmentId": jobAssignmentId })
     };
 
     await LambdaInvoke(params);
 }
 
-async function getJobAssignment(request, response) {
+const getJobAssignment = async (request, response) => {
     console.log("getJobAssignment()", JSON.stringify(request, null, 2));
 
     let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
 
-    response.body = await table.get("JobAssignment", request.pathVariables.id);
+    let jobAssignmentId = request.stageVariables.PublicUrl + request.path;
+
+    response.body = await table.get("JobAssignment", jobAssignmentId);
 
     if (response.body === null) {
         response.statusCode = MCMA_AWS.HTTP_NOT_FOUND;
@@ -69,11 +87,12 @@ async function getJobAssignment(request, response) {
     }
 }
 
-async function deleteJobAssignment(request, response) {
+const deleteJobAssignment = async (request, response) => {
     console.log("deleteJobAssignment()", JSON.stringify(request, null, 2));
 
-    let jobAssignmentId = request.pathVariables.id;
     let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
+
+    let jobAssignmentId = request.stageVariables.PublicUrl + request.path;
 
     let jobAssignment = await table.get("JobAssignment", jobAssignmentId);
     if (!jobAssignment) {
@@ -86,11 +105,12 @@ async function deleteJobAssignment(request, response) {
 }
 
 // Initializing rest controller for API Gateway Endpoint
-let restController = new MCMA_AWS.RestController();
+const restController = new MCMA_AWS.RestController();
 
 // adding routes
 restController.addRoute("GET", "/job-assignments", getJobAssignments);
 restController.addRoute("POST", "/job-assignments", addJobAssignment);
+restController.addRoute("DELETE", "/job-assignments", deleteJobAssignments);
 restController.addRoute("GET", "/job-assignments/{id}", getJobAssignment);
 restController.addRoute("DELETE", "/job-assignments/{id}", deleteJobAssignment);
 

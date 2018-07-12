@@ -6,17 +6,17 @@ const uuidv4 = require('uuid/v4');
 
 // async functions to handle the different routes.
 
-async function getServices (request, response) {
+const getServices = async (request, response) => {
     console.log("getServices()", JSON.stringify(request, null, 2));
 
     let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
 
     response.body = await table.getAll("Service");
-    
+
     console.log(JSON.stringify(response, null, 2));
 }
 
-async function addService (request, response) {
+const addService = async (request, response) => {
     console.log("addService()", JSON.stringify(request, null, 2));
 
     let service = request.body;
@@ -26,9 +26,9 @@ async function addService (request, response) {
         return;
     }
 
-    let serviceId = uuidv4();
+    let serviceId = request.stageVariables.PublicUrl + "/services/" + uuidv4();
     service["@type"] = "Service";
-    service.id = request.stageVariables.PublicUrl + "/services/" + serviceId;
+    service.id = serviceId;
 
     let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
 
@@ -41,12 +41,14 @@ async function addService (request, response) {
     console.log(JSON.stringify(response, null, 2));
 }
 
-async function getService (request, response) {
+const getService = async (request, response) => {
     console.log("getService()", JSON.stringify(request, null, 2));
 
     let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
-    
-    response.body = await table.get("Service", request.pathVariables.id);
+
+    let serviceId = request.stageVariables.PublicUrl + request.path;
+
+    response.body = await table.get("Service", serviceId);
 
     if (response.body === null) {
         response.statusCode = MCMA_AWS.HTTP_NOT_FOUND;
@@ -54,7 +56,7 @@ async function getService (request, response) {
     }
 }
 
-async function putService (request, response) {
+const putService = async (request, response) => {
     console.log("putService()", JSON.stringify(request, null, 2));
 
     let service = request.body;
@@ -64,35 +66,36 @@ async function putService (request, response) {
         return;
     }
 
-    let serviceId = request.pathVariables.id;
-    service["@type"] = "Service";
-    service.id = request.stageVariables.PublicUrl + "/services/" + serviceId;
-
     let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
+
+    let serviceId = request.stageVariables.PublicUrl + request.path;
+    service["@type"] = "Service";
+    service.id = serviceId;
 
     await table.put("Service", serviceId, service);
 
     response.body = service;
 }
 
-async function deleteService (request, response) {
+const deleteService = async (request, response) => {
     console.log("deleteService()", JSON.stringify(request, null, 2));
 
-    let serviceId = request.pathVariables.id;
     let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
+
+    let serviceId = request.stageVariables.PublicUrl + request.path;
 
     let service = await table.get("Service", serviceId);
     if (!service) {
         response.statusCode = MCMA_AWS.HTTP_NOT_FOUND;
         response.statusMessage = "No resource found on path '" + request.path + "'.";
         return;
-    } 
+    }
 
     await table.delete("Service", serviceId);
 }
 
 // Initializing rest controller for API Gateway Endpoint
-let restController = new MCMA_AWS.RestController();
+const restController = new MCMA_AWS.RestController();
 
 // adding routes
 restController.addRoute("GET", "/services", getServices);
