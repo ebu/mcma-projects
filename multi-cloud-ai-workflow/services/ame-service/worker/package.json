@@ -11,6 +11,6 @@
     "dependencies": {
         "aws-sdk": "^2.270.1",
         "axios": "^0.18.0",
-        "mcma-aws": "0.0.1"
+        "mcma-aws": "0.0.2"
     }
 }
