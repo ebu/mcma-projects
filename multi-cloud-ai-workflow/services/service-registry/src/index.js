@@ -94,6 +94,94 @@ const deleteService = async (request, response) => {
     await table.delete("Service", serviceId);
 }
 
+const getJobProfiles = async (request, response) => {
+    console.log("getJobProfiles()", JSON.stringify(request, null, 2));
+
+    let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
+
+    response.body = await table.getAll("JobProfile");
+
+    console.log(JSON.stringify(response, null, 2));
+}
+
+const addJobProfile = async (request, response) => {
+    console.log("addJobProfile()", JSON.stringify(request, null, 2));
+
+    let jobProfile = request.body;
+    if (!jobProfile) {
+        response.statusCode = MCMA_AWS.HTTP_BAD_REQUEST;
+        response.statusMessage = "Missing request body.";
+        return;
+    }
+
+    let jobProfileId = request.stageVariables.PublicUrl + "/job-profiles/" + uuidv4();
+    jobProfile["@type"] = "JobProfile";
+    jobProfile.id = jobProfileId;
+
+    let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
+
+    await table.put("JobProfile", jobProfileId, jobProfile);
+
+    response.statusCode = MCMA_AWS.HTTP_CREATED;
+    response.headers.Location = jobProfile.id;
+    response.body = jobProfile;
+
+    console.log(JSON.stringify(response, null, 2));
+}
+
+const getJobProfile = async (request, response) => {
+    console.log("getJobProfile()", JSON.stringify(request, null, 2));
+
+    let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
+
+    let jobProfileId = request.stageVariables.PublicUrl + request.path;
+
+    response.body = await table.get("JobProfile", jobProfileId);
+
+    if (response.body === null) {
+        response.statusCode = MCMA_AWS.HTTP_NOT_FOUND;
+        response.statusMessage = "No resource found on path '" + request.path + "'.";
+    }
+}
+
+const putJobProfile = async (request, response) => {
+    console.log("putJobProfile()", JSON.stringify(request, null, 2));
+
+    let jobProfile = request.body;
+    if (!jobProfile) {
+        response.statusCode = MCMA_AWS.HTTP_BAD_REQUEST;
+        response.statusMessage = "Missing request body.";
+        return;
+    }
+
+    let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
+
+    let jobProfileId = request.stageVariables.PublicUrl + request.path;
+    jobProfile["@type"] = "JobProfile";
+    jobProfile.id = jobProfileId;
+
+    await table.put("JobProfile", jobProfileId, jobProfile);
+
+    response.body = jobProfile;
+}
+
+const deleteJobProfile = async (request, response) => {
+    console.log("deleteJobProfile()", JSON.stringify(request, null, 2));
+
+    let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
+
+    let jobProfileId = request.stageVariables.PublicUrl + request.path;
+
+    let jobProfile = await table.get("JobProfile", jobProfileId);
+    if (!jobProfile) {
+        response.statusCode = MCMA_AWS.HTTP_NOT_FOUND;
+        response.statusMessage = "No resource found on path '" + request.path + "'.";
+        return;
+    }
+
+    await table.delete("JobProfile", jobProfileId);
+}
+
 // Initializing rest controller for API Gateway Endpoint
 const restController = new MCMA_AWS.RestController();
 
@@ -103,6 +191,12 @@ restController.addRoute("POST", "/services", addService);
 restController.addRoute("GET", "/services/{id}", getService);
 restController.addRoute("PUT", "/services/{id}", putService);
 restController.addRoute("DELETE", "/services/{id}", deleteService);
+
+restController.addRoute("GET", "/job-profiles", getJobProfiles);
+restController.addRoute("POST", "/job-profiles", addJobProfile);
+restController.addRoute("GET", "/job-profiles/{id}", getJobProfile);
+restController.addRoute("PUT", "/job-profiles/{id}", putJobProfile);
+restController.addRoute("DELETE", "/job-profiles/{id}", deleteJobProfile);
 
 exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));

@@ -67,6 +67,7 @@ task terraformInit(type: Exec) {
 }
 
 task terraformPlan(type: Exec) {
+    dependsOn ":build"
     dependsOn terraformInit
     dependsOn generateTerraformTFVars
     dependsOn generateTerraformWebsiteTF
@@ -74,14 +75,11 @@ task terraformPlan(type: Exec) {
     args "plan"
 }
 
-terraformPlan.dependsOn(terraformInit)
-terraformPlan.dependsOn(":build")
-
 task terraformApply(type: Exec) {
+    mustRunAfter terraformPlan
     commandLine terraformExecutable
     args "apply", "-auto-approve"
 }
-terraformApply.mustRunAfter(terraformPlan)
 
 task terraformDestroy(type: Exec) {
     dependsOn generateTerraformTFVars
@@ -91,6 +89,7 @@ task terraformDestroy(type: Exec) {
 }
 
 task terraformOutput(type: Exec) {
+    mustRunAfter terraformApply
     inputs.file("terraform.tfstate")
     outputs.file("terraform.output")
     commandLine terraformExecutable
@@ -99,19 +98,19 @@ task terraformOutput(type: Exec) {
         standardOutput new FileOutputStream("${projectDir}/terraform.output")
     }
 }
-terraformOutput.mustRunAfter(terraformApply)
 
-// task updateServiceRegistry(type: Exec) {
-//     inputs.file("terraform.output")
-//     inputs.file("../service-registry/register.js")
-//     outputs.upToDateWhen { true }
-//     commandLine "cmd", "/c", "node"
-//     args "../service-registry/register.js"
-//     doFirst {
-//         standardInput new FileInputStream("${projectDir}/terraform.output")
-//     }
-// }
-// updateServiceRegistry.dependsOn(terraformOutput)
+task updateServiceRegistry(type: Exec) {
+    dependsOn terraformOutput
+    dependsOn "registry:npmInstall"
+    inputs.file("${projectDir}/terraform.output")
+    inputs.file("${projectDir}/registry/src/index.js")
+    outputs.upToDateWhen { true }
+    commandLine nodeExecutable
+    args "registry/src/index.js"
+    doFirst {
+        standardInput new FileInputStream("${projectDir}/terraform.output")
+    }
+}
 
 clean {
     delete "${projectDir}/terraform.output"
@@ -123,7 +122,7 @@ plan.dependsOn(terraformPlan)
 
 task apply {}
 apply.dependsOn(terraformApply)
-// apply.dependsOn(updateServiceRegistry)
+apply.dependsOn(updateServiceRegistry)
 
 task deploy {}
 deploy.dependsOn(plan)
