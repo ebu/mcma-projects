@@ -1,6 +1,11 @@
 //"use strict";
 
+const util = require('util');
+
 const AWS = require("aws-sdk");
+const Lambda = new AWS.Lambda({ apiVersion: "2015-03-31" });
+const LambdaInvoke = util.promisify(Lambda.invoke.bind(Lambda));
+
 const MCMA_AWS = require("mcma-aws");
 const uuidv4 = require('uuid/v4');
 
@@ -39,6 +44,16 @@ const addJobProcess = async (request, response) => {
     response.body = jobProcess;
 
     console.log(JSON.stringify(response, null, 2));
+
+    // invoking worker lambda function that will create a job process for this new job
+    var params = {
+        FunctionName: request.stageVariables.WorkerLambdaFunctionName,
+        InvocationType: "Event",
+        LogType: "None",
+        Payload: JSON.stringify({ "request": request, "jobProcessId": jobProcessId })
+    };
+
+    await LambdaInvoke(params);
 }
 
 const getJobProcess = async (request, response) => {

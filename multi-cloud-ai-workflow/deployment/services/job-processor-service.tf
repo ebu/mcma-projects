@@ -13,6 +13,21 @@ resource "aws_lambda_function" "job-processor-service-api-handler" {
   memory_size      = "256"
 }
 
+#################################
+#  aws_lambda_function : job-processor-service-worker
+#################################
+
+resource "aws_lambda_function" "job-processor-service-worker" {
+  filename         = "./../services/job-processor-service/worker/dist/lambda.zip"
+  function_name    = "${format("%.64s", "${var.global_prefix}-job-processor-service-worker")}"
+  role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
+  handler          = "index.handler"
+  source_code_hash = "${base64sha256(file("./../services/job-processor-service/worker/dist/lambda.zip"))}"
+  runtime          = "nodejs8.10"
+  timeout          = "30"
+  memory_size      = "256"
+}
+
 ##################################
 # aws_dynamodb_table : job_processor_service_table
 ##################################
@@ -88,8 +103,10 @@ resource "aws_api_gateway_deployment" "job_processor_service_deployment" {
   stage_name  = "${var.environment_type}"
 
   variables = {
-    "TableName" = "${var.global_prefix}-job-processor-service"
-    "PublicUrl" = "https://${aws_api_gateway_rest_api.job_processor_service_api.id}.execute-api.${var.aws_region}.amazonaws.com/${var.environment_type}"
+    "TableName"                = "${var.global_prefix}-job-processor-service"
+    "PublicUrl"                = "https://${aws_api_gateway_rest_api.job_processor_service_api.id}.execute-api.${var.aws_region}.amazonaws.com/${var.environment_type}"
+    "ServicesUrl"              = "https://${aws_api_gateway_rest_api.service_registry_api.id}.execute-api.${var.aws_region}.amazonaws.com/${var.environment_type}/services"
+    "WorkerLambdaFunctionName" = "${aws_lambda_function.job-processor-service-worker.function_name}"
   }
 }
 

@@ -1,0 +1,16 @@
+{
+    "name": "job-processor-worker",
+    "version": "0.0.0",
+    "description": "Lambda function to process requests from the api-handler asynchronously",
+    "private": true,
+    "engines": {
+        "node": "~8.10.0"
+    },
+    "main": "src/index.js",
+    "license": "Apache-2.0",
+    "dependencies": {
+        "aws-sdk": "^2.270.1",
+        "mcma-aws": "0.0.3",
+        "mcma-core": "0.0.4"
+    }
+}

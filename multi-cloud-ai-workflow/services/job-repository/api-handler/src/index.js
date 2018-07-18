@@ -1,6 +1,11 @@
 //"use strict";
 
+const util = require('util');
+
 const AWS = require("aws-sdk");
+const Lambda = new AWS.Lambda({ apiVersion: "2015-03-31" });
+const LambdaInvoke = util.promisify(Lambda.invoke.bind(Lambda));
+
 const MCMA_AWS = require("mcma-aws");
 const uuidv4 = require('uuid/v4');
 
@@ -44,6 +49,16 @@ const addJob = async (request, response) => {
     response.body = job;
 
     console.log(JSON.stringify(response, null, 2));
+
+    // invoking worker lambda function that will create a job process for this new job
+    var params = {
+        FunctionName: request.stageVariables.WorkerLambdaFunctionName,
+        InvocationType: "Event",
+        LogType: "None",
+        Payload: JSON.stringify({ "request": request, "jobId": jobId })
+    };
+
+    await LambdaInvoke(params);
 }
 
 const getJob = async (request, response) => {
@@ -104,6 +119,38 @@ const deleteJob = async (request, response) => {
     await table.delete("Job", jobId);
 }
 
+const stopJob = async (request, response) => {
+    let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
+
+    let jobId = request.stageVariables.PublicUrl + "/jobs/" + request.pathVariables.id;
+    
+    let job = await table.get("Job", jobId);
+    if (!job) {
+        response.statusCode = MCMA_AWS.HTTP_NOT_FOUND;
+        response.statusMessage = "No resource found on path '" + request.path + "'.";
+        return;
+    }
+
+    response.statusCode = MCMA_AWS.HTTP_NOT_IMPLEMENTED;
+    response.statusMessage = "Stopping job is not implemented";
+}
+
+const cancelJob = async (request, response) => {
+    let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
+
+    let jobId = request.stageVariables.PublicUrl + "/jobs/" + request.pathVariables.id;
+    
+    let job = await table.get("Job", jobId);
+    if (!job) {
+        response.statusCode = MCMA_AWS.HTTP_NOT_FOUND;
+        response.statusMessage = "No resource found on path '" + request.path + "'.";
+        return;
+    }
+
+    response.statusCode = MCMA_AWS.HTTP_NOT_IMPLEMENTED;
+    response.statusMessage = "Canceling job is not implemented";
+}
+
 // Initializing rest controller for API Gateway Endpoint
 const restController = new MCMA_AWS.RestController();
 
@@ -113,6 +160,9 @@ restController.addRoute("POST", "/jobs", addJob);
 restController.addRoute("GET", "/jobs/{id}", getJob);
 restController.addRoute("PUT", "/jobs/{id}", putJob);
 restController.addRoute("DELETE", "/jobs/{id}", deleteJob);
+
+restController.addRoute("POST", "/jobs/{id}/stop", stopJob);
+restController.addRoute("POST", "/jobs/{id}/cancel", cancelJob);
 
 exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));

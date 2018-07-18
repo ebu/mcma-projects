@@ -61,7 +61,7 @@ const addJobAssignment = async (request, response) => {
 
     console.log(JSON.stringify(response, null, 2));
 
-    // invoking worker lambda
+    // invoking worker lambda function that does the actual metadata extraction
     var params = {
         FunctionName: request.stageVariables.WorkerLambdaFunctionName,
         InvocationType: "Event",
