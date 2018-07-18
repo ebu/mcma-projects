@@ -1,9 +1,11 @@
 task build {
     dependsOn "ame-service:api-handler:build"
     dependsOn "ame-service:worker:build"
-    dependsOn "job-processor-service:build"
-    dependsOn "job-repository:build"
-    dependsOn "service-registry:build"
+    dependsOn "job-processor-service:api-handler:build"
+    dependsOn "job-processor-service:worker:build"
+    dependsOn "job-repository:api-handler:build"
+    dependsOn "job-repository:worker:build"
+    dependsOn "service-registry:api-handler:build"
 }
 
 subprojects {

@@ -1,7 +1,7 @@
 {
-    "name": "job-processor-service",
+    "name": "job-repository-api-handler",
     "version": "0.0.0",
-    "description": "API gateway request handler for Job Processor Service",
+    "description": "API gateway request handler for Job Repository",
     "private": true,
     "engines": {
         "node": "~8.10.0"

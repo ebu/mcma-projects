@@ -3,11 +3,11 @@
 #################################
 
 resource "aws_lambda_function" "job-processor-service-api-handler" {
-  filename         = "./../services/job-processor-service/dist/lambda.zip"
+  filename         = "./../services/job-processor-service/api-handler/dist/lambda.zip"
   function_name    = "${format("%.64s", "${var.global_prefix}-job-processor-service-api-handler")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("./../services/job-processor-service/dist/lambda.zip"))}"
+  source_code_hash = "${base64sha256(file("./../services/job-processor-service/api-handler/dist/lambda.zip"))}"
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
