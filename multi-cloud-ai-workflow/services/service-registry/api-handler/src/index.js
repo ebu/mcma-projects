@@ -27,7 +27,9 @@ const addService = async (request, response) => {
     }
 
     let serviceId = request.stageVariables.PublicUrl + "/services/" + uuidv4();
-    service["@type"] = "Service";
+    if (service["@type"] !== "Service") {
+        service["@type"] = "Service";
+    }
     service.id = serviceId;
 
     let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
@@ -69,7 +71,9 @@ const putService = async (request, response) => {
     let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
 
     let serviceId = request.stageVariables.PublicUrl + request.path;
-    service["@type"] = "Service";
+    if (service["@type"] !== "Service") {
+        service["@type"] = "Service";
+    }
     service.id = serviceId;
 
     await table.put("Service", serviceId, service);
@@ -115,7 +119,9 @@ const addJobProfile = async (request, response) => {
     }
 
     let jobProfileId = request.stageVariables.PublicUrl + "/job-profiles/" + uuidv4();
-    jobProfile["@type"] = "JobProfile";
+    if (jobProfile["@type"] !== "JobProfile") {
+        jobProfile["@type"] = "JobProfile";
+    }
     jobProfile.id = jobProfileId;
 
     let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
@@ -157,7 +163,9 @@ const putJobProfile = async (request, response) => {
     let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
 
     let jobProfileId = request.stageVariables.PublicUrl + request.path;
-    jobProfile["@type"] = "JobProfile";
+    if (jobProfile["@type"] !== "JobProfile") {
+        jobProfile["@type"] = "JobProfile";
+    }
     jobProfile.id = jobProfileId;
 
     await table.put("JobProfile", jobProfileId, jobProfile);

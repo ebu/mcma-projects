@@ -45,7 +45,9 @@ const addJobAssignment = async (request, response) => {
     }
 
     let jobAssignmentId = request.stageVariables.PublicUrl + "/job-assignments/" + uuidv4();
-    jobAssignment["@type"] = "JobAssignment";
+    if (jobAssignment["@type"] !== "JobAssignment") {
+        jobAssignment["@type"] = "JobAssignment";
+    }
     jobAssignment.id = jobAssignmentId;
     jobAssignment.status = "NEW";
     jobAssignment.dateCreated = new Date().toISOString();

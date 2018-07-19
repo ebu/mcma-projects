@@ -57,7 +57,7 @@ const createServices = (serviceUrls) => {
                     new MCMA_CORE.Service(
                         "MediaInfo AME Service",
                         [
-                            new MCMA_CORE.ServiceResource("JobAssignment", serviceUrls[prop] + "job-assignments")
+                            new MCMA_CORE.ServiceResource("JobAssignment", serviceUrls[prop] + "/job-assignments")
                         ],
                         "AmeJob",
                         [
@@ -79,7 +79,7 @@ const createServices = (serviceUrls) => {
                     new MCMA_CORE.Service(
                         "AI Service",
                         [
-                            new MCMA_CORE.ServiceResource("JobAssignment", serviceUrls[prop] + "job-assignments")
+                            new MCMA_CORE.ServiceResource("JobAssignment", serviceUrls[prop] + "/job-assignments")
                         ],
                         "AIJob",
                         [
@@ -132,7 +132,7 @@ const createServices = (serviceUrls) => {
                     new MCMA_CORE.Service(
                         "FFmpeg TransformService",
                         [
-                            new MCMA_CORE.ServiceResource("JobAssignment", serviceUrls[prop] + "job-assignments")
+                            new MCMA_CORE.ServiceResource("JobAssignment", serviceUrls[prop] + "/job-assignments")
                         ],
                         "TransformJob",
                         [

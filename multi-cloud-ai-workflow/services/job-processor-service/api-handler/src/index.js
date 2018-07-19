@@ -32,8 +32,11 @@ const addJobProcess = async (request, response) => {
     }
 
     let jobProcessId = request.stageVariables.PublicUrl + "/job-processes/" + uuidv4();
-    jobProcess["@type"] = "JobProcess";
+    if (jobProcess["@type"] !== "JobProcess") {
+        jobProcess["@type"] = "JobProcess";
+    }
     jobProcess.id = jobProcessId;
+    jobProcess.status = "NEW";
 
     let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
 
@@ -45,7 +48,7 @@ const addJobProcess = async (request, response) => {
 
     console.log(JSON.stringify(response, null, 2));
 
-    // invoking worker lambda function that will create a job process for this new job
+    // invoking worker lambda function that will find a service that can execute the job and send it a JobAssignment
     var params = {
         FunctionName: request.stageVariables.WorkerLambdaFunctionName,
         InvocationType: "Event",
@@ -82,7 +85,9 @@ const putJobProcess = async (request, response) => {
     }
 
     let jobProcessId = request.stageVariables.PublicUrl + request.path;
-    jobProcess["@type"] = "JobProcess";
+    if (jobProcess["@type"] !== "JobProcess") {
+        jobProcess["@type"] = "JobProcess";
+    }
     jobProcess.id = jobProcessId;
 
     let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
