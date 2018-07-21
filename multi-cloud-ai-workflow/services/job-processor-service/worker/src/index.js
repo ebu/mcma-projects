@@ -20,14 +20,14 @@ exports.handler = async (event, context) => {
     // retrieving the job
     let job = jobProcess.job;
     if (typeof job === "string") {
-        let response = await resourceManager.http.get(job);
+        let response = await MCMA_CORE.HTTP.get(job);
         job = response.data;
     }
 
     // retrieving the jobProfile
     let jobProfile = job.jobProfile;
     if (typeof jobProfile === "string") {
-        let response = await resourceManager.http.get(jobProfile);
+        let response = await MCMA_CORE.HTTP.get(jobProfile);
         jobProfile = response.data;
     }
 
@@ -77,7 +77,7 @@ exports.handler = async (event, context) => {
 
     let jobAssignment = new MCMA_CORE.JobAssignment(jobProcess.job);
 
-    let response = await resourceManager.http.post(jobAssignmentEndPoint, jobAssignment);
+    let response = await MCMA_CORE.HTTP.post(jobAssignmentEndPoint, jobAssignment);
     jobAssignment = response.data;
 
     jobProcess.status = "SCHEDULED";
