@@ -1,3 +1,5 @@
+//"use strict";
+
 const MCMA_CORE = require("mcma-core");
 
 const JOB_PROFILES = {
@@ -48,9 +50,9 @@ const JOB_PROFILES = {
 }
 
 const createServices = (serviceUrls) => {
-    var serviceList = [];
+    const serviceList = [];
 
-    for (var prop in serviceUrls) {
+    for (const prop in serviceUrls) {
         switch (prop) {
             case "ame_service_url":
                 serviceList.push(
@@ -155,9 +157,9 @@ const createServices = (serviceUrls) => {
 
     var services = {};
 
-    serviceList.forEach(service => {
+    for (const service of serviceList) {
         services[service.name] = service;
-    });
+    }
 
     return services;
 }
@@ -179,13 +181,13 @@ const parseContent = (content) => {
     let serviceUrls = {};
 
     let lines = content.split("\n");
-    lines.forEach(line => {
+    for (const line of lines) {
         var parts = line.split(" = ");
 
         if (parts.length === 2) {
             serviceUrls[parts[0]] = parts[1];
         }
-    });
+    }
 
     return serviceUrls;
 }
@@ -206,7 +208,7 @@ const main = async () => {
     let resourceManager = new MCMA_CORE.ResourceManager(servicesUrl);
     let retrievedServices = await resourceManager.get("Service");
 
-    for (retrievedService of retrievedServices) {
+    for (const retrievedService of retrievedServices) {
         if (retrievedService.name === "Service Registry") {
             if (!serviceRegistry.id) {
                 serviceRegistry.id = retrievedService.id;
@@ -231,7 +233,7 @@ const main = async () => {
     // 3. Inserting / updating job profiles
     let retrievedJobProfiles = await resourceManager.get("JobProfile");
 
-    for (retrievedJobProfile of retrievedJobProfiles) {
+    for (const retrievedJobProfile of retrievedJobProfiles) {
         let jobProfile = JOB_PROFILES[retrievedJobProfile.name];
 
         if (jobProfile && !jobProfile.id) {
@@ -245,7 +247,7 @@ const main = async () => {
         }
     }
 
-    for (jobProfileName in JOB_PROFILES) {
+    for (const jobProfileName in JOB_PROFILES) {
         let jobProfile = JOB_PROFILES[jobProfileName];
         if (!jobProfile.id) {
             console.log("Inserting JobProfile '" + jobProfile.name + "'");
@@ -255,10 +257,10 @@ const main = async () => {
 
     // 4. Inserting / updating services
     const SERVICES = createServices(serviceUrls);
-    
+
     retrievedServices = await resourceManager.get("Service");
 
-    for (retrievedService of retrievedServices) {
+    for (const retrievedService of retrievedServices) {
         if (retrievedService.name === serviceRegistry.name) {
             continue;
         }
@@ -276,7 +278,7 @@ const main = async () => {
         }
     }
 
-    for (serviceName in SERVICES) {
+    for (const serviceName in SERVICES) {
         let service = SERVICES[serviceName];
         if (!service.id) {
             console.log("Inserting Service '" + service.name + "'");
