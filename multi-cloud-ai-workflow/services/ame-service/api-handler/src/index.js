@@ -68,7 +68,7 @@ const addJobAssignment = async (request, response) => {
         FunctionName: request.stageVariables.WorkerLambdaFunctionName,
         InvocationType: "Event",
         LogType: "None",
-        Payload: JSON.stringify({ "request": request, "jobAssignmentId": jobAssignmentId })
+        Payload: JSON.stringify({ "action": "processJobAssignment", "request": request, "jobAssignmentId": jobAssignmentId })
     };
 
     await LambdaInvoke(params);
@@ -109,7 +109,7 @@ const deleteJobAssignment = async (request, response) => {
 // Initializing rest controller for API Gateway Endpoint
 const restController = new MCMA_AWS.RestController();
 
-// adding routes
+// adding routes for GET, POST and DELETE
 restController.addRoute("GET", "/job-assignments", getJobAssignments);
 restController.addRoute("POST", "/job-assignments", addJobAssignment);
 restController.addRoute("DELETE", "/job-assignments", deleteJobAssignments);

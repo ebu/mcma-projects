@@ -8,18 +8,21 @@ const MCMA_CORE = require("mcma-core");
 const createJobProcess = async (event) => {
     let jobId = event.jobId;
 
-    let resourceManager = new MCMA_CORE.ResourceManager(event.request.stageVariables.ServicesUrl);
-
-    let jobProcess = new MCMA_CORE.JobProcess(jobId, new MCMA_CORE.NotificationEndpoint(jobId + "/notifications"));
-
-    jobProcess = await resourceManager.create(jobProcess);
-
     let table = new MCMA_AWS.DynamoDbTable(AWS, event.request.stageVariables.TableName);
-
     let job = await table.get("Job", jobId);
 
-    job.status = "QUEUED";
-    job.jobProcess = jobProcess.id;
+    try {
+        let jobProcess = new MCMA_CORE.JobProcess(jobId, new MCMA_CORE.NotificationEndpoint(jobId + "/notifications"));
+
+        let resourceManager = new MCMA_CORE.ResourceManager(event.request.stageVariables.ServicesUrl);
+        jobProcess = await resourceManager.create(jobProcess);
+
+        job.status = "QUEUED";
+        job.jobProcess = jobProcess.id;
+    } catch (error) {
+        job.status = "FAILED";
+        job.statusMessage = error.message;
+    }
 
     await table.put("Job", jobId, job);
 

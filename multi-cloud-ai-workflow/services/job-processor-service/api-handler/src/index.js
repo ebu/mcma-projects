@@ -138,7 +138,7 @@ restController.addRoute("GET", "/job-processes/{id}", getJobProcess);
 restController.addRoute("DELETE", "/job-processes/{id}", deleteJobProcess);
 
 // adding route for callback notifications
-restController.addRoute("DELETE", "/job-processes/{id}/notifications", processNotification);
+restController.addRoute("POST", "/job-processes/{id}/notifications", processNotification);
 
 exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));

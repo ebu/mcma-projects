@@ -2,20 +2,22 @@
 
 const AWS = require("aws-sdk");
 
-const axios = require("axios");
 const MCMA_AWS = require("mcma-aws");
+const MCMA_CORE = require("mcma-core");
 
 const JOB_PROFILE_EXTRACT_TECHNICAL_METADATA = "ExtractTechnicalMetadata";
 
 exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
 
+    let resourceManager = new MCMA_CORE.ResourceManager(event.request.stageVariables.ServicesUrl);
+
     let table = new MCMA_AWS.DynamoDbTable(AWS, event.request.stageVariables.TableName);
     let jobAssignmentId = event.jobAssignmentId;
 
     try {
         // 1. Setting job assignment status to RUNNING
-        await updateJobAssignmentStatus(table, jobAssignmentId, "RUNNING");
+        await updateJobAssignmentStatus(resourceManager, table, jobAssignmentId, "RUNNING");
 
         // 2. Retrieving AmeJob
         let ameJob = await retrieveAmeJob(table, jobAssignmentId);
@@ -42,12 +44,12 @@ exports.handler = async (event, context) => {
         }
 
         // x. Setting job assignment status to COMPLETED
-        await updateJobAssignmentStatus(table, jobAssignmentId, "COMPLETED");
+        await updateJobAssignmentStatus(resourceManager, table, jobAssignmentId, "COMPLETED");
 
     } catch (error) {
         console.error(error);
         try {
-            await updateJobAssignmentStatus(table, jobAssignmentId, "FAILED", error.message);
+            await updateJobAssignmentStatus(resourceManager, table, jobAssignmentId, "FAILED", error.message);
         } catch (error) {
             console.error(error);
         }
@@ -82,7 +84,8 @@ const retrieveResource = async (resource, resourceName) => {
     }
 
     if (type === "string") {  // if type is a string we assume it's a URL.
-        resource = await axios.get(resource).data;
+        let response = await MCMA_CORE.HTTP.get(resource);
+        resource = response.data;
     }
 
     type = typeof resource;
@@ -98,11 +101,11 @@ const retrieveResource = async (resource, resourceName) => {
     }
 }
 
-const updateJobAssignmentStatus = async (table, jobAssignmentId, status, statusMessage) => {
+const updateJobAssignmentStatus = async (resourceManager, table, jobAssignmentId, status, statusMessage) => {
     let jobAssignment = await getJobAssignment(table, jobAssignmentId);
     jobAssignment.status = status;
     jobAssignment.statusMessage = statusMessage;
-    await putJobAssignment(table, jobAssignmentId, jobAssignment);
+    await putJobAssignment(resourceManager, table, jobAssignmentId, jobAssignment);
 }
 
 const getJobAssignment = async (table, jobAssignmentId) => {
@@ -113,7 +116,9 @@ const getJobAssignment = async (table, jobAssignmentId) => {
     return jobAssignment;
 }
 
-const putJobAssignment = async (table, jobAssignmentId, jobAssignment) => {
+const putJobAssignment = async (resourceManager, table, jobAssignmentId, jobAssignment) => {
     jobAssignment.dateModified = new Date().toISOString();
     await table.put("JobAssignment", jobAssignmentId, jobAssignment);
+
+    await resourceManager.sendNotification(jobAssignment);
 }
