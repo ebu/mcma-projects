@@ -104,6 +104,7 @@ task updateServiceRegistry(type: Exec) {
     dependsOn "registry:npmInstall"
     inputs.file("${projectDir}/terraform.output")
     inputs.file("${projectDir}/registry/src/index.js")
+    inputs.file("${projectDir}/registry/package.json")
     outputs.upToDateWhen { true }
     commandLine nodeExecutable
     args "registry/src/index.js"
