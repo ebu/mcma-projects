@@ -39,6 +39,7 @@ const processNotification = async (event) => {
 
     job.status = notification.content.status;
     job.statusMessage = notification.content.statusMessage;
+    job.jobOutput = notification.content.jobOutput;
 
     await table.put("Job", jobId, job);
 
