@@ -24,8 +24,8 @@ resource "aws_lambda_function" "ame-service-worker" {
   handler          = "index.handler"
   source_code_hash = "${base64sha256(file("./../services/ame-service/worker/dist/lambda.zip"))}"
   runtime          = "nodejs8.10"
-  timeout          = "30"
-  memory_size      = "256"
+  timeout          = "300"
+  memory_size      = "3008"
 }
 
 ##################################

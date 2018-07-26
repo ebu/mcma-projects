@@ -22,6 +22,9 @@ const createJobAssignment = async (event) => {
             let response = await MCMA_CORE.HTTP.get(job);
             job = response.data;
         }
+        if (!job) {
+            throw new Error("JobProcess is missing a job definition")
+        }
 
         // retrieving the jobProfile
         let jobProfile = job.jobProfile;
@@ -29,9 +32,33 @@ const createJobAssignment = async (event) => {
             let response = await MCMA_CORE.HTTP.get(jobProfile);
             jobProfile = response.data;
         }
+        if (!jobProfile) {
+            throw new Error("Job is missing jobProfile");
+        }
+
+        // validating job.jobInput with required input parameters of jobProfile
+        let jobInput = job.jobInput;
+        if (typeof jobInput === "string") {
+            let response = await MCMA_CORE.HTTP.get(jobInput);
+            jobInput = response.data;
+        }
+        if (!jobInput) {
+            throw new Error("Job is missing jobInput");
+        }
+        
+        if (jobProfile.inputParameters) {
+            if (!Array.isArray(jobProfile.inputParameters)) {
+                throw new Error ("JobProfile.inputParameters is not an array");
+            }
+
+            for (parameter of jobProfile.inputParameters) {
+                if (jobInput[parameter.parameterName] === undefined) {
+                    throw new Error("jobInput misses required input parameter '" + parameter.parameterName + "'");
+                }
+            }
+        }
 
         // finding a service that is capable of handling the job type and job profile
-
         let services = await resourceManager.get("Service");
 
         let selectedService;
