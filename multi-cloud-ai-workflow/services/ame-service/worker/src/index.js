@@ -97,7 +97,7 @@ exports.handler = async (event, context) => {
             Key: (outputLocation.awsS3KeyPrefix ? outputLocation.awsS3KeyPrefix : "") + uuidv4() + ".json",
             Body: output.stdout
         }
-        
+
         await S3PutObject(s3Params);
 
         // 9. updating JobAssignment with jobOutput
@@ -163,8 +163,12 @@ const retrieveResource = async (resource, resourceName) => {
     }
 
     if (type === "string") {  // if type is a string we assume it's a URL.
-        let response = await MCMA_CORE.HTTP.get(resource);
-        resource = response.data;
+        try {
+            let response = await MCMA_CORE.HTTP.get(resource);
+            resource = response.data;
+        } catch (error) {
+            throw new Error("Failed to retrieve '" + resourceName + "' from url '" + resource + "'");
+        }
     }
 
     type = typeof resource;

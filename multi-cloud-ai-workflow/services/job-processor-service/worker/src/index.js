@@ -2,7 +2,7 @@
 
 const AWS = require("aws-sdk");
 
-const equal = require('fast-deep-equal');
+const equal = require("fast-deep-equal");
 
 const MCMA_AWS = require("mcma-aws");
 const MCMA_CORE = require("mcma-core");
@@ -19,8 +19,12 @@ const createJobAssignment = async (event) => {
         // retrieving the job
         let job = jobProcess.job;
         if (typeof job === "string") {
-            let response = await MCMA_CORE.HTTP.get(job);
-            job = response.data;
+            try {
+                let response = await MCMA_CORE.HTTP.get(job);
+                job = response.data;
+            } catch (error) {
+                throw new Error("Failed to retrieve job definition from url '" + job + "'")
+            }
         }
         if (!job) {
             throw new Error("JobProcess is missing a job definition")
@@ -29,8 +33,12 @@ const createJobAssignment = async (event) => {
         // retrieving the jobProfile
         let jobProfile = job.jobProfile;
         if (typeof jobProfile === "string") {
-            let response = await MCMA_CORE.HTTP.get(jobProfile);
-            jobProfile = response.data;
+            try {
+                let response = await MCMA_CORE.HTTP.get(jobProfile);
+                jobProfile = response.data;
+            } catch (error) {
+                throw new Error("Failed to retrieve job profile from url '" + jobProfile + "'")
+            }
         }
         if (!jobProfile) {
             throw new Error("Job is missing jobProfile");
@@ -39,16 +47,20 @@ const createJobAssignment = async (event) => {
         // validating job.jobInput with required input parameters of jobProfile
         let jobInput = job.jobInput;
         if (typeof jobInput === "string") {
-            let response = await MCMA_CORE.HTTP.get(jobInput);
-            jobInput = response.data;
+            try {
+                let response = await MCMA_CORE.HTTP.get(jobInput);
+                jobInput = response.data;
+            } catch (error) {
+                throw new Error("Failed to retrieve job input from url '" + jobInput + "'")
+            }
         }
         if (!jobInput) {
             throw new Error("Job is missing jobInput");
         }
-        
+
         if (jobProfile.inputParameters) {
             if (!Array.isArray(jobProfile.inputParameters)) {
-                throw new Error ("JobProfile.inputParameters is not an array");
+                throw new Error("JobProfile.inputParameters is not an array");
             }
 
             for (parameter of jobProfile.inputParameters) {
