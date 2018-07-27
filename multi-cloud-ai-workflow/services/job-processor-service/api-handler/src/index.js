@@ -91,6 +91,18 @@ const deleteJobProcess = async (request, response) => {
     }
 
     await table.delete("JobProcess", jobProcessId);
+
+    // invoking worker lambda function that will delete the JobAssignment created for this JobProcess
+    if (jobProcess.jobAssignment) {
+        var params = {
+            FunctionName: request.stageVariables.WorkerLambdaFunctionName,
+            InvocationType: "Event",
+            LogType: "None",
+            Payload: JSON.stringify({ "action": "deleteJobAssignment", "request": request, "jobAssignmentId": jobProcess.jobAssignment })
+        };
+
+        await LambdaInvoke(params);
+    }
 }
 
 const processNotification = async (request, response) => {

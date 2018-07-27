@@ -31,6 +31,16 @@ const createJobProcess = async (event) => {
     await resourceManager.sendNotification(job);
 }
 
+const deleteJobProcess = async (event) => {
+    let jobProcessId = event.jobProcessId;
+
+    try {
+        await MCMA_CORE.HTTP.delete(jobProcessId);
+    } catch (error) {
+        console.log(error);
+    }
+}
+
 const processNotification = async (event) => {
     let jobId = event.jobId;
     let notification = event.notification;
@@ -57,6 +67,9 @@ exports.handler = async (event, context) => {
     switch (event.action) {
         case "createJobProcess":
             await createJobProcess(event);
+            break;
+        case "deleteJobProcess":
+            await deleteJobProcess(event);
             break;
         case "processNotification":
             await processNotification(event);
