@@ -24,6 +24,8 @@ const createJobProcess = async (event) => {
         job.statusMessage = error.message;
     }
 
+    job.dateModified = new Date().toISOString();
+
     await table.put("Job", jobId, job);
 
     await resourceManager.sendNotification(job);
@@ -40,6 +42,7 @@ const processNotification = async (event) => {
     job.status = notification.content.status;
     job.statusMessage = notification.content.statusMessage;
     job.jobOutput = notification.content.jobOutput;
+    job.dateModified = new Date().toISOString();
 
     await table.put("Job", jobId, job);
 

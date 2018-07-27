@@ -128,6 +128,8 @@ const createJobAssignment = async (event) => {
         jobProcess.statusMessage = error.message;
     }
 
+    jobProcess.dateModified = new Date().toISOString();
+
     await table.put("JobProcess", jobProcessId, jobProcess);
 
     await resourceManager.sendNotification(jobProcess);
@@ -144,6 +146,7 @@ const processNotification = async (event) => {
     jobProcess.status = notification.content.status;
     jobProcess.statusMessage = notification.content.statusMessage;
     jobProcess.jobOutput = notification.content.jobOutput;
+    jobProcess.dateModified = new Date().toISOString();
 
     await table.put("JobProcess", jobProcessId, jobProcess);
 

@@ -37,6 +37,8 @@ const addJobProcess = async (request, response) => {
     }
     jobProcess.id = jobProcessId;
     jobProcess.status = "NEW";
+    jobProcess.dateCreated = new Date().toISOString();
+    jobProcess.dateModified = jobProcess.dateCreated;
 
     let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
 

@@ -40,6 +40,8 @@ const addJob = async (request, response) => {
     let jobId = request.stageVariables.PublicUrl + "/jobs/" + uuidv4();
     job.id = jobId;
     job.status = "NEW";
+    job.dateCreated = new Date().toISOString();
+    job.dateModified = job.dateCreated;
 
     let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
 

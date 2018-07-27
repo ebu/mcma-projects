@@ -31,6 +31,8 @@ const addService = async (request, response) => {
         service["@type"] = "Service";
     }
     service.id = serviceId;
+    service.dateCreated = new Date().toISOString();
+    service.dateModified = service.dateCreated;
 
     let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
 
@@ -75,6 +77,10 @@ const putService = async (request, response) => {
         service["@type"] = "Service";
     }
     service.id = serviceId;
+    service.dateModified = new Date().toISOString();
+    if (!service.dateCreated) {
+        service.dateCreated = service.dateModified;
+    }
 
     await table.put("Service", serviceId, service);
 
@@ -123,6 +129,8 @@ const addJobProfile = async (request, response) => {
         jobProfile["@type"] = "JobProfile";
     }
     jobProfile.id = jobProfileId;
+    jobProfile.dateCreated = new Date().toISOString();
+    jobProfile.dateModified = jobProfile.dateCreated;
 
     let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
 
@@ -167,6 +175,10 @@ const putJobProfile = async (request, response) => {
         jobProfile["@type"] = "JobProfile";
     }
     jobProfile.id = jobProfileId;
+    jobProfile.dateModified = new Date().toISOString();
+    if (!jobProfile.dateCreated) {
+        jobProfile.dateCreated = jobProfile.dateModified;
+    }
 
     await table.put("JobProfile", jobProfileId, jobProfile);
 
