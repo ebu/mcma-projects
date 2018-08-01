@@ -9,7 +9,7 @@ provider "aws" {
 #################################
 
 resource "aws_iam_role" "iam_for_exec_lambda" {
-  name               = "${var.global_prefix}.${var.aws_region}.workflows.role_exec_lambda"
+  name               = "${format("${var.global_prefix}.${var.aws_region}.workflows.lambda_exec_role")}"
   assume_role_policy = "${file("policies/lambda-assume-role.json")}"
 }
 
@@ -44,7 +44,7 @@ data "template_file" "steps-assume-role" {
 }
 
 resource "aws_iam_role" "iam_for_state_machine_execution" {
-  name               = "${var.global_prefix}.${var.aws_region}.workflows.role_exec_steps"
+  name               = "${format("${var.global_prefix}.${var.aws_region}.workflows.steps_exec_role")}"
   assume_role_policy = "${data.template_file.steps-assume-role.rendered}"
 }
 
