@@ -74,10 +74,12 @@ resource "aws_lambda_function" "conform-04-extract-technical-metadata" {
 
   environment {
     variables = {
-      SERVICE_REGISTRY_URL = "${var.service_registry_url}"
-      REPOSITORY_BUCKET    = "${var.repository_bucket}"
-      TEMP_BUCKET          = "${var.temp_bucket}"
-      WEBSITE_BUCKET       = "${var.website_bucket}"
+      SERVICE_REGISTRY_URL  = "${var.service_registry_url}"
+      REPOSITORY_BUCKET     = "${var.repository_bucket}"
+      TEMP_BUCKET           = "${var.temp_bucket}"
+      WEBSITE_BUCKET        = "${var.website_bucket}"
+      ACTIVITY_CALLBACK_URL = "${local.workflow_activity_callback_handler_url}"
+      ACTIVITY_ARN          = "${aws_sfn_activity.conform-04-extract-technical-metadata.id}"
     }
   }
 }
@@ -138,10 +140,12 @@ resource "aws_lambda_function" "conform-07a-short-transcode" {
 
   environment {
     variables = {
-      SERVICE_REGISTRY_URL = "${var.service_registry_url}"
-      REPOSITORY_BUCKET    = "${var.repository_bucket}"
-      TEMP_BUCKET          = "${var.temp_bucket}"
-      WEBSITE_BUCKET       = "${var.website_bucket}"
+      SERVICE_REGISTRY_URL  = "${var.service_registry_url}"
+      REPOSITORY_BUCKET     = "${var.repository_bucket}"
+      TEMP_BUCKET           = "${var.temp_bucket}"
+      WEBSITE_BUCKET        = "${var.website_bucket}"
+      ACTIVITY_CALLBACK_URL = "${local.workflow_activity_callback_handler_url}"
+      ACTIVITY_ARN          = "${aws_sfn_activity.conform-07a-short-transcode.id}"
     }
   }
 }
@@ -162,10 +166,12 @@ resource "aws_lambda_function" "conform-07b-long-transcode" {
 
   environment {
     variables = {
-      SERVICE_REGISTRY_URL = "${var.service_registry_url}"
-      REPOSITORY_BUCKET    = "${var.repository_bucket}"
-      TEMP_BUCKET          = "${var.temp_bucket}"
-      WEBSITE_BUCKET       = "${var.website_bucket}"
+      SERVICE_REGISTRY_URL  = "${var.service_registry_url}"
+      REPOSITORY_BUCKET     = "${var.repository_bucket}"
+      TEMP_BUCKET           = "${var.temp_bucket}"
+      WEBSITE_BUCKET        = "${var.website_bucket}"
+      ACTIVITY_CALLBACK_URL = "${local.workflow_activity_callback_handler_url}"
+      ACTIVITY_ARN          = "${aws_sfn_activity.conform-07b-long-transcode.id}"
     }
   }
 }
