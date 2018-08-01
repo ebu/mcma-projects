@@ -105,7 +105,7 @@ resource "aws_api_gateway_deployment" "job_processor_service_deployment" {
   variables = {
     "TableName"                = "${var.global_prefix}-job-processor-service"
     "PublicUrl"                = "${local.job_processor_service_url}"
-    "ServicesUrl"              = "${local.service_registry_url}"
+    "ServicesUrl"              = "${local.service_registry_url}/services"
     "WorkerLambdaFunctionName" = "${aws_lambda_function.job-processor-service-worker.function_name}"
   }
 }

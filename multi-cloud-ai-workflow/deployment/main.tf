@@ -53,7 +53,7 @@ module "workflows" {
   aws_region     = "${var.aws_region}"
 
   environment_type     = "${var.environment_type}"
-  service_registry_url = "${module.services.service_registry_url}"
+  service_registry_url = "${module.services.service_registry_url}/services"
   repository_bucket    = "${module.storage.repository_bucket}"
   temp_bucket          = "${module.storage.temp_bucket}"
   website_bucket       = "${module.storage.website_bucket}"

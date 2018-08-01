@@ -5,7 +5,7 @@
         "01-validate-workflow-input": {
             "Type": "Task",
             "Resource": "${lambda-01-validate-workflow-input}",
-            "ResultPath": "$.output.01-validate-workflow-input",
+            "ResultPath": "$.data.inputFileMetadata",
             "Next": "02-move-content-to-file-repository",
             "Catch": [
                 {
@@ -20,7 +20,7 @@
         "02-move-content-to-file-repository": {
             "Type": "Task",
             "Resource": "${lambda-02-move-content-to-file-repository}",
-            "ResultPath": "$.output.02-move-content-to-file-repository",
+            "ResultPath": "$.data.repositoryFile",
             "Next": "03-create-media-asset",
             "Catch": [
                 {
@@ -35,7 +35,7 @@
         "03-create-media-asset": {
             "Type": "Task",
             "Resource": "${lambda-03-create-media-asset}",
-            "ResultPath": "$.output.03-create-media-asset",
+            "ResultPath": "$.data.assets",
             "Next": "04-extract-technical-metadata-parent",
             "Catch": [
                 {
@@ -73,7 +73,7 @@
                     }
                 }
             ],
-            "ResultPath": "$.output.04-extract-technical-metadata",
+            "ResultPath": "$.data.ameJob",
             "Next": "05-register-technical-metadata",
             "Catch": [
                 {
@@ -88,7 +88,7 @@
         "05-register-technical-metadata": {
             "Type": "Task",
             "Resource": "${lambda-05-register-technical-metadata}",
-            "ResultPath": "$.output.05-register-technical-metadata",
+            "ResultPath": null,
             "Next": "06-decide-transcode-requirements",
             "Catch": [
                 {
@@ -103,7 +103,7 @@
         "06-decide-transcode-requirements": {
             "Type": "Task",
             "Resource": "${lambda-06-decide-transcode-requirements}",
-            "ResultPath": "$.output.06-decide-transcode-requirements",
+            "ResultPath": "$.data.transcode.type",
             "Next": "choice-transcode-step",
             "Catch": [
                 {
@@ -119,21 +119,17 @@
             "Type": "Choice",
             "Choices": [
                 {
-                    "Variable": "$.workflow_param.transcode.type",
+                    "Variable": "$.data.transcode.type",
                     "StringEquals": "short",
                     "Next": "07a-short-transcode-parent"
                 },
                 {
-                    "Variable": "$.workflow_param.transcode.type",
+                    "Variable": "$.data.transcode.type",
                     "StringEquals": "long",
                     "Next": "07b-long-transcode-parent"
-                },
-                {
-                    "Variable": "$.workflow_param.transcode.type",
-                    "StringEquals": "none",
-                    "Next": "08-register-proxy-essence"
                 }
-            ]
+            ],
+            "Default": "08-register-proxy-essence"
         },
         "07a-short-transcode-parent": {
             "Type": "Parallel",
@@ -161,6 +157,7 @@
                     }
                 }
             ],
+            "ResultPath": "$.data.transformJob",
             "Next": "08-register-proxy-essence",
             "Catch": [
                 {
@@ -198,6 +195,7 @@
                     }
                 }
             ],
+            "ResultPath": "$.data.transformJob",
             "Next": "08-register-proxy-essence",
             "Catch": [
                 {
@@ -212,6 +210,7 @@
         "08-register-proxy-essence": {
             "Type": "Task",
             "Resource": "${lambda-08-register-proxy-essence}",
+            "ResultPath": "$.data.assets",
             "Next": "09-copy-proxy-to-website-storage",
             "Catch": [
                 {
@@ -226,6 +225,7 @@
         "09-copy-proxy-to-website-storage": {
             "Type": "Task",
             "Resource": "${lambda-09-copy-proxy-to-website-storage}",
+            "ResultPath": "$.data.websiteFile",
             "Next": "10-register-proxy-website-locator",
             "Catch": [
                 {
@@ -240,6 +240,7 @@
         "10-register-proxy-website-locator": {
             "Type": "Task",
             "Resource": "${lambda-10-register-proxy-website-locator}",
+            "ResultPath": "$.data.assets",
             "Next": "11-start-ai-workflow",
             "Catch": [
                 {
@@ -254,6 +255,7 @@
         "11-start-ai-workflow": {
             "Type": "Task",
             "Resource": "${lambda-11-start-ai-workflow}",
+            "ResultPath": "$.data.workflowJobId",
             "Next": "Process-Completion",
             "Catch": [
                 {

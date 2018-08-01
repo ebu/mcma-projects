@@ -35,6 +35,17 @@ resource "aws_iam_role_policy_attachment" "role-policy-S3" {
   policy_arn = "${aws_iam_policy.S3_policy.arn}"
 }
 
+resource "aws_iam_policy" "steps_policy" {
+  name        = "${var.global_prefix}.${var.aws_region}.workflows.policy_steps"
+  description = "Policy to allow lambda functions manage step functions"
+  policy      = "${file("policies/lambda-allow-steps-access.json")}"
+}
+
+resource "aws_iam_role_policy_attachment" "role-policy-steps" {
+  role       = "${aws_iam_role.iam_for_exec_lambda.name}"
+  policy_arn = "${aws_iam_policy.steps_policy.arn}"
+}
+
 data "template_file" "steps-assume-role" {
   template = "${file("policies/steps-assume-role.json")}"
 
@@ -50,11 +61,11 @@ resource "aws_iam_role" "iam_for_state_machine_execution" {
 
 resource "aws_iam_policy" "policy_steps_invoke_lambda" {
   name        = "${var.global_prefix}.${var.aws_region}.workflows.policy_steps_invoke_lambda"
-  description = "Policy to execute Step Function"
+  description = "Policy to allow step functions to invoke lambdas"
   policy      = "${file("policies/steps-allow-invoke-lambda.json")}"
 }
 
-resource "aws_iam_role_policy_attachment" "role-policy-steps" {
+resource "aws_iam_role_policy_attachment" "role-policy-allow-steps-invoke-lambda" {
   role       = "${aws_iam_role.iam_for_state_machine_execution.name}"
   policy_arn = "${aws_iam_policy.policy_steps_invoke_lambda.arn}"
 }

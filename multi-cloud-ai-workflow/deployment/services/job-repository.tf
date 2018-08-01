@@ -105,7 +105,7 @@ resource "aws_api_gateway_deployment" "job_repository_deployment" {
   variables = {
     "TableName"                = "${var.global_prefix}-job-repository"
     "PublicUrl"                = "${local.job_repository_url}"
-    "ServicesUrl"              = "${local.service_registry_url}"
+    "ServicesUrl"              = "${local.service_registry_url}/services"
     "WorkerLambdaFunctionName" = "${aws_lambda_function.job-repository-worker.function_name}"
   }
 }

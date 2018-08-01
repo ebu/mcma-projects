@@ -74,7 +74,5 @@ exports.handler = async (event, context) => {
         throw new Error("Input file is not a video");
     }
 
-    return {
-        "inputFileMetadata": data
-    }
+    return data;
 }

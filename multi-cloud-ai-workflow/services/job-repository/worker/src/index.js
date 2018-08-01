@@ -11,17 +11,17 @@ const createJobProcess = async (event) => {
     let table = new MCMA_AWS.DynamoDbTable(AWS, event.request.stageVariables.TableName);
     let job = await table.get("Job", jobId);
 
+    let resourceManager = new MCMA_CORE.ResourceManager(event.request.stageVariables.ServicesUrl);
+
     try {
         let jobProcess = new MCMA_CORE.JobProcess(jobId, new MCMA_CORE.NotificationEndpoint(jobId + "/notifications"));
-
-        let resourceManager = new MCMA_CORE.ResourceManager(event.request.stageVariables.ServicesUrl);
         jobProcess = await resourceManager.create(jobProcess);
 
         job.status = "QUEUED";
         job.jobProcess = jobProcess.id;
     } catch (error) {
         job.status = "FAILED";
-        job.statusMessage = error.message;
+        job.statusMessage = "Failed to create JobProcess due to error '" + error.message + "'";
     }
 
     job.dateModified = new Date().toISOString();

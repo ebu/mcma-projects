@@ -1,91 +1,68 @@
-// require
+//"use strict";
+
+const util = require("util");
+
 const AWS = require("aws-sdk");
-const async = require("async");
-const core = require("mcma-core");
+const StepFunctions = new AWS.StepFunctions();
+const StepFunctionsGetActivityTask = util.promisify(StepFunctions.getActivityTask.bind(StepFunctions));
 
-// Environment Variable(AWS Lambda)
+
+const MCMA_CORE = require("mcma-core");
+
 const SERVICE_REGISTRY_URL = process.env.SERVICE_REGISTRY_URL;
-const JOB_OUTPUT_BUCKET = process.env.JOB_OUTPUT_BUCKET;
-const JOB_OUTPUT_KEY_PREFIX = process.env.JOB_OUTPUT_KEY_PREFIX;
-const JOB_SUCCESS_URL = process.env.JOB_SUCCESS_URL;
-const JOB_FAILED_URL = process.env.JOB_FAILED_URL;
-const JOB_PROCESS_ACTIVITY_ARN = process.env.JOB_PROCESS_ACTIVITY_ARN;
-const JOB_PROFILE_LABEL = "ExtractTechnicalMetadata";
+const TEMP_BUCKET = process.env.TEMP_BUCKET;
+const ACTIVITY_CALLBACK_URL = process.env.ACTIVITY_CALLBACK_URL;
+const ACTIVITY_ARN = process.env.ACTIVITY_ARN;
 
-// mcma-core settings
-core.setServiceRegistryServicesURL(SERVICE_REGISTRY_URL + "/Service");
+exports.handler = async (event, context) => {
+    console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
+    console.log(SERVICE_REGISTRY_URL, TEMP_BUCKET, ACTIVITY_CALLBACK_URL, ACTIVITY_ARN);
 
-/**
- * Lambda function handler
- * @param {*} event event
- * @param {*} context context
- * @param {*} callback callback
- */
-exports.handler = (event, context, callback) => {
-    // Read options from the event.
-    console.log("Event:");
-    console.log(JSON.stringify(event, null, 2));
-    // Execute async waterfall
-    async.waterfall([
-        (callback) => { // Get Activity Task from Step Functions
-            return stepfunctions.getActivityTask({ activityArn: JOB_PROCESS_ACTIVITY_ARN }, function (err, data) {
-                if (err) {
-                    return callback(err, err.stack);
-                } else if (data) {
-                    var taskToken = data.taskToken;
-                    console.log('Task Token =' + taskToken);
-                    return callback(null, encodeURIComponent(taskToken));
-                }
-            });
-        },
-        (taskToken, callback) => { // Get JobProfiles by label
-            return core.getJobProfilesByLabel("mcma:AmeJob", jobProfileLabel, (err, jobProfiles) => callback(err, taskToken, jobProfiles));
-        },
-        (taskToken, jobProfiles, callback) => { // Create the new ame job, and Post AmeJob
-            var jobProfile = jobProfiles.length > 0 ? jobProfiles[0] : null;
-            if (!jobProfile) {
-                return callback("JobProfile '" + jobProfileLabel + "' not found");
-            }
-            // Init job profile
-            var jobProfile = jobProfile.id ? jobProfile.id : jobProfile;
-            // Create a bag of job parameter
-            var parameter = new core.JobParameterBag({
-                "mcma:inputFile": event.workflow_param.essenceLocator,
-                "mcma:outputLocation": new core.Locator({
-                    awsS3Bucket: JOB_OUTPUT_BUCKET,
-                    awsS3Key: JOB_OUTPUT_KEY_PREFIX
-                })
-            });
-            // Create async endpoint
-            var asyncEndpoint = new core.AsyncEndpoint(
-                JOB_SUCCESS_URL + taskToken,
-                JOB_FAILED_URL + taskToken
-            );
-            // Create ame-job data
-            var ameJob = new core.AmeJob(
-                jobProfile,
-                parameter,
-                asyncEndpoint
-            );
-            // Posting AMEJob
-            console.log("posting ame job:");
-            console.log(JSON.stringify(ameJob, null, 2));
-            return core.postResource("mcma:AmeJob", ameJob, callback);
-        },
-        (callback) => { // Create the job process of ame job, and Post JobProcess
-            event.workflow_param.amejob_id = ameJob.id;
-            // Posting JobProcess
-            var jobProcess = new core.JobProcess(ameJob.id);
-            console.log("posting job process:");
-            console.log(JSON.stringify(jobProcess, null, 2));
-            return core.postResource("mcma:JobProcess", jobProcess, callback);
+    // get activity task
+    let data = await StepFunctionsGetActivityTask({ activityArn: ACTIVITY_ARN});
+
+    console.log(data)
+
+    let taskToken = data.taskToken;
+    if (!taskToken) {
+        throw new Error("Failed to obtain activity task")
+    }
+
+    // using input from activity task to ensure we don't have race conditions if two workflows execute simultanously.
+    event = JSON.parse(data.input);
+
+    let resourceManager = new MCMA_CORE.ResourceManager(SERVICE_REGISTRY_URL);
+
+    // get all job profiles
+    let jobProfiles = await resourceManager.get("JobProfile");
+
+    let jobProfileId;
+
+    // find job profile with correct name
+    for (const jobProfile of jobProfiles) {
+        if (jobProfile.name === "ExtractTechnicalMetadata") {
+            jobProfileId = jobProfile.id;
+            break;
         }
-    ], (err) => {
-        // Process results
-        if (err) {
-            console.error("Error:");
-            console.error(err);
-        }
-        callback(err, event);
-    });
+    }
+
+    // if not found bail out
+    if (!jobProfileId) {
+        throw new Error("JobProfile 'ExtractTechnicalMetadata' not found");
+    }
+
+    // creating ame job
+    let ameJob = new MCMA_CORE.AmeJob(
+        jobProfileId,
+        new MCMA_CORE.JobParameterBag({
+            inputFile: event.data.repositoryFile,
+            outputLocation: new MCMA_CORE.Locator({
+                awsS3Bucket: TEMP_BUCKET,
+                awsS3KeyPrefix: "AmeJobResults/"
+            })
+        }),
+        new MCMA_CORE.NotificationEndpoint(ACTIVITY_CALLBACK_URL + "?taskToken=" + encodeURIComponent(taskToken)));
+
+    // posting the amejob to the job repository
+    ameJob = await resourceManager.create(ameJob);
 }
