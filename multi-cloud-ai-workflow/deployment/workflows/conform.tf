@@ -11,6 +11,15 @@ resource "aws_lambda_function" "conform-01-validate-workflow-input" {
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
+
+  environment {
+    variables = {
+      SERVICE_REGISTRY_URL = "${var.service_registry_url}"
+      REPOSITORY_BUCKET    = "${var.repository_bucket}"
+      TEMP_BUCKET          = "${var.temp_bucket}"
+      WEBSITE_BUCKET       = "${var.website_bucket}"
+    }
+  }
 }
 
 resource "aws_lambda_function" "conform-02-move-content-to-file-repository" {
@@ -22,6 +31,15 @@ resource "aws_lambda_function" "conform-02-move-content-to-file-repository" {
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
+
+  environment {
+    variables = {
+      SERVICE_REGISTRY_URL = "${var.service_registry_url}"
+      REPOSITORY_BUCKET    = "${var.repository_bucket}"
+      TEMP_BUCKET          = "${var.temp_bucket}"
+      WEBSITE_BUCKET       = "${var.website_bucket}"
+    }
+  }
 }
 
 resource "aws_lambda_function" "conform-03-create-media-asset" {
@@ -33,6 +51,15 @@ resource "aws_lambda_function" "conform-03-create-media-asset" {
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
+
+  environment {
+    variables = {
+      SERVICE_REGISTRY_URL = "${var.service_registry_url}"
+      REPOSITORY_BUCKET    = "${var.repository_bucket}"
+      TEMP_BUCKET          = "${var.temp_bucket}"
+      WEBSITE_BUCKET       = "${var.website_bucket}"
+    }
+  }
 }
 
 resource "aws_lambda_function" "conform-04-extract-technical-metadata" {
@@ -44,6 +71,19 @@ resource "aws_lambda_function" "conform-04-extract-technical-metadata" {
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
+
+  environment {
+    variables = {
+      SERVICE_REGISTRY_URL = "${var.service_registry_url}"
+      REPOSITORY_BUCKET    = "${var.repository_bucket}"
+      TEMP_BUCKET          = "${var.temp_bucket}"
+      WEBSITE_BUCKET       = "${var.website_bucket}"
+    }
+  }
+}
+
+resource "aws_sfn_activity" "conform-04-extract-technical-metadata" {
+  name = "${var.global_prefix}-conform-04-extract-technical-metadata"
 }
 
 resource "aws_lambda_function" "conform-05-register-technical-metadata" {
@@ -55,6 +95,15 @@ resource "aws_lambda_function" "conform-05-register-technical-metadata" {
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
+
+  environment {
+    variables = {
+      SERVICE_REGISTRY_URL = "${var.service_registry_url}"
+      REPOSITORY_BUCKET    = "${var.repository_bucket}"
+      TEMP_BUCKET          = "${var.temp_bucket}"
+      WEBSITE_BUCKET       = "${var.website_bucket}"
+    }
+  }
 }
 
 resource "aws_lambda_function" "conform-06-decide-transcode-requirements" {
@@ -66,6 +115,15 @@ resource "aws_lambda_function" "conform-06-decide-transcode-requirements" {
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
+
+  environment {
+    variables = {
+      SERVICE_REGISTRY_URL = "${var.service_registry_url}"
+      REPOSITORY_BUCKET    = "${var.repository_bucket}"
+      TEMP_BUCKET          = "${var.temp_bucket}"
+      WEBSITE_BUCKET       = "${var.website_bucket}"
+    }
+  }
 }
 
 resource "aws_lambda_function" "conform-07a-short-transcode" {
@@ -77,6 +135,19 @@ resource "aws_lambda_function" "conform-07a-short-transcode" {
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
+
+  environment {
+    variables = {
+      SERVICE_REGISTRY_URL = "${var.service_registry_url}"
+      REPOSITORY_BUCKET    = "${var.repository_bucket}"
+      TEMP_BUCKET          = "${var.temp_bucket}"
+      WEBSITE_BUCKET       = "${var.website_bucket}"
+    }
+  }
+}
+
+resource "aws_sfn_activity" "conform-07a-short-transcode" {
+  name = "${var.global_prefix}-conform-07a-short-transcode"
 }
 
 resource "aws_lambda_function" "conform-07b-long-transcode" {
@@ -88,6 +159,19 @@ resource "aws_lambda_function" "conform-07b-long-transcode" {
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
+
+  environment {
+    variables = {
+      SERVICE_REGISTRY_URL = "${var.service_registry_url}"
+      REPOSITORY_BUCKET    = "${var.repository_bucket}"
+      TEMP_BUCKET          = "${var.temp_bucket}"
+      WEBSITE_BUCKET       = "${var.website_bucket}"
+    }
+  }
+}
+
+resource "aws_sfn_activity" "conform-07b-long-transcode" {
+  name = "${var.global_prefix}-conform-07b-long-transcode"
 }
 
 resource "aws_lambda_function" "conform-08-register-proxy-essence" {
@@ -99,6 +183,15 @@ resource "aws_lambda_function" "conform-08-register-proxy-essence" {
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
+
+  environment {
+    variables = {
+      SERVICE_REGISTRY_URL = "${var.service_registry_url}"
+      REPOSITORY_BUCKET    = "${var.repository_bucket}"
+      TEMP_BUCKET          = "${var.temp_bucket}"
+      WEBSITE_BUCKET       = "${var.website_bucket}"
+    }
+  }
 }
 
 resource "aws_lambda_function" "conform-09-copy-proxy-to-website-storage" {
@@ -110,6 +203,15 @@ resource "aws_lambda_function" "conform-09-copy-proxy-to-website-storage" {
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
+
+  environment {
+    variables = {
+      SERVICE_REGISTRY_URL = "${var.service_registry_url}"
+      REPOSITORY_BUCKET    = "${var.repository_bucket}"
+      TEMP_BUCKET          = "${var.temp_bucket}"
+      WEBSITE_BUCKET       = "${var.website_bucket}"
+    }
+  }
 }
 
 resource "aws_lambda_function" "conform-10-register-proxy-website-locator" {
@@ -121,6 +223,15 @@ resource "aws_lambda_function" "conform-10-register-proxy-website-locator" {
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
+
+  environment {
+    variables = {
+      SERVICE_REGISTRY_URL = "${var.service_registry_url}"
+      REPOSITORY_BUCKET    = "${var.repository_bucket}"
+      TEMP_BUCKET          = "${var.temp_bucket}"
+      WEBSITE_BUCKET       = "${var.website_bucket}"
+    }
+  }
 }
 
 resource "aws_lambda_function" "conform-11-start-ai-workflow" {
@@ -132,6 +243,15 @@ resource "aws_lambda_function" "conform-11-start-ai-workflow" {
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
+
+  environment {
+    variables = {
+      SERVICE_REGISTRY_URL = "${var.service_registry_url}"
+      REPOSITORY_BUCKET    = "${var.repository_bucket}"
+      TEMP_BUCKET          = "${var.temp_bucket}"
+      WEBSITE_BUCKET       = "${var.website_bucket}"
+    }
+  }
 }
 
 #################################
@@ -146,15 +266,17 @@ data "template_file" "conform-workflow" {
     lambda-02-move-content-to-file-repository = "${aws_lambda_function.conform-02-move-content-to-file-repository.arn}"
     lambda-03-create-media-asset              = "${aws_lambda_function.conform-03-create-media-asset.arn}"
     lambda-04-extract-technical-metadata      = "${aws_lambda_function.conform-04-extract-technical-metadata.arn}"
+    activity-04-extract-technical-metadata    = "${aws_sfn_activity.conform-04-extract-technical-metadata.id}"
     lambda-05-register-technical-metadata     = "${aws_lambda_function.conform-05-register-technical-metadata.arn}"
     lambda-06-decide-transcode-requirements   = "${aws_lambda_function.conform-06-decide-transcode-requirements.arn}"
     lambda-07a-short-transcode                = "${aws_lambda_function.conform-07a-short-transcode.arn}"
+    activity-07a-short-transcode              = "${aws_sfn_activity.conform-07a-short-transcode.id}"
     lambda-07b-long-transcode                 = "${aws_lambda_function.conform-07b-long-transcode.arn}"
+    activity-07b-long-transcode               = "${aws_sfn_activity.conform-07b-long-transcode.id}"
     lambda-08-register-proxy-essence          = "${aws_lambda_function.conform-08-register-proxy-essence.arn}"
     lambda-09-copy-proxy-to-website-storage   = "${aws_lambda_function.conform-09-copy-proxy-to-website-storage.arn}"
     lambda-10-register-proxy-website-locator  = "${aws_lambda_function.conform-10-register-proxy-website-locator.arn}"
     lambda-11-start-ai-workflow               = "${aws_lambda_function.conform-11-start-ai-workflow.arn}"
-    job-completion-activity                   = "${aws_sfn_activity.job_completion_activity.id}"
   }
 }
 

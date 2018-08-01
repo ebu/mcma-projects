@@ -5,40 +5,47 @@
         "01-validate-workflow-input": {
             "Type": "Task",
             "Resource": "${lambda-01-validate-workflow-input}",
-            "Next": "02-move-content-to-file-repository-parent"
-        },
-        "02-move-content-to-file-repository-parent": {
-            "Type": "Parallel",
-            "Branches": [
+            "ResultPath": "$.output.01-validate-workflow-input",
+            "Next": "02-move-content-to-file-repository",
+            "Catch": [
                 {
-                    "StartAt": "02-move-content-to-file-repository",
-                    "States": {
-                        "02-move-content-to-file-repository": {
-                            "Type": "Task",
-                            "Resource": "${lambda-02-move-content-to-file-repository}",
-                            "End": true
-                        }
-                    }
-                },
-                {
-                    "StartAt": "02-wait-for-job-completion",
-                    "States": {
-                        "02-wait-for-job-completion": {
-                            "Type": "Task",
-                            "Resource": "${job-completion-activity}",
-                            "TimeoutSeconds": 3600,
-                            "HeartbeatSeconds": 1800,
-                            "End": true
-                        }
-                    }
+                    "ErrorEquals": [
+                        "States.ALL"
+                    ],
+                    "ResultPath": "$.error",
+                    "Next": "Process-Failure"
                 }
-            ],
-            "Next": "03-create-media-asset"
+            ]
+        },
+        "02-move-content-to-file-repository": {
+            "Type": "Task",
+            "Resource": "${lambda-02-move-content-to-file-repository}",
+            "ResultPath": "$.output.02-move-content-to-file-repository",
+            "Next": "03-create-media-asset",
+            "Catch": [
+                {
+                    "ErrorEquals": [
+                        "States.ALL"
+                    ],
+                    "ResultPath": "$.error",
+                    "Next": "Process-Failure"
+                }
+            ]
         },
         "03-create-media-asset": {
             "Type": "Task",
             "Resource": "${lambda-03-create-media-asset}",
-            "Next": "04-extract-technical-metadata-parent"
+            "ResultPath": "$.output.03-create-media-asset",
+            "Next": "04-extract-technical-metadata-parent",
+            "Catch": [
+                {
+                    "ErrorEquals": [
+                        "States.ALL"
+                    ],
+                    "ResultPath": "$.error",
+                    "Next": "Process-Failure"
+                }
+            ]
         },
         "04-extract-technical-metadata-parent": {
             "Type": "Parallel",
@@ -58,7 +65,7 @@
                     "States": {
                         "04-wait-for-job-completion": {
                             "Type": "Task",
-                            "Resource": "${job-completion-activity}",
+                            "Resource": "${activity-04-extract-technical-metadata}",
                             "TimeoutSeconds": 3600,
                             "HeartbeatSeconds": 1800,
                             "End": true
@@ -66,44 +73,51 @@
                     }
                 }
             ],
-            "Next": "05-register-technical-metadata-parent"
+            "ResultPath": "$.output.04-extract-technical-metadata",
+            "Next": "05-register-technical-metadata",
+            "Catch": [
+                {
+                    "ErrorEquals": [
+                        "States.ALL"
+                    ],
+                    "ResultPath": "$.error",
+                    "Next": "Process-Failure"
+                }
+            ]
         },
-        "05-register-technical-metadata-parent": {
-            "Type": "Parallel",
-            "Branches": [
+        "05-register-technical-metadata": {
+            "Type": "Task",
+            "Resource": "${lambda-05-register-technical-metadata}",
+            "ResultPath": "$.output.05-register-technical-metadata",
+            "Next": "06-decide-transcode-requirements",
+            "Catch": [
                 {
-                    "StartAt": "05-register-technical-metadata",
-                    "States": {
-                        "05-register-technical-metadata": {
-                            "Type": "Task",
-                            "Resource": "${lambda-05-register-technical-metadata}",
-                            "End": true
-                        }
-                    }
-                },
-                {
-                    "StartAt": "05-wait-for-job-completion",
-                    "States": {
-                        "05-wait-for-job-completion": {
-                            "Type": "Task",
-                            "Resource": "${job-completion-activity}",
-                            "TimeoutSeconds": 3600,
-                            "HeartbeatSeconds": 1800,
-                            "End": true
-                        }
-                    }
+                    "ErrorEquals": [
+                        "States.ALL"
+                    ],
+                    "ResultPath": "$.error",
+                    "Next": "Process-Failure"
                 }
-            ],
-            "Next": "06-decide-transcode-requirements"
+            ]
         },
         "06-decide-transcode-requirements": {
             "Type": "Task",
             "Resource": "${lambda-06-decide-transcode-requirements}",
-            "Next": "choice-transcode-step"
+            "ResultPath": "$.output.06-decide-transcode-requirements",
+            "Next": "choice-transcode-step",
+            "Catch": [
+                {
+                    "ErrorEquals": [
+                        "States.ALL"
+                    ],
+                    "ResultPath": "$.error",
+                    "Next": "Process-Failure"
+                }
+            ]
         },
         "choice-transcode-step": {
             "Type": "Choice",
-            "Choices":[
+            "Choices": [
                 {
                     "Variable": "$.workflow_param.transcode.type",
                     "StringEquals": "short",
@@ -117,7 +131,7 @@
                 {
                     "Variable": "$.workflow_param.transcode.type",
                     "StringEquals": "none",
-                    "Next": "08-register-proxy-essence-parent"
+                    "Next": "08-register-proxy-essence"
                 }
             ]
         },
@@ -139,7 +153,7 @@
                     "States": {
                         "07a-wait-for-job-completion": {
                             "Type": "Task",
-                            "Resource": "${job-completion-activity}",
+                            "Resource": "${activity-07a-short-transcode}",
                             "TimeoutSeconds": 3600,
                             "HeartbeatSeconds": 1800,
                             "End": true
@@ -147,7 +161,16 @@
                     }
                 }
             ],
-            "Next": "08-register-proxy-essence-parent"
+            "Next": "08-register-proxy-essence",
+            "Catch": [
+                {
+                    "ErrorEquals": [
+                        "States.ALL"
+                    ],
+                    "ResultPath": "$.error",
+                    "Next": "Process-Failure"
+                }
+            ]
         },
         "07b-long-transcode-parent": {
             "Type": "Parallel",
@@ -167,7 +190,7 @@
                     "States": {
                         "07b-wait-for-job-completion": {
                             "Type": "Task",
-                            "Resource": "${job-completion-activity}",
+                            "Resource": "${activity-07b-long-transcode}",
                             "TimeoutSeconds": 3600,
                             "HeartbeatSeconds": 1800,
                             "End": true
@@ -175,119 +198,83 @@
                     }
                 }
             ],
-            "Next": "08-register-proxy-essence-parent"
+            "Next": "08-register-proxy-essence",
+            "Catch": [
+                {
+                    "ErrorEquals": [
+                        "States.ALL"
+                    ],
+                    "ResultPath": "$.error",
+                    "Next": "Process-Failure"
+                }
+            ]
         },
-        "08-register-proxy-essence-parent": {
-            "Type": "Parallel",
-            "Branches": [
+        "08-register-proxy-essence": {
+            "Type": "Task",
+            "Resource": "${lambda-08-register-proxy-essence}",
+            "Next": "09-copy-proxy-to-website-storage",
+            "Catch": [
                 {
-                    "StartAt": "08-register-proxy-essence",
-                    "States": {
-                        "08-register-proxy-essence": {
-                            "Type": "Task",
-                            "Resource": "${lambda-08-register-proxy-essence}",
-                            "End": true
-                        }
-                    }
-                },
-                {
-                    "StartAt": "08-wait-for-job-completion",
-                    "States": {
-                        "08-wait-for-job-completion": {
-                            "Type": "Task",
-                            "Resource": "${job-completion-activity}",
-                            "TimeoutSeconds": 3600,
-                            "HeartbeatSeconds": 1800,
-                            "End": true
-                        }
-                    }
+                    "ErrorEquals": [
+                        "States.ALL"
+                    ],
+                    "ResultPath": "$.error",
+                    "Next": "Process-Failure"
                 }
-            ],
-            "Next": "09-copy-proxy-to-website-storage-parent"
+            ]
         },
-        "09-copy-proxy-to-website-storage-parent": {
-            "Type": "Parallel",
-            "Branches": [
+        "09-copy-proxy-to-website-storage": {
+            "Type": "Task",
+            "Resource": "${lambda-09-copy-proxy-to-website-storage}",
+            "Next": "10-register-proxy-website-locator",
+            "Catch": [
                 {
-                    "StartAt": "09-copy-proxy-to-website-storage",
-                    "States": {
-                        "09-copy-proxy-to-website-storage": {
-                            "Type": "Task",
-                            "Resource": "${lambda-09-copy-proxy-to-website-storage}",
-                            "End": true
-                        }
-                    }
-                },
-                {
-                    "StartAt": "09-wait-for-job-completion",
-                    "States": {
-                        "09-wait-for-job-completion": {
-                            "Type": "Task",
-                            "Resource": "${job-completion-activity}",
-                            "TimeoutSeconds": 3600,
-                            "HeartbeatSeconds": 1800,
-                            "End": true
-                        }
-                    }
+                    "ErrorEquals": [
+                        "States.ALL"
+                    ],
+                    "ResultPath": "$.error",
+                    "Next": "Process-Failure"
                 }
-            ],
-            "Next": "10-register-proxy-website-locator-parent"
+            ]
         },
-        "10-register-proxy-website-locator-parent": {
-            "Type": "Parallel",
-            "Branches": [
+        "10-register-proxy-website-locator": {
+            "Type": "Task",
+            "Resource": "${lambda-10-register-proxy-website-locator}",
+            "Next": "11-start-ai-workflow",
+            "Catch": [
                 {
-                    "StartAt": "10-register-proxy-website-locator",
-                    "States": {
-                        "10-register-proxy-website-locator": {
-                            "Type": "Task",
-                            "Resource": "${lambda-10-register-proxy-website-locator}",
-                            "End": true
-                        }
-                    }
-                },
-                {
-                    "StartAt": "10-wait-for-job-completion",
-                    "States": {
-                        "10-wait-for-job-completion": {
-                            "Type": "Task",
-                            "Resource": "${job-completion-activity}",
-                            "TimeoutSeconds": 3600,
-                            "HeartbeatSeconds": 1800,
-                            "End": true
-                        }
-                    }
+                    "ErrorEquals": [
+                        "States.ALL"
+                    ],
+                    "ResultPath": "$.error",
+                    "Next": "Process-Failure"
                 }
-            ],
-            "Next": "11-start-ai-workflow-parent"
+            ]
         },
-        "11-start-ai-workflow-parent": {
-            "Type": "Parallel",
-            "Branches": [
+        "11-start-ai-workflow": {
+            "Type": "Task",
+            "Resource": "${lambda-11-start-ai-workflow}",
+            "Next": "Process-Completion",
+            "Catch": [
                 {
-                    "StartAt": "11-start-ai-workflow",
-                    "States": {
-                        "11-start-ai-workflow": {
-                            "Type": "Task",
-                            "Resource": "${lambda-11-start-ai-workflow}",
-                            "End": true
-                        }
-                    }
-                },
-                {
-                    "StartAt": "11-wait-for-job-completion",
-                    "States": {
-                        "11-wait-for-job-completion": {
-                            "Type": "Task",
-                            "Resource": "${job-completion-activity}",
-                            "TimeoutSeconds": 3600,
-                            "HeartbeatSeconds": 1800,
-                            "End": true
-                        }
-                    }
+                    "ErrorEquals": [
+                        "States.ALL"
+                    ],
+                    "ResultPath": "$.error",
+                    "Next": "Process-Failure"
                 }
-            ],
+            ]
+        },
+        "Process-Completion": {
+            "Type": "Pass",
             "End": true
+        },
+        "Process-Failure": {
+            "Type": "Pass",
+            "Next": "Failed"
+        },
+        "Failed": {
+            "Type": "Fail"
         }
     }
 }

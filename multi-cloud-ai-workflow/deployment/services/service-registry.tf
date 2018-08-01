@@ -89,10 +89,14 @@ resource "aws_api_gateway_deployment" "service_registry_deployment" {
 
   variables = {
     "TableName" = "${var.global_prefix}-service-registry"
-    "PublicUrl" = "https://${aws_api_gateway_rest_api.service_registry_api.id}.execute-api.${var.aws_region}.amazonaws.com/${var.environment_type}"
+    "PublicUrl" = "${local.service_registry_url}"
   }
 }
 
 output "service_registry_url" {
-  value = "https://${aws_api_gateway_rest_api.service_registry_api.id}.execute-api.${var.aws_region}.amazonaws.com/${var.environment_type}"
+  value = "${local.service_registry_url}"
+}
+
+locals {
+  service_registry_url = "https://${aws_api_gateway_rest_api.service_registry_api.id}.execute-api.${var.aws_region}.amazonaws.com/${var.environment_type}"
 }

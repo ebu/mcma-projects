@@ -104,11 +104,16 @@ resource "aws_api_gateway_deployment" "ame_service_deployment" {
 
   variables = {
     "TableName"                = "${var.global_prefix}-ame-service"
-    "PublicUrl"                = "https://${aws_api_gateway_rest_api.ame_service_api.id}.execute-api.${var.aws_region}.amazonaws.com/${var.environment_type}"
+    "PublicUrl"                = "${local.ame_service_url}"
+    "ServicesUrl"              = "${local.service_registry_url}"
     "WorkerLambdaFunctionName" = "${aws_lambda_function.ame-service-worker.function_name}"
   }
 }
 
 output "ame_service_url" {
-  value = "https://${aws_api_gateway_rest_api.ame_service_api.id}.execute-api.${var.aws_region}.amazonaws.com/${var.environment_type}"
+  value = "${local.ame_service_url}"
+}
+
+locals {
+  ame_service_url = "https://${aws_api_gateway_rest_api.ame_service_api.id}.execute-api.${var.aws_region}.amazonaws.com/${var.environment_type}"
 }

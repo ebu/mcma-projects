@@ -104,12 +104,17 @@ resource "aws_api_gateway_deployment" "job_processor_service_deployment" {
 
   variables = {
     "TableName"                = "${var.global_prefix}-job-processor-service"
-    "PublicUrl"                = "https://${aws_api_gateway_rest_api.job_processor_service_api.id}.execute-api.${var.aws_region}.amazonaws.com/${var.environment_type}"
-    "ServicesUrl"              = "https://${aws_api_gateway_rest_api.service_registry_api.id}.execute-api.${var.aws_region}.amazonaws.com/${var.environment_type}/services"
+    "PublicUrl"                = "${local.job_processor_service_url}"
+    "ServicesUrl"              = "${local.service_registry_url}"
     "WorkerLambdaFunctionName" = "${aws_lambda_function.job-processor-service-worker.function_name}"
   }
 }
 
 output "job_processor_service_url" {
-  value = "https://${aws_api_gateway_rest_api.job_processor_service_api.id}.execute-api.${var.aws_region}.amazonaws.com/${var.environment_type}"
+  value = "${local.job_processor_service_url}"
 }
+
+locals {
+  job_processor_service_url = "https://${aws_api_gateway_rest_api.job_processor_service_api.id}.execute-api.${var.aws_region}.amazonaws.com/${var.environment_type}"
+}
+

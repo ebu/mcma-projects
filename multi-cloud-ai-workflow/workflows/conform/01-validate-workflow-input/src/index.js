@@ -1,125 +1,80 @@
-// require
-const AWS = require("aws-sdk");
-const async = require("async");
-const _ = require('underscore');
-// get reference to S3 client
-var s3 = new AWS.S3();
+//"use strict";
 
-/**
- * Retrieve the value of the specified element
- * @param {*} jsonld Metadata Json
- * @param {*} propertyName Target Element Name
- */
-function getElementValue(jsonld, propertyName) {
-    var graph = jsonld["@graph"];
-    var pluck = _.pluck(graph, propertyName);
-    var value = pluck.filter(function (element) {
-        return !!element;
-    });
-    return value;
+const util = require("util");
+
+const AWS = require("aws-sdk");
+const S3 = new AWS.S3()
+const S3HeadObject = util.promisify(S3.headObject.bind(S3));
+
+/* Expecting input like the following:
+
+{
+    "input": {
+        "metadata": {
+            "@type": "DescriptiveMetadata",
+            "name": "Cat video",
+            "description": "Create video of cats"
+        },
+        "inputFile": {
+            "@type": "Locator",
+            "awsS3Bucket": "bucket_name",
+            "awsS3Key": "key_name"
+        }
+    },
+    "notificationEndpoint": {
+        "@type": "NotificationEndpoint",
+        "httpEndpoint": "http://workflow-service/job-assignments/34543-34-534345-34/notifications"
+    }
 }
 
-/**
- * Lambda function handler
- * @param {*} event event
- * @param {*} context context
- * @param {*} callback callback
- */
-exports.handler = (event, context, callback) => {
-    console.log("S3 api version = " + s3.apiVersion);
-    // Read options from the event.
-    console.log("Event:");
-    console.log(JSON.stringify(event, null, 2));
-    // Read bucket name
-    var srcBucket = event.Records[0].s3.bucket.name;
-    console.log("bucket name = " + srcBucket);
-    // Object key may have spaces or unicode non-ASCII characters.
-    var srcKey = decodeURIComponent(event.Records[0].s3.object.key.replace(/\+/g, " "));
-    console.log("object key = " + srcKey);
-    // Execute async waterfall
-    async.waterfall([
-        (callback) => {
-            // Get Jsonld File From S3 Bucket
-            console.log("Calling S3.getObject on params above");
-            var params = {
-                Bucket: srcBucket,
-                Key: srcKey
-            };
-            s3.getObject(params, function (err, data) {
-                // Handle any error and exit
-                if (err) {
-                    return callback(err, null);
-                } else {
-                    var jsonld = JSON.parse(new Buffer(data.Body).toString("utf8"));
-                    return callback(null, jsonld);
-                }
-            });
-        },
-        (jsonld, callback) => {
-            // Validate Title(ebucore:title)
-            console.log("Validate Title(ebucore:title).");
-            var title = getElementValue(jsonld, "ebucore:title");
+Note that the notification endpoint is optional. But is used to notify progress and completed/failed of workflow.
 
-            if (title.length == 0 || title[0].length == 0) {
-                return callback("Not Found Title(ebucore:title).");
-            }
+*/
 
-            console.log("[ebucore:title]:", title[0]);
-            callback(null, jsonld, title[0]);
-        },
-        (jsonld, title, callback) => {
-            // Validate Description(ebucore:description)
-            console.log("Validate Description(ebucore:description).");
-            var description = getElementValue(jsonld, "ebucore:description");
+exports.handler = async (event, context) => {
+    console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
 
-            if (description.length == 0 || description[0].length == 0) {
-                return callback("Not Found Title(ebucore:title).");
-            }
+    if (!event || !event.input) {
+        throw new Error("Missing workflow input");
+    }
 
-            console.log("[ebucore:description]:", description[0]);
-            callback(null, jsonld, title, description);
-        },
-        (jsonld, title, description, callback) => {
-            // Validate Media File Location(ebucore:fileName)
-            console.log("Validate Media File Location(ebucore:fileName).");
-            var fileName = getElementValue(jsonld, "ebucore:fileName");
-            console.log("[ebucore:fileName]:", fileName[0]);
-            callback(null, jsonld, fileName[0]);
-        },
-        (jsonld, fileName, callback) => {
-            // Check Exist Video File(S3Bucket)
-            console.log("Check Exist Video File(S3Bucket).");
-            var params = {
-                Bucket: srcBucket,
-                Key: fileName
-            };
-            s3.getObject(params, function (err, data) {
-                // Handle any error and exit
-                if (err) {
-                    return callback("Not Found Video File:" + fileName);
-                } else {
-                    return callback(null, jsonld, fileName);
-                }
-            });
-        },
-        (jsonld, fileName, callback) => {
-            // Create results Object
-            var result = {
-                "workflow_param" : {
-                    "src_bucket" : srcBucket,
-                    "src_key" : srcKey,
-                    "essence" : fileName,
-                },
-                "payload" : jsonld,
-            };
-            callback(null, result);
-        }
-    ], (err, result) => {
-        // Process results
-        if (err) {
-            console.error("Error:");
-            console.error(err);
-        }
-        callback(err, result);
-    });
+    let input = event.input;
+
+    if (!input.metadata) {
+        throw new Error("Missing input.metadata");
+    }
+
+    if (!input.metadata.name) {
+        throw new Error("Missing input.metadata.name");
+    }
+
+    if (!event.input.metadata.description) {
+        throw new Error("Missing input.metadata.description");
+    }
+
+    if (!input.inputFile) {
+        throw new Error("Missing input.inputFile");
+    }
+
+    let s3Bucket = input.inputFile.awsS3Bucket;
+    let s3Key = input.inputFile.awsS3Key;
+
+    let data;
+
+    try {
+        data = await S3HeadObject({
+            Bucket: s3Bucket,
+            Key: s3Key,
+        });
+    } catch (error) {
+        throw new Error("Unable to read input file in bucket '" + s3Bucket + "' with key '" + s3Key + "' due to error: " + error.message);
+    }
+
+    if (!data.ContentType.startsWith("video")) {
+        throw new Error("Input file is not a video");
+    }
+
+    return {
+        "inputFileMetadata": data
+    }
 }

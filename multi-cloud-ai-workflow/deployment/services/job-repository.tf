@@ -104,12 +104,16 @@ resource "aws_api_gateway_deployment" "job_repository_deployment" {
 
   variables = {
     "TableName"                = "${var.global_prefix}-job-repository"
-    "PublicUrl"                = "https://${aws_api_gateway_rest_api.job_repository_api.id}.execute-api.${var.aws_region}.amazonaws.com/${var.environment_type}"
-    "ServicesUrl"              = "https://${aws_api_gateway_rest_api.service_registry_api.id}.execute-api.${var.aws_region}.amazonaws.com/${var.environment_type}/services"
+    "PublicUrl"                = "${local.job_repository_url}"
+    "ServicesUrl"              = "${local.service_registry_url}"
     "WorkerLambdaFunctionName" = "${aws_lambda_function.job-repository-worker.function_name}"
   }
 }
 
 output "job_repository_url" {
-  value = "https://${aws_api_gateway_rest_api.job_repository_api.id}.execute-api.${var.aws_region}.amazonaws.com/${var.environment_type}"
+  value = "${local.job_repository_url}"
+}
+
+locals {
+  job_repository_url = "https://${aws_api_gateway_rest_api.job_repository_api.id}.execute-api.${var.aws_region}.amazonaws.com/${var.environment_type}"
 }

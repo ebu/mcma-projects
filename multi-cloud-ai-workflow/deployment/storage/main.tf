@@ -46,6 +46,22 @@ resource "aws_s3_bucket" "website" {
   }
 }
 
+output "upload_bucket" {
+  value = "${var.upload_bucket}"
+}
+
+output "repository_bucket" {
+  value = "${var.repository_bucket}"
+}
+
+output "temp_bucket" {
+  value = "${var.temp_bucket}"
+}
+
+output "website_bucket" {
+  value = "${var.website_bucket}"
+}
+
 output "website_url" {
   value = "https://s3-${var.aws_region}.amazonaws.com/${var.website_bucket}/index.html"
 }

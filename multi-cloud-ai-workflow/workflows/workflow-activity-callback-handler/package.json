@@ -1,0 +1,15 @@
+{
+    "name": "service-registry-api-handler",
+    "version": "0.0.0",
+    "description": "API gateway request handler for Service Registry",
+    "private": true,
+    "engines": {
+        "node": "~8.10.0"
+    },
+    "main": "src/index.js",
+    "license": "Apache-2.0",
+    "dependencies": {
+        "aws-sdk": "^2.279.1",
+        "mcma-aws": "0.0.4"
+    }
+}

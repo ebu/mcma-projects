@@ -1,4 +1,45 @@
 task build {
-    dependsOn "conform:build"
-    dependsOn "ai:build"
+    dependsOn "ai:01-validate-workflow-input:build"
+    dependsOn "ai:02-extract-speech-to-text:build"
+    dependsOn "ai:03-register-speech-to-text-output:build"
+    dependsOn "ai:04-translate-speech-transcription:build"
+    dependsOn "ai:05-register-speech-translation:build"
+    dependsOn "ai:06a-detect-celebrities-aws:build"
+    dependsOn "ai:06b-detect-celebrities-azure:build"
+    dependsOn "ai:07a-register-celebrities-info-aws:build"
+    dependsOn "ai:07b-register-celebrities-info-azure:build"
+    dependsOn "conform:01-validate-workflow-input:build"
+    dependsOn "conform:02-move-content-to-file-repository:build"
+    dependsOn "conform:03-create-media-asset:build"
+    dependsOn "conform:04-extract-technical-metadata:build"
+    dependsOn "conform:05-register-technical-metadata:build"
+    dependsOn "conform:06-decide-transcode-requirements:build"
+    dependsOn "conform:07a-short-transcode:build"
+    dependsOn "conform:07b-long-transcode:build"
+    dependsOn "conform:08-register-proxy-essence:build"
+    dependsOn "conform:09-copy-proxy-to-website-storage:build"
+    dependsOn "conform:10-register-proxy-website-locator:build"
+    dependsOn "conform:11-start-ai-workflow:build"
+    dependsOn "workflow-activity-callback-handler:build"
+}
+
+subprojects {
+    task copyNodeModules (type: Copy) {
+        dependsOn npmInstall
+        from "node_modules"
+        into "dist/staging/node_modules"
+        exclude awsAvailableLibraries
+    }
+
+    task copySource (type: Copy) {
+        from "src"
+        into "dist/staging/"
+    }
+
+    task build (type: Zip) {
+        dependsOn copySource, copyNodeModules
+        archiveName "lambda.zip"
+        destinationDir file("dist")
+        from "dist/staging"
+    }
 }

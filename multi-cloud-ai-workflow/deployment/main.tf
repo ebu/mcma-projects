@@ -51,6 +51,16 @@ module "workflows" {
   aws_access_key = "${var.aws_access_key}"
   aws_secret_key = "${var.aws_secret_key}"
   aws_region     = "${var.aws_region}"
+
+  environment_type     = "${var.environment_type}"
+  service_registry_url = "${module.services.service_registry_url}"
+  repository_bucket    = "${module.storage.repository_bucket}"
+  temp_bucket          = "${module.storage.temp_bucket}"
+  website_bucket       = "${module.storage.website_bucket}"
+}
+
+output "upload_bucket" {
+    value = "${module.storage.upload_bucket}"
 }
 
 output "website_url" {
