@@ -203,7 +203,7 @@ const deleteJobProfile = async (request, response) => {
 }
 
 // Initializing rest controller for API Gateway Endpoint
-const restController = new MCMA_AWS.RestController();
+const restController = new MCMA_AWS.ApiGatewayRestController();
 
 // adding routes
 restController.addRoute("GET", "/services", getServices);

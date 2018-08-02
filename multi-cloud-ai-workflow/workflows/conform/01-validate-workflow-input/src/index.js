@@ -13,7 +13,7 @@ const S3HeadObject = util.promisify(S3.headObject.bind(S3));
         "metadata": {
             "@type": "DescriptiveMetadata",
             "name": "Cat video",
-            "description": "Create video of cats"
+            "description": "Great video of cats"
         },
         "inputFile": {
             "@type": "Locator",

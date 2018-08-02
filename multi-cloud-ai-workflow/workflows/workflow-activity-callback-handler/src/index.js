@@ -35,7 +35,7 @@ const processNotification = async (request, response) => {
 
     switch (notification.content.status) {
         case "COMPLETED":
-            await SendTaskSuccess({ taskToken: request.queryStringParameters.taskToken, output: JSON.stringify(notification.content) });
+            await SendTaskSuccess({ taskToken: request.queryStringParameters.taskToken, output: JSON.stringify(notification.source) });
             break;
         case "FAILED":
             await SendTaskFailure({ taskToken: request.queryStringParameters.taskToken, error: notification.content["@type"] + " failed execution with statusMessage '" + notification.content.statusMessage + "'", cause: notification.source });
@@ -44,7 +44,7 @@ const processNotification = async (request, response) => {
 }
 
 // Initializing rest controller for API Gateway Endpoint
-const restController = new MCMA_AWS.RestController();
+const restController = new MCMA_AWS.ApiGatewayRestController();
 
 // adding routes
 restController.addRoute("POST", "/notifications", processNotification);

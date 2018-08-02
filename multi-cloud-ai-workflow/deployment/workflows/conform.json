@@ -73,7 +73,7 @@
                     }
                 }
             ],
-            "ResultPath": "$.data.ameJob",
+            "ResultPath": "$.data.ameJobId",
             "Next": "05-register-technical-metadata",
             "Catch": [
                 {
@@ -195,7 +195,7 @@
                     }
                 }
             ],
-            "ResultPath": "$.data.transformJob",
+            "ResultPath": "$.data.transformJobId",
             "Next": "08-register-proxy-essence",
             "Catch": [
                 {

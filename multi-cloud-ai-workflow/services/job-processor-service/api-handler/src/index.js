@@ -143,7 +143,7 @@ const processNotification = async (request, response) => {
 }
 
 // Initializing rest controller for API Gateway Endpoint
-const restController = new MCMA_AWS.RestController();
+const restController = new MCMA_AWS.ApiGatewayRestController();
 
 // adding routes for GET POST and DELETE of JobProcesses
 restController.addRoute("GET", "/job-processes", getJobProcesses);
