@@ -15,7 +15,7 @@ This example worklow demonstrates how you can leverage AI technologies from mult
 3. Create file named gradle.properties
 4. Add the following informaton to the created file and update the parameter values reflecting your AWS account 
 ```
-environmentName=com.your-domain.mcma.multi-cloud-ai-workflow
+environmentName=com.your-domain.mcma
 environmentType=dev
 
 awsAccountId=<YOUR_AWS_ACCOUNT_ID>
@@ -27,4 +27,4 @@ awsRegion=<YOUR_AWS_REGION>
 5. Save the file.
 6. Open command line in `multi-cloud-ai-workflow` folder.
 7. Execute `gradlew deploy` and let it run. This can take a few minutes.
-8. If no errors have occured until now you have successfully setup the infrastructure in your AWS cloud. Go to https://aws.amazon.com/console/ and sign in to see your cloud infrastructure.
+8. If no errors have occured until now you have successfully setup the infrastructure in your AWS cloud. Go to https://aws.amazon.com/console/ and sign in to see your cloud infrastructure. In case you do have errors it may be that your environmentName is either too long or not unique enough to guarantee unique names for your cloud resources e.g. bucket names.
