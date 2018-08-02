@@ -10,6 +10,6 @@
     "license": "Apache-2.0",
     "dependencies": {
         "async": "^2.6.1",
-        "aws-sdk": "^2.279.1"
+        "aws-sdk": "^2.285.1"
     }
 }

@@ -13,39 +13,33 @@ const MCMA_AWS = require("mcma-aws");
 const processNotification = async (request, response) => {
     console.log("processNotification()", JSON.stringify(request, null, 2));
 
-    try {
+    let notification = request.body;
 
-        let notification = request.body;
+    if (!notification) {
+        response.statusCode = MCMA_AWS.HTTP_BAD_REQUEST;
+        response.statusMessage = "Missing notification in request body";
+        return;
+    }
 
-        if (!notification) {
-            response.statusCode = MCMA_AWS.HTTP_BAD_REQUEST;
-            response.statusMessage = "Missing notification in request body";
-            return;
-        }
+    if (!notification.content) {
+        response.statusCode = MCMA_AWS.HTTP_BAD_REQUEST;
+        response.statusMessage = "Missing notification content";
+        return;
+    }
 
-        if (!notification.content) {
-            response.statusCode = MCMA_AWS.HTTP_BAD_REQUEST;
-            response.statusMessage = "Missing notification content";
-            return;
-        }
+    if (!notification.content.status) {
+        response.statusCode = MCMA_AWS.HTTP_BAD_REQUEST;
+        response.statusMessage = "Missing notification content status";
+        return;
+    }
 
-        if (!notification.content.status) {
-            response.statusCode = MCMA_AWS.HTTP_BAD_REQUEST;
-            response.statusMessage = "Missing notification content status";
-            return;
-        }
-
-        switch (notification.content.status) {
-            case "COMPLETED":
-                await SendTaskSuccess({ taskToken: request.queryStringParameters.taskToken, output: JSON.stringify(notification.content) });
-                break;
-            case "FAILED":
-                await SendTaskFailure({ taskToken: request.queryStringParameters.taskToken, error: notification.content["@type"] + " failed execution with statusMessage '" + notification.content.statusMessage + "'" , cause: notification.source });
-                break;
-        }
-
-    } catch (error) {
-        console.log(error);
+    switch (notification.content.status) {
+        case "COMPLETED":
+            await SendTaskSuccess({ taskToken: request.queryStringParameters.taskToken, output: JSON.stringify(notification.content) });
+            break;
+        case "FAILED":
+            await SendTaskFailure({ taskToken: request.queryStringParameters.taskToken, error: notification.content["@type"] + " failed execution with statusMessage '" + notification.content.statusMessage + "'", cause: notification.source });
+            break;
     }
 }
 

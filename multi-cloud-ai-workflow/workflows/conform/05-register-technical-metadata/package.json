@@ -9,6 +9,6 @@
     "main": "src/index.js",
     "license": "Apache-2.0",
     "dependencies": {
-        "mcma-core": "^0.0.8"
+        "mcma-core": "0.0.8"
     }
 }
