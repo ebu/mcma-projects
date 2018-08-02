@@ -12,8 +12,8 @@ This example worklow demonstrates how you can leverage AI technologies from mult
 ## Setup procedure
 1. Clone this repository to your local harddrive
 2. Navigate to the `multi-cloud-ai-workflow` folder.
-3. Create file named gradle.properties
-4. Add the following informaton to the created file and update the parameter values reflecting your AWS account 
+3. Create file named `gradle.properties`
+4. Add the following information to the created file and update the parameter values reflecting your AWS account 
 ```
 environmentName=com.your-domain.mcma
 environmentType=dev

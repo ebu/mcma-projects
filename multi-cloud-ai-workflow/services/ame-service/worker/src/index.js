@@ -74,7 +74,7 @@ exports.handler = async (event, context) => {
             let data = await S3GetObject({ Bucket: inputFile.awsS3Bucket, Key: inputFile.awsS3Key });
 
             // write data to local tmp storage
-            let localFilename = "/tmp/" + inputFile.awsS3Key;
+            let localFilename = "/tmp/" + uuidv4();
             await fsWriteFile(localFilename, data.Body);
 
             // obtain mediainfo output
