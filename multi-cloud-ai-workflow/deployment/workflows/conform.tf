@@ -291,3 +291,7 @@ resource "aws_sfn_state_machine" "conform-workflow" {
   role_arn   = "${aws_iam_role.iam_for_state_machine_execution.arn}"
   definition = "${data.template_file.conform-workflow.rendered}"
 }
+
+output "conform_workflow_id" {
+  value = "${aws_sfn_state_machine.conform-workflow.id}"
+}

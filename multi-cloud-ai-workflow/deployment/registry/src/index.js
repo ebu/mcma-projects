@@ -3,6 +3,19 @@
 const MCMA_CORE = require("mcma-core");
 
 const JOB_PROFILES = {
+    ConformWorkflow: new MCMA_CORE.JobProfile(
+        "ConformWorkflow",
+        [
+            new MCMA_CORE.JobParameter("inputFile", "Locator"),
+            new MCMA_CORE.JobParameter("inputMetadata", "DescriptiveMetadata")
+        ]
+    ),
+    AiWorkflow: new MCMA_CORE.JobProfile(
+        "AiWorkflow",
+        [
+            new MCMA_CORE.JobParameter("inputFile", "Locator")
+        ]
+    ),
     ExtractTechnicalMetadata: new MCMA_CORE.JobProfile(
         "ExtractTechnicalMetadata",
         [
@@ -140,6 +153,29 @@ const createServices = (serviceUrls) => {
                         [
                             JOB_PROFILES.CreateProxy.id ? JOB_PROFILES.CreateProxy.id : JOB_PROFILES.CreateProxy,
                             JOB_PROFILES.ExtractThumbnail.id ? JOB_PROFILES.ExtractThumbnail.id : JOB_PROFILES.ExtractThumbnail
+                            // ],
+                            // [
+                            //     new MCMA_CORE.Locator({ "httpEndpoint" : serviceUrls.publicBucketUrl, "awsS3Bucket": serviceUrls.publicBucket }),
+                            //     new MCMA_CORE.Locator({ "httpEndpoint" : serviceUrls.privateBucketUrl, "awsS3Bucket": serviceUrls.privateBucket })
+                            // ],
+                            // [
+                            //     new MCMA_CORE.Locator({ "httpEndpoint" : serviceUrls.publicBucketUrl, "awsS3Bucket": serviceUrls.publicBucket }),
+                            //     new MCMA_CORE.Locator({ "httpEndpoint" : serviceUrls.privateBucketUrl, "awsS3Bucket": serviceUrls.privateBucket })
+                        ]
+                    )
+                );
+                break;
+            case "workflow_service_url":
+                serviceList.push(
+                    new MCMA_CORE.Service(
+                        "Workflow Service",
+                        [
+                            new MCMA_CORE.ServiceResource("JobAssignment", serviceUrls[prop] + "/job-assignments")
+                        ],
+                        "WorkflowJob",
+                        [
+                            JOB_PROFILES.ConformWorkflow.id ? JOB_PROFILES.ConformWorkflow.id : JOB_PROFILES.ConformWorkflow,
+                            JOB_PROFILES.AiWorkflow.id ? JOB_PROFILES.AiWorkflow.id : JOB_PROFILES.AiWorkflow
                             // ],
                             // [
                             //     new MCMA_CORE.Locator({ "httpEndpoint" : serviceUrls.publicBucketUrl, "awsS3Bucket": serviceUrls.publicBucket }),

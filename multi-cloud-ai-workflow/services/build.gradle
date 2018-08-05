@@ -7,6 +7,8 @@ task build {
     dependsOn "job-repository:worker:build"
     dependsOn "media-repository:api-handler:build"
     dependsOn "service-registry:api-handler:build"
+    dependsOn "workflow-service:api-handler:build"
+    dependsOn "workflow-service:worker:build"
 }
 
 subprojects {

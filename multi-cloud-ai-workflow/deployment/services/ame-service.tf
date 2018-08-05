@@ -58,7 +58,7 @@ resource "aws_dynamodb_table" "ame_service_table" {
 ##############################
 resource "aws_api_gateway_rest_api" "ame_service_api" {
   name        = "${var.global_prefix}-ame-service"
-  description = "Service Registry Rest Api"
+  description = "Ame Service Rest Api"
 }
 
 resource "aws_api_gateway_resource" "ame_service_api_resource" {

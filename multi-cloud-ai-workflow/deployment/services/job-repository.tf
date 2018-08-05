@@ -58,7 +58,7 @@ resource "aws_dynamodb_table" "job_repository_table" {
 ##############################
 resource "aws_api_gateway_rest_api" "job_repository_api" {
   name        = "${var.global_prefix}-job-repository"
-  description = "Service Registry Rest Api"
+  description = "Job Repository Rest Api"
 }
 
 resource "aws_api_gateway_resource" "job_repository_api_resource" {

@@ -127,3 +127,7 @@
 #   role_arn   = "${aws_iam_role.iam_for_state_machine_execution.arn}"
 #   definition = "${data.template_file.ai-workflow.rendered}"
 # }
+
+output "ai_workflow_id" {
+  value = "TBD"
+}

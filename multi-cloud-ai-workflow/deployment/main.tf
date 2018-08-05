@@ -29,6 +29,9 @@ module "services" {
   repository_bucket = "${var.repository_bucket}"
   website_bucket    = "${var.website_bucket}"
 
+  conform_workflow_id = "${module.workflows.conform_workflow_id}"
+  ai_workflow_id      = "${module.workflows.ai_workflow_id}"
+
   aws_account_id = "${var.aws_account_id}"
   aws_access_key = "${var.aws_access_key}"
   aws_secret_key = "${var.aws_secret_key}"
@@ -60,7 +63,7 @@ module "workflows" {
 }
 
 output "upload_bucket" {
-    value = "${module.storage.upload_bucket}"
+  value = "${module.storage.upload_bucket}"
 }
 
 output "website_url" {
@@ -85,4 +88,8 @@ output "job_processor_service_url" {
 
 output "ame_service_url" {
   value = "${module.services.ame_service_url}"
+}
+
+output "workflow_service_url" {
+  value = "${module.services.workflow_service_url}"
 }

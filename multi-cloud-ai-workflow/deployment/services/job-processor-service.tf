@@ -58,7 +58,7 @@ resource "aws_dynamodb_table" "job_processor_service_table" {
 ##############################
 resource "aws_api_gateway_rest_api" "job_processor_service_api" {
   name        = "${var.global_prefix}-job-processor-service"
-  description = "Service Registry Rest Api"
+  description = "Job Processor Service Rest Api"
 }
 
 resource "aws_api_gateway_resource" "job_processor_service_api_resource" {
@@ -117,4 +117,3 @@ output "job_processor_service_url" {
 locals {
   job_processor_service_url = "https://${aws_api_gateway_rest_api.job_processor_service_api.id}.execute-api.${var.aws_region}.amazonaws.com/${var.environment_type}"
 }
-
