@@ -5,6 +5,7 @@ task build {
     dependsOn "job-processor-service:worker:build"
     dependsOn "job-repository:api-handler:build"
     dependsOn "job-repository:worker:build"
+    dependsOn "media-repository:api-handler:build"
     dependsOn "service-registry:api-handler:build"
 }
 

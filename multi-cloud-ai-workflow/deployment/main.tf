@@ -71,6 +71,10 @@ output "service_registry_url" {
   value = "${module.services.service_registry_url}"
 }
 
+output "media_repository_url" {
+  value = "${module.services.media_repository_url}"
+}
+
 output "job_repository_url" {
   value = "${module.services.job_repository_url}"
 }

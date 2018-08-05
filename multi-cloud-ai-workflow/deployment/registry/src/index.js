@@ -124,8 +124,8 @@ const createServices = (serviceUrls) => {
                 serviceList.push(new MCMA_CORE.Service(
                     "Media Repository",
                     [
-                        new MCMA_CORE.ServiceResource("ebucore:BMContent", serviceUrls[prop] + "/bm-contents"),
-                        new MCMA_CORE.ServiceResource("ebucore:BMEssence", serviceUrls[prop] + "/bm-essences")
+                        new MCMA_CORE.ServiceResource("BMContent", serviceUrls[prop] + "/bm-contents"),
+                        new MCMA_CORE.ServiceResource("BMEssence", serviceUrls[prop] + "/bm-essences")
                     ]
                 ));
                 break;
