@@ -88,7 +88,7 @@
         "05-register-technical-metadata": {
             "Type": "Task",
             "Resource": "${lambda-05-register-technical-metadata}",
-            "ResultPath": null,
+            "ResultPath": "$.data.video",
             "Next": "06-decide-transcode-requirements",
             "Catch": [
                 {
