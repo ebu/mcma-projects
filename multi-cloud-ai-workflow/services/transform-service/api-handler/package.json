@@ -1,0 +1,15 @@
+{
+    "name": "ame-service-api-handler",
+    "version": "0.0.0",
+    "description": "AWS Lambda based AME service leveraging MediaInfo to extract metadata",
+    "private": true,
+    "engines": {
+        "node": "~8.10.0"
+    },
+    "main": "src/index.js",
+    "license": "Apache-2.0",
+    "dependencies": {
+        "aws-sdk": "^2.285.1",
+        "mcma-aws": "0.0.7"
+    }
+}

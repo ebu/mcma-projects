@@ -9,6 +9,8 @@ task build {
     dependsOn "service-registry:api-handler:build"
     dependsOn "workflow-service:api-handler:build"
     dependsOn "workflow-service:worker:build"
+    dependsOn "transform-service:api-handler:build"
+    dependsOn "transform-service:worker:build"
 }
 
 subprojects {

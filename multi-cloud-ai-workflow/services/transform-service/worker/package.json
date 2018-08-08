@@ -1,0 +1,16 @@
+{
+    "name": "transform-service-worker",
+    "version": "0.0.0",
+    "description": "",
+    "private": true,
+    "engines": {
+        "node": "~8.10.0"
+    },
+    "main": "src/index.js",
+    "license": "Apache-2.0",
+    "dependencies": {
+        "aws-sdk": "^2.288.0",
+        "mcma-aws": "0.0.7",
+        "mcma-core": "0.0.8"
+    }
+}
