@@ -6,14 +6,15 @@ const JOB_PROFILES = {
     ConformWorkflow: new MCMA_CORE.JobProfile(
         "ConformWorkflow",
         [
-            new MCMA_CORE.JobParameter("inputFile", "Locator"),
-            new MCMA_CORE.JobParameter("inputMetadata", "DescriptiveMetadata")
+            new MCMA_CORE.JobParameter("metadata", "DescriptiveMetadata"),
+            new MCMA_CORE.JobParameter("inputFile", "Locator")
         ]
     ),
     AiWorkflow: new MCMA_CORE.JobProfile(
         "AiWorkflow",
         [
-            new MCMA_CORE.JobParameter("inputFile", "Locator")
+            new MCMA_CORE.JobParameter("bmContent", "BMContent"),
+            new MCMA_CORE.JobParameter("bmEssence", "BMEssence")
         ]
     ),
     ExtractTechnicalMetadata: new MCMA_CORE.JobProfile(

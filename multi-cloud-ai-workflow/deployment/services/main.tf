@@ -46,3 +46,14 @@ resource "aws_iam_role_policy_attachment" "role-policy-lambda-full-access" {
   role       = "${aws_iam_role.iam_for_exec_lambda.name}"
   policy_arn = "arn:aws:iam::aws:policy/AWSLambdaFullAccess"
 }
+
+resource "aws_iam_policy" "steps_policy" {
+  name        = "${var.global_prefix}.${var.aws_region}.services.policy_steps"
+  description = "Policy to allow lambda functions manage step functions"
+  policy      = "${file("policies/lambda-allow-steps-access.json")}"
+}
+
+resource "aws_iam_role_policy_attachment" "role-policy-steps" {
+  role       = "${aws_iam_role.iam_for_exec_lambda.name}"
+  policy_arn = "${aws_iam_policy.steps_policy.arn}"
+}

@@ -269,7 +269,7 @@
         },
         "Process-Completion": {
             "Type": "Pass",
-            "End": true
+            "Next": "Completed"
         },
         "Process-Failure": {
             "Type": "Pass",
@@ -277,6 +277,9 @@
         },
         "Failed": {
             "Type": "Fail"
+        },
+        "Completed": {
+            "Type": "Succeed"
         }
     }
 }
