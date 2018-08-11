@@ -59,6 +59,21 @@ task generateTerraformWebsiteTF {
     }
 }
 
+task generateAwsCredentialsJson {
+    inputs.property("AWS_ACCESS_KEY", "${awsAccessKey}")
+    inputs.property("AWS_SECRET_KEY", "${awsSecretKey}")
+    inputs.property("AWS_REGION", "${awsRegion}")
+    outputs.file("${projectDir}/aws-credentials.json")
+    doLast {
+        def targetFile = new File("${projectDir}/aws-credentials.json")
+        targetFile.write("{\r\n")
+        targetFile.append("    \"accessKeyId\": \"${awsAccessKey}\",\r\n")
+        targetFile.append("    \"secretAccessKey\": \"${awsSecretKey}\",\r\n")
+        targetFile.append("    \"region\": \"${awsRegion}\"\r\n")
+        targetFile.append("}\r\n")
+    }
+}
+
 task terraformInit(type: Exec) {
     inputs.file "main.tf"
     outputs.upToDateWhen { file(".terraform").exists() }
@@ -100,6 +115,7 @@ task terraformOutput(type: Exec) {
 }
 
 task updateServiceRegistry(type: Exec) {
+    dependsOn generateAwsCredentialsJson
     dependsOn terraformOutput
     dependsOn "registry:npmInstall"
     inputs.file("${projectDir}/terraform.output")

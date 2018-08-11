@@ -66,6 +66,10 @@ output "upload_bucket" {
   value = "${module.storage.upload_bucket}"
 }
 
+output "website_bucket" {
+  value = "${module.storage.website_bucket}"
+}
+
 output "website_url" {
   value = "${module.storage.website_url}"
 }

@@ -1,5 +1,12 @@
 //"use strict";
 
+const util = require("util");
+
+const AWS = require("aws-sdk");
+AWS.config.loadFromPath('./aws-credentials.json');
+const S3 = new AWS.S3();
+const S3PutObject = util.promisify(S3.putObject.bind(S3));
+
 const MCMA_CORE = require("mcma-core");
 
 const JOB_PROFILES = {
@@ -235,6 +242,24 @@ const main = async () => {
 
     let servicesUrl = serviceUrls.service_registry_url + "/services";
     let jobProfilesUrl = serviceUrls.service_registry_url + "/job-profiles";
+
+    console.log("Uploading deployment configuration to website");
+    let config = {
+        servicesUrl: servicesUrl,
+        uploadBucket: serviceUrls.upload_bucket
+    }
+
+    let s3Params = {
+        Bucket: serviceUrls.website_bucket,
+        Key: "config.json",
+        Body: JSON.stringify(config)
+    }
+    try {
+        await S3PutObject(s3Params);
+    } catch (error) {
+        console.error(error);
+        return;
+    }
 
     // 1. Inserting / updating service registry
     let serviceRegistry = new MCMA_CORE.Service("Service Registry", [
