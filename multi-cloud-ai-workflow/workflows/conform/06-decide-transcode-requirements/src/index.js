@@ -46,6 +46,7 @@ exports.handler = async (event, context) => {
         console.warn("Failed to send notification");
     }
 
+    // temporary hack until we have both short and long transcoding implemented
     if (1 === 1) {
         return "none";
     }
