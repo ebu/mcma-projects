@@ -86,11 +86,10 @@ export class AppComponent implements OnInit {
                 let workflowJob = new MCMA_CORE.WorkflowJob(
                     jobProfileId,
                     new MCMA_CORE.JobParameterBag({
-                        metadata: {
-                            "@type": "DescriptiveMetadata",
+                        metadata: new MCMA_CORE.DescriptiveMetadata({
                             "name": "Test video",
                             "description": "Description of test video"
-                        },
+                        }),
                         inputFile: new MCMA_CORE.Locator({
                             awsS3Bucket: this.config.uploadBucket,
                             awsS3Key: this.itemsList[0].Key
