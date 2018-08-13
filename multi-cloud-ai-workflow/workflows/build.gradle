@@ -20,6 +20,8 @@ task build {
     dependsOn "conform:09-copy-proxy-to-website-storage:build"
     dependsOn "conform:10-register-proxy-website-locator:build"
     dependsOn "conform:11-start-ai-workflow:build"
+    dependsOn "process-workflow-completion:build"
+    dependsOn "process-workflow-failure:build"
     dependsOn "workflow-activity-callback-handler:build"
 }
 

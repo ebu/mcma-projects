@@ -83,7 +83,26 @@ const processJobAssignment = async (event) => {
 }
 
 const processNotification = async (event) => {
+    let jobAssignmentId = event.jobAssignmentId;
+    let notification = event.notification;
 
+    let table = new MCMA_AWS.DynamoDbTable(AWS, event.request.stageVariables.TableName);
+
+    let jobAssignment = await table.get("JobAssignment", jobAssignmentId);
+
+    jobAssignment.status = notification.content.status;
+    jobAssignment.statusMessage = notification.content.statusMessage;
+    if (notification.content.progress !== undefined) {
+        jobAssignment.progress = notification.content.progress;
+    }
+    jobAssignment.jobOutput = notification.content.output;
+    jobAssignment.dateModified = new Date().toISOString();
+
+    await table.put("JobAssignment", jobAssignmentId, jobAssignment);
+
+    let resourceManager = new MCMA_CORE.ResourceManager(event.request.stageVariables.ServicesUrl);
+
+    await resourceManager.sendNotification(jobAssignment);
 }
 
 const validateJobProfile = (jobProfile, jobInput) => {

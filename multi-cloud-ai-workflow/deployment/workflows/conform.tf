@@ -283,6 +283,8 @@ data "template_file" "conform-workflow" {
     lambda-09-copy-proxy-to-website-storage   = "${aws_lambda_function.conform-09-copy-proxy-to-website-storage.arn}"
     lambda-10-register-proxy-website-locator  = "${aws_lambda_function.conform-10-register-proxy-website-locator.arn}"
     lambda-11-start-ai-workflow               = "${aws_lambda_function.conform-11-start-ai-workflow.arn}"
+    lambda-process-workflow-completion        = "${aws_lambda_function.process-workflow-completion.arn}"
+    lambda-process-workflow-failure           = "${aws_lambda_function.process-workflow-failure.arn}"
   }
 }
 

@@ -36,4 +36,6 @@ include "deployment",
         "workflows:ai:06b-detect-celebrities-azure",
         "workflows:ai:07a-register-celebrities-info-aws",
         "workflows:ai:07b-register-celebrities-info-azure",
+        "workflows:process-workflow-completion",
+        "workflows:process-workflow-failure",
         "workflows:workflow-activity-callback-handler"

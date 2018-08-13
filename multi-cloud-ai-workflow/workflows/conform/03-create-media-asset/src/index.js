@@ -43,11 +43,20 @@ function createBMContent(title, description) {
 exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
 
-    // metadata of lambda input parameter
-    let metadata = event.input.metadata;
-
     // init resource manager
     let resourceManager = new MCMA_CORE.ResourceManager(SERVICE_REGISTRY_URL);
+
+    // send update notification
+    try {
+        event.status = "RUNNING";
+        event.progress = 18;
+        await resourceManager.sendNotification(event);
+    } catch (error) {
+        console.warn("Failed to send notification");
+    }
+
+    // metadata of lambda input parameter
+    let metadata = event.input.metadata;
 
     // create bm content object
     let bmc = createBMContent(metadata.name, metadata.description);

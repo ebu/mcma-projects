@@ -71,6 +71,44 @@ resource "aws_iam_role_policy_attachment" "role-policy-allow-steps-invoke-lambda
 }
 
 #################################
+#  Step Functions : Lambdas used in all workflows
+#################################
+
+resource "aws_lambda_function" "process-workflow-completion" {
+  filename         = "./../workflows/process-workflow-completion/dist/lambda.zip"
+  function_name    = "${format("%.64s", "${var.global_prefix}-process-workflow-completion")}"
+  role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
+  handler          = "index.handler"
+  source_code_hash = "${base64sha256(file("./../workflows/process-workflow-completion/dist/lambda.zip"))}"
+  runtime          = "nodejs8.10"
+  timeout          = "30"
+  memory_size      = "256"
+
+  environment {
+    variables = {
+      SERVICE_REGISTRY_URL = "${var.service_registry_url}"
+    }
+  }
+}
+
+resource "aws_lambda_function" "process-workflow-failure" {
+  filename         = "./../workflows/process-workflow-failure/dist/lambda.zip"
+  function_name    = "${format("%.64s", "${var.global_prefix}-process-workflow-failure")}"
+  role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
+  handler          = "index.handler"
+  source_code_hash = "${base64sha256(file("./../workflows/process-workflow-failure/dist/lambda.zip"))}"
+  runtime          = "nodejs8.10"
+  timeout          = "30"
+  memory_size      = "256"
+
+  environment {
+    variables = {
+      SERVICE_REGISTRY_URL = "${var.service_registry_url}"
+    }
+  }
+}
+
+#################################
 #  Step Functions : Workflow activity callback handler
 #################################
 

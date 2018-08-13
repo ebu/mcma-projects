@@ -2,12 +2,15 @@
 
 // require
 const AWS = require("aws-sdk");
+const MCMA_CORE = require("mcma-core");
 const timecodes = require("node-timecodes");
 
 // Define
 const VIDEO_CODEC_H264 = "h.264";
 const VIDEO_FORMAT = "mp42";
 const VIDEO_BITRATE_MB = 2;
+
+const SERVICE_REGISTRY_URL = process.env.SERVICE_REGISTRY_URL;
 
 // Environment Variable(AWS Lambda)
 const THESHOLD_SECONDS = parseInt(process.env.THESHOLD_SECONDS);
@@ -30,6 +33,22 @@ function calcSeconds(hour, minute, seconds) {
  */
 exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
+
+    // init resource manager
+    let resourceManager = new MCMA_CORE.ResourceManager(SERVICE_REGISTRY_URL);
+
+    // send update notification
+    try {
+        event.status = "RUNNING";
+        event.progress = 45;
+        await resourceManager.sendNotification(event);
+    } catch (error) {
+        console.warn("Failed to send notification");
+    }
+
+    if (1 === 1) {
+        return "none";
+    }
 
     let video = event.data.video;
 

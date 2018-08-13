@@ -155,6 +155,7 @@ const processNotification = async (event) => {
 
     jobProcess.status = notification.content.status;
     jobProcess.statusMessage = notification.content.statusMessage;
+    jobProcess.progress = notification.content.progress;
     jobProcess.jobOutput = notification.content.jobOutput;
     jobProcess.dateModified = new Date().toISOString();
 

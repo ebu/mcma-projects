@@ -10,6 +10,7 @@ const S3CopyObject = util.promisify(S3.copyObject.bind(S3));
 const MCMA_CORE = require("mcma-core");
 
 const REPOSITORY_BUCKET = process.env.REPOSITORY_BUCKET;
+const SERVICE_REGISTRY_URL = process.env.SERVICE_REGISTRY_URL;
 
 const yyyymmdd = () => {
     let now = new Date();
@@ -21,6 +22,17 @@ const yyyymmdd = () => {
 
 exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
+
+    let resourceManager = new MCMA_CORE.ResourceManager(SERVICE_REGISTRY_URL);
+
+    // send update notification
+    try {
+        event.status = "RUNNING";
+        event.progress = 9;
+        await resourceManager.sendNotification(event);
+    } catch (error) {
+        console.warn("Failed to send notification");
+    }
 
     let inputFile = event.input.inputFile;
 

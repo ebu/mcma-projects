@@ -268,11 +268,15 @@
             ]
         },
         "Process-Completion": {
-            "Type": "Pass",
+            "Type": "Task",
+            "Resource": "${lambda-process-workflow-completion}",
+            "ResultPath": null,
             "Next": "Completed"
         },
         "Process-Failure": {
-            "Type": "Pass",
+            "Type": "Task",
+            "Resource": "${lambda-process-workflow-failure}",
+            "ResultPath": null,
             "Next": "Failed"
         },
         "Failed": {

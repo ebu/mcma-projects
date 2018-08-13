@@ -1,11 +1,12 @@
 //"use strict";
 
 const util = require("util");
-const MCMA_CORE = require("mcma-core");
 
 const AWS = require("aws-sdk");
 const S3 = new AWS.S3();
 const S3GetObject = util.promisify(S3.getObject.bind(S3));
+
+const MCMA_CORE = require("mcma-core");
 
 const SERVICE_REGISTRY_URL = process.env.SERVICE_REGISTRY_URL;
 
@@ -36,6 +37,15 @@ exports.handler = async (event, context) => {
 
     // init resource manager
     let resourceManager = new MCMA_CORE.ResourceManager(SERVICE_REGISTRY_URL);
+
+    // send update notification
+    try {
+        event.status = "RUNNING";
+        event.progress = 36;
+        await resourceManager.sendNotification(event);
+    } catch (error) {
+        console.warn("Failed to send notification");
+    }
 
     // get ame job id
     let ameJobId = getAmeJobId(event);
