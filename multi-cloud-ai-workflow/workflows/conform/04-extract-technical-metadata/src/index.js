@@ -33,18 +33,10 @@ exports.handler = async (event, context) => {
 
     let resourceManager = new MCMA_CORE.ResourceManager(SERVICE_REGISTRY_URL);
 
-    // get all job profiles
-    let jobProfiles = await resourceManager.get("JobProfile");
+    // get job profiles filtered by name
+    let jobProfiles = await resourceManager.get("JobProfile", { name : "ExtractTechnicalMetadata"});
 
-    let jobProfileId;
-
-    // find job profile with correct name
-    for (const jobProfile of jobProfiles) {
-        if (jobProfile.name === "ExtractTechnicalMetadata") {
-            jobProfileId = jobProfile.id;
-            break;
-        }
-    }
+    let jobProfileId = jobProfiles.length ? jobProfiles[0].id : null;
 
     // if not found bail out
     if (!jobProfileId) {

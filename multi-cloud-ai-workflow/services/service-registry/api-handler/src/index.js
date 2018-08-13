@@ -11,7 +11,21 @@ const getServices = async (request, response) => {
 
     let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
 
-    response.body = await table.getAll("Service");
+    let services = await table.getAll("Service");
+
+    // simple property based filtering
+    if (Object.keys(request.queryStringParameters).length) {
+        for (let i = services.length - 1; i >= 0; i--) {
+            for (const prop in request.queryStringParameters) {
+                if (services[i][prop] !== request.queryStringParameters[prop]) {
+                    services.splice(i, 1);
+                    break;
+                }
+            }
+        }
+    }
+
+    response.body = services;
 
     console.log(JSON.stringify(response, null, 2));
 }
@@ -109,8 +123,22 @@ const getJobProfiles = async (request, response) => {
 
     let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
 
-    response.body = await table.getAll("JobProfile");
+    jobProfiles = await table.getAll("JobProfile");
 
+    // simple property based filtering
+    if (Object.keys(request.queryStringParameters).length) {
+        for (let i = jobProfiles.length - 1; i >= 0; i--) {
+            for (const prop in request.queryStringParameters) {
+                if (jobProfiles[i][prop] !== request.queryStringParameters[prop]) {
+                    jobProfiles.splice(i, 1);
+                    break;
+                }
+            }
+        }
+    }
+
+    response.body = jobProfiles;
+ 
     console.log(JSON.stringify(response, null, 2));
 }
 

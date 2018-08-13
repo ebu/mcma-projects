@@ -64,18 +64,10 @@ export class AppComponent implements OnInit {
 
                 let resourceManager = new MCMA_CORE.ResourceManager(this.config.servicesUrl);
 
-                // get all job profiles
-                let jobProfiles = await resourceManager.get("JobProfile");
+                // get job profiles filtered by name
+                let jobProfiles = await resourceManager.get("JobProfile", { name: "ConformWorkflow" });
 
-                let jobProfileId;
-
-                // find job profile with correct name
-                for (const jobProfile of jobProfiles) {
-                    if (jobProfile.name === "ConformWorkflow") {
-                        jobProfileId = jobProfile.id;
-                        break;
-                    }
-                }
+                let jobProfileId = jobProfiles.length ? jobProfiles[0].id : null;
 
                 // if not found bail out
                 if (!jobProfileId) {
