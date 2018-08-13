@@ -1,6 +1,7 @@
+//"use strict";
+
 // require
 const AWS = require("aws-sdk");
-const async = require("async");
 const timecodes = require("node-timecodes");
 
 // Define

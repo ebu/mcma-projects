@@ -1,7 +1,7 @@
+//"use strict";
+
 // require
-const AWS = require("aws-sdk");
-const async = require("async");
-const core = require("mcma-core");
+const MCMA_CORE = require("mcma-core");
 
 /**
  * Lambda function handler
