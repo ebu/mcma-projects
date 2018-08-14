@@ -1,5 +1,6 @@
 //"use strict";
 
+// require
 const util = require("util");
 
 const AWS = require("aws-sdk");
@@ -8,11 +9,17 @@ const StepFunctionsGetActivityTask = util.promisify(StepFunctions.getActivityTas
 
 const MCMA_CORE = require("mcma-core");
 
+// Environment Variable(AWS Lambda)
 const SERVICE_REGISTRY_URL = process.env.SERVICE_REGISTRY_URL;
 const TEMP_BUCKET = process.env.TEMP_BUCKET;
 const ACTIVITY_CALLBACK_URL = process.env.ACTIVITY_CALLBACK_URL;
 const ACTIVITY_ARN = process.env.ACTIVITY_ARN;
 
+/**
+ * Lambda function handler
+ * @param {*} event event
+ * @param {*} context context
+ */
 exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
     console.log(SERVICE_REGISTRY_URL, TEMP_BUCKET, ACTIVITY_CALLBACK_URL, ACTIVITY_ARN);

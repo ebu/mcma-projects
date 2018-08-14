@@ -1,5 +1,6 @@
 //"use strict";
 
+// require
 const util = require("util");
 const uuidv4 = require('uuid/v4');
 
@@ -9,6 +10,7 @@ const S3CopyObject = util.promisify(S3.copyObject.bind(S3));
 
 const MCMA_CORE = require("mcma-core");
 
+// Environment Variable(AWS Lambda)
 const REPOSITORY_BUCKET = process.env.REPOSITORY_BUCKET;
 const SERVICE_REGISTRY_URL = process.env.SERVICE_REGISTRY_URL;
 
@@ -20,6 +22,11 @@ const yyyymmdd = () => {
     return y + m + d;
 }
 
+/**
+ * Lambda function handler
+ * @param {*} event event
+ * @param {*} context context
+ */
 exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
 

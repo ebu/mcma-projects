@@ -124,6 +124,7 @@ resource "aws_lambda_function" "conform-06-decide-transcode-requirements" {
       REPOSITORY_BUCKET    = "${var.repository_bucket}"
       TEMP_BUCKET          = "${var.temp_bucket}"
       WEBSITE_BUCKET       = "${var.website_bucket}"
+      THESHOLD_SECONDS     = "300"
     }
   }
 }

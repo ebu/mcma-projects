@@ -1,25 +1,22 @@
 //"use strict";
 
 // require
-const AWS = require("aws-sdk");
 const MCMA_CORE = require("mcma-core");
-const timecodes = require("node-timecodes");
 
-// Define
+// Local Define
 const VIDEO_CODEC_H264 = "h.264";
 const VIDEO_FORMAT = "mp42";
 const VIDEO_BITRATE_MB = 2;
 
-const SERVICE_REGISTRY_URL = process.env.SERVICE_REGISTRY_URL;
-
 // Environment Variable(AWS Lambda)
+const SERVICE_REGISTRY_URL = process.env.SERVICE_REGISTRY_URL;
 const THESHOLD_SECONDS = parseInt(process.env.THESHOLD_SECONDS);
 
 /**
  * calcutate seconds
- * @param {*} hour 
- * @param {*} minute 
- * @param {*} seconds 
+ * @param {*} hour hour
+ * @param {*} minute minute
+ * @param {*} seconds seconds
  */
 function calcSeconds(hour, minute, seconds) {
     var sec = (hour * 60 * 60) + (minute * 60) + seconds;
@@ -44,11 +41,6 @@ exports.handler = async (event, context) => {
         await resourceManager.sendNotification(event);
     } catch (error) {
         console.warn("Failed to send notification");
-    }
-
-    // temporary hack until we have both short and long transcoding implemented
-    if (1 === 1) {
-        return "none";
     }
 
     let video = event.data.video;

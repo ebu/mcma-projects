@@ -44,8 +44,28 @@ const JOB_PROFILES = {
             new MCMA_CORE.JobParameter("outputFile", "Locator")
         ]
     ),
-    CreateProxy: new MCMA_CORE.JobProfile(
-        "CreateProxy",
+    // CreateProxy: new MCMA_CORE.JobProfile(
+    //     "CreateProxy",
+    //     [
+    //         new MCMA_CORE.JobParameter("inputFile", "Locator"),
+    //         new MCMA_CORE.JobParameter("outputLocation", "Locator")
+    //     ],
+    //     [
+    //         new MCMA_CORE.JobParameter("outputFile", "Locator")
+    //     ]
+    // ),
+    CreateProxyLambda: new MCMA_CORE.JobProfile(
+        "CreateProxyLambda",
+        [
+            new MCMA_CORE.JobParameter("inputFile", "Locator"),
+            new MCMA_CORE.JobParameter("outputLocation", "Locator")
+        ],
+        [
+            new MCMA_CORE.JobParameter("outputFile", "Locator")
+        ]
+    ),
+    CreateProxyEC2: new MCMA_CORE.JobProfile(
+        "CreateProxyEC2",
         [
             new MCMA_CORE.JobParameter("inputFile", "Locator"),
             new MCMA_CORE.JobParameter("outputLocation", "Locator")
@@ -72,6 +92,8 @@ const JOB_PROFILES = {
 
 const createServices = (serviceUrls) => {
     const serviceList = [];
+
+    console.log("serviceUrls", serviceUrls);
 
     for (const prop in serviceUrls) {
         switch (prop) {
@@ -150,25 +172,53 @@ const createServices = (serviceUrls) => {
                     ]
                 ));
                 break;
-            case "transform_service_url":
+            // case "transform_service_url":
+            //     serviceList.push(
+            //         new MCMA_CORE.Service(
+            //             "FFmpeg TransformService",
+            //             [
+            //                 new MCMA_CORE.ServiceResource("JobAssignment", serviceUrls[prop] + "/job-assignments")
+            //             ],
+            //             "TransformJob",
+            //             [
+            //                 JOB_PROFILES.CreateProxy.id ? JOB_PROFILES.CreateProxy.id : JOB_PROFILES.CreateProxy,
+            //                 JOB_PROFILES.ExtractThumbnail.id ? JOB_PROFILES.ExtractThumbnail.id : JOB_PROFILES.ExtractThumbnail
+            //                 // ],
+            //                 // [
+            //                 //     new MCMA_CORE.Locator({ "httpEndpoint" : serviceUrls.publicBucketUrl, "awsS3Bucket": serviceUrls.publicBucket }),
+            //                 //     new MCMA_CORE.Locator({ "httpEndpoint" : serviceUrls.privateBucketUrl, "awsS3Bucket": serviceUrls.privateBucket })
+            //                 // ],
+            //                 // [
+            //                 //     new MCMA_CORE.Locator({ "httpEndpoint" : serviceUrls.publicBucketUrl, "awsS3Bucket": serviceUrls.publicBucket }),
+            //                 //     new MCMA_CORE.Locator({ "httpEndpoint" : serviceUrls.privateBucketUrl, "awsS3Bucket": serviceUrls.privateBucket })
+            //             ]
+            //         )
+            //     );
+            //     break;
+            case "transform_service_lambda_url":
                 serviceList.push(
                     new MCMA_CORE.Service(
-                        "FFmpeg TransformService",
+                        "FFmpeg Lambda TransformService",
                         [
                             new MCMA_CORE.ServiceResource("JobAssignment", serviceUrls[prop] + "/job-assignments")
                         ],
                         "TransformJob",
                         [
-                            JOB_PROFILES.CreateProxy.id ? JOB_PROFILES.CreateProxy.id : JOB_PROFILES.CreateProxy,
-                            JOB_PROFILES.ExtractThumbnail.id ? JOB_PROFILES.ExtractThumbnail.id : JOB_PROFILES.ExtractThumbnail
-                            // ],
-                            // [
-                            //     new MCMA_CORE.Locator({ "httpEndpoint" : serviceUrls.publicBucketUrl, "awsS3Bucket": serviceUrls.publicBucket }),
-                            //     new MCMA_CORE.Locator({ "httpEndpoint" : serviceUrls.privateBucketUrl, "awsS3Bucket": serviceUrls.privateBucket })
-                            // ],
-                            // [
-                            //     new MCMA_CORE.Locator({ "httpEndpoint" : serviceUrls.publicBucketUrl, "awsS3Bucket": serviceUrls.publicBucket }),
-                            //     new MCMA_CORE.Locator({ "httpEndpoint" : serviceUrls.privateBucketUrl, "awsS3Bucket": serviceUrls.privateBucket })
+                            JOB_PROFILES.CreateProxyLambda.id ? JOB_PROFILES.CreateProxyLambda.id : JOB_PROFILES.CreateProxyLambda,
+                        ]
+                    )
+                );
+                break;
+            case "transform_service_ec2_url":
+                serviceList.push(
+                    new MCMA_CORE.Service(
+                        "FFmpeg EC2 TransformService",
+                        [
+                            new MCMA_CORE.ServiceResource("JobAssignment", serviceUrls[prop] + "/job-assignments")
+                        ],
+                        "TransformJob",
+                        [
+                            JOB_PROFILES.CreateProxyEC2.id ? JOB_PROFILES.CreateProxyEC2.id : JOB_PROFILES.CreateProxyEC2,
                         ]
                     )
                 );
@@ -305,7 +355,8 @@ const main = async () => {
             await resourceManager.update(jobProfile);
         } else {
             console.log("Removing " + (jobProfile && jobProfile.id ? "duplicate " : "") + "JobProfile '" + retrievedJobProfile.name + "'");
-            await resourceManager.delete(jobProfile[i]);
+            //await resourceManager.delete(jobProfile[i]);
+            await resourceManager.delete(retrievedJobProfile);
         }
     }
 

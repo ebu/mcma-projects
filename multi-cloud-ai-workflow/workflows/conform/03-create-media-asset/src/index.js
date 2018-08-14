@@ -1,7 +1,9 @@
 //"use strict";
 
+// require
 const MCMA_CORE = require("mcma-core");
 
+// Environment Variable(AWS Lambda)
 const SERVICE_REGISTRY_URL = process.env.SERVICE_REGISTRY_URL;
 
 /**
@@ -37,8 +39,8 @@ function createBMContent(title, description) {
 
 /**
  * Lambda function handler
- * @param {*} event 
- * @param {*} context 
+ * @param {*} event event
+ * @param {*} context context
  */
 exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));

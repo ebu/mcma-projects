@@ -1,5 +1,6 @@
 //"use strict";
 
+// require
 const util = require("util");
 
 const AWS = require("aws-sdk");
@@ -8,6 +9,7 @@ const S3GetObject = util.promisify(S3.getObject.bind(S3));
 
 const MCMA_CORE = require("mcma-core");
 
+// Environment Variable(AWS Lambda)
 const SERVICE_REGISTRY_URL = process.env.SERVICE_REGISTRY_URL;
 
 /**
@@ -28,9 +30,9 @@ function getAmeJobId(event) {
 }
 
 /**
- * 
- * @param {*} event 
- * @param {*} context 
+ * Lambda function handler
+ * @param {*} event event
+ * @param {*} context context
  */
 exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));

@@ -3,6 +3,7 @@
 // require
 const MCMA_CORE = require("mcma-core");
 
+// Environment Variable(AWS Lambda)
 const SERVICE_REGISTRY_URL = process.env.SERVICE_REGISTRY_URL;
 
 /**
@@ -24,4 +25,40 @@ exports.handler = async (event, context) => {
     } catch (error) {
         console.warn("Failed to send notification");
     }
+
+    // Before the workflow is created, no further processing is performed
+    if( true ) {
+        return null;
+    }
+
+    // get activity task
+    let data = await StepFunctionsGetActivityTask({ activityArn: ACTIVITY_ARN });
+
+    let taskToken = data.taskToken;
+    if (!taskToken) {
+        throw new Error("Failed to obtain activity task")
+    }
+
+    // get job profiles filtered by name
+    let jobProfiles = await resourceManager.get("JobProfile", { name : "AiWorkflow"});
+
+    let jobProfileId = jobProfiles.length ? jobProfiles[0].id : null;
+
+    // if not found bail out
+    if (!jobProfileId) {
+        throw new Error("JobProfile 'AiWorkflow' not found");
+    }
+
+    // creating ai job
+    let aiJob = new MCMA_CORE.AIJob(
+        jobProfileId,
+        new MCMA_CORE.JobParameterBag({
+            inputFile: event.data.repositoryFile,
+            outputLocation: null,
+        }),
+        new MCMA_CORE.NotificationEndpoint(ACTIVITY_CALLBACK_URL + "?taskToken=" + encodeURIComponent(taskToken))
+    );
+
+    // posting the aiJob to the job repository
+    aiJob = await resourceManager.create(aiJob);
 }
