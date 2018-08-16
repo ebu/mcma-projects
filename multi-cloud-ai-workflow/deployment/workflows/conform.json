@@ -35,7 +35,7 @@
         "03-create-media-asset": {
             "Type": "Task",
             "Resource": "${lambda-03-create-media-asset}",
-            "ResultPath": "$.data.assets",
+            "ResultPath": "$.data.bmContent",
             "Next": "04-extract-technical-metadata-parent",
             "Catch": [
                 {
@@ -210,7 +210,7 @@
         "08-register-proxy-essence": {
             "Type": "Task",
             "Resource": "${lambda-08-register-proxy-essence}",
-            "ResultPath": "$.data.assets",
+            "ResultPath": "$.data.bmEssence",
             "Next": "09-copy-proxy-to-website-storage",
             "Catch": [
                 {
@@ -240,7 +240,7 @@
         "10-register-proxy-website-locator": {
             "Type": "Task",
             "Resource": "${lambda-10-register-proxy-website-locator}",
-            "ResultPath": "$.data.assets",
+            "ResultPath": null,
             "Next": "11-start-ai-workflow",
             "Catch": [
                 {
@@ -255,7 +255,7 @@
         "11-start-ai-workflow": {
             "Type": "Task",
             "Resource": "${lambda-11-start-ai-workflow}",
-            "ResultPath": "$.data.workflowJobId",
+            "ResultPath": "$.output",
             "Next": "Process-Completion",
             "Catch": [
                 {

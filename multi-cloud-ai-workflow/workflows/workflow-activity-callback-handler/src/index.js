@@ -35,10 +35,20 @@ const processNotification = async (request, response) => {
 
     switch (notification.content.status) {
         case "COMPLETED":
-            await SendTaskSuccess({ taskToken: request.queryStringParameters.taskToken, output: JSON.stringify(notification.source) });
+            await SendTaskSuccess({
+                taskToken: request.queryStringParameters.taskToken,
+                output: JSON.stringify(notification.source)
+            });
             break;
         case "FAILED":
-            await SendTaskFailure({ taskToken: request.queryStringParameters.taskToken, error: notification.content["@type"] + " failed execution with statusMessage '" + notification.content.statusMessage + "'", cause: notification.source });
+            let error = notification.content["@type"] + " failed execution";
+            let cause = notification.content["@type"] + " with id '" + notification.source + "' failed execution with statusMessage '" + notification.content.statusMessage + "'";
+
+            await SendTaskFailure({
+                taskToken: request.queryStringParameters.taskToken,
+                error: error,
+                cause: JSON.stringify(cause)
+            });
             break;
     }
 }

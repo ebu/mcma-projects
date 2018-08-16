@@ -82,7 +82,7 @@ exports.handler = async (event, context) => {
     }
 
     // get BMContent
-    response = await MCMA_CORE.HTTP.get(event.data.assets);
+    response = await MCMA_CORE.HTTP.get(event.data.bmContent);
     if (!response.data) {
         throw new Error("Faild to obtain BMContent");
     }
@@ -95,6 +95,6 @@ exports.handler = async (event, context) => {
     bmc = await resourceManager.update(bmc);
 
     // addin ResultPath of StepFunctions
-    return bmc.id;
+    return bme.id;
 
 }

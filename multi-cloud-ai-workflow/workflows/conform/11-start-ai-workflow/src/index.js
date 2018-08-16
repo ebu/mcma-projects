@@ -26,19 +26,6 @@ exports.handler = async (event, context) => {
         console.warn("Failed to send notification");
     }
 
-    // Before the workflow is created, no further processing is performed
-    if( true ) {
-        return null;
-    }
-
-    // get activity task
-    let data = await StepFunctionsGetActivityTask({ activityArn: ACTIVITY_ARN });
-
-    let taskToken = data.taskToken;
-    if (!taskToken) {
-        throw new Error("Failed to obtain activity task")
-    }
-
     // get job profiles filtered by name
     let jobProfiles = await resourceManager.get("JobProfile", { name : "AiWorkflow"});
 
@@ -49,16 +36,21 @@ exports.handler = async (event, context) => {
         throw new Error("JobProfile 'AiWorkflow' not found");
     }
 
-    // creating ai job
-    let aiJob = new MCMA_CORE.AIJob(
+    // creating workflow job
+    let workflowJob = new MCMA_CORE.WorkflowJob(
         jobProfileId,
         new MCMA_CORE.JobParameterBag({
-            inputFile: event.data.repositoryFile,
-            outputLocation: null,
-        }),
-        new MCMA_CORE.NotificationEndpoint(ACTIVITY_CALLBACK_URL + "?taskToken=" + encodeURIComponent(taskToken))
+            bmContent: event.data.bmContent,
+            bmEssence: event.data.bmEssence
+        })
     );
 
-    // posting the aiJob to the job repository
-    aiJob = await resourceManager.create(aiJob);
+    // posting the workflowJob to the job repository
+    workflowJob = await resourceManager.create(workflowJob);
+
+    // returning workflow output
+    return {
+        aiWorkflow: workflowJob.id,
+        websiteMediaFile: event.data.websiteFile
+    }
 }

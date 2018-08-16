@@ -39,8 +39,6 @@ exports.handler = async (event, context) => {
     // get activity task
     let data = await StepFunctionsGetActivityTask({ activityArn: ACTIVITY_ARN});
 
-    console.log(data)
-
     let taskToken = data.taskToken;
     if (!taskToken) {
         throw new Error("Failed to obtain activity task")

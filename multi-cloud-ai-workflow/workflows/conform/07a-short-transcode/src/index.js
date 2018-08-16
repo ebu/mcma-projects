@@ -16,7 +16,7 @@ const SERVICE_REGISTRY_URL = process.env.SERVICE_REGISTRY_URL;
 const TEMP_BUCKET = process.env.TEMP_BUCKET;
 
 // Local Define
-const RESORCE_TYPE_JOB_PROFILE = "JobProfile";
+const RESOURCE_TYPE_JOB_PROFILE = "JobProfile";
 const JOB_PROFILE_NAME = "CreateProxyLambda";
 
 /**
@@ -26,14 +26,6 @@ const JOB_PROFILE_NAME = "CreateProxyLambda";
  */
 exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
-
-    // get activity task
-    let data = await StepFunctionsGetActivityTask({ activityArn: ACTIVITY_ARN });
-
-    let taskToken = data.taskToken;
-    if (!taskToken) {
-        throw new Error("Failed to obtain activity task")
-    }
 
     // init resource manager
     let resourceManager = new MCMA_CORE.ResourceManager(SERVICE_REGISTRY_URL);
@@ -47,18 +39,21 @@ exports.handler = async (event, context) => {
         console.warn("Failed to send notification");
     }
 
-	// get all job profiles
-    let jobProfiles = await resourceManager.get(RESORCE_TYPE_JOB_PROFILE);
+    // get activity task
+    let data = await StepFunctionsGetActivityTask({ activityArn: ACTIVITY_ARN });
 
-    // find job profile with correct name
-    let jobProfileId;
-
-    for (const jobProfile of jobProfiles) {
-        if (jobProfile.name === JOB_PROFILE_NAME) {
-            jobProfileId = jobProfile.id;
-            break;
-        }
+    let taskToken = data.taskToken;
+    if (!taskToken) {
+        throw new Error("Failed to obtain activity task")
     }
+
+    // using input from activity task to ensure we don't have race conditions if two workflows execute simultanously.
+    event = JSON.parse(data.input);
+
+    // get job profiles filtered by name
+    let jobProfiles = await resourceManager.get(RESOURCE_TYPE_JOB_PROFILE, { name: JOB_PROFILE_NAME });
+
+    let jobProfileId = jobProfiles.length ? jobProfiles[0].id : null;
 
     // if not found bail out
     if (!jobProfileId) {

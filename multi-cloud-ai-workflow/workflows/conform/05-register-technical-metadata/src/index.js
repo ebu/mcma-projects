@@ -88,7 +88,7 @@ exports.handler = async (event, context) => {
     console.log("[BMEssence ID]:", bme.id);
 
     // get BMContent
-    response = await MCMA_CORE.HTTP.get(event.data.assets);
+    response = await MCMA_CORE.HTTP.get(event.data.bmContent);
     if (!response.data) {
         throw new Error("Faild to obtain BMContent");
     }
