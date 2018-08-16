@@ -8,6 +8,7 @@ const uuidv4 = require('uuid/v4');
 
 const execFile = util.promisify(childProcess.execFile);
 const fsWriteFile = util.promisify(fs.writeFile);
+const fsReadFile = util.promisify(fs.readFile);
 const fsUnlink = util.promisify(fs.unlink);
 
 // adding bin folder to process path
@@ -21,11 +22,12 @@ const S3PutObject = util.promisify(S3.putObject.bind(S3));
 const MCMA_AWS = require("mcma-aws");
 const MCMA_CORE = require("mcma-core");
 
-const JOB_PROFILE_EXTRACT_TECHNICAL_METADATA = "ExtractTechnicalMetadata";
+const JOB_PROFILE_CREATE_PROXY_LAMBDA = "CreateProxyLambda";
 
 const ffmpeg = async (params) => {
     try {
         const { stdout, stderr } = await execFile(path.join(__dirname, 'bin/ffmpeg'), params);
+
         return {
             stdout: stdout,
             stderr: stderr
@@ -35,17 +37,118 @@ const ffmpeg = async (params) => {
     }
 }
 
+/**
+ * Lambda function handler
+ * @param {*} event event
+ * @param {*} context context
+ */
 exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
 
-    let resourceManager = new MCMA_CORE.ResourceManager(event.request.stageVariables.ServicesUrl);
-
-    let table = new MCMA_AWS.DynamoDbTable(AWS, event.request.stageVariables.TableName);
+    // init
+    let variables = event.request.stageVariables;
+    let resourceManager = new MCMA_CORE.ResourceManager(variables.ServicesUrl);
+    let table = new MCMA_AWS.DynamoDbTable(AWS, variables.TableName);
     let jobAssignmentId = event.jobAssignmentId;
+
+    try {
+
+        // 1. Setting job assignment status to RUNNING
+        // console.log("1. Setting job assignment status to RUNNING");
+        await updateJobAssignmentStatus(resourceManager, table, jobAssignmentId, "RUNNING");
+
+        // 2. Retrieving TransformJob
+        // console.log("2. Retrieving TransformJob");
+        let transformJob = await retrieveTranformJob(table, jobAssignmentId);
+
+        // 3. Retrieve JobProfile
+        // console.log("3. Retrieve JobProfile");
+        let jobProfile = await retrieveJobProfile(transformJob);
+
+        // 4. Retrieve job inputParameters
+        // console.log("4. Retrieve job inputParameters");
+        let jobInput = await retrieveJobInput(transformJob);
+
+        // 5. Check if we support jobProfile and if we have required parameters in jobInput
+        // console.log("5. Check if we support jobProfile and if we have required parameters in jobInput");
+        validateJobProfile(jobProfile, jobInput);
+
+        // 6. Execute ffmepg on input file
+        // console.log("6. Execute ffmepg on input file");
+        let inputFile = jobInput.inputFile;
+        let outputLocation = jobInput.outputLocation;
+
+        let tempFilename;
+        if (inputFile.awsS3Bucket && inputFile.awsS3Key) {
+
+            // 6.1. obtain data from s3 object
+            console.log(" 6.1. obtain data from s3 object");
+            let data = await S3GetObject({ Bucket: inputFile.awsS3Bucket, Key: inputFile.awsS3Key });
+
+            // 6.2. write data to local tmp storage
+            console.log("6.2. write data to local tmp storage");
+            let localFilename = "/tmp/" + uuidv4();
+            await fsWriteFile(localFilename, data.Body);
+
+            // 6.3. obtain ffmpeg output
+            console.log("6.3. obtain ffmpeg output");
+            tempFilename = "/tmp/" + uuidv4() + ".mp4";
+            let params = ["-y", "-i", localFilename, "-preset", "ultrafast", "-vf", "scale=-1:360", "-c:v", "libx264", "-pix_fmt", "yuv420p", tempFilename];
+            let output = await ffmpeg(params);
+
+            // 6.4. removing local file
+            console.log("6.4. removing local file");
+            await fsUnlink(localFilename);
+            
+        } else {
+            throw new Error("Not able to obtain input file");
+        }
+
+        // 7. Writing ffmepg output to output location
+        // console.log("7. Writing ffmepg output to output location");
+
+        let s3Params = {
+            Bucket: outputLocation.awsS3Bucket,
+            Key: (outputLocation.awsS3KeyPrefix ? outputLocation.awsS3KeyPrefix : "") + uuidv4() + ".mp4",
+            Body: await fsReadFile(tempFilename)
+        }
+
+        await S3PutObject(s3Params);
+
+        // 8. removing temp file
+        // console.log("8. removing temp file");
+        await fsUnlink(tempFilename);
+
+        // 9. updating JobAssignment with jobOutput
+        let jobOutput = new MCMA_CORE.JobParameterBag({
+            outputFile: new MCMA_CORE.Locator({
+                awsS3Bucket: s3Params.Bucket,
+                awsS3Key: s3Params.Key
+            })
+        });
+
+        await updateJobAssignmentWithOutput(table, jobAssignmentId, jobOutput);
+
+        // 10. Setting job assignment status to COMPLETED
+        await updateJobAssignmentStatus(resourceManager, table, jobAssignmentId, "COMPLETED");
+
+    } catch (error) {
+        console.error(error);
+        try {
+            await updateJobAssignmentStatus(resourceManager, table, jobAssignmentId, "FAILED", error.message);
+        } catch (error) {
+            console.error(error);
+        }
+    }
 }
 
+/**
+ * Validate Job Profile
+ * @param {*} jobProfile JobProfile 
+ * @param {*} jobInput JobInput
+ */
 const validateJobProfile = (jobProfile, jobInput) => {
-    if (jobProfile.name !== JOB_PROFILE_EXTRACT_TECHNICAL_METADATA) {
+    if (jobProfile.name !== JOB_PROFILE_CREATE_PROXY_LAMBDA) {
         throw new Error("JobProfile '" + jobProfile.name + "' is not supported");
     }
 
@@ -54,7 +157,7 @@ const validateJobProfile = (jobProfile, jobInput) => {
             throw new Error("JobProfile.inputParameters is not an array");
         }
 
-        for (parameter of jobProfile.inputParameters) {
+        for (let parameter of jobProfile.inputParameters) {
             if (jobInput[parameter.parameterName] === undefined) {
                 throw new Error("jobInput misses required input parameter '" + parameter.parameterName + "'");
             }
@@ -62,12 +165,12 @@ const validateJobProfile = (jobProfile, jobInput) => {
     }
 }
 
-const retrieveJobInput = async (ameJob) => {
-    return await retrieveResource(ameJob.jobInput, "ameJob.jobInput");
+const retrieveJobInput = async (transformJob) => {
+    return await retrieveResource(transformJob.jobInput, "transformJob.jobInput");
 }
 
-const retrieveJobProfile = async (ameJob) => {
-    return await retrieveResource(ameJob.jobProfile, "ameJob.jobProfile");
+const retrieveJobProfile = async (transformJob) => {
+    return await retrieveResource(transformJob.jobProfile, "transformJob.jobProfile");
 }
 
 const retrieveTranformJob = async (table, jobAssignmentId) => {
