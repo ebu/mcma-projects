@@ -14,6 +14,8 @@ const ACTIVITY_ARN = process.env.ACTIVITY_ARN;
 const ACTIVITY_CALLBACK_URL = process.env.ACTIVITY_CALLBACK_URL;
 const SERVICE_REGISTRY_URL = process.env.SERVICE_REGISTRY_URL;
 const TEMP_BUCKET = process.env.TEMP_BUCKET;
+const REPOSITORY_BUCKET = process.env.REPOSITORY_BUCKET;
+const WEBSITE_BUCKET = process.env.WEBSITE_BUCKET;
 
 // Local Define
 const RESOURCE_TYPE_JOB_PROFILE = "JobProfile";
@@ -66,7 +68,7 @@ exports.handler = async (event, context) => {
         new MCMA_CORE.JobParameterBag({
             inputFile: event.data.repositoryFile,
             outputLocation: new MCMA_CORE.Locator({
-                awsS3Bucket: TEMP_BUCKET,
+                awsS3Bucket: REPOSITORY_BUCKET,
                 awsS3KeyPrefix: "TransformJobResults/"
             })
         }),

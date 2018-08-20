@@ -8,32 +8,18 @@ const SERVICE_REGISTRY_URL = process.env.SERVICE_REGISTRY_URL;
 
 /**
  * Create New BMContent Object
- * @param {*} title 
- * @param {*} description 
+ * @param {*} title title
+ * @param {*} description description
  */
 function createBMContent(title, description) {
-    let bmContent = {
-        "@type": "BMContent",
-        "ebucore:title": title,
-        "ebucore:description": description,
-        // "rdfs:label": "Eurovision Song Contest 2015, Austria",
-        // "ebucore:dateCreated": "2015-05-23T21:00:00",
-        // "ebucore:dateModified": "2015-05-23T21:00:00",
-        // "ebucore:title": "Eurovision Song Contest 2015 Grand Final",
-        // "esc:orderOk": "1",
-        // "esc:resultsKnown": "1",
-        // "esc:votingRules": " Televoters and a professional jury in each country have a 50% stake in the outcome. The votes are revealed by spokespeople from all participating countries. ",
-        // "ebucore:date": "2015-05-23T21:00:00",
-        // "@context": {
-        //     "ebucore": "http://www.ebu.ch/metadata/ontologies/ebucore/ebucore#",
-        //     "esc": "http://www.eurovision.com#",
-        //     "fims": "http://fims.tv#",
-        //     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-        //     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-        //     "xsd": "http://www.w3.org/2001/XMLSchema#"
-        // }
-    };
-
+    // init bmcontent
+    let bmContent = new MCMA_CORE.BMContent({
+        "name": title,
+        "description": description,
+        "bmEssences": [],
+        "awsAiMetadata": null,
+        "azureAiMetadata": null,
+    });
     return bmContent;
 }
 
@@ -66,10 +52,12 @@ exports.handler = async (event, context) => {
     // post bm content
     bmc = await resourceManager.create(bmc);
 
+    // check if BMContent is registered
     if (!bmc.id) {
         throw new Error("Failed to register BMContent.");
     }
 
+    // return the URL to the BMContent
     return bmc.id;
 
 }

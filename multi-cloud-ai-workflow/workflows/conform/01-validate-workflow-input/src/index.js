@@ -92,9 +92,9 @@ exports.handler = async (event, context) => {
         throw new Error("Unable to read input file in bucket '" + s3Bucket + "' with key '" + s3Key + "' due to error: " + error.message);
     }
 
-    if (!data.ContentType.startsWith("video")) {
-        throw new Error("Input file is not a video");
-    }
+    // if (!data.ContentType.startsWith("video")) {
+    //     throw new Error("Input file is not a video");
+    // }
 
     return data;
 }

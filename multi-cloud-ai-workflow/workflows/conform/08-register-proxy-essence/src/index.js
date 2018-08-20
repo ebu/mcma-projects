@@ -17,14 +17,58 @@ const SERVICE_REGISTRY_URL = process.env.SERVICE_REGISTRY_URL;
 function getTransformJobId(event) {
     let id;
 
-    event.data.transformJob.forEach(element => {
-        if (element) {
-            id = element;
-            return true;
-        }
-    });
+    if( event.data.transformJob ) {
+        event.data.transformJob.forEach(element => {
+            if (element) {
+                id = element;
+                return true;
+            }
+        });
+    }
 
     return id;
+}
+
+/**
+ * get the registered BMContent
+ */
+getBMContent = async(url) => {
+
+    let response = await MCMA_CORE.HTTP.get(url);
+
+    if (!response.data) {
+        throw new Error("Faild to obtain BMContent");
+    }
+
+    return response.data;
+}
+
+/**
+ * get the registered BMEssence
+ */
+getBMEssence = async(url) => {
+
+    let response = await MCMA_CORE.HTTP.get(url);
+
+    if (!response.data) {
+        throw new Error("Faild to obtain BMContent");
+    }
+
+    return response.data;
+}
+
+/**
+ * Create New BMEssence Object
+ * @param {*} bmContent the URL to the BMContent
+ * @param {*} location point to copies of the media file
+ */
+function createBMEssence(bmContent, location) {
+    // init bmcontent
+    let bmEssence = new MCMA_CORE.BMEssence({
+        "bmContent": bmContent.id,
+        "locations": [ location ],
+    });
+    return bmEssence;
 }
 
 /**
@@ -49,8 +93,10 @@ exports.handler = async (event, context) => {
 
     // get transform job id
     let transformJobId = getTransformJobId(event);
+
+    // in case we did note do a transcode
     if(!transformJobId) {
-        throw new Error("Faild to obtain TransformJob ID");
+        return event.data.bmEssence;
     }
 
     // get result of transform job
@@ -63,17 +109,16 @@ exports.handler = async (event, context) => {
     let s3Bucket = response.data.jobOutput.outputFile.awsS3Bucket;
     let s3Key = response.data.jobOutput.outputFile.awsS3Key;
 
+    // acquire the registered BMContent
+    let bmc = await getBMContent(event.data.bmContent);
+
     // create BMEssence
-    let bme = {
-        "@type": "BMEssence",
-        "label": "proxy",
-        "ebucore:locator": [
-            {
-                "key": "s3.temp",
-                "value": "https://" + s3Bucket + ".s3.amazonaws.com/" + s3Key
-            }
-        ]
-    };
+    let locator = new MCMA_CORE.Locator({
+        "awsS3Bucket": s3Bucket,
+        "awsS3Key": s3Key
+    });
+
+    let bme = createBMEssence(bmc, locator);
 
     // register BMEssence
     bme = await resourceManager.create(bme);
@@ -81,20 +126,12 @@ exports.handler = async (event, context) => {
         throw new Error("Failed to register BMEssence.");
     }
 
-    // get BMContent
-    response = await MCMA_CORE.HTTP.get(event.data.bmContent);
-    if (!response.data) {
-        throw new Error("Faild to obtain BMContent");
-    }
-
     // addin BMEssence ID
-    let bmc = response.data;
-    bmc["ebucore:hasRelatedResource"].push({ "@id": bme.id });
+    bmc.bmEssences.push(bme.id);
 
     // update BMContents
     bmc = await resourceManager.update(bmc);
 
-    // addin ResultPath of StepFunctions
+    // the URL to the BMEssence with conformed media
     return bme.id;
-
 }

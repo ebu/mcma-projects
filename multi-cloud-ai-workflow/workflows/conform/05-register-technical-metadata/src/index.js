@@ -30,6 +30,36 @@ function getAmeJobId(event) {
 }
 
 /**
+ * get the registered BMContent
+ */
+getBMContent = async(url) => {
+
+    let response = await MCMA_CORE.HTTP.get(url);
+
+    if (!response.data) {
+        throw new Error("Faild to obtain BMContent");
+    }
+
+    return response.data;
+}
+
+/**
+ * Create New BMEssence Object
+ * @param {*} bmContent the URL to the BMContent
+ * @param {*} location point to copies of the media file
+ * @param {*} mediainfo json output from media info
+ */
+function createBMEssence(bmContent, location, mediainfo) {
+    // init bmcontent
+    let bmEssence = new MCMA_CORE.BMEssence({
+        "bmContent": bmContent.id,
+        "locations": [ location ],
+        "technicalMetadata": mediainfo,
+    });
+    return bmEssence;
+}
+
+/**
  * Lambda function handler
  * @param {*} event event
  * @param {*} context context
@@ -76,9 +106,13 @@ exports.handler = async (event, context) => {
     }
     let mediainfo = JSON.parse(s3Object.Body.toString());
 
+    // acquire the registered BMContent
+    let bmc = await getBMContent(event.data.bmContent);
+
+    console.log("[BMContent]:", JSON.stringify(bmc, null, 2));
+
     // create BMEssence
-    mediainfo["@type"] = "BMEssence";
-    let bme = mediainfo;
+    let bme = createBMEssence(bmc, event.data.repositoryFile, mediainfo);
 
     // register BMEssence
     bme = await resourceManager.create(bme);
@@ -87,36 +121,12 @@ exports.handler = async (event, context) => {
     }
     console.log("[BMEssence ID]:", bme.id);
 
-    // get BMContent
-    response = await MCMA_CORE.HTTP.get(event.data.bmContent);
-    if (!response.data) {
-        throw new Error("Faild to obtain BMContent");
-    }
-    let bmc = response.data;
-
     // append BMEssence ID to BMContent
-    bmc["ebucore:hasRelatedResource"] = [];
-    bmc["ebucore:hasRelatedResource"].push({ "@id": bme.id });
+    bmc.bmEssences.push(bme.id);
 
     // update BMContents
     bmc = await resourceManager.update(bmc);
 
-    // make result path data
-    let ebuCoreMain = bme['ebucore:ebuCoreMain'];
-    let coreMetadata = ebuCoreMain['ebucore:coreMetadata'][0];
-    let format = coreMetadata['ebucore:format'][0]['ebucore:videoFormat'][0]['@videoFormatName'];
-    let bitRate = coreMetadata['ebucore:format'][0]['ebucore:videoFormat'][0]['ebucore:bitRate'][0]['#value'];
-    let containerFormat = coreMetadata['ebucore:format'][0]['ebucore:containerFormat'][0];
-    let codec = containerFormat['ebucore:codec'][0]['ebucore:codecIdentifier'][0]['dc:identifier'][0]['#value'];
-    let duration = coreMetadata['ebucore:format'][0]['ebucore:duration'][0];
-    let normalPlayTime = duration['ebucore:normalPlayTime'][0]['#value'];
-
-    let data = {
-        "normalPlayTime" : normalPlayTime,
-        "codec": codec,
-        "format": format,
-        "bitRate": bitRate,
-    };
-
-    return data;
+    // return the URL to the BMEssense
+    return bme.id;
 }

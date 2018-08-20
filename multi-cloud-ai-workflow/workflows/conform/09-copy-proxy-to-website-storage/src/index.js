@@ -13,14 +13,6 @@ const MCMA_CORE = require("mcma-core");
 const SERVICE_REGISTRY_URL = process.env.SERVICE_REGISTRY_URL;
 const WEBSITE_BUCKET = process.env.WEBSITE_BUCKET;
 
-const yyyymmdd = () => {
-    let now = new Date();
-    let y = now.getUTCFullYear();
-    let m = ('' + (now.getUTCMonth() + 1)).padStart(2, '0');
-    let d = ('' + (now.getUTCDate() + 1)).padStart(2, '0');
-    return y + m + d;
-}
-
 /**
  * get amejob id
  * @param {*} event 
@@ -28,14 +20,30 @@ const yyyymmdd = () => {
 function getTransformJobId(event) {
     let id;
 
-    event.data.transformJob.forEach(element => {
-        if (element) {
-            id = element;
-            return true;
-        }
-    });
+    if( event.data.transformJob ) {
+        event.data.transformJob.forEach(element => {
+            if (element) {
+                id = element;
+                return true;
+            }
+        });
+    }
 
     return id;
+}
+
+/**
+ * get the registered BMEssence
+ */
+getBMEssence = async(url) => {
+
+    let response = await MCMA_CORE.HTTP.get(url);
+
+    if (!response.data) {
+        throw new Error("Faild to obtain BMEssence");
+    }
+
+    return response.data;
 }
 
 /**
@@ -60,24 +68,35 @@ exports.handler = async (event, context) => {
 
     // get transform job id
     let transformJobId = getTransformJobId(event);
+    // in case we did note do a transcode
+    let response;
+    let outputFile;
+    let copySource;
     if(!transformJobId) {
-        throw new Error("Faild to obtain TransformJob ID");
+        let bme = await getBMEssence(event.data.bmEssence);
+        // copy proxy to website storage
+        outputFile = bme.locations[0];
+        copySource = encodeURI(outputFile.awsS3Bucket + "/" + outputFile.awsS3Key);
+
+    } else {
+        // get result of transform job
+        response = await MCMA_CORE.HTTP.get(transformJobId);
+        if(!response.data) {
+            throw new Error("Faild to obtain TransformJob");
+        }
+
+        let transformJob = response.data;
+
+        // copy proxy to website storage
+        outputFile = transformJob.jobOutput.outputFile;
+        copySource = encodeURI(outputFile.awsS3Bucket + "/" + outputFile.awsS3Key);
+        
     }
 
-    // get result of transform job
-    let response = await MCMA_CORE.HTTP.get(transformJobId);
-    if(!response.data) {
-        throw new Error("Faild to obtain TransformJob");
-    }
-
-    let transformJob = response.data;
-
-    // copy proxy to website storage
-    let outputFile = transformJob.jobOutput.outputFile;
-    let copySource = encodeURI(outputFile.awsS3Bucket + "/" + outputFile.awsS3Key);
+    
 
     let s3Bucket = WEBSITE_BUCKET;
-    let s3Key = yyyymmdd() + "/" + uuidv4();
+    let s3Key = "media/" + uuidv4();
 
     // addin file extension
     let idxLastDot = outputFile.awsS3Key.lastIndexOf(".");
