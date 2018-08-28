@@ -1,0 +1,150 @@
+task generateTerraformTFVars {
+    inputs.property("ENVIRONMENT_NAME", "${environmentName}")
+    inputs.property("ENVIRONMENT_TYPE", "${environmentType}")
+    inputs.property("AWS_ACCOUNT_ID", "${awsAccountId}")
+    inputs.property("AWS_ACCESS_KEY", "${awsAccessKey}")
+    inputs.property("AWS_SECRET_KEY", "${awsSecretKey}")
+    inputs.property("AWS_REGION", "${awsRegion}")
+    outputs.file("${projectDir}/terraform.tfvars")
+    doLast {
+        def targetFile = new File("${projectDir}/terraform.tfvars")
+        targetFile.write("environment_name = \"${environmentName}\"\r\n")
+        targetFile.append("environment_type = \"${environmentType}\"\r\n")
+        targetFile.append("aws_account_id = \"${awsAccountId}\"\r\n")
+        targetFile.append("aws_access_key = \"${awsAccessKey}\"\r\n")
+        targetFile.append("aws_secret_key = \"${awsSecretKey}\"\r\n")
+        targetFile.append("aws_region = \"${awsRegion}\"\r\n")
+        targetFile.append("upload_bucket = \"${environmentName}.${environmentType}.upload\"\r\n")
+        targetFile.append("temp_bucket = \"${environmentName}.${environmentType}.temp\"\r\n")
+        targetFile.append("repository_bucket = \"${environmentName}.${environmentType}.repository\"\r\n")
+        targetFile.append("website_bucket = \"${environmentName}.${environmentType}.website\"\r\n")
+        targetFile.append(("global_prefix = \"${environmentName}.${environmentType}\"\r\n").replace(".", "_"))
+    }
+}
+
+task generateTerraformWebsiteTF {
+    dependsOn ":build";
+    inputs.dir "../website/dist"
+    outputs.file "${projectDir}/storage/website.tf"
+
+    doLast {
+        def idx = 1;
+        def targetFile = new File("${projectDir}/storage/website.tf");
+        targetFile.text = ""
+
+        fileTree(dir: "../website/dist/website").visit {f -> 
+            def mimeType = ""
+            if (f.path.endsWith(".html")) {
+                mimeType = "text/html"
+            } else if (f.path.endsWith(".css")) {
+                mimeType = "text/css"
+            } else if (f.path.endsWith(".js")) {
+                mimeType = "application/javascript"
+            } else if (f.path.endsWith(".json")) {
+                mimeType = "application/json"
+            } else if (f.path.endsWith(".ico")) {
+                mimeType = "image/x-icon"
+            } else if (f.path.endsWith(".txt")) {
+                mimeType = "text/plain"
+            }
+            
+            targetFile.append("resource \"aws_s3_bucket_object\" \"file_" + idx++ + "\" {\r\n" )
+            targetFile.append("  bucket       = \"\${aws_s3_bucket.website.bucket}\"\r\n")
+            targetFile.append("  key          = \"" + f.relativePath + "\"\r\n")
+            targetFile.append("  source       = \"" + f.file.path.replace("\\", "/") + "\"\r\n")
+            targetFile.append("  content_type = \"" + mimeType + "\"\r\n")
+            targetFile.append("  etag         = \"\${md5(file(\"" + f.file.path.replace("\\", "/") + "\"))}\"\r\n")
+            targetFile.append("}\r\n\r\n")
+        }
+    }
+}
+
+task generateAwsCredentialsJson {
+    inputs.property("AWS_ACCESS_KEY", "${awsAccessKey}")
+    inputs.property("AWS_SECRET_KEY", "${awsSecretKey}")
+    inputs.property("AWS_REGION", "${awsRegion}")
+    outputs.file("${projectDir}/aws-credentials.json")
+    doLast {
+        def targetFile = new File("${projectDir}/aws-credentials.json")
+        targetFile.write("{\r\n")
+        targetFile.append("    \"accessKeyId\": \"${awsAccessKey}\",\r\n")
+        targetFile.append("    \"secretAccessKey\": \"${awsSecretKey}\",\r\n")
+        targetFile.append("    \"region\": \"${awsRegion}\"\r\n")
+        targetFile.append("}\r\n")
+    }
+}
+
+task terraformInit(type: Exec) {
+    inputs.file "main.tf"
+    outputs.upToDateWhen { file(".terraform").exists() }
+    commandLine terraformExecutable
+    args "init"
+}
+
+task terraformPlan(type: Exec) {
+    dependsOn ":build"
+    dependsOn terraformInit
+    dependsOn generateTerraformTFVars
+    dependsOn generateTerraformWebsiteTF
+    commandLine terraformExecutable
+    args "plan"
+}
+
+task terraformApply(type: Exec) {
+    mustRunAfter terraformPlan
+    commandLine terraformExecutable
+    args "apply", "-auto-approve"
+}
+
+task terraformDestroy(type: Exec) {
+    dependsOn generateTerraformTFVars
+    dependsOn generateTerraformWebsiteTF
+    commandLine terraformExecutable
+    args "destroy", "-force"
+}
+
+task terraformOutput(type: Exec) {
+    mustRunAfter terraformApply
+    inputs.file("terraform.tfstate")
+    outputs.file("terraform.output")
+    commandLine terraformExecutable
+    args "output"
+    doFirst {
+        standardOutput new FileOutputStream("${projectDir}/terraform.output")
+    }
+}
+
+task updateServiceRegistry(type: Exec) {
+    dependsOn generateAwsCredentialsJson
+    dependsOn terraformOutput
+    dependsOn "registry:npmInstall"
+    inputs.file("${projectDir}/terraform.output")
+    inputs.file("${projectDir}/registry/src/index.js")
+    inputs.file("${projectDir}/registry/package.json")
+    outputs.upToDateWhen { true }
+    commandLine nodeExecutable
+    args "registry/src/index.js"
+    doFirst {
+        standardInput new FileInputStream("${projectDir}/terraform.output")
+    }
+}
+
+clean {
+    delete "${projectDir}/terraform.output"
+    delete "${projectDir}/storage/website.tf"
+}
+
+task plan {}
+plan.dependsOn(terraformPlan)
+
+task apply {}
+apply.dependsOn(terraformApply)
+apply.dependsOn(updateServiceRegistry)
+
+task deploy {}
+deploy.dependsOn(plan)
+deploy.dependsOn(apply)
+
+task destroy {}
+destroy.dependsOn(terraformDestroy)
+destroy.dependsOn(clean)

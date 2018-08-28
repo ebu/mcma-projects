@@ -1,0 +1,37 @@
+task build {
+    dependsOn "ame-service:api-handler:build"
+    dependsOn "ame-service:worker:build"
+    dependsOn "aws-ai-service:api-handler:build"
+    dependsOn "aws-ai-service:worker:build"
+    dependsOn "job-processor-service:api-handler:build"
+    dependsOn "job-processor-service:worker:build"
+    dependsOn "job-repository:api-handler:build"
+    dependsOn "job-repository:worker:build"
+    dependsOn "media-repository:api-handler:build"
+    dependsOn "service-registry:api-handler:build"
+    dependsOn "transform-service:api-handler:build"
+    dependsOn "transform-service:worker:build"
+    dependsOn "workflow-service:api-handler:build"
+    dependsOn "workflow-service:worker:build"
+}
+
+subprojects {
+    task copyNodeModules (type: Copy) {
+        dependsOn npmInstall
+        from "node_modules"
+        into "dist/staging/node_modules"
+        exclude awsAvailableLibraries
+    }
+
+    task copySource (type: Copy) {
+        from "src"
+        into "dist/staging/"
+    }
+
+    task build (type: Zip) {
+        dependsOn copySource, copyNodeModules
+        archiveName "lambda.zip"
+        destinationDir file("dist")
+        from "dist/staging"
+    }
+}
