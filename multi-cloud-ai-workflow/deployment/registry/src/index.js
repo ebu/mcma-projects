@@ -38,26 +38,6 @@ const JOB_PROFILES = {
             new MCMA_CORE.JobParameter("outputFile", "Locator")
         ]
     ),
-    ExtractAIMetadata: new MCMA_CORE.JobProfile(
-        "ExtractAIMetadata",
-        [
-            new MCMA_CORE.JobParameter("inputFile", "Locator"),
-            new MCMA_CORE.JobParameter("outputLocation", "Locator")
-        ],
-        [
-            new MCMA_CORE.JobParameter("outputFile", "Locator")
-        ]
-    ),
-    // CreateProxy: new MCMA_CORE.JobProfile(
-    //     "CreateProxy",
-    //     [
-    //         new MCMA_CORE.JobParameter("inputFile", "Locator"),
-    //         new MCMA_CORE.JobParameter("outputLocation", "Locator")
-    //     ],
-    //     [
-    //         new MCMA_CORE.JobParameter("outputFile", "Locator")
-    //     ]
-    // ),
     CreateProxyLambda: new MCMA_CORE.JobProfile(
         "CreateProxyLambda",
         [
@@ -92,12 +72,30 @@ const JOB_PROFILES = {
             new MCMA_CORE.JobParameter("ebucore:height")
         ]
     ),
+    TranscribeAudio: new MCMA_CORE.JobProfile(
+        "TranscribeAudio",
+        [
+            new MCMA_CORE.JobParameter("inputFile", "Locator"),
+            new MCMA_CORE.JobParameter("outputLocation", "Locator")
+        ],
+        [
+            new MCMA_CORE.JobParameter("outputFile", "Locator")
+        ]
+    ),
+    TranslateText: new MCMA_CORE.JobProfile(
+        "TranslateText",
+        [
+            new MCMA_CORE.JobParameter("inputFile", "Locator"),
+            new MCMA_CORE.JobParameter("outputLocation", "Locator")
+        ],
+        [
+            new MCMA_CORE.JobParameter("outputFile", "Locator")
+        ]
+    ),
 }
 
 const createServices = (serviceUrls) => {
     const serviceList = [];
-
-    console.log("serviceUrls", serviceUrls);
 
     for (const prop in serviceUrls) {
         switch (prop) {
@@ -111,36 +109,21 @@ const createServices = (serviceUrls) => {
                         "AmeJob",
                         [
                             JOB_PROFILES.ExtractTechnicalMetadata.id ? JOB_PROFILES.ExtractTechnicalMetadata.id : JOB_PROFILES.ExtractTechnicalMetadata
-                            // ],
-                            // [
-                            //     new MCMA_CORE.Locator({ "httpEndpoint" : serviceUrls.publicBucketUrl, "awsS3Bucket": serviceUrls.publicBucket }),
-                            //     new MCMA_CORE.Locator({ "httpEndpoint" : serviceUrls.privateBucketUrl, "awsS3Bucket": serviceUrls.privateBucket })
-                            // ],
-                            // [
-                            //     new MCMA_CORE.Locator({ "httpEndpoint" : serviceUrls.publicBucketUrl, "awsS3Bucket": serviceUrls.publicBucket }),
-                            //     new MCMA_CORE.Locator({ "httpEndpoint" : serviceUrls.privateBucketUrl, "awsS3Bucket": serviceUrls.privateBucket })
                         ]
                     )
                 );
                 break;
-            case "ai_service_url":
+            case "aws_ai_service_url":
                 serviceList.push(
                     new MCMA_CORE.Service(
-                        "AI Service",
+                        "AWS AI Service",
                         [
                             new MCMA_CORE.ServiceResource("JobAssignment", serviceUrls[prop] + "/job-assignments")
                         ],
                         "AIJob",
                         [
-                            JOB_PROFILES.ExtractAIMetadata.id ? JOB_PROFILES.ExtractAIMetadata.id : JOB_PROFILES.ExtractAIMetadata
-                            // ],
-                            // [
-                            //     new MCMA_CORE.Locator({ "httpEndpoint" : serviceUrls.publicBucketUrl, "awsS3Bucket": serviceUrls.publicBucket }),
-                            //     new MCMA_CORE.Locator({ "httpEndpoint" : serviceUrls.privateBucketUrl, "awsS3Bucket": serviceUrls.privateBucket })
-                            // ],
-                            // [
-                            //     new MCMA_CORE.Locator({ "httpEndpoint" : serviceUrls.publicBucketUrl, "awsS3Bucket": serviceUrls.publicBucket }),
-                            //     new MCMA_CORE.Locator({ "httpEndpoint" : serviceUrls.privateBucketUrl, "awsS3Bucket": serviceUrls.privateBucket })
+                            JOB_PROFILES.TranscribeAudio.id ? JOB_PROFILES.TranscribeAudio.id : JOB_PROFILES.TranscribeAudio,
+                            JOB_PROFILES.TranslateText.id ? JOB_PROFILES.TranslateText.id : JOB_PROFILES.TranslateText
                         ]
                     )
                 );
@@ -176,29 +159,6 @@ const createServices = (serviceUrls) => {
                     ]
                 ));
                 break;
-            // case "transform_service_url":
-            //     serviceList.push(
-            //         new MCMA_CORE.Service(
-            //             "FFmpeg TransformService",
-            //             [
-            //                 new MCMA_CORE.ServiceResource("JobAssignment", serviceUrls[prop] + "/job-assignments")
-            //             ],
-            //             "TransformJob",
-            //             [
-            //                 JOB_PROFILES.CreateProxy.id ? JOB_PROFILES.CreateProxy.id : JOB_PROFILES.CreateProxy,
-            //                 JOB_PROFILES.ExtractThumbnail.id ? JOB_PROFILES.ExtractThumbnail.id : JOB_PROFILES.ExtractThumbnail
-            //                 // ],
-            //                 // [
-            //                 //     new MCMA_CORE.Locator({ "httpEndpoint" : serviceUrls.publicBucketUrl, "awsS3Bucket": serviceUrls.publicBucket }),
-            //                 //     new MCMA_CORE.Locator({ "httpEndpoint" : serviceUrls.privateBucketUrl, "awsS3Bucket": serviceUrls.privateBucket })
-            //                 // ],
-            //                 // [
-            //                 //     new MCMA_CORE.Locator({ "httpEndpoint" : serviceUrls.publicBucketUrl, "awsS3Bucket": serviceUrls.publicBucket }),
-            //                 //     new MCMA_CORE.Locator({ "httpEndpoint" : serviceUrls.privateBucketUrl, "awsS3Bucket": serviceUrls.privateBucket })
-            //             ]
-            //         )
-            //     );
-            //     break;
             case "transform_service_lambda_url":
                 serviceList.push(
                     new MCMA_CORE.Service(

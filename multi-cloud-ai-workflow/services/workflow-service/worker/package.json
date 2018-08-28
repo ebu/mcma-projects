@@ -1,7 +1,7 @@
 {
     "name": "workflow-service-worker",
     "version": "0.0.0",
-    "description": "AWS Lambda based AME service leveraging AWS step functions to execute a workflow",
+    "description": "AWS Lambda based service leveraging AWS step functions to execute a workflow",
     "private": true,
     "engines": {
         "node": "~8.10.0"

@@ -101,3 +101,7 @@ output "workflow_service_url" {
 output "transform_service_lambda_url" {
   value = "${module.services.transform_service_url}"
 }
+
+output "aws_ai_service_url" {
+  value = "${module.services.aws_ai_service_url}"
+}
