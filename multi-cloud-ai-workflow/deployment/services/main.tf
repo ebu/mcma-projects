@@ -57,3 +57,8 @@ resource "aws_iam_role_policy_attachment" "role-policy-steps" {
   role       = "${aws_iam_role.iam_for_exec_lambda.name}"
   policy_arn = "${aws_iam_policy.steps_policy.arn}"
 }
+
+resource "aws_iam_role_policy_attachment" "role-policy-amazon-transcribe-full-access" {
+  role       = "${aws_iam_role.iam_for_exec_lambda.name}"
+  policy_arn = "arn:aws:iam::aws:policy/AmazonTranscribeFullAccess"
+}
