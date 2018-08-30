@@ -9,6 +9,8 @@ import { CognitoAuthService } from './services/cognito-auth.service';
     templateUrl: './app.component.html',
     styleUrls: ['./app.component.scss']
 })
+
+
 export class AppComponent {
     isLoggedIn$: Observable<boolean>;
 

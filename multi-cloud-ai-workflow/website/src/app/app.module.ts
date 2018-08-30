@@ -15,13 +15,17 @@ import { CognitoAuthService } from './services/cognito-auth.service';
 import { AuthGuard } from './guards/auth.guard';
 import { FileSizePipe } from './pipes/file-size.pipe';
 import { WorkflowService } from './services/workflow.service';
+import { MonitorDetailComponent } from './monitor/monitor-detail/monitor-detail.component';
+import { MonitorQueueComponent } from './monitor/monitor-queue/monitor-queue.component';
 
 @NgModule({
   declarations: [
     FileSizePipe,
     AppComponent,
     RunComponent,
-    MonitorComponent
+    MonitorComponent,
+    MonitorDetailComponent,
+    MonitorQueueComponent
   ],
   imports: [
     BrowserModule,
