@@ -1,0 +1,11 @@
+@import '~@angular/material/theming';
+@import 'src/styles/theme.scss';
+
+.monitor-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 400px;
+    font-size: 18px;
+    color: mat-color($mcma-primary, 300);
+}

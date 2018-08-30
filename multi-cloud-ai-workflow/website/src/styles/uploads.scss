@@ -1,0 +1,15 @@
+.mat-raised-button.upload-button {
+    padding: 0;
+
+    .mat-button-wrapper {
+        display: flex;
+        flex: 1;
+
+        label {
+            display: flex;
+            flex: 1;
+            justify-content: center;
+            align-items: center;
+        }
+    }
+}
