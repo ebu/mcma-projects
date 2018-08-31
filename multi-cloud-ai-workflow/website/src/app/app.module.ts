@@ -21,6 +21,8 @@ import { FileSizePipe } from './pipes/file-size.pipe';
 import { ModalContentDirective } from './directives/modal-content.directive';
 import { ModalComponent } from './modal/modal.component';
 import { RunCompleteModalComponent } from './run/run-complete-modal/run-complete-modal.component';
+import { MonitorDetailComponent } from './monitor/monitor-detail/monitor-detail.component';
+import { MonitorQueueComponent } from './monitor/monitor-queue/monitor-queue.component';
 
 @NgModule({
   declarations: [
@@ -30,7 +32,9 @@ import { RunCompleteModalComponent } from './run/run-complete-modal/run-complete
     AppComponent,
     RunComponent,
     MonitorComponent,
-    RunCompleteModalComponent
+    RunCompleteModalComponent,
+    MonitorDetailComponent,
+    MonitorQueueComponent
   ],
   entryComponents: [
     RunCompleteModalComponent
