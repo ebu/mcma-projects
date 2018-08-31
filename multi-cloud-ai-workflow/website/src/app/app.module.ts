@@ -2,37 +2,51 @@ import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule } from '@angular/common/http';
+import { ReactiveFormsModule } from '@angular/forms';
 
 import { MaterialModule } from './material.module';
 import { AppRoutingModule } from './app-routing.module';
 
-import { AppComponent } from './app.component';
-import { RunComponent } from './run/run.component';
-import { MonitorComponent } from './monitor/monitor.component';
 import { ConfigService } from './services/config.service';
 import { S3BucketService } from './services/s3bucket.service';
 import { CognitoAuthService } from './services/cognito-auth.service';
 import { AuthGuard } from './guards/auth.guard';
-import { FileSizePipe } from './pipes/file-size.pipe';
 import { WorkflowService } from './services/workflow.service';
+import { ModalService } from './services/modal.service';
+
+import { AppComponent } from './app.component';
+import { RunComponent } from './run/run.component';
+import { MonitorComponent } from './monitor/monitor.component';
+import { FileSizePipe } from './pipes/file-size.pipe';
+import { ModalContentDirective } from './directives/modal-content.directive';
+import { ModalComponent } from './modal/modal.component';
+import { RunCompleteModalComponent } from './run/run-complete-modal/run-complete-modal.component';
 
 @NgModule({
   declarations: [
+    ModalContentDirective,
+    ModalComponent,
     FileSizePipe,
     AppComponent,
     RunComponent,
-    MonitorComponent
+    MonitorComponent,
+    RunCompleteModalComponent
+  ],
+  entryComponents: [
+    RunCompleteModalComponent
   ],
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
     HttpClientModule,
+    ReactiveFormsModule,
     MaterialModule,
     AppRoutingModule
   ],
   providers: [
     ConfigService,
     CognitoAuthService,
+    ModalService,
     S3BucketService,
     AuthGuard,
     WorkflowService

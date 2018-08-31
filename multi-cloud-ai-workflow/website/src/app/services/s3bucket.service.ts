@@ -26,7 +26,8 @@ export class S3BucketService {
     }
 
     listObjects(): void {
-        this.s3$.pipe(
+        this.bucketSubject.next(null);
+        const sub = this.s3$.pipe(
             zip(this.configService.get<string>('aws.s3.uploadBucket')),
             switchMap(([s3, uploadBucket]) =>
                 asObservableWithInput<S3.ListObjectsRequest, S3.ListObjectsOutput>(s3, s3.listObjects, { Bucket: uploadBucket })),
@@ -44,7 +45,10 @@ export class S3BucketService {
                     })
                 };
             })
-        ).subscribe(this.bucketSubject);
+        ).subscribe(bucket => {
+            sub.unsubscribe();
+            this.bucketSubject.next(bucket);
+        });
     }
 
     uploadObject(file: File): Observable<S3Upload> {

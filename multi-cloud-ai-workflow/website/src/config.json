@@ -1,5 +1,5 @@
 {
-    "servicesUrl": "https://hnb82r4vo4.execute-api.us-east-1.amazonaws.com/dev",
+    "servicesUrl": "https://hnb82r4vo4.execute-api.us-east-1.amazonaws.com/dev/services",
     "aws": {
         "region": "us-east-1",
         "s3": {

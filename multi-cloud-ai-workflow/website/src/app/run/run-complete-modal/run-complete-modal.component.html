@@ -1,0 +1,13 @@
+<div class="run-workflow-complete-container">
+  <div class="message">
+    <mat-icon color="accent">done</mat-icon>
+    <span>Your workflow has been initiated successfully!</span>
+  </div>
+  <div class="prompt">
+    <span>What would you like to do next?</span>
+  </div>
+  <div class="actions">
+    <button mat-raised-button color="primary" (click)="close()"><mat-icon color="white">subdirectory_arrow_left</mat-icon> Return to Bucket</button>
+    <button mat-raised-button color="accent" (click)="navigateToWorkflow()">Go to Workflow <mat-icon color="white">arrow_forward</mat-icon></button>
+  </div>
+</div>

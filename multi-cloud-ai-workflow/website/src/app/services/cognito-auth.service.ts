@@ -69,13 +69,8 @@ export class CognitoAuthService {
                     Logins: {
                         [`cognito-idp.${region}.amazonaws.com/${cognitoConfig.UserPoolId}`]: session.getIdToken().getJwtToken()
                     }
-                }, {
-                    region
-                });
+                }, { region });
             })
-        ).subscribe(creds => {
-            console.log('got aws creds: ', creds);
-            this.authenticatedSubject.next(creds);
-        });
+        ).subscribe(this.authenticatedSubject);
     }
 }
