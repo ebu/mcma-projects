@@ -33,28 +33,32 @@ task generateTerraformWebsiteTF {
         targetFile.text = ""
 
         fileTree(dir: "../website/dist/website").visit {f -> 
-            def mimeType = ""
-            if (f.path.endsWith(".html")) {
-                mimeType = "text/html"
-            } else if (f.path.endsWith(".css")) {
-                mimeType = "text/css"
-            } else if (f.path.endsWith(".js")) {
-                mimeType = "application/javascript"
-            } else if (f.path.endsWith(".json")) {
-                mimeType = "application/json"
-            } else if (f.path.endsWith(".ico")) {
-                mimeType = "image/x-icon"
-            } else if (f.path.endsWith(".txt")) {
-                mimeType = "text/plain"
+            if (f.getFile().isFile()) {
+                def mimeType = ""
+                if (f.path.endsWith(".html")) {
+                    mimeType = "text/html"
+                } else if (f.path.endsWith(".css")) {
+                    mimeType = "text/css"
+                } else if (f.path.endsWith(".js")) {
+                    mimeType = "application/javascript"
+                } else if (f.path.endsWith(".json")) {
+                    mimeType = "application/json"
+                } else if (f.path.endsWith(".ico")) {
+                    mimeType = "image/x-icon"
+                } else if (f.path.endsWith(".txt")) {
+                    mimeType = "text/plain"
+                } else if (f.path.endsWith(".svg")) {
+                    mimeType = "image/svg+xml"
+                }
+
+                targetFile.append("resource \"aws_s3_bucket_object\" \"file_" + idx++ + "\" {\r\n" )
+                targetFile.append("  bucket       = \"\${aws_s3_bucket.website.bucket}\"\r\n")
+                targetFile.append("  key          = \"" + f.relativePath + "\"\r\n")
+                targetFile.append("  source       = \"" + f.file.path.replace("\\", "/") + "\"\r\n")
+                targetFile.append("  content_type = \"" + mimeType + "\"\r\n")
+                targetFile.append("  etag         = \"\${md5(file(\"" + f.file.path.replace("\\", "/") + "\"))}\"\r\n")
+                targetFile.append("}\r\n\r\n")
             }
-            
-            targetFile.append("resource \"aws_s3_bucket_object\" \"file_" + idx++ + "\" {\r\n" )
-            targetFile.append("  bucket       = \"\${aws_s3_bucket.website.bucket}\"\r\n")
-            targetFile.append("  key          = \"" + f.relativePath + "\"\r\n")
-            targetFile.append("  source       = \"" + f.file.path.replace("\\", "/") + "\"\r\n")
-            targetFile.append("  content_type = \"" + mimeType + "\"\r\n")
-            targetFile.append("  etag         = \"\${md5(file(\"" + f.file.path.replace("\\", "/") + "\"))}\"\r\n")
-            targetFile.append("}\r\n\r\n")
         }
     }
 }
