@@ -62,6 +62,22 @@ module "workflows" {
   website_bucket       = "${module.storage.website_bucket}"
 }
 
+
+// Uncomment if you want to run ec2 transform service with "gradle delpoy"
+/*
+module "ec2" {
+  source = "./ec2"
+
+  global_prefix = "${var.global_prefix}"
+
+  aws_account_id = "${var.aws_account_id}"
+  aws_access_key = "${var.aws_access_key}"
+  aws_secret_key = "${var.aws_secret_key}"
+  aws_region     = "${var.aws_region}"
+  aws_instance_type = "${var.aws_instance_type}"
+}
+*/
+
 output "upload_bucket" {
   value = "${module.storage.upload_bucket}"
 }
