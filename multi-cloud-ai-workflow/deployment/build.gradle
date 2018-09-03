@@ -5,6 +5,7 @@ task generateTerraformTFVars {
     inputs.property("AWS_ACCESS_KEY", "${awsAccessKey}")
     inputs.property("AWS_SECRET_KEY", "${awsSecretKey}")
     inputs.property("AWS_REGION", "${awsRegion}")
+    inputs.property("AWS_INSTANCE_TYPE", "${awsInstanceType}")
     outputs.file("${projectDir}/terraform.tfvars")
     doLast {
         def targetFile = new File("${projectDir}/terraform.tfvars")
@@ -14,6 +15,7 @@ task generateTerraformTFVars {
         targetFile.append("aws_access_key = \"${awsAccessKey}\"\r\n")
         targetFile.append("aws_secret_key = \"${awsSecretKey}\"\r\n")
         targetFile.append("aws_region = \"${awsRegion}\"\r\n")
+        targetFile.append("aws_instance_type = \"${awsInstanceType}\"\r\n")
         targetFile.append("upload_bucket = \"${environmentName}.${environmentType}.upload\"\r\n")
         targetFile.append("temp_bucket = \"${environmentName}.${environmentType}.temp\"\r\n")
         targetFile.append("repository_bucket = \"${environmentName}.${environmentType}.repository\"\r\n")
