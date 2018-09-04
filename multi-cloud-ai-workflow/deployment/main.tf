@@ -37,6 +37,7 @@ module "services" {
   aws_secret_key = "${var.aws_secret_key}"
   aws_region     = "${var.aws_region}"
 
+  environment_name = "${var.environment_name}"
   environment_type = "${var.environment_type}"
 }
 

@@ -5,6 +5,8 @@ const util = require('util');
 const AWS = require("aws-sdk");
 const S3 = new AWS.S3();
 const S3GetBucketLocation = util.promisify(S3.getBucketLocation.bind(S3));
+const S3CopyObject = util.promisify(S3.copyObject.bind(S3));
+const S3DeleteObject = util.promisify(S3.deleteObject.bind(S3));
 
 const TranscribeService = new AWS.TranscribeService();
 const TranscribeServiceStartTranscriptionJob = util.promisify(TranscribeService.startTranscriptionJob.bind(TranscribeService));
@@ -18,41 +20,45 @@ const JOB_PROFILE_TRANSLATE_TEXT = "TranslateText";
 exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
 
-    switch (event.action) {
-        case "ProcessJobAssignment":
-            await processJobAssignment(event);
-            break;
-        case "ProcessNotification":
-            await processNotification(event);
-            break;
+    try {
+        switch (event.action) {
+            case "ProcessJobAssignment":
+                await processJobAssignment(event);
+                break;
+            case "ProcessTranscribeJobResult":
+                await processTranscribeJobResult(event);
+                break;
+            default:
+                throw new Error("Unknown action");
+        }
+    } catch (error) {
+        console.error("Processing action '" + event.action + "' ended with error: '" + error.message + "'");
     }
 }
 
 const processJobAssignment = async (event) => {
-    let resourceManager = new MCMA_CORE.ResourceManager(event.request.stageVariables.ServicesUrl);
-
-    let table = new MCMA_AWS.DynamoDbTable(AWS, event.request.stageVariables.TableName);
+    let resourceManager = new MCMA_CORE.ResourceManager(event.stageVariables.ServicesUrl);
+    let table = new MCMA_AWS.DynamoDbTable(AWS, event.stageVariables.TableName);
     let jobAssignmentId = event.jobAssignmentId;
 
     try {
         // 1. Setting job assignment status to RUNNING
         await updateJobAssignmentStatus(resourceManager, table, jobAssignmentId, "RUNNING");
 
-        // 2. Retrieving WorkflowJob
-        let workflowJob = await retrieveWorkflowJob(table, jobAssignmentId);
+        // 2. Retrieving AiJob
+        let job = await retrieveJob(table, jobAssignmentId);
 
         // 3. Retrieve JobProfile
-        let jobProfile = await retrieveJobProfile(workflowJob);
+        let jobProfile = await retrieveJobProfile(job);
 
         // 4. Retrieve job inputParameters
-        let jobInput = await retrieveJobInput(workflowJob);
+        let jobInput = await retrieveJobInput(job);
 
         // 5. Check if we support jobProfile and if we have required parameters in jobInput
         validateJobProfile(jobProfile, jobInput);
 
         // 6. start the appropriate ai service
         let inputFile = jobInput.inputFile;
-        let outputLocation = jobInput.outputLocation;
 
         let mediaFileUri;
 
@@ -83,13 +89,13 @@ const processJobAssignment = async (event) => {
                 }
 
                 params = {
-                    TranscriptionJobName: jobAssignmentId.substring(jobAssignmentId.lastIndexOf("/") + 1),
+                    TranscriptionJobName: "TranscriptionJob-" + jobAssignmentId.substring(jobAssignmentId.lastIndexOf("/") + 1),
                     LanguageCode: "en-US",
                     Media: {
                         MediaFileUri: mediaFileUri
                     },
                     MediaFormat: mediaFormat,
-                    OutputBucketName: outputLocation.awsS3Bucket
+                    OutputBucketName: event.stageVariables.ServiceOutputBucket
                 }
 
                 data = await TranscribeServiceStartTranscriptionJob(params);
@@ -98,12 +104,7 @@ const processJobAssignment = async (event) => {
             case JOB_PROFILE_TRANSLATE_TEXT:
                 throw new Error("Not Implemented");
 
-            // 7. saving the transcriptionJobName on the jobAssignment
-            // let jobAssignment = await getJobAssignment(table, jobAssignmentId);
-            // jobAssignment.transcriptionJobName = data.TranscriptionJobName;
-            // await putJobAssignment(resourceManager, table, jobAssignmentId, jobAssignment);
 
-            // break;
         }
 
         console.log(JSON.stringify(data, null, 2));
@@ -117,27 +118,63 @@ const processJobAssignment = async (event) => {
     }
 }
 
-const processNotification = async (event) => {
+const processTranscribeJobResult = async (event) => {
+    let resourceManager = new MCMA_CORE.ResourceManager(event.stageVariables.ServicesUrl);
+    let table = new MCMA_AWS.DynamoDbTable(AWS, event.stageVariables.TableName);
     let jobAssignmentId = event.jobAssignmentId;
-    let notification = event.notification;
 
-    let table = new MCMA_AWS.DynamoDbTable(AWS, event.request.stageVariables.TableName);
+    // 1. Retrieving Job based on jobAssignmentId
+    let job = await retrieveJob(table, jobAssignmentId);
 
-    let jobAssignment = await table.get("JobAssignment", jobAssignmentId);
+    try {
+        // 2. Retrieve job inputParameters
+        let jobInput = await retrieveJobInput(job);
 
-    jobAssignment.status = notification.content.status;
-    jobAssignment.statusMessage = notification.content.statusMessage;
-    if (notification.content.progress !== undefined) {
-        jobAssignment.progress = notification.content.progress;
+        // 3. Copy transcribe output file to output location
+        let copySource = encodeURI(event.outputFile.awsS3Bucket + "/" + event.outputFile.awsS3Key);
+
+        let s3Bucket = jobInput.outputLocation.awsS3Bucket;
+        let s3Key = (jobInput.outputLocation.awsS3KeyPrefix ? jobInput.outputLocation.awsS3KeyPrefix : "") + event.outputFile.awsS3Key;
+
+        try {
+            await S3CopyObject({
+                CopySource: copySource,
+                Bucket: s3Bucket,
+                Key: s3Key,
+            });
+        } catch (error) {
+            throw new Error("Unable to copy output file to bucket '" + s3Bucket + "' with key '" + s3Key + "' due to error: " + error.message);
+        }
+
+        // 4. updating JobAssignment with jobOutput
+        let jobOutput = new MCMA_CORE.JobParameterBag({
+            outputFile: new MCMA_CORE.Locator({
+                awsS3Bucket: s3Bucket,
+                awsS3Key: s3Key
+            })
+        });
+        await updateJobAssignmentWithOutput(table, jobAssignmentId, jobOutput);
+
+        // 5. Setting job assignment status to COMPLETED
+        await updateJobAssignmentStatus(resourceManager, table, jobAssignmentId, "COMPLETED");
+    } catch (error) {
+        console.error(error);
+        try {
+            await updateJobAssignmentStatus(resourceManager, table, jobAssignmentId, "FAILED", error.message);
+        } catch (error) {
+            console.error(error);
+        }
     }
-    jobAssignment.jobOutput = notification.content.output;
-    jobAssignment.dateModified = new Date().toISOString();
 
-    await table.put("JobAssignment", jobAssignmentId, jobAssignment);
-
-    let resourceManager = new MCMA_CORE.ResourceManager(event.request.stageVariables.ServicesUrl);
-
-    await resourceManager.sendNotification(jobAssignment);
+    // Cleanup: Deleting original output file
+    try {
+        await S3DeleteObject({
+            Bucket: event.outputFile.awsS3Bucket,
+            Key: event.outputFile.awsS3Key,
+        });
+    } catch (error) {
+        console.warn("Failed to cleanup transcribe output file");
+    }
 }
 
 const validateJobProfile = (jobProfile, jobInput) => {
@@ -167,7 +204,7 @@ const retrieveJobProfile = async (job) => {
     return await retrieveResource(job.jobProfile, "job.jobProfile");
 }
 
-const retrieveWorkflowJob = async (table, jobAssignmentId) => {
+const retrieveJob = async (table, jobAssignmentId) => {
     let jobAssignment = await getJobAssignment(table, jobAssignmentId);
 
     return await retrieveResource(jobAssignment.job, "jobAssignment.job");
