@@ -2,6 +2,7 @@ task build {
     dependsOn "ame-service:api-handler:build"
     dependsOn "ame-service:worker:build"
     dependsOn "aws-ai-service:api-handler:build"
+    dependsOn "aws-ai-service:s3-trigger:build"
     dependsOn "aws-ai-service:worker:build"
     dependsOn "azure-ai-service:api-handler:build"
     dependsOn "azure-ai-service:worker:build"

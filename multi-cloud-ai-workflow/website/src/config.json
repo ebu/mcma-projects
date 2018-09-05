@@ -1,0 +1,18 @@
+{
+    "servicesUrl": "https://hnb82r4vo4.execute-api.us-east-1.amazonaws.com/dev/services",
+    "aws": {
+        "region": "us-east-1",
+        "s3": {
+            "uploadBucket": "com.triskel.mcma.dev.upload"
+        },
+        "cognito": {
+            "userPool": {
+                "UserPoolId": "us-east-1_uoBr2sr1c",
+                "ClientId": "1qtee62lh0mq9en11n0eu0sudt"
+            },
+            "identityPool": {
+                "id": "us-east-1:83b4ab0e-8350-4098-9770-04fed25dca67"
+            }
+        }
+    }
+}

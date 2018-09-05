@@ -14,6 +14,54 @@ resource "aws_lambda_function" "aws-ai-service-api-handler" {
 }
 
 #################################
+#  aws_lambda_function : aws-ai-service-s3-trigger
+#################################
+
+resource "aws_lambda_function" "aws-ai-service-s3-trigger" {
+  filename         = "./../services/aws-ai-service/s3-trigger/dist/lambda.zip"
+  function_name    = "${format("%.64s", "${var.global_prefix}-aws-ai-service-s3-trigger")}"
+  role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
+  handler          = "index.handler"
+  source_code_hash = "${base64sha256(file("./../services/aws-ai-service/s3-trigger/dist/lambda.zip"))}"
+  runtime          = "nodejs8.10"
+  timeout          = "30"
+  memory_size      = "256"
+
+  environment {
+    variables = {
+      "TableName"                = "${aws_dynamodb_table.aws_ai_service_table.name}"
+      "PublicUrl"                = "${local.aws_ai_service_url}"
+      "ServicesUrl"              = "${local.service_registry_url}/services"
+      "WorkerLambdaFunctionName" = "${aws_lambda_function.aws-ai-service-worker.function_name}"
+      "ServiceOutputBucket"      = "${aws_s3_bucket.aws-ai-service-output.id}"
+    }
+  }
+}
+
+resource "aws_s3_bucket" "aws-ai-service-output" {
+  bucket = "${var.environment_name}.${var.environment_type}.aws-ai-service-output"
+  acl    = "private"
+}
+
+resource "aws_lambda_permission" "allow_bucket" {
+  statement_id  = "AllowExecutionFromS3Bucket"
+  action        = "lambda:InvokeFunction"
+  function_name = "${aws_lambda_function.aws-ai-service-s3-trigger.arn}"
+  principal     = "s3.amazonaws.com"
+  source_arn    = "${aws_s3_bucket.aws-ai-service-output.arn}"
+}
+
+resource "aws_s3_bucket_notification" "aws-ai-service-output-bucket-notification" {
+  bucket = "${aws_s3_bucket.aws-ai-service-output.id}"
+
+  lambda_function {
+    lambda_function_arn = "${aws_lambda_function.aws-ai-service-s3-trigger.arn}"
+    events              = ["s3:ObjectCreated:*"]
+    filter_suffix       = "json"
+  }
+}
+
+#################################
 #  aws_lambda_function : aws-ai-service-worker
 #################################
 
@@ -103,10 +151,11 @@ resource "aws_api_gateway_deployment" "aws_ai_service_deployment" {
   stage_name  = "${var.environment_type}"
 
   variables = {
-    "TableName"                = "${var.global_prefix}-aws-ai-service"
+    "TableName"                = "${aws_dynamodb_table.aws_ai_service_table.name}"
     "PublicUrl"                = "${local.aws_ai_service_url}"
     "ServicesUrl"              = "${local.service_registry_url}/services"
     "WorkerLambdaFunctionName" = "${aws_lambda_function.aws-ai-service-worker.function_name}"
+    "ServiceOutputBucket"      = "${aws_s3_bucket.aws-ai-service-output.id}"
   }
 }
 

@@ -1,0 +1,92 @@
+@import '~@angular/material/theming';
+@import 'src/styles/theme.scss';
+
+mat-sidenav-container {
+    height: 100%;
+}
+
+mat-toolbar {
+    padding: 0 30px;
+}
+
+.img-and-icon {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    flex: 1;
+
+    img, h2 {
+        margin: 5px;
+    }
+
+    h2 {
+        font-size: 24px;
+    }
+}
+
+.nav-items {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    flex: 1;
+}
+
+.app-details {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+
+    span {
+        font-size: 16px;
+    }
+}
+
+.nav-item {
+    padding: 5px 20px 5px 10px;
+    margin: 0 15px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    text-transform: uppercase;
+
+    * {
+        margin: 0 5px;
+    }
+
+    &:focus {
+        outline: none;
+    }
+
+    &.active {
+        border-bottom: solid 2px mat-color($mcma-accent);
+    }
+}
+
+.app-content {
+    display: flex;
+    justify-content: center;
+}
+
+.logging-in {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 200px;
+
+    span {
+        color: mat-color($mcma-primary, 300);
+        font-size: 18px;
+    }
+
+    .sk-three-bounce {
+        width: 270px;
+        .sk-child {
+            width: 30px;
+            height: 30px;
+            margin: 0 15px;
+            background-color: mat-color($mcma-accent);
+        }
+    }
+}
