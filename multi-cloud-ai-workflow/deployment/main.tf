@@ -37,6 +37,11 @@ module "services" {
   aws_secret_key = "${var.aws_secret_key}"
   aws_region     = "${var.aws_region}"
 
+  azure_location         = "${var.azure_location}"
+  azure_account_id       = "${var.azure_account_id}"
+  azure_subscription_key = "${var.azure_subscription_key}"
+  azure_api_url          = "${var.azure_api_url}"
+
   environment_type = "${var.environment_type}"
 }
 
@@ -104,4 +109,8 @@ output "transform_service_lambda_url" {
 
 output "aws_ai_service_url" {
   value = "${module.services.aws_ai_service_url}"
+}
+
+output "azure_ai_service_url" {
+  value = "${module.services.azure_ai_service_url}"
 }

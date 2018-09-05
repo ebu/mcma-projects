@@ -5,6 +5,14 @@ task generateTerraformTFVars {
     inputs.property("AWS_ACCESS_KEY", "${awsAccessKey}")
     inputs.property("AWS_SECRET_KEY", "${awsSecretKey}")
     inputs.property("AWS_REGION", "${awsRegion}")
+
+    inputs.property("AZURE_LOCATION", "${AzureLocation}")
+    inputs.property("AZURE_ACCOUNT_ID", "${AzureAccountID}")
+    inputs.property("AZURE_SUBSCRIPTION_ID", "${AzureSubscriptionKey}")
+    inputs.property("AZURE_API_URL", "${AzureApiUrl}")
+
+
+
     outputs.file("${projectDir}/terraform.tfvars")
     doLast {
         def targetFile = new File("${projectDir}/terraform.tfvars")
@@ -19,6 +27,13 @@ task generateTerraformTFVars {
         targetFile.append("repository_bucket = \"${environmentName}.${environmentType}.repository\"\r\n")
         targetFile.append("website_bucket = \"${environmentName}.${environmentType}.website\"\r\n")
         targetFile.append(("global_prefix = \"${environmentName}.${environmentType}\"\r\n").replace(".", "_"))
+
+        targetFile.append("azure_location = \"${AzureLocation}\"\r\n")
+        targetFile.append("azure_account_id = \"${AzureAccountID}\"\r\n")
+        targetFile.append("azure_subscription_key = \"${AzureSubscriptionKey}\"\r\n")
+         targetFile.append("azure_api_url = \"${AzureApiUrl}\"\r\n")
+
+
     }
 }
 

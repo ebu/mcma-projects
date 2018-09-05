@@ -92,6 +92,16 @@ const JOB_PROFILES = {
             new MCMA_CORE.JobParameter("outputFile", "Locator")
         ]
     ),
+    ExtractAllAIMetadata: new MCMA_CORE.JobProfile(
+        "ExtractAllAIMetadata",
+        [
+            new MCMA_CORE.JobParameter("inputFile", "Locator"),
+            new MCMA_CORE.JobParameter("outputLocation", "Locator")
+        ],
+        [
+            new MCMA_CORE.JobParameter("outputFile", "Locator")
+        ]
+    ),
 }
 
 const createServices = (serviceUrls) => {
@@ -128,6 +138,23 @@ const createServices = (serviceUrls) => {
                     )
                 );
                 break;
+            case "azure_ai_service_url":
+                serviceList.push(
+                    new MCMA_CORE.Service(
+                        "AZURE AI Service",
+                        [
+                            new MCMA_CORE.ServiceResource("JobAssignment", serviceUrls[prop] + "/job-assignments")
+                        ],
+                        "AIJob",
+                        [
+                            //JOB_PROFILES.TranscribeAudio.id ? JOB_PROFILES.TranscribeAudio.id : JOB_PROFILES.TranscribeAudio,   //Will be implemented at a later time and may need to be renamed to not conflict with AWS
+                            //JOB_PROFILES.TranslateText.id ? JOB_PROFILES.TranslateText.id : JOB_PROFILES.TranslateText,
+                            JOB_PROFILES.ExtractAllAIMetadata.id ? JOB_PROFILES.ExtractAllAIMetadata.id : JOB_PROFILES.ExtractAllAIMetadata
+                            
+                        ]
+                    )
+                );
+                break;    
             case "job_processor_service_url":
                 serviceList.push(new MCMA_CORE.Service(
                     "Job Processor Service",

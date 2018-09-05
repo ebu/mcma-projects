@@ -8,12 +8,14 @@ This example worklow demonstrates how you can leverage AI technologies from mult
 * Latest version of Terraform and available in PATH. See the [Terraform website](https://www.terraform.io/)
 * Java JRE or JDK 1.8 or higher to run Gradle build and deploy scripts
 * AWS account
+* Azure video indexer account, a free account can be used for testing. Follow these instructions: https://docs.microsoft.com/en-us/azure/cognitive-services/video-indexer/video-indexer-use-apis
+
 
 ## Setup procedure
 1. Clone this repository to your local harddrive
 2. Navigate to the `multi-cloud-ai-workflow` folder.
 3. Create file named `gradle.properties`
-4. Add the following information to the created file and update the parameter values reflecting your AWS account 
+4. Add the following information to the created file and update the parameter values reflecting your AWS account and Azure account 
 ```
 environmentName=com.your-domain.mcma
 environmentType=dev
@@ -22,6 +24,13 @@ awsAccountId=<YOUR_AWS_ACCOUNT_ID>
 awsAccessKey=<YOUR_AWS_ACCESS_KEY>
 awsSecretKey=<YOUR_AWS_SECRET_KEY>
 awsRegion=<YOUR_AWS_REGION>
+
+AzureLocation =  <YOUR AZURE REGION - USE "trial" FOR TESTING>
+AzureAccountID = <YOUR AZURE Video Indexer Account ID> 
+AzureSubscriptionKey = <YOUR AZURE SUBSCRIPTION KEY>
+AzureApiUrl = <AZURE VIDEO API END[POINT DEFAULT IS: https://api.videoindexer.ai>
+
+
 ```
 
 5. Save the file.

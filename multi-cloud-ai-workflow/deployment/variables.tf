@@ -24,3 +24,12 @@ variable "upload_bucket" {}
 variable "temp_bucket" {}
 variable "repository_bucket" {}
 variable "website_bucket" {}
+
+#########################
+# Azure Variables
+#########################
+
+variable "azure_location" {}
+variable "azure_account_id" {}
+variable "azure_subscription_key" {}
+variable "azure_api_url" {}

@@ -1,7 +1,7 @@
 {
-    "name": "azure-ai-service-api-handler",
+    "name": "aws-ai-service-api-handler",
     "version": "0.0.0",
-    "description": "AWS Lambda based service leveraging AWS AI services to do AI operations",
+    "description": "Azure Lambda based service leveraging AWS AI services to do AI operations",
     "private": true,
     "engines": {
         "node": "~8.10.0"
@@ -10,6 +10,7 @@
     "license": "Apache-2.0",
     "dependencies": {
         "aws-sdk": "^2.291.0",
-        "mcma-aws": "0.1.0"
+        "mcma-aws": "0.1.0",
+        "mcma-core": "0.0.9"
     }
 }
