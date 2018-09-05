@@ -42,6 +42,7 @@ module "services" {
   azure_subscription_key = "${var.azure_subscription_key}"
   azure_api_url          = "${var.azure_api_url}"
 
+  environment_name = "${var.environment_name}"
   environment_type = "${var.environment_type}"
 }
 
