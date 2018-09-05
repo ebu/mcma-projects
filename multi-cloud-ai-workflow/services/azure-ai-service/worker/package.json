@@ -1,5 +1,5 @@
 {
-    "name": "aws-ai-service-worker",
+    "name": "azure-ai-service-worker",
     "version": "0.0.0",
     "description": "Azure Lambda based service leveraging AWS AI services to do AI operations",
     "private": true,
