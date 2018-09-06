@@ -9,3 +9,4 @@ gradle.properties
 /multi-cloud-ai-workflow/deployment/storage/website.tf
 /multi-cloud-ai-workflow/deployment/terraform.output
 /multi-cloud-ai-workflow/deployment/aws-credentials.json
+/multi-cloud-ai-workflow/website/src/config.json
