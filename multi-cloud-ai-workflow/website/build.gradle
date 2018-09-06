@@ -39,5 +39,5 @@ task build (type: Exec) {
     inputs.dir("src")
     outputs.dir("dist")
     commandLine ngExecutable
-    args "build", "--prod", "--base-href", "./", "--progress", "false"
+    args "build", "--prod", "--base-href", "./index.html", "--progress", "false"
 }

@@ -1,11 +1,19 @@
 //"use strict";
 
 const util = require("util");
+const uuidv4 = require("uuid/v4");
 
 const AWS = require("aws-sdk");
 AWS.config.loadFromPath('./aws-credentials.json');
 const S3 = new AWS.S3();
 const S3PutObject = util.promisify(S3.putObject.bind(S3));
+
+const Cognito = new AWS.CognitoIdentityServiceProvider();
+const CognitoAdminCreateUser = util.promisify(Cognito.adminCreateUser.bind(Cognito));
+const CognitoAdminDeleteUser = util.promisify(Cognito.adminDeleteUser.bind(Cognito));
+
+global.fetch = require('node-fetch');
+const AmazonCognitoIdentity = require("amazon-cognito-identity-js");
 
 const MCMA_CORE = require("mcma-core");
 
@@ -150,11 +158,11 @@ const createServices = (serviceUrls) => {
                             //JOB_PROFILES.TranscribeAudio.id ? JOB_PROFILES.TranscribeAudio.id : JOB_PROFILES.TranscribeAudio,   //Will be implemented at a later time and may need to be renamed to not conflict with AWS
                             //JOB_PROFILES.TranslateText.id ? JOB_PROFILES.TranslateText.id : JOB_PROFILES.TranslateText,
                             JOB_PROFILES.ExtractAllAIMetadata.id ? JOB_PROFILES.ExtractAllAIMetadata.id : JOB_PROFILES.ExtractAllAIMetadata
-                            
+
                         ]
                     )
                 );
-                break;    
+                break;
             case "job_processor_service_url":
                 serviceList.push(new MCMA_CORE.Service(
                     "Job Processor Service",
@@ -279,19 +287,109 @@ const parseContent = (content) => {
 
 const main = async () => {
     let content = await readStdin();
-    let serviceUrls = parseContent(content);
+    let terraformOutput = parseContent(content);
 
-    let servicesUrl = serviceUrls.service_registry_url + "/services";
-    let jobProfilesUrl = serviceUrls.service_registry_url + "/job-profiles";
+    let servicesUrl = terraformOutput.service_registry_url + "/services";
+    let jobProfilesUrl = terraformOutput.service_registry_url + "/job-profiles";
 
+    // 1. (Re)create cognito user for website
+    let username = "mcma";
+    let tempPassword = "b9BC9aX6B3yQK#nr";
+    let password = "%bshgkUTv*RD$sR7";
+
+    try {
+        var params = {
+            UserPoolId: terraformOutput.cognito_user_pool_id,
+            Username: "mcma"
+        }
+
+        // console.log(JSON.stringify(params, null, 2));
+        
+        let data = await CognitoAdminDeleteUser(params);
+        console.log("Deleting existing user");
+        // console.log(JSON.stringify(data, null, 2));
+    } catch (error) {
+    }
+
+    try {
+        var params = {
+            UserPoolId: terraformOutput.cognito_user_pool_id,
+            Username: username,
+            MessageAction: "SUPPRESS",
+            TemporaryPassword: tempPassword
+        }
+
+        // console.log(JSON.stringify(params, null, 2));
+
+        console.log("Creating user '" + username + "' with temporary password");
+        let data = await CognitoAdminCreateUser(params);
+
+        // console.log(JSON.stringify(data, null, 2));
+
+        var authenticationData = {
+            Username: username,
+            Password: tempPassword,
+        };
+        var authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails(authenticationData);
+        var poolData = {
+            UserPoolId: terraformOutput.cognito_user_pool_id,
+            ClientId: terraformOutput.cognito_user_pool_client_id
+        };
+        var userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+        var userData = {
+            Username: username,
+            Pool: userPool
+        };
+        var cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+
+        console.log("Authenticating user '" + username + "' with temporary password");
+        cognitoUser.authenticateUser(authenticationDetails, {
+            onSuccess: function (result) {
+            },
+
+            onFailure: function (err) {
+                console.log("Unexpected error:", err);
+            },
+
+            newPasswordRequired: (userAttributes, requiredAttributes) => {
+                console.log("Changing temporary password to final password");
+                cognitoUser.completeNewPasswordChallenge(password, requiredAttributes, {
+                    onSuccess: (session) => {
+                        console.log("User '" + username + "' is ready with password '" + password + "'");
+                    },
+                    onFailure: (err) => {
+                        console.log("Unexpected error:", err);
+                    }
+                });
+            }
+        });
+    } catch (error) {
+        console.log("Failed to setup user due to error:", error);
+    }
+
+    // 2. Uploading configuration to website
     console.log("Uploading deployment configuration to website");
     let config = {
         servicesUrl: servicesUrl,
-        uploadBucket: serviceUrls.upload_bucket
+        aws: {
+            region: terraformOutput.aws_region,
+            s3: {
+                uploadBucket: terraformOutput.upload_bucket
+            },
+            cognito: {
+                userPool: {
+                    UserPoolId: terraformOutput.cognito_user_pool_id,
+                    ClientId: terraformOutput.cognito_user_pool_client_id
+                },
+                identityPool: {
+                    id: terraformOutput.cognito_identity_pool_id
+                }
+            }
+        }
     }
 
     let s3Params = {
-        Bucket: serviceUrls.website_bucket,
+        Bucket: terraformOutput.website_bucket,
         Key: "config.json",
         Body: JSON.stringify(config)
     }
@@ -302,7 +400,7 @@ const main = async () => {
         return;
     }
 
-    // 1. Inserting / updating service registry
+    // 3. Inserting / updating service registry
     let serviceRegistry = new MCMA_CORE.Service("Service Registry", [
         new MCMA_CORE.ServiceResource("Service", servicesUrl),
         new MCMA_CORE.ServiceResource("JobProfile", jobProfilesUrl)
@@ -330,10 +428,10 @@ const main = async () => {
         serviceRegistry = await resourceManager.create(serviceRegistry);
     }
 
-    // 2. reinitializing resourceManager
+    // 4. reinitializing resourceManager
     await resourceManager.init();
 
-    // 3. Inserting / updating job profiles
+    // 5. Inserting / updating job profiles
     let retrievedJobProfiles = await resourceManager.get("JobProfile");
 
     for (const retrievedJobProfile of retrievedJobProfiles) {
@@ -359,8 +457,8 @@ const main = async () => {
         }
     }
 
-    // 4. Inserting / updating services
-    const SERVICES = createServices(serviceUrls);
+    // 6. Inserting / updating services
+    const SERVICES = createServices(terraformOutput);
 
     retrievedServices = await resourceManager.get("Service");
 
