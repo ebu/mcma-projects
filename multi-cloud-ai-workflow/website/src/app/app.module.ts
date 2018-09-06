@@ -23,6 +23,7 @@ import { ModalComponent } from './modal/modal.component';
 import { RunCompleteModalComponent } from './run/run-complete-modal/run-complete-modal.component';
 import { MonitorDetailComponent } from './monitor/monitor-detail/monitor-detail.component';
 import { MonitorQueueComponent } from './monitor/monitor-queue/monitor-queue.component';
+import { RunMetadataModalComponent } from './run/run-metadata-modal/run-metadata-modal.component';
 
 @NgModule({
   declarations: [
@@ -34,9 +35,11 @@ import { MonitorQueueComponent } from './monitor/monitor-queue/monitor-queue.com
     MonitorComponent,
     RunCompleteModalComponent,
     MonitorDetailComponent,
-    MonitorQueueComponent
+    MonitorQueueComponent,
+    RunMetadataModalComponent
   ],
   entryComponents: [
+    RunMetadataModalComponent,
     RunCompleteModalComponent
   ],
   imports: [

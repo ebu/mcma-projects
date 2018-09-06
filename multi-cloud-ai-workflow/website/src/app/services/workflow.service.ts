@@ -4,10 +4,13 @@ import { Observable, BehaviorSubject, from } from 'rxjs';
 import { ResourceManager, WorkflowJob, JobParameterBag, DescriptiveMetadata, Locator } from 'mcma-core';
 
 import { ConfigService } from './config.service';
-import { map, zip, tap, switchMap } from 'rxjs/operators';
+import { map, zip, switchMap } from 'rxjs/operators';
 
 @Injectable()
 export class WorkflowService {
+
+    readonly WORKFLOW_NAME = 'ConformWorkflow';
+    readonly WORKFLOW_JOB_TYPE = 'WorkflowJob';
 
     private resourceManager$: Observable<ResourceManager>;
 
@@ -15,12 +18,12 @@ export class WorkflowService {
         this.resourceManager$ = this.configService.get<string>('servicesUrl').pipe(map(servicesUrl => new ResourceManager(servicesUrl)));
     }
 
-    runWorkflow(objectKey: string, profileName = 'ConformWorkflow'): Observable<WorkflowJob> {
+    runWorkflow(objectKey: string, metadata: DescriptiveMetadata, profileName = this.WORKFLOW_NAME): Observable<WorkflowJob> {
         const workflowJobSubject = new BehaviorSubject<WorkflowJob>(null);
         
         const sub = this.resourceManager$.pipe(
             zip(this.configService.get<string>('aws.s3.uploadBucket')),
-            switchMap(([resourceManager, uploadBucket]) => from(this.runWorkflowAsync(resourceManager, profileName, uploadBucket, objectKey)))
+            switchMap(([resourceManager, uploadBucket]) => from(this.runWorkflowAsync(resourceManager, profileName, uploadBucket, objectKey, metadata)))
         ).subscribe(job => {
             sub.unsubscribe();
             workflowJobSubject.next(job);
@@ -29,25 +32,41 @@ export class WorkflowService {
         return workflowJobSubject.asObservable();
     }
 
-    async runWorkflowAsync(resourceManager: ResourceManager, profileName: string, uploadBucket: string, objectKey: string) {
-        // get job profiles filtered by name
-        let jobProfiles = await resourceManager.get('JobProfile', { name: profileName });
+    getWorkflowJobs(): Observable<WorkflowJob[]> {
+        const workflowJobsSubject = new BehaviorSubject<WorkflowJob[]>(null);
+        
+        const sub = this.resourceManager$.pipe(
+            switchMap(resourceManager => from(this.getWorkflowJobsAsync(resourceManager)))
+        ).subscribe(jobs => {
+            sub.unsubscribe();
+            workflowJobsSubject.next(jobs);
+        });
 
-        let jobProfileId = jobProfiles.length ? jobProfiles[0].id : null;
+        return workflowJobsSubject.asObservable();
+    }
+
+    private async getJobProfileIdAsync(resourceManager: ResourceManager, profileName: string) {
+        // get job profiles filtered by name
+        const jobProfiles = await resourceManager.get('JobProfile', { name: profileName });
+
+        const jobProfileId = jobProfiles.length ? jobProfiles[0].id : null;
 
         // if not found bail out
         if (!jobProfileId) {
             throw new Error(`JobProfile '${profileName}' not found`);
         }
 
+        return jobProfileId;
+    }
+
+    private async runWorkflowAsync(resourceManager: ResourceManager, profileName: string, uploadBucket: string, objectKey: string, metadata: DescriptiveMetadata) {
+        const jobProfileId = await this.getJobProfileIdAsync(resourceManager, profileName);
+
         // creating workflow job
         let workflowJob = new WorkflowJob(
             jobProfileId,
             new JobParameterBag({
-                metadata: new DescriptiveMetadata({
-                    name: 'Test video',
-                    description: 'Description of test video'
-                }),
+                metadata: metadata,
                 inputFile: new Locator({
                     awsS3Bucket: uploadBucket,
                     awsS3Key: objectKey
@@ -61,5 +80,17 @@ export class WorkflowService {
         console.log(JSON.stringify(workflowJob, null, 2));
 
         return workflowJob;
+    }
+
+    private async getWorkflowJobsAsync(resourceManager: ResourceManager) {
+        const jobProfileId = await this.getJobProfileIdAsync(resourceManager, this.WORKFLOW_NAME);
+
+        const jobs: WorkflowJob[] = await resourceManager.get(this.WORKFLOW_JOB_TYPE);
+        console.log('All jobs', jobs);
+        
+        const filteredJobs = jobs.filter(j => j['@type'] === this.WORKFLOW_JOB_TYPE && j.jobProfile && j.jobProfile === jobProfileId);
+        console.log('Filtered jobs', filteredJobs);
+
+        return filteredJobs;
     }
 }

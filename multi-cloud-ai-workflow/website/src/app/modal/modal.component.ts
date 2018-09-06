@@ -25,7 +25,7 @@ export class ModalComponent implements AfterViewInit {
         this.modalContent.viewContainerRef.clear();
 
         // if we have new content, show it now
-        if (modal) {
+        if (modal && modal.componentType) {
           const componentRef =
             this.modalContent.viewContainerRef.createComponent(
               this.componentFactoryResolver.resolveComponentFactory(modal.componentType));

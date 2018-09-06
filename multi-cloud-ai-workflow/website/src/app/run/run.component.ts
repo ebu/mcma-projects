@@ -11,6 +11,7 @@ import { ModalService } from '../services/modal.service';
 import { RunCompleteModalComponent } from './run-complete-modal/run-complete-modal.component';
 import { FormControl } from '@angular/forms';
 import { S3Object } from '../models/s3-object';
+import { RunMetadataModalComponent } from './run-metadata-modal/run-metadata-modal.component';
 
 @Component({
   selector: 'mcma-run',
@@ -91,13 +92,22 @@ export class RunComponent implements OnInit {
 
   runWorkflow(): void {
     if (this.selectedKey) {
-      this.runningWorkflowSubject.next(true);
-      const sub = this.workflowService.runWorkflow(this.selectedKey).pipe(filter(job => !!job))
-        .subscribe(job => {
-          this.runningWorkflowSubject.next(false);
-          this.modalService.showModal(RunCompleteModalComponent, { job });
-          sub.unsubscribe();
-        });
+      this.modalService.showModal(RunMetadataModalComponent);
+
+      const sub1 = this.modalService.currentModal$.subscribe(m => {
+        // when modal clears, get data, if any
+        if (m && !m.componentType && m.data) {
+          this.runningWorkflowSubject.next(true);
+          const sub2 = this.workflowService.runWorkflow(this.selectedKey, m.data).pipe(filter(job => !!job))
+            .subscribe(job => {
+              this.runningWorkflowSubject.next(false);
+              this.modalService.showModal(RunCompleteModalComponent, { job });
+              sub2.unsubscribe();
+            });
+            
+            sub1.unsubscribe();
+        }
+      });
     }
   }
 }
