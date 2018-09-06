@@ -25,7 +25,7 @@ export class CognitoAuthService {
     }
 
     autoLogin(): Observable<CognitoIdentityCredentials> {
-        return this.credentials$.pipe(switchMap(creds => !!creds ? of(creds) : this.login('evanverneyfink', 'mcma-l23#j19%51AKda!')), share());
+        return this.credentials$.pipe(switchMap(creds => !!creds ? of(creds) : this.login('mcma', '%bshgkUTv*RD$sR7')), share());
     }
 
     private authenticateWithCognito(cognitoConfig: ICognitoUserPoolData, userName: string, password: string): Observable<CognitoIdentityCredentials> {
@@ -49,17 +49,12 @@ export class CognitoAuthService {
                 console.log('failed to get aws creds: ', err);
                 this.credentialsSubject.error(err);
             }
-            //,
-            // newPasswordRequired: (userAttributes, requiredAttributes) => {
-            //     console.log('new password required');
-            //     cognitoUser.completeNewPasswordChallenge('mcma-l23#j19%51AKda!', requiredAttributes, this.getCognitoAuthCallbacks(cognitoConfig, cognitoUser));
-            // }
         };
     };
 
     private onAuthSuccess(cognitoConfig: ICognitoUserPoolData, session: CognitoUserSession) {
         console.log('auth success');
-        
+
         this.configService.get<string>('aws.cognito.identityPool.id').pipe(
             zip(this.configService.get<string>('aws.region')),
             map(([identityPoolId, region]) => {

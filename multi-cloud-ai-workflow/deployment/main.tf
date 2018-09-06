@@ -3,6 +3,22 @@
 # Run a terraform get on each module before executing this script
 #########################
 
+module "cognito" {
+  source = "./cognito"
+
+  global_prefix = "${var.global_prefix}"
+
+  upload_bucket     = "${var.upload_bucket}"
+  temp_bucket       = "${var.temp_bucket}"
+  repository_bucket = "${var.repository_bucket}"
+  website_bucket    = "${var.website_bucket}"
+
+  aws_account_id = "${var.aws_account_id}"
+  aws_access_key = "${var.aws_access_key}"
+  aws_secret_key = "${var.aws_secret_key}"
+  aws_region     = "${var.aws_region}"
+}
+
 module "storage" {
   source = "./storage"
 
@@ -66,6 +82,22 @@ module "workflows" {
   repository_bucket    = "${module.storage.repository_bucket}"
   temp_bucket          = "${module.storage.temp_bucket}"
   website_bucket       = "${module.storage.website_bucket}"
+}
+
+output "aws_region" {
+    value = "${var.aws_region}"
+}
+
+output "cognito_user_pool_id" {
+    value = "${module.cognito.user_pool_id}"
+}
+
+output "cognito_user_pool_client_id" {
+    value = "${module.cognito.user_pool_client_id}"
+}
+
+output "cognito_identity_pool_id" {
+    value = "${module.cognito.identity_pool_id}"
 }
 
 output "upload_bucket" {
