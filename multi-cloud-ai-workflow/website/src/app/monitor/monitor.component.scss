@@ -1,17 +1,15 @@
 @import '~@angular/material/theming';
 @import 'src/styles/theme.scss';
 
+:host {
+    display: flex;
+    flex: 1;
+}
+
 .monitor-container {
     display: flex;
     justify-content: center;
-    align-items: center;
-    height: 400px;
+    height: 1000px;
     font-size: 18px;
     color: mat-color($mcma-primary, 300);
-}
-
-mcma-monitor-detail {
-    display: inline-flex;
-    margin-left:20px;
-    width: 1000px;
 }

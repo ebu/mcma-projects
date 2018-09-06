@@ -1,3 +1,4 @@
-  
-<monitor-queue [workflowJobs]="workflowJobs$ | async"></monitor-queue>
-<mcma-monitor-detail></mcma-monitor-detail>
+<div class="monitor-container">
+    <mcma-monitor-queue [workflowJobs]="workflowJobs$ | async" (jobSelected)="onJobSelected($event)"></mcma-monitor-queue>
+    <mcma-monitor-detail [workflowJob]="selectedWorkflowJob$ | async"></mcma-monitor-detail>
+</div>
