@@ -36,7 +36,7 @@ exports.handler = async (event, context) => {
     // get ai job id (first non null entry in array)
     let jobId = event.data.transcribeJobId.find(id => id);
     if (!jobId) {
-        throw new Error("Faild to obtain TranscribeJobId");
+        throw new Error("Failed to obtain TranscribeJobId");
     }
     console.log("[TranscribeJobId]:", jobId);
 
