@@ -91,6 +91,10 @@ export class WorkflowService {
         const filteredJobs = jobs.filter(j => j['@type'] === this.WORKFLOW_JOB_TYPE && j.jobProfile && j.jobProfile === jobProfileId);
         console.log('Filtered jobs', filteredJobs);
 
+        filteredJobs.sort((a, b) => new Date(b.dateCreated).getTime() -  new Date(a.dateCreated).getTime());
+
+        console.log("Sorted jobs'", filteredJobs);
+
         return filteredJobs;
     }
 }
