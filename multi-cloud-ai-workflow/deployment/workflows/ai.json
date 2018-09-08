@@ -5,7 +5,7 @@
         "01-validate-workflow-input": {
             "Type": "Task",
             "Resource": "${lambda-01-validate-workflow-input}",
-            "ResultPath": null,
+            "ResultPath": "$.data.mediaFileLocator",
             "Next": "02-ai-extraction-parent",
             "Catch": [
                 {
@@ -50,13 +50,31 @@
                                 }
                             ],
                             "ResultPath": "$.data.transcribeJobId",
-                            "Next": "03-register-speech-to-text-output"
+                            "Next": "03-register-speech-to-text-output",
+                            "Catch": [
+                                {
+                                    "ErrorEquals": [
+                                        "States.ALL"
+                                    ],
+                                    "ResultPath": "$.error",
+                                    "Next": "process-failure-branch-1"
+                                }
+                            ]
                         },
                         "03-register-speech-to-text-output": {
                             "Type": "Task",
                             "Resource": "${lambda-03-register-speech-to-text-output}",
                             "ResultPath": null,
-                            "Next": "04-translate-speech-transcription-parent"
+                            "Next": "04-translate-speech-transcription-parent",
+                            "Catch": [
+                                {
+                                    "ErrorEquals": [
+                                        "States.ALL"
+                                    ],
+                                    "ResultPath": "$.error",
+                                    "Next": "process-failure-branch-1"
+                                }
+                            ]
                         },
                         "04-translate-speech-transcription-parent": {
                             "Type": "Parallel",
@@ -85,12 +103,38 @@
                                 }
                             ],
                             "ResultPath": "$.data.translateJobId",
-                            "Next": "05-register-speech-translation"
+                            "Next": "05-register-speech-translation",
+                            "Catch": [
+                                {
+                                    "ErrorEquals": [
+                                        "States.ALL"
+                                    ],
+                                    "ResultPath": "$.error",
+                                    "Next": "process-failure-branch-1"
+                                }
+                            ]
                         },
                         "05-register-speech-translation": {
                             "Type": "Task",
                             "Resource": "${lambda-05-register-speech-translation}",
                             "ResultPath": null,
+                            "Next": "process-completion-branch-1",
+                            "Catch": [
+                                {
+                                    "ErrorEquals": [
+                                        "States.ALL"
+                                    ],
+                                    "ResultPath": "$.error",
+                                    "Next": "process-failure-branch-1"
+                                }
+                            ]
+                        },
+                        "process-failure-branch-1": {
+                            "Type": "Pass",
+                            "End": true
+                        },
+                        "process-completion-branch-1": {
+                            "Type": "Pass",
                             "End": true
                         }
                     }
@@ -125,12 +169,38 @@
                                 }
                             ],
                             "ResultPath": "$.data.awsCelebritiesJobId",
-                            "Next": "07-register-celebrities-info-aws"
+                            "Next": "07-register-celebrities-info-aws",
+                            "Catch": [
+                                {
+                                    "ErrorEquals": [
+                                        "States.ALL"
+                                    ],
+                                    "ResultPath": "$.error",
+                                    "Next": "process-failure-branch-2"
+                                }
+                            ]
                         },
                         "07-register-celebrities-info-aws": {
                             "Type": "Task",
                             "Resource": "${lambda-07-register-celebrities-info-aws}",
                             "ResultPath": null,
+                            "Next": "process-completion-branch-2",
+                            "Catch": [
+                                {
+                                    "ErrorEquals": [
+                                        "States.ALL"
+                                    ],
+                                    "ResultPath": "$.error",
+                                    "Next": "process-failure-branch-2"
+                                }
+                            ]
+                        },
+                        "process-failure-branch-2": {
+                            "Type": "Pass",
+                            "End": true
+                        },
+                        "process-completion-branch-2": {
+                            "Type": "Pass",
                             "End": true
                         }
                     }
@@ -165,12 +235,38 @@
                                 }
                             ],
                             "ResultPath": "$.data.azureCelebritiesJobId",
-                            "Next": "09-register-celebrities-info-azure"
+                            "Next": "09-register-celebrities-info-azure",
+                            "Catch": [
+                                {
+                                    "ErrorEquals": [
+                                        "States.ALL"
+                                    ],
+                                    "ResultPath": "$.error",
+                                    "Next": "process-failure-branch-3"
+                                }
+                            ]
                         },
                         "09-register-celebrities-info-azure": {
                             "Type": "Task",
                             "Resource": "${lambda-09-register-celebrities-info-azure}",
                             "ResultPath": null,
+                            "Next": "process-completion-branch-3",
+                            "Catch": [
+                                {
+                                    "ErrorEquals": [
+                                        "States.ALL"
+                                    ],
+                                    "ResultPath": "$.error",
+                                    "Next": "process-failure-branch-3"
+                                }
+                            ]
+                        },
+                        "process-failure-branch-3": {
+                            "Type": "Pass",
+                            "End": true
+                        },
+                        "process-completion-branch-3": {
+                            "Type": "Pass",
                             "End": true
                         }
                     }

@@ -15,13 +15,13 @@ const MCMA_CORE = require("mcma-core");
 const uuidv4 = require('uuid/v4');
 
 
-const JOB_PROFILE_TRANSCRIBE_AUDIO = "TranscribeAudio";
-const JOB_PROFILE_TRANSLATE_TEXT = "TranslateText";
-const JOB_PROFILE_EXTRACT_ALL_AI_METADATA = "ExtractAllAIMetadata";
+const JOB_PROFILE_TRANSCRIBE_AUDIO = "AzureTranscribeAudio";
+const JOB_PROFILE_TRANSLATE_TEXT = "AzureTranslateText";
+const JOB_PROFILE_EXTRACT_ALL_AI_METADATA = "AzureExtractAllAIMetadata";
 
 let AzureApiUrl; //= "https://api.videoindexer.ai"  // need to move to a stage variale 
-let AzureLocation; 
-let AzureAccountID; 
+let AzureLocation;
+let AzureAccountID;
 let AzureSubscriptionKey;
 
 // function HttpGetData(url, customHeaders) {
@@ -50,12 +50,12 @@ let AzureSubscriptionKey;
 exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
 
-     AzureApiUrl = event.request.stageVariables.AzureApiUrl; // "https://api.videoindexer.ai"   
-     AzureLocation =  event.request.stageVariables.AzureLocation;
-     AzureAccountID =  event.request.stageVariables.AzureAccountID;
-     AzureSubscriptionKey =  event.request.stageVariables.AzureSubscriptionKey;
+    AzureApiUrl = event.request.stageVariables.AzureApiUrl; // "https://api.videoindexer.ai"   
+    AzureLocation = event.request.stageVariables.AzureLocation;
+    AzureAccountID = event.request.stageVariables.AzureAccountID;
+    AzureSubscriptionKey = event.request.stageVariables.AzureSubscriptionKey;
 
-  event.request.stageVariables
+    event.request.stageVariables
 
 
     switch (event.action) {
@@ -78,14 +78,14 @@ const processJobAssignment = async (event) => {
         // 1. Setting job assignment status to RUNNING
         await updateJobAssignmentStatus(resourceManager, table, jobAssignmentId, "RUNNING");
 
-        // 2. Retrieving WorkflowJob
-        let workflowJob = await retrieveWorkflowJob(table, jobAssignmentId);
+        // 2. Retrieving Job
+        let job = await retrieveJob(table, jobAssignmentId);
 
         // 3. Retrieve JobProfile
-        let jobProfile = await retrieveJobProfile(workflowJob);
+        let jobProfile = await retrieveJobProfile(job);
 
         // 4. Retrieve job inputParameters
-        let jobInput = await retrieveJobInput(workflowJob);
+        let jobInput = await retrieveJobInput(job);
 
         // 5. Check if we support jobProfile and if we have required parameters in jobInput
         validateJobProfile(jobProfile, jobInput);
@@ -97,7 +97,7 @@ const processJobAssignment = async (event) => {
         let mediaFileUri;
 
         if (inputFile.httpEndpoint) {
-            mediaFileUri = httpEndpoint;
+            mediaFileUri = inputFile.httpEndpoint;
         } else {
             let data = await S3GetBucketLocation({ Bucket: inputFile.awsS3Bucket });
             console.log(JSON.stringify(data, null, 2));
@@ -186,24 +186,24 @@ const processJobAssignment = async (event) => {
                     console.log("Call Azure Video Indexer Video API : Doing a POST on  : ", postVideoUrl);
                     let postVideoResponse = await MCMA_CORE.HTTP.post(postVideoUrl);
 
-                    console.log("Azure API RAW Response postVideoResponse",postVideoResponse);
+                    console.log("Azure API RAW Response postVideoResponse", postVideoResponse);
 
                     if (postVideoResponse.status != 200) {
                         console.error("Azure Video Indexer - Error processing the video : ", response);
                     }
                     else {
-                        let azureAssetInfo =  postVideoResponse.data;
-                        console.log("azureAssetInfo: ", JSON.stringify(azureAssetInfo, null, 2) );
+                        let azureAssetInfo = postVideoResponse.data;
+                        console.log("azureAssetInfo: ", JSON.stringify(azureAssetInfo, null, 2));
 
                         try {
-                               console.log("updateJobAssignmentWithInfo" );
-                               console.log("table = ", table );
-                               console.log("jobAssignmentId = ", jobAssignmentId );
+                            console.log("updateJobAssignmentWithInfo");
+                            console.log("table = ", table);
+                            console.log("jobAssignmentId = ", jobAssignmentId);
 
 
                             await updateJobAssignmentWithInfo(table, jobAssignmentId, azureAssetInfo);
                         } catch (error) {
-                            console.error("Error updating the job",error);
+                            console.error("Error updating the job", error);
                         }
 
 
@@ -235,8 +235,8 @@ const processJobAssignment = async (event) => {
 }
 
 const processNotification = async (event) => {
-    
-    
+
+
     console.log("ProcessNotification from Azure");
 
 
@@ -269,7 +269,7 @@ const processNotification = async (event) => {
     console.log("azureState = ", azureState);
 
     jobAssignment.status = azureState;
-    
+
 
 
     if (flagCounter != 2) {
@@ -300,65 +300,65 @@ const processNotification = async (event) => {
             console.log("Azure API Token : ", apiToken);
 
 
-        //https://api.videoindexer.ai/{location}/Accounts/{accountId}/Videos/{videoId}/Index[?accessToken][&language]   
-        let videoMetadata;
-        let metadataFromAzureVideoIndexwer = AzureApiUrl + "/" + AzureLocation + "/Accounts/" + AzureAccountID + "/Videos/" + azureVideoId + "/Index?accessToken=" + apiToken + "&language=English";
-           
-                console.log("Get the azure video metadata : Doing a GET on  : ", metadataFromAzureVideoIndexwer);
-                let indexedVideoMetadataResponse = await MCMA_CORE.HTTP.get(metadataFromAzureVideoIndexwer);
+            //https://api.videoindexer.ai/{location}/Accounts/{accountId}/Videos/{videoId}/Index[?accessToken][&language]   
+            let videoMetadata;
+            let metadataFromAzureVideoIndexwer = AzureApiUrl + "/" + AzureLocation + "/Accounts/" + AzureAccountID + "/Videos/" + azureVideoId + "/Index?accessToken=" + apiToken + "&language=English";
 
-                console.log("Azure Indexed Video Metadata get response : ", indexedVideoMetadataResponse);
+            console.log("Get the azure video metadata : Doing a GET on  : ", metadataFromAzureVideoIndexwer);
+            let indexedVideoMetadataResponse = await MCMA_CORE.HTTP.get(metadataFromAzureVideoIndexwer);
 
-                if (indexedVideoMetadataResponse.status != 200) {
-                    console.console.error("Error getting Azure video metadata : ", indexedVideoMetadataResponse);
-                }
-                else {
-                    videoMetadata = indexedVideoMetadataResponse.data;
-                    console.log("Azure AI video metadata : ", videoMetadata);
+            console.log("Azure Indexed Video Metadata get response : ", indexedVideoMetadataResponse);
 
-
-                    //Need to hydrate the destination bucket from the job input
-
-                    let workflowJob = await retrieveWorkflowJob(table, jobAssignmentId);
-
-                    //Retrieve JobProfile
-                    let jobProfile = await retrieveJobProfile(workflowJob);
-            
-                    //Retrieve job inputParameters
-                    let jobInput = await retrieveJobInput(workflowJob);
-
-                    let jobOutputLocation = jobInput.outputLocation.awsS3Bucket;
-
-                    // get the info about the destination bucket to store the result of the 
-                    let s3Params = {
-                        Bucket: jobOutputLocation,
-                        Key: azureVideoId + "-" + uuidv4() + ".json",
-                        Body: JSON.stringify(videoMetadata,null,2)
-                    }
-            
-                    await S3PutObject(s3Params);
-            
-                    //updating JobAssignment with jobOutput
-                    let jobOutput = new MCMA_CORE.JobParameterBag({
-                        outputFile: new MCMA_CORE.Locator({
-                            awsS3Bucket: s3Params.Bucket,
-                            awsS3Key: s3Params.Key
-                        })
-                    });
-
-                    await updateJobAssignmentWithOutput(table, jobAssignmentId, jobOutput);
-
-                  // 10. Setting job assignment status to COMPLETED
-                  //  await updateJobAssignmentStatus(resourceManager, table, jobAssignmentId, "COMPLETED");
-
-                }
+            if (indexedVideoMetadataResponse.status != 200) {
+                console.console.error("Error getting Azure video metadata : ", indexedVideoMetadataResponse);
             }
-        
+            else {
+                videoMetadata = indexedVideoMetadataResponse.data;
+                console.log("Azure AI video metadata : ", videoMetadata);
+
+
+                //Need to hydrate the destination bucket from the job input
+
+                let workflowJob = await retrieveJob(table, jobAssignmentId);
+
+                //Retrieve JobProfile
+                let jobProfile = await retrieveJobProfile(workflowJob);
+
+                //Retrieve job inputParameters
+                let jobInput = await retrieveJobInput(workflowJob);
+
+                let jobOutputLocation = jobInput.outputLocation.awsS3Bucket;
+
+                // get the info about the destination bucket to store the result of the 
+                let s3Params = {
+                    Bucket: jobOutputLocation,
+                    Key: azureVideoId + "-" + uuidv4() + ".json",
+                    Body: JSON.stringify(videoMetadata, null, 2)
+                }
+
+                await S3PutObject(s3Params);
+
+                //updating JobAssignment with jobOutput
+                let jobOutput = new MCMA_CORE.JobParameterBag({
+                    outputFile: new MCMA_CORE.Locator({
+                        awsS3Bucket: s3Params.Bucket,
+                        awsS3Key: s3Params.Key
+                    })
+                });
+
+                await updateJobAssignmentWithOutput(table, jobAssignmentId, jobOutput);
+
+                // 10. Setting job assignment status to COMPLETED
+                await updateJobAssignmentStatus(resourceManager, table, jobAssignmentId, "COMPLETED");
+
+            }
+        }
+
 
     }
 
 
-///***** */
+    ///***** */
 
     //jobAssignment.jobOutput = notification.content.output;
     jobAssignment.dateModified = new Date().toISOString();
@@ -401,7 +401,7 @@ const retrieveJobProfile = async (job) => {
     return await retrieveResource(job.jobProfile, "job.jobProfile");
 }
 
-const retrieveWorkflowJob = async (table, jobAssignmentId) => {
+const retrieveJob = async (table, jobAssignmentId) => {
     let jobAssignment = await getJobAssignment(table, jobAssignmentId);
 
     return await retrieveResource(jobAssignment.job, "jobAssignment.job");

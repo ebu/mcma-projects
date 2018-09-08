@@ -80,8 +80,8 @@ const JOB_PROFILES = {
             new MCMA_CORE.JobParameter("ebucore:height")
         ]
     ),
-    TranscribeAudio: new MCMA_CORE.JobProfile(
-        "TranscribeAudio",
+    AWSTranscribeAudio: new MCMA_CORE.JobProfile(
+        "AWSTranscribeAudio",
         [
             new MCMA_CORE.JobParameter("inputFile", "Locator"),
             new MCMA_CORE.JobParameter("outputLocation", "Locator")
@@ -90,8 +90,8 @@ const JOB_PROFILES = {
             new MCMA_CORE.JobParameter("outputFile", "Locator")
         ]
     ),
-    TranslateText: new MCMA_CORE.JobProfile(
-        "TranslateText",
+    AWSTranslateText: new MCMA_CORE.JobProfile(
+        "AWSTranslateText",
         [
             new MCMA_CORE.JobParameter("inputFile", "Locator"),
             new MCMA_CORE.JobParameter("outputLocation", "Locator")
@@ -100,8 +100,18 @@ const JOB_PROFILES = {
             new MCMA_CORE.JobParameter("outputFile", "Locator")
         ]
     ),
-    ExtractAllAIMetadata: new MCMA_CORE.JobProfile(
-        "ExtractAllAIMetadata",
+    AWSDetectCelebrities: new MCMA_CORE.JobProfile(
+        "AWSDetectCelebrities",
+        [
+            new MCMA_CORE.JobParameter("inputFile", "Locator"),
+            new MCMA_CORE.JobParameter("outputLocation", "Locator")
+        ],
+        [
+            new MCMA_CORE.JobParameter("outputFile", "Locator")
+        ]
+    ),
+    AzureExtractAllAIMetadata: new MCMA_CORE.JobProfile(
+        "AzureExtractAllAIMetadata",
         [
             new MCMA_CORE.JobParameter("inputFile", "Locator"),
             new MCMA_CORE.JobParameter("outputLocation", "Locator")
@@ -140,8 +150,9 @@ const createServices = (serviceUrls) => {
                         ],
                         "AIJob",
                         [
-                            JOB_PROFILES.TranscribeAudio.id ? JOB_PROFILES.TranscribeAudio.id : JOB_PROFILES.TranscribeAudio,
-                            JOB_PROFILES.TranslateText.id ? JOB_PROFILES.TranslateText.id : JOB_PROFILES.TranslateText
+                            JOB_PROFILES.AWSTranscribeAudio.id ? JOB_PROFILES.AWSTranscribeAudio.id : JOB_PROFILES.AWSTranscribeAudio,
+                            JOB_PROFILES.AWSTranslateText.id ? JOB_PROFILES.AWSTranslateText.id : JOB_PROFILES.AWSTranslateText,
+                            JOB_PROFILES.AWSDetectCelebrities.id ? JOB_PROFILES.AWSDetectCelebrities.id : JOB_PROFILES.AWSDetectCelebrities
                         ]
                     )
                 );
@@ -157,7 +168,7 @@ const createServices = (serviceUrls) => {
                         [
                             //JOB_PROFILES.TranscribeAudio.id ? JOB_PROFILES.TranscribeAudio.id : JOB_PROFILES.TranscribeAudio,   //Will be implemented at a later time and may need to be renamed to not conflict with AWS
                             //JOB_PROFILES.TranslateText.id ? JOB_PROFILES.TranslateText.id : JOB_PROFILES.TranslateText,
-                            JOB_PROFILES.ExtractAllAIMetadata.id ? JOB_PROFILES.ExtractAllAIMetadata.id : JOB_PROFILES.ExtractAllAIMetadata
+                            JOB_PROFILES.AzureExtractAllAIMetadata.id ? JOB_PROFILES.AzureExtractAllAIMetadata.id : JOB_PROFILES.AzureExtractAllAIMetadata
 
                         ]
                     )

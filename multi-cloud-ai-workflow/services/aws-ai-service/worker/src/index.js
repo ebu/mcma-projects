@@ -14,8 +14,9 @@ const TranscribeServiceStartTranscriptionJob = util.promisify(TranscribeService.
 const MCMA_AWS = require("mcma-aws");
 const MCMA_CORE = require("mcma-core");
 
-const JOB_PROFILE_TRANSCRIBE_AUDIO = "TranscribeAudio";
-const JOB_PROFILE_TRANSLATE_TEXT = "TranslateText";
+const JOB_PROFILE_TRANSCRIBE_AUDIO = "AWSTranscribeAudio";
+const JOB_PROFILE_TRANSLATE_TEXT = "AWSTranslateText";
+const JOB_PROFILE_DETECT_CELEBRITIES = "AWSDetectCelebrities";
 
 exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
@@ -63,7 +64,7 @@ const processJobAssignment = async (event) => {
         let mediaFileUri;
 
         if (inputFile.httpEndpoint) {
-            mediaFileUri = httpEndpoint;
+            mediaFileUri = inputFile.httpEndpoint;
         } else {
             let data = await S3GetBucketLocation({ Bucket: inputFile.awsS3Bucket });
             console.log(JSON.stringify(data, null, 2));
@@ -102,9 +103,8 @@ const processJobAssignment = async (event) => {
 
                 break;
             case JOB_PROFILE_TRANSLATE_TEXT:
+            case JOB_PROFILE_DETECT_CELEBRITIES:
                 throw new Error("Not Implemented");
-
-
         }
 
         console.log(JSON.stringify(data, null, 2));
@@ -179,7 +179,8 @@ const processTranscribeJobResult = async (event) => {
 
 const validateJobProfile = (jobProfile, jobInput) => {
     if (jobProfile.name !== JOB_PROFILE_TRANSCRIBE_AUDIO &&
-        jobProfile.name !== JOB_PROFILE_TRANSLATE_TEXT) {
+        jobProfile.name !== JOB_PROFILE_TRANSLATE_TEXT &&
+        jobProfile.name !== JOB_PROFILE_DETECT_CELEBRITIES) {
         throw new Error("JobProfile '" + jobProfile.name + "' is not supported");
     }
 
