@@ -7,9 +7,6 @@ const S3 = new AWS.S3();
 const S3GetBucketLocation = util.promisify(S3.getBucketLocation.bind(S3));
 const S3PutObject = util.promisify(S3.putObject.bind(S3));
 
-const TranscribeService = new AWS.TranscribeService();
-const TranscribeServiceStartTranscriptionJob = util.promisify(TranscribeService.startTranscriptionJob.bind(TranscribeService));
-
 const MCMA_AWS = require("mcma-aws");
 const MCMA_CORE = require("mcma-core");
 const uuidv4 = require('uuid/v4');
@@ -23,28 +20,6 @@ let AzureApiUrl; //= "https://api.videoindexer.ai"  // need to move to a stage v
 let AzureLocation;
 let AzureAccountID;
 let AzureSubscriptionKey;
-
-// function HttpGetData(url, customHeaders) {
-//     // Setting URL and headers for request
-//     var options = {
-//         url: url,
-//         headers: customHeaders
-
-//     };
-//     // Return new promise 
-//     return new Promise(function (resolve, reject) {
-//         // Do async job
-//         request.get(options, function (err, resp, body) {
-//             if (err) {
-//                 reject(err);
-//             } else {
-//                 resolve(body);
-//             }
-//         })
-//     })  
-// }
-
-
 
 
 exports.handler = async (event, context) => {
@@ -107,36 +82,8 @@ const processJobAssignment = async (event) => {
         let params, data;
 
         switch (jobProfile.name) {
-            // case JOB_PROFILE_TRANSCRIBE_AUDIO:
-            //     let mediaFormat;
-
-            //     if (mediaFileUri.toLowerCase().endsWith("mp3")) {
-            //         mediaFormat = "mp3";
-            //     } else if (mediaFileUri.toLowerCase().endsWith("mp4")) {
-            //         mediaFormat = "mp4";
-            //     } else if (mediaFileUri.toLowerCase().endsWith("wav")) {
-            //         mediaFormat = "wav";
-            //     } else if (mediaFileUri.toLowerCase().endsWith("flac")) {
-            //         mediaFormat = "flac";
-            //     } else {
-            //         throw new Error("Unable to determine Media Format from input file '" + mediaFileUri + "'");
-            //     }
-
-            //     params = {
-            //         TranscriptionJobName: jobAssignmentId.substring(jobAssignmentId.lastIndexOf("/") + 1),
-            //         LanguageCode: "en-US",
-            //         Media: {
-            //             MediaFileUri: mediaFileUri
-            //         },
-            //         MediaFormat: mediaFormat,
-            //         OutputBucketName: outputLocation.awsS3Bucket
-            //     }
-
-            //     data = await TranscribeServiceStartTranscriptionJob(params);
-
-            //     break;
-
-
+            case JOB_PROFILE_TRANSCRIBE_AUDIO:
+                throw new Error("Not Implemented");
 
             case JOB_PROFILE_EXTRACT_ALL_AI_METADATA:
                 // implement call to azure
@@ -144,83 +91,64 @@ const processJobAssignment = async (event) => {
                 // Get a token for API call - token are onlu good for one hour
                 let authTokenUrl = AzureApiUrl + "/auth/" + AzureLocation + "/Accounts/" + AzureAccountID + "/AccessToken?allowEdit=true";
                 let customHeaders = { 'Ocp-Apim-Subscription-Key': AzureSubscriptionKey };
-                let apiToken;
-
 
                 console.log("Generate Azure Video Indexer Token : Doing a GET on  : ", authTokenUrl);
                 let response = await MCMA_CORE.HTTP.get(authTokenUrl, {
-                    headers: { 'Ocp-Apim-Subscription-Key': AzureSubscriptionKey }
+                    headers: customHeaders
                 });
 
-                console.log("Azure API Token response : ", response);
+                let apiToken = response.data;
+                console.log("Azure API Token : ", apiToken);
 
-                if (response.status != 200) {
-                    console.console.error("Error generating an Azure Auth Token : ", response);
+                // call the Azure API to process the video 
+                // in this scenario the video is located in a public link
+                // so no need to upload the file to Azure
+
+                /*                 Sample URL Structure      
+                                   https://api.videoindexer.ai/{location}/Accounts/{accountId}/Videos?accessToken={accessToken}&
+                                                                             name={name}?description={string}&
+                                                                            partition={string}&
+                                                                            externalId={string}&
+                                                                            callbackUrl={string}&
+                                                                            metadata={string}&
+                                                                            language={string}&
+                                                                            videoUrl={string}&
+                                                                            fileName={string}&
+                                                                            indexingPreset={string}&
+                                                                            streamingPreset=Default&
+                                                                            linguisticModelId={string}&
+                                                                            privacy={string}&
+                                                                            externalUrl={string}" */
+
+                let postVideoUrl = AzureApiUrl + "/" + AzureLocation + "/Accounts/" + AzureAccountID + "/Videos?accessToken=" + apiToken + "&name=" + inputFile.awsS3Key + "&callbackUrl=" + jobAssignmentId + "/notifications&videoUrl=" + mediaFileUri + "&fileName=" + inputFile.awsS3Key;
+
+                console.log("Call Azure Video Indexer Video API : Doing a POST on  : ", postVideoUrl);
+                let postVideoResponse = await MCMA_CORE.HTTP.post(postVideoUrl);
+
+                console.log("Azure API RAW Response postVideoResponse", postVideoResponse);
+
+                if (postVideoResponse.status != 200) {
+                    console.error("Azure Video Indexer - Error processing the video : ", response);
                 }
                 else {
-                    apiToken = response.data;
-                    console.log("Azure API Token : ", apiToken);
+                    let azureAssetInfo = postVideoResponse.data;
+                    console.log("azureAssetInfo: ", JSON.stringify(azureAssetInfo, null, 2));
 
-                    // call the Azure API to process the video 
-                    // in this scenario the video is located in a public link
-                    // so no need to upload the file to Azure
+                    try {
+                        console.log("updateJobAssignmentWithInfo");
+                        console.log("table = ", table);
+                        console.log("jobAssignmentId = ", jobAssignmentId);
 
-                    /*                 Sample URL Structure      
-                                       https://api.videoindexer.ai/{location}/Accounts/{accountId}/Videos?accessToken={accessToken}&
-                                                                                 name={name}?description={string}&
-                                                                                partition={string}&
-                                                                                externalId={string}&
-                                                                                callbackUrl={string}&
-                                                                                metadata={string}&
-                                                                                language={string}&
-                                                                                videoUrl={string}&
-                                                                                fileName={string}&
-                                                                                indexingPreset={string}&
-                                                                                streamingPreset=Default&
-                                                                                linguisticModelId={string}&
-                                                                                privacy={string}&
-                                                                                externalUrl={string}" */
 
-                    let postVideoUrl = AzureApiUrl + "/" + AzureLocation + "/Accounts/" + AzureAccountID + "/Videos?accessToken=" + apiToken + "&name=" + inputFile.awsS3Key + "&callbackUrl=" + jobAssignmentId + "&videoUrl=" + mediaFileUri + "&fileName=" + inputFile.awsS3Key;
-
-                    console.log("Call Azure Video Indexer Video API : Doing a POST on  : ", postVideoUrl);
-                    let postVideoResponse = await MCMA_CORE.HTTP.post(postVideoUrl);
-
-                    console.log("Azure API RAW Response postVideoResponse", postVideoResponse);
-
-                    if (postVideoResponse.status != 200) {
-                        console.error("Azure Video Indexer - Error processing the video : ", response);
+                        await updateJobAssignmentWithInfo(table, jobAssignmentId, azureAssetInfo);
+                    } catch (error) {
+                        console.error("Error updating the job", error);
                     }
-                    else {
-                        let azureAssetInfo = postVideoResponse.data;
-                        console.log("azureAssetInfo: ", JSON.stringify(azureAssetInfo, null, 2));
-
-                        try {
-                            console.log("updateJobAssignmentWithInfo");
-                            console.log("table = ", table);
-                            console.log("jobAssignmentId = ", jobAssignmentId);
-
-
-                            await updateJobAssignmentWithInfo(table, jobAssignmentId, azureAssetInfo);
-                        } catch (error) {
-                            console.error("Error updating the job", error);
-                        }
-
-
-                    }
-
                 }
-
                 break;
 
             case JOB_PROFILE_TRANSLATE_TEXT:
                 throw new Error("Not Implemented");
-
-            // 7. saving the transcriptionJobName on the jobAssignment
-            // let jobAssignment = await getJobAssignment(table, jobAssignmentId);
-            // jobAssignment.transcriptionJobName = data.TranscriptionJobName;
-            // await putJobAssignment(resourceManager, table, jobAssignmentId, jobAssignment);
-
         }
 
         console.log(JSON.stringify(data, null, 2));
@@ -235,19 +163,12 @@ const processJobAssignment = async (event) => {
 }
 
 const processNotification = async (event) => {
-
-
-    console.log("ProcessNotification from Azure");
-
-
     console.log("ProcessNotification", JSON.stringify(event, null, 2));
     let jobAssignmentId = event.jobAssignmentId;
     let notification = event.notification;
 
+    let resourceManager = new MCMA_CORE.ResourceManager(event.request.stageVariables.ServicesUrl);
     let table = new MCMA_AWS.DynamoDbTable(AWS, event.request.stageVariables.TableName);
-
-    let jobAssignment = await table.get("JobAssignment", jobAssignmentId);
-
 
     let flagCounter = 0;
     let azureVideoId;
@@ -268,115 +189,84 @@ const processNotification = async (event) => {
     console.log("azureVideoId = ", azureVideoId);
     console.log("azureState = ", azureState);
 
-    jobAssignment.status = azureState;
-
-
-
     if (flagCounter != 2) {
         console.error("looks like the POST is not coming from Azure Video Indexer: expecting two parameters id and state");
-    } else {
+        return;
+    }
 
+    try {
         // Get the AI metadata form Azure for the video
         console.log("The POST is coming from Azure. Next steps, get the metadata for the video  ");
-
 
         let authTokenUrl = AzureApiUrl + "/auth/" + AzureLocation + "/Accounts/" + AzureAccountID + "/AccessToken?allowEdit=true";
         let customHeaders = { 'Ocp-Apim-Subscription-Key': AzureSubscriptionKey };
         let apiToken;
 
-
         console.log("Generate Azure Video Indexer Token : Doing a GET on  : ", authTokenUrl);
         let response = await MCMA_CORE.HTTP.get(authTokenUrl, {
-            headers: { 'Ocp-Apim-Subscription-Key': AzureSubscriptionKey }
+            headers: customHeaders
         });
 
         console.log("Azure API Token response : ", response);
 
-        if (response.status != 200) {
-            console.console.error("Error generating an Azure Auth Token : ", response);
-        }
-        else {
-            apiToken = response.data;
-            console.log("Azure API Token : ", apiToken);
+        apiToken = response.data;
+        console.log("Azure API Token : ", apiToken);
 
+        // https://api.videoindexer.ai/{location}/Accounts/{accountId}/Videos/{videoId}/Index[?accessToken][&language]   
 
-            //https://api.videoindexer.ai/{location}/Accounts/{accountId}/Videos/{videoId}/Index[?accessToken][&language]   
-            let videoMetadata;
-            let metadataFromAzureVideoIndexwer = AzureApiUrl + "/" + AzureLocation + "/Accounts/" + AzureAccountID + "/Videos/" + azureVideoId + "/Index?accessToken=" + apiToken + "&language=English";
+        let metadataFromAzureVideoIndexwer = AzureApiUrl + "/" + AzureLocation + "/Accounts/" + AzureAccountID + "/Videos/" + azureVideoId + "/Index?accessToken=" + apiToken + "&language=English";
 
-            console.log("Get the azure video metadata : Doing a GET on  : ", metadataFromAzureVideoIndexwer);
-            let indexedVideoMetadataResponse = await MCMA_CORE.HTTP.get(metadataFromAzureVideoIndexwer);
+        console.log("Get the azure video metadata : Doing a GET on  : ", metadataFromAzureVideoIndexwer);
+        let indexedVideoMetadataResponse = await MCMA_CORE.HTTP.get(metadataFromAzureVideoIndexwer);
 
-            console.log("Azure Indexed Video Metadata get response : ", indexedVideoMetadataResponse);
+        let videoMetadata = indexedVideoMetadataResponse.data;
+        console.log("Azure AI video metadata : ", JSON.stringify(videoMetadata, null, 2));
 
-            if (indexedVideoMetadataResponse.status != 200) {
-                console.console.error("Error getting Azure video metadata : ", indexedVideoMetadataResponse);
-            }
-            else {
-                videoMetadata = indexedVideoMetadataResponse.data;
-                console.log("Azure AI video metadata : ", videoMetadata);
+        //Need to hydrate the destination bucket from the job input
+        let workflowJob = await retrieveJob(table, jobAssignmentId);
 
+        //Retrieve job inputParameters
+        let jobInput = await retrieveJobInput(workflowJob);
 
-                //Need to hydrate the destination bucket from the job input
+        let jobOutputBucket = jobInput.outputLocation.awsS3Bucket;
+        let jobOutputKeyPrefix = ((jobInput.outputLocation.awsS3KeyPrefix) ? jobInput.outputLocation.awsS3KeyPrefix : "");
 
-                let workflowJob = await retrieveJob(table, jobAssignmentId);
-
-                //Retrieve JobProfile
-                let jobProfile = await retrieveJobProfile(workflowJob);
-
-                //Retrieve job inputParameters
-                let jobInput = await retrieveJobInput(workflowJob);
-
-                let jobOutputLocation = jobInput.outputLocation.awsS3Bucket;
-
-                // get the info about the destination bucket to store the result of the 
-                let s3Params = {
-                    Bucket: jobOutputLocation,
-                    Key: azureVideoId + "-" + uuidv4() + ".json",
-                    Body: JSON.stringify(videoMetadata, null, 2)
-                }
-
-                await S3PutObject(s3Params);
-
-                //updating JobAssignment with jobOutput
-                let jobOutput = new MCMA_CORE.JobParameterBag({
-                    outputFile: new MCMA_CORE.Locator({
-                        awsS3Bucket: s3Params.Bucket,
-                        awsS3Key: s3Params.Key
-                    })
-                });
-
-                await updateJobAssignmentWithOutput(table, jobAssignmentId, jobOutput);
-
-                // 10. Setting job assignment status to COMPLETED
-                await updateJobAssignmentStatus(resourceManager, table, jobAssignmentId, "COMPLETED");
-
-            }
+        // get the info about the destination bucket to store the result of the job
+        let s3Params = {
+            Bucket: jobOutputBucket,
+            Key: jobOutputKeyPrefix + azureVideoId + "-" + uuidv4() + ".json",
+            Body: JSON.stringify(videoMetadata, null, 2)
         }
 
+        await S3PutObject(s3Params);
 
+        //updating JobAssignment with jobOutput
+        let jobOutput = new MCMA_CORE.JobParameterBag({
+            outputFile: new MCMA_CORE.Locator({
+                awsS3Bucket: s3Params.Bucket,
+                awsS3Key: s3Params.Key
+            })
+        });
+
+        await updateJobAssignmentWithOutput(table, jobAssignmentId, jobOutput);
+
+        // Setting job assignment status to COMPLETED
+        await updateJobAssignmentStatus(resourceManager, table, jobAssignmentId, "COMPLETED");
+
+    } catch (error) {
+        console.error(error);
+        try {
+            await updateJobAssignmentStatus(resourceManager, table, jobAssignmentId, "FAILED", error.message);
+        } catch (error) {
+            console.error(error);
+        }
     }
-
-
-    ///***** */
-
-    //jobAssignment.jobOutput = notification.content.output;
-    jobAssignment.dateModified = new Date().toISOString();
-
-    await table.put("JobAssignment", jobAssignmentId, jobAssignment);
-
-    let resourceManager = new MCMA_CORE.ResourceManager(event.request.stageVariables.ServicesUrl);
-
-    await resourceManager.sendNotification(jobAssignment);
 }
-
-
-
-
 
 const validateJobProfile = (jobProfile, jobInput) => {
     if (jobProfile.name !== JOB_PROFILE_TRANSCRIBE_AUDIO &&
-        jobProfile.name !== JOB_PROFILE_TRANSLATE_TEXT && jobProfile.name !== JOB_PROFILE_EXTRACT_ALL_AI_METADATA) {
+        jobProfile.name !== JOB_PROFILE_TRANSLATE_TEXT &&
+        jobProfile.name !== JOB_PROFILE_EXTRACT_ALL_AI_METADATA) {
         throw new Error("JobProfile '" + jobProfile.name + "' is not supported");
     }
 
@@ -442,15 +332,11 @@ const updateJobAssignmentWithOutput = async (table, jobAssignmentId, jobOutput) 
     await putJobAssignment(null, table, jobAssignmentId, jobAssignment);
 }
 
-
-
 const updateJobAssignmentWithInfo = async (table, jobAssignmentId, jobInfo) => {
-
     let jobAssignment = await getJobAssignment(table, jobAssignmentId);
     jobAssignment.jobInfo = jobInfo;
     await putJobAssignment(null, table, jobAssignmentId, jobAssignment);
 }
-
 
 const updateJobAssignmentStatus = async (resourceManager, table, jobAssignmentId, status, statusMessage) => {
     let jobAssignment = await getJobAssignment(table, jobAssignmentId);

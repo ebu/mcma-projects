@@ -39,8 +39,6 @@ exports.handler = async (event, context) => {
         console.warn("Failed to send notification");
     }
 
-    throw new Error ("Disabled");
-
     // get activity task
     let data = await StepFunctionsGetActivityTask({ activityArn: ACTIVITY_ARN });
 
