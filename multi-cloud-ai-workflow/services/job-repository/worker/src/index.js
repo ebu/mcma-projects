@@ -49,6 +49,12 @@ const processNotification = async (event) => {
 
     let job = await table.get("Job", jobId);
 
+    // not updating job if it already was marked as completed or failed.
+    if (job.status === "COMPLETED" || job.status === "FAILED") {
+        console.log("Ignoring update of job that tried to change state from " + job.status + " to " + notification.content.status)
+        return;
+    }
+
     job.status = notification.content.status;
     job.statusMessage = notification.content.statusMessage;
     job.progress = notification.content.progress;
