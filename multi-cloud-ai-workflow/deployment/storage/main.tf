@@ -16,16 +16,26 @@ resource "aws_s3_bucket" "upload" {
   bucket = "${var.upload_bucket}"
   acl    = "public-read-write"
   policy = "${data.template_file.s3_public_read_write_policy_upload.rendered}"
+  force_destroy = true
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["GET", "PUT", "POST", "DELETE"]
+    allowed_origins = ["*"]
+    expose_headers  = ["ETag"]
+    max_age_seconds = 3000
+  }
 }
 
 resource "aws_s3_bucket" "media-repo" {
   bucket = "${var.repository_bucket}"
   acl    = "private"
+  force_destroy = true
 }
 
 resource "aws_s3_bucket" "temp" {
   bucket = "${var.temp_bucket}"
   acl    = "private"
+  force_destroy = true
 }
 
 data "template_file" "s3_public_read_policy_website" {
@@ -40,6 +50,7 @@ resource "aws_s3_bucket" "website" {
   bucket = "${var.website_bucket}"
   acl    = "public-read"
   policy = "${data.template_file.s3_public_read_policy_website.rendered}"
+  force_destroy = true
 
   website {
     index_document = "index.html"
