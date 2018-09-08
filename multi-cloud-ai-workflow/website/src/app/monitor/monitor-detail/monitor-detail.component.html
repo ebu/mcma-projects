@@ -2,7 +2,7 @@
 
   <div class="job-info">
     <div class="job-preview-player">
-      <video controls [src]="'https://s3.amazonaws.com/' + workflowJob.jobOutput.websiteMediaFile.awsS3Bucket + '/' + workflowJob.jobOutput.websiteMediaFile.awsS3Key"></video>
+      <video controls [src]="workflowJob.jobOutput.websiteMediaFile.httpEndpoint"></video>
     </div>
     <div class="job-fields">
       <div class="job-field">

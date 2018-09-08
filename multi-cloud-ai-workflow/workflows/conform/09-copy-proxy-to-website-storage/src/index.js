@@ -6,6 +6,7 @@ const uuidv4 = require('uuid/v4');
 
 const AWS = require("aws-sdk");
 const S3 = new AWS.S3()
+const S3GetBucketLocation = util.promisify(S3.getBucketLocation.bind(S3));
 const S3CopyObject = util.promisify(S3.copyObject.bind(S3));
 const MCMA_CORE = require("mcma-core");
 
@@ -20,7 +21,7 @@ const WEBSITE_BUCKET = process.env.WEBSITE_BUCKET;
 function getTransformJobId(event) {
     let id;
 
-    if( event.data.transformJob ) {
+    if (event.data.transformJob) {
         event.data.transformJob.forEach(element => {
             if (element) {
                 id = element;
@@ -35,7 +36,7 @@ function getTransformJobId(event) {
 /**
  * get the registered BMEssence
  */
-getBMEssence = async(url) => {
+getBMEssence = async (url) => {
 
     let response = await MCMA_CORE.HTTP.get(url);
 
@@ -72,7 +73,7 @@ exports.handler = async (event, context) => {
     let response;
     let outputFile;
     let copySource;
-    if(!transformJobId) {
+    if (!transformJobId) {
         let bme = await getBMEssence(event.data.bmEssence);
         // copy proxy to website storage
         outputFile = bme.locations[0];
@@ -81,7 +82,7 @@ exports.handler = async (event, context) => {
     } else {
         // get result of transform job
         response = await MCMA_CORE.HTTP.get(transformJobId);
-        if(!response.data) {
+        if (!response.data) {
             throw new Error("Faild to obtain TransformJob");
         }
 
@@ -90,10 +91,7 @@ exports.handler = async (event, context) => {
         // copy proxy to website storage
         outputFile = transformJob.jobOutput.outputFile;
         copySource = encodeURI(outputFile.awsS3Bucket + "/" + outputFile.awsS3Key);
-        
     }
-
-    
 
     let s3Bucket = WEBSITE_BUCKET;
     let s3Key = "media/" + uuidv4();
@@ -116,9 +114,15 @@ exports.handler = async (event, context) => {
         throw new Error("Unable to read input file in bucket '" + s3Bucket + "' with key '" + s3Key + "' due to error: " + error.message);
     }
 
+    // construct public https endpoint
+    let data = await S3GetBucketLocation({ Bucket: s3Bucket });
+    console.log(JSON.stringify(data, null, 2));
+    let httpEndpoint = "https://s3-" + data.LocationConstraint + ".amazonaws.com/" + s3Bucket + "/" + s3Key;
+
     // addin ResultPath of StepFunctions
     return new MCMA_CORE.Locator({
         "awsS3Bucket": s3Bucket,
-        "awsS3Key": s3Key
+        "awsS3Key": s3Key,
+        "httpEndpoint": httpEndpoint
     });
 }

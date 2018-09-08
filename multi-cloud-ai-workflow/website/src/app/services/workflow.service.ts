@@ -75,7 +75,7 @@ export class WorkflowService {
         );
 
         // posting the workflowJob to the job repository
-        //workflowJob = await resourceManager.create(workflowJob);
+        workflowJob = await resourceManager.create(workflowJob);
 
         console.log(JSON.stringify(workflowJob, null, 2));
 

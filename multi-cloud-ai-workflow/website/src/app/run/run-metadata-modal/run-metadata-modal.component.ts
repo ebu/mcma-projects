@@ -19,7 +19,7 @@ export class RunMetadataModalComponent implements OnInit {
   }
 
   confirm(): void {
-    this.modalService.clearModal({ title: this.title.value, description: this.description.value });
+    this.modalService.clearModal({ name: this.title.value, description: this.description.value });
   }
 
   close(): void {
