@@ -2,10 +2,14 @@
 
 // require
 const util = require("util");
+const uuidv4 = require("uuid/v4");
 
 const AWS = require("aws-sdk");
 const StepFunctions = new AWS.StepFunctions();
 const StepFunctionsGetActivityTask = util.promisify(StepFunctions.getActivityTask.bind(StepFunctions));
+
+const S3 = new AWS.S3();
+const S3PutObject = util.promisify(S3.putObject.bind(S3));
 
 const MCMA_CORE = require("mcma-core");
 
@@ -60,11 +64,32 @@ exports.handler = async (event, context) => {
         throw new Error("JobProfile '" + JOB_PROFILE_NAME + "' not found");
     }
 
+    // writing speech transcription to a textfile in temp bucket
+    let bmContent = await retrieveResource(event.input.bmContent, "input.bmContent");
+
+    if (!bmContent.awsAiMetadata ||
+        !bmContent.awsAiMetadata.transcription ||
+        !bmContent.awsAiMetadata.transcription.original) {
+        throw new Error("Missing transcription on BMContent")
+    }
+
+    let s3Params = {
+        Bucket: TEMP_BUCKET,
+        Key: "AiInput/" + uuidv4() + ".txt",
+        Body: bmContent.awsAiMetadata.transcription.original
+    }
+
+    await S3PutObject(s3Params);
+
     // creating job
     let job = new MCMA_CORE.AIJob(
         jobProfileId,
         new MCMA_CORE.JobParameterBag({
-            inputFile: event.data.speechTranscriptionLocator,
+            inputFile: new MCMA_CORE.Locator({
+                awsS3Bucket: s3Params.Bucket,
+                awsS3Key: s3Params.Key
+            }),
+            targetLanguageCode: "es",
             outputLocation: new MCMA_CORE.Locator({
                 awsS3Bucket: TEMP_BUCKET,
                 awsS3KeyPrefix: JOB_RESULTS_PREFIX
@@ -74,4 +99,33 @@ exports.handler = async (event, context) => {
 
     // posting the job to the job repository
     job = await resourceManager.create(job);
+}
+
+const retrieveResource = async (resource, resourceName) => {
+    let type = typeof resource;
+
+    if (!resource) {
+        throw new Error(resourceName + " does not exist");
+    }
+
+    if (type === "string") {  // if type is a string we assume it's a URL.
+        try {
+            let response = await MCMA_CORE.HTTP.get(resource);
+            resource = response.data;
+        } catch (error) {
+            throw new Error("Failed to retrieve '" + resourceName + "' from url '" + resource + "'");
+        }
+    }
+
+    type = typeof resource;
+
+    if (type === "object") {
+        if (Array.isArray(resource)) {
+            throw new Error(resourceName + " has illegal type 'Array'");
+        }
+
+        return resource;
+    } else {
+        throw new Error(resourceName + " has illegal type '" + type + "'");
+    }
 }

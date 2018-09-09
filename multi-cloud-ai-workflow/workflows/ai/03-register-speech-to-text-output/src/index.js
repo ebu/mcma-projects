@@ -72,12 +72,16 @@ exports.handler = async (event, context) => {
     }
 
     let bmContent = await retrieveResource(event.input.bmContent, "input.bmContent");
-    
+
     console.log("[BMContent]:", JSON.stringify(bmContent, null, 2));
-    
-    let awsAiMetadata = bmContent.awsAiMetadata || {};
-    awsAiMetadata.transcription = { original: transcript };
-    bmContent.awsAiMetadata = awsAiMetadata;
+
+    if (!bmContent.awsAiMetadata) {
+        bmContent.awsAiMetadata = {};
+    }
+    if (!bmContent.awsAiMetadata.transcription) {
+        bmContent.awsAiMetadata.transcription = {}
+    }
+    bmContent.awsAiMetadata.transcription.original = transcript;
 
     await resourceManager.update(bmContent);
 
