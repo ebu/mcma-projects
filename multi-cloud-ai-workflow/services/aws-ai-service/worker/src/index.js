@@ -1,15 +1,21 @@
 //"use strict";
 
-const util = require('util');
+const util = require("util");
+const uuidv4 = require("uuid/v4");
 
 const AWS = require("aws-sdk");
 const S3 = new AWS.S3();
 const S3GetBucketLocation = util.promisify(S3.getBucketLocation.bind(S3));
+const S3GetObject = util.promisify(S3.getObject.bind(S3));
+const S3PutObject = util.promisify(S3.putObject.bind(S3));
 const S3CopyObject = util.promisify(S3.copyObject.bind(S3));
 const S3DeleteObject = util.promisify(S3.deleteObject.bind(S3));
 
 const TranscribeService = new AWS.TranscribeService();
 const TranscribeServiceStartTranscriptionJob = util.promisify(TranscribeService.startTranscriptionJob.bind(TranscribeService));
+
+const Translate = new AWS.Translate({ apiVersion: '2017-07-01' });
+const TranslateText = util.promisify(Translate.translateText.bind(Translate));
 
 const MCMA_AWS = require("mcma-aws");
 const MCMA_CORE = require("mcma-core");
@@ -60,40 +66,41 @@ const processJobAssignment = async (event) => {
 
         // 6. start the appropriate ai service
         let inputFile = jobInput.inputFile;
-
-        let mediaFileUri;
-
-        if (inputFile.httpEndpoint) {
-            mediaFileUri = inputFile.httpEndpoint;
-        } else {
-            let data = await S3GetBucketLocation({ Bucket: inputFile.awsS3Bucket });
-            console.log(JSON.stringify(data, null, 2));
-            mediaFileUri = "https://s3-" + data.LocationConstraint + ".amazonaws.com/" + inputFile.awsS3Bucket + "/" + inputFile.awsS3Key;
-        }
+        let outputLocation = jobInput.outputLocation;
 
         let params, data;
 
         switch (jobProfile.name) {
             case JOB_PROFILE_TRANSCRIBE_AUDIO:
+                // obtain media file URL
+                let mediaFileUrl;
+
+                if (inputFile.httpEndpoint) {
+                    mediaFileUrl = inputFile.httpEndpoint;
+                } else {
+                    data = await S3GetBucketLocation({ Bucket: inputFile.awsS3Bucket });
+                    console.log(JSON.stringify(data, null, 2));
+                    mediaFileUrl = "https://s3-" + data.LocationConstraint + ".amazonaws.com/" + inputFile.awsS3Bucket + "/" + inputFile.awsS3Key;
+                }
                 let mediaFormat;
 
-                if (mediaFileUri.toLowerCase().endsWith("mp3")) {
+                if (mediaFileUrl.toLowerCase().endsWith("mp3")) {
                     mediaFormat = "mp3";
-                } else if (mediaFileUri.toLowerCase().endsWith("mp4")) {
+                } else if (mediaFileUrl.toLowerCase().endsWith("mp4")) {
                     mediaFormat = "mp4";
-                } else if (mediaFileUri.toLowerCase().endsWith("wav")) {
+                } else if (mediaFileUrl.toLowerCase().endsWith("wav")) {
                     mediaFormat = "wav";
-                } else if (mediaFileUri.toLowerCase().endsWith("flac")) {
+                } else if (mediaFileUrl.toLowerCase().endsWith("flac")) {
                     mediaFormat = "flac";
                 } else {
-                    throw new Error("Unable to determine Media Format from input file '" + mediaFileUri + "'");
+                    throw new Error("Unable to determine Media Format from input file '" + mediaFileUrl + "'");
                 }
 
                 params = {
                     TranscriptionJobName: "TranscriptionJob-" + jobAssignmentId.substring(jobAssignmentId.lastIndexOf("/") + 1),
                     LanguageCode: "en-US",
                     Media: {
-                        MediaFileUri: mediaFileUri
+                        MediaFileUri: mediaFileUrl
                     },
                     MediaFormat: mediaFormat,
                     OutputBucketName: event.stageVariables.ServiceOutputBucket
@@ -101,13 +108,60 @@ const processJobAssignment = async (event) => {
 
                 data = await TranscribeServiceStartTranscriptionJob(params);
 
+                console.log(JSON.stringify(data, null, 2));
                 break;
             case JOB_PROFILE_TRANSLATE_TEXT:
+                // get input text file
+                let s3Bucket = inputFile.awsS3Bucket;
+                let s3Key = inputFile.awsS3Key;
+                let s3Object;
+                try {
+                    s3Object = await S3GetObject({
+                        Bucket: s3Bucket,
+                        Key: s3Key,
+                    });
+                } catch (error) {
+                    throw new Error("Unable to read file in bucket '" + s3Bucket + "' with key '" + s3Key + "' due to error: " + error.message);
+                }
+
+                let inputText = s3Object.Body.toString();
+
+                // start translation job
+                params = {
+                    SourceLanguageCode: jobInput.sourceLanguageCode || 'auto',
+                    TargetLanguageCode: jobInput.targetLanguageCode,
+                    Text: inputText
+                };
+
+                console.log("Invoking translation service with parameters", JSON.stringify(params, null, 2));
+
+                data = await TranslateText(params)
+
+                // write result to file
+                let s3Params = {
+                    Bucket: outputLocation.awsS3Bucket,
+                    Key: (outputLocation.awsS3KeyPrefix ? outputLocation.awsS3KeyPrefix : "") + uuidv4() + ".txt",
+                    Body: data.TranslatedText
+                }
+
+                await S3PutObject(s3Params);
+
+                // updating JobAssignment with jobOutput
+                let jobOutput = new MCMA_CORE.JobParameterBag({
+                    outputFile: new MCMA_CORE.Locator({
+                        awsS3Bucket: s3Params.Bucket,
+                        awsS3Key: s3Params.Key
+                    })
+                });
+
+                await updateJobAssignmentWithOutput(table, jobAssignmentId, jobOutput);
+
+                // Setting job assignment status to COMPLETED
+                await updateJobAssignmentStatus(resourceManager, table, jobAssignmentId, "COMPLETED");
+                break;
             case JOB_PROFILE_DETECT_CELEBRITIES:
                 throw new Error("Not Implemented");
         }
-
-        console.log(JSON.stringify(data, null, 2));
     } catch (error) {
         console.error(error);
         try {

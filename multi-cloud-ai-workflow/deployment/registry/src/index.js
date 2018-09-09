@@ -95,10 +95,14 @@ const JOB_PROFILES = {
         "AWSTranslateText",
         [
             new MCMA_CORE.JobParameter("inputFile", "Locator"),
+            new MCMA_CORE.JobParameter("targetLanguageCode", "awsLanguageCode"),
             new MCMA_CORE.JobParameter("outputLocation", "Locator")
         ],
         [
             new MCMA_CORE.JobParameter("outputFile", "Locator")
+        ],
+        [
+            new MCMA_CORE.JobParameter("sourceLanguageCode", "awsLanguageCode")
         ]
     ),
     AWSDetectCelebrities: new MCMA_CORE.JobProfile(

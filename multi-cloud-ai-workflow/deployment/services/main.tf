@@ -62,3 +62,8 @@ resource "aws_iam_role_policy_attachment" "role-policy-amazon-transcribe-full-ac
   role       = "${aws_iam_role.iam_for_exec_lambda.name}"
   policy_arn = "arn:aws:iam::aws:policy/AmazonTranscribeFullAccess"
 }
+
+resource "aws_iam_role_policy_attachment" "role-policy-amazon-translate-read-only" {
+  role       = "${aws_iam_role.iam_for_exec_lambda.name}"
+  policy_arn = "arn:aws:iam::aws:policy/TranslateReadOnly"
+}
