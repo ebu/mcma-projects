@@ -26,7 +26,8 @@ const JOB_PROFILES = {
         ],
         [
             new MCMA_CORE.JobParameter("websiteMediaFile", "Locator"),
-            new MCMA_CORE.JobParameter("aiWorkflow", "WorkflowJob")
+            new MCMA_CORE.JobParameter("aiWorkflow", "WorkflowJob"),
+            new MCMA_CORE.JobParameter("bmContent", "BMContent")
         ]
     ),
     AiWorkflow: new MCMA_CORE.JobProfile(

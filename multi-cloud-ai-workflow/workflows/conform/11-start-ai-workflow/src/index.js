@@ -51,6 +51,7 @@ exports.handler = async (event, context) => {
     // returning workflow output
     return {
         aiWorkflow: workflowJob.id,
+        bmContent: event.data.bmContent,
         websiteMediaFile: event.data.websiteFile
     }
 }
