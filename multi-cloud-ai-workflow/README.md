@@ -17,6 +17,8 @@ This example worklow demonstrates how you can leverage AI technologies from mult
 3. Create file named `gradle.properties`
 4. Add the following information to the created file and update the parameter values reflecting your AWS account and Azure account 
 ```
+# Mandatory settings
+
 environmentName=com.your-domain.mcma
 environmentType=dev
 
@@ -25,11 +27,15 @@ awsAccessKey=<YOUR_AWS_ACCESS_KEY>
 awsSecretKey=<YOUR_AWS_SECRET_KEY>
 awsRegion=<YOUR_AWS_REGION>
 
+
+# Optional settings, though without configuration some features may not work
+
+awsInstanceType=<EC2_TRANSFORM_SERVICE_INSTANCE_TYPE - DEFAULTS TO "t2.micro">
+
 AzureLocation =  <YOUR AZURE REGION - USE "trial" FOR TESTING>
 AzureAccountID = <YOUR AZURE Video Indexer Account ID> 
 AzureSubscriptionKey = <YOUR AZURE SUBSCRIPTION KEY>
 AzureApiUrl = <AZURE VIDEO API END[POINT DEFAULT IS: https://api.videoindexer.ai>
-
 
 ```
 

@@ -104,3 +104,23 @@ afterEvaluate {
         }
     }
 }
+
+if (!hasProperty("awsInstanceType")) {
+    ext.awsInstanceType = "t2.micro"
+}
+
+if (!hasProperty("AzureLocation")) {
+    ext.AzureLocation = "trial"
+}
+
+if (!hasProperty("AzureAccountID")) {
+    ext.AzureAccountID = "undefined"
+}
+
+if (!hasProperty("AzureSubscriptionKey")) {
+    ext.AzureSubscriptionKey = "undefined"
+}
+
+if (!hasProperty("AzureApiUrl")) {
+    ext.AzureApiUrl = "https://api.videoindexer.ai"
+}
