@@ -29,7 +29,7 @@ const appRouter = function (app) {
         let resourceManager = new MCMA_CORE.ResourceManager();
 
         console.log('Send Callback:', job);
-        resourceManager.sendNotification(job);
+        await resourceManager.sendNotification(job);
 
       } else {
         res.status(500).send({error: 'No job found in given assignment'});
