@@ -106,6 +106,39 @@ const deleteJobAssignment = async (request, response) => {
     await table.delete("JobAssignment", jobAssignmentId);
 }
 
+const processNotification = async (request, response) => {
+    console.log("processNotification()", JSON.stringify(request, null, 2));
+
+    let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
+
+    let jobAssignmentId = request.stageVariables.PublicUrl + "/job-assignments/" + request.pathVariables.id;
+
+    let jobAssignment = await table.get("JobAssignment", jobAssignmentId);
+    if (!jobAssignment) {
+        response.statusCode = MCMA_AWS.HTTP_NOT_FOUND;
+        response.statusMessage = "No resource found on path '" + request.path + "'.";
+        return;
+    }
+
+    let notification = request.body;
+
+    if (!notification) {
+        response.statusCode = MCMA_AWS.HTTP_BAD_REQUEST;
+        response.statusMessage = "Missing notification in request body";
+        return;
+    }
+
+    // invoking worker lambda function that will process the notification
+    var params = {
+        FunctionName: request.stageVariables.WorkerLambdaFunctionName,
+        InvocationType: "Event",
+        LogType: "None",
+        Payload: JSON.stringify({ "action": "ProcessNotification", "request": request, "jobAssignmentId": jobAssignmentId, "notification": notification })
+    };
+
+    await LambdaInvoke(params);
+}
+
 // Initializing rest controller for API Gateway Endpoint
 const restController = new MCMA_AWS.ApiGatewayRestController();
 
@@ -115,6 +148,9 @@ restController.addRoute("POST", "/job-assignments", addJobAssignment);
 restController.addRoute("DELETE", "/job-assignments", deleteJobAssignments);
 restController.addRoute("GET", "/job-assignments/{id}", getJobAssignment);
 restController.addRoute("DELETE", "/job-assignments/{id}", deleteJobAssignment);
+
+// adding route for notifications from ec2 transform service
+restController.addRoute("POST", "/job-assignments/{id}/notifications", processNotification);
 
 exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));

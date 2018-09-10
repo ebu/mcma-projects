@@ -23,6 +23,7 @@ const MCMA_AWS = require("mcma-aws");
 const MCMA_CORE = require("mcma-core");
 
 const JOB_PROFILE_CREATE_PROXY_LAMBDA = "CreateProxyLambda";
+const JOB_PROFILE_CREATE_PROXY_EC2 = "CreateProxyEC2";
 
 const ffmpeg = async (params) => {
     try {
@@ -44,6 +45,18 @@ const ffmpeg = async (params) => {
  */
 exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
+
+    switch (event.action) {
+        case "ProcessJobAssignment":
+            await processJobAssignment(event);
+            break;
+        case "ProcessNotification":
+            await processNotification(event);
+            break;
+    }
+}
+
+const processJobAssignment = async (event) => {
 
     // init
     let variables = event.request.stageVariables;
@@ -73,64 +86,79 @@ exports.handler = async (event, context) => {
         // console.log("5. Check if we support jobProfile and if we have required parameters in jobInput");
         validateJobProfile(jobProfile, jobInput);
 
-        // 6. Execute ffmepg on input file
-        // console.log("6. Execute ffmepg on input file");
-        let inputFile = jobInput.inputFile;
-        let outputLocation = jobInput.outputLocation;
+        switch (jobProfile.name) {
+            case JOB_PROFILE_CREATE_PROXY_LAMBDA:
+                // 6. Execute ffmepg on input file
+                // console.log("6. Execute ffmepg on input file");
+                let inputFile = jobInput.inputFile;
+                let outputLocation = jobInput.outputLocation;
 
-        let tempFilename;
-        if (inputFile.awsS3Bucket && inputFile.awsS3Key) {
+                let tempFilename;
+                if (inputFile.awsS3Bucket && inputFile.awsS3Key) {
 
-            // 6.1. obtain data from s3 object
-            console.log(" 6.1. obtain data from s3 object");
-            let data = await S3GetObject({ Bucket: inputFile.awsS3Bucket, Key: inputFile.awsS3Key });
+                    // 6.1. obtain data from s3 object
+                    console.log(" 6.1. obtain data from s3 object");
+                    let data = await S3GetObject({ Bucket: inputFile.awsS3Bucket, Key: inputFile.awsS3Key });
 
-            // 6.2. write data to local tmp storage
-            console.log("6.2. write data to local tmp storage");
-            let localFilename = "/tmp/" + uuidv4();
-            await fsWriteFile(localFilename, data.Body);
+                    // 6.2. write data to local tmp storage
+                    console.log("6.2. write data to local tmp storage");
+                    let localFilename = "/tmp/" + uuidv4();
+                    await fsWriteFile(localFilename, data.Body);
 
-            // 6.3. obtain ffmpeg output
-            console.log("6.3. obtain ffmpeg output");
-            tempFilename = "/tmp/" + uuidv4() + ".mp4";
-            let params = ["-y", "-i", localFilename, "-preset", "ultrafast", "-vf", "scale=-1:360", "-c:v", "libx264", "-pix_fmt", "yuv420p", tempFilename];
-            let output = await ffmpeg(params);
+                    // 6.3. obtain ffmpeg output
+                    console.log("6.3. obtain ffmpeg output");
+                    tempFilename = "/tmp/" + uuidv4() + ".mp4";
+                    let params = ["-y", "-i", localFilename, "-preset", "ultrafast", "-vf", "scale=-1:360", "-c:v", "libx264", "-pix_fmt", "yuv420p", tempFilename];
+                    let output = await ffmpeg(params);
 
-            // 6.4. removing local file
-            console.log("6.4. removing local file");
-            await fsUnlink(localFilename);
-            
-        } else {
-            throw new Error("Not able to obtain input file");
+                    // 6.4. removing local file
+                    console.log("6.4. removing local file");
+                    await fsUnlink(localFilename);
+
+                } else {
+                    throw new Error("Not able to obtain input file");
+                }
+
+                // 7. Writing ffmepg output to output location
+                // console.log("7. Writing ffmepg output to output location");
+
+                let s3Params = {
+                    Bucket: outputLocation.awsS3Bucket,
+                    Key: (outputLocation.awsS3KeyPrefix ? outputLocation.awsS3KeyPrefix : "") + uuidv4() + ".mp4",
+                    Body: await fsReadFile(tempFilename)
+                }
+
+                await S3PutObject(s3Params);
+
+                // 8. removing temp file
+                // console.log("8. removing temp file");
+                await fsUnlink(tempFilename);
+
+                // 9. updating JobAssignment with jobOutput
+                let jobOutput = new MCMA_CORE.JobParameterBag({
+                    outputFile: new MCMA_CORE.Locator({
+                        awsS3Bucket: s3Params.Bucket,
+                        awsS3Key: s3Params.Key
+                    })
+                });
+
+                await updateJobAssignmentWithOutput(table, jobAssignmentId, jobOutput);
+
+                // 10. Setting job assignment status to COMPLETED
+                await updateJobAssignmentStatus(resourceManager, table, jobAssignmentId, "COMPLETED");
+                break;
+            case JOB_PROFILE_CREATE_PROXY_EC2:
+                let ec2hostname = variables.HostnameInstanceEC2;
+
+                let ec2Url = "http://" + ec2hostname + "/new-transform-job"
+
+                let message = {
+                    input: jobInput,
+                    notificationEndpoint: new MCMA_CORE.NotificationEndpoint(jobAssignmentId + "/notifications")
+                }
+                await MCMA_CORE.HTTP.post(ec2Url, message);
+                break;
         }
-
-        // 7. Writing ffmepg output to output location
-        // console.log("7. Writing ffmepg output to output location");
-
-        let s3Params = {
-            Bucket: outputLocation.awsS3Bucket,
-            Key: (outputLocation.awsS3KeyPrefix ? outputLocation.awsS3KeyPrefix : "") + uuidv4() + ".mp4",
-            Body: await fsReadFile(tempFilename)
-        }
-
-        await S3PutObject(s3Params);
-
-        // 8. removing temp file
-        // console.log("8. removing temp file");
-        await fsUnlink(tempFilename);
-
-        // 9. updating JobAssignment with jobOutput
-        let jobOutput = new MCMA_CORE.JobParameterBag({
-            outputFile: new MCMA_CORE.Locator({
-                awsS3Bucket: s3Params.Bucket,
-                awsS3Key: s3Params.Key
-            })
-        });
-
-        await updateJobAssignmentWithOutput(table, jobAssignmentId, jobOutput);
-
-        // 10. Setting job assignment status to COMPLETED
-        await updateJobAssignmentStatus(resourceManager, table, jobAssignmentId, "COMPLETED");
 
     } catch (error) {
         console.error(error);
@@ -142,13 +170,37 @@ exports.handler = async (event, context) => {
     }
 }
 
+const processNotification = async (event) => {
+    let jobAssignmentId = event.jobAssignmentId;
+    let notification = event.notification;
+
+    let table = new MCMA_AWS.DynamoDbTable(AWS, event.request.stageVariables.TableName);
+
+    let jobAssignment = await table.get("JobAssignment", jobAssignmentId);
+
+    jobAssignment.status = notification.content.status;
+    jobAssignment.statusMessage = notification.content.statusMessage;
+    if (notification.content.progress !== undefined) {
+        jobAssignment.progress = notification.content.progress;
+    }
+    jobAssignment.jobOutput = notification.content.output;
+    jobAssignment.dateModified = new Date().toISOString();
+
+    await table.put("JobAssignment", jobAssignmentId, jobAssignment);
+
+    let resourceManager = new MCMA_CORE.ResourceManager(event.request.stageVariables.ServicesUrl);
+
+    await resourceManager.sendNotification(jobAssignment);
+}
+
 /**
  * Validate Job Profile
  * @param {*} jobProfile JobProfile 
  * @param {*} jobInput JobInput
  */
 const validateJobProfile = (jobProfile, jobInput) => {
-    if (jobProfile.name !== JOB_PROFILE_CREATE_PROXY_LAMBDA) {
+    if (jobProfile.name !== JOB_PROFILE_CREATE_PROXY_LAMBDA &&
+        jobProfile.name !== JOB_PROFILE_CREATE_PROXY_EC2) {
         throw new Error("JobProfile '" + jobProfile.name + "' is not supported");
     }
 

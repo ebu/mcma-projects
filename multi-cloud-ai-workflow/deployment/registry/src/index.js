@@ -210,29 +210,16 @@ const createServices = (serviceUrls) => {
                     ]
                 ));
                 break;
-            case "transform_service_lambda_url":
+            case "transform_service_url":
                 serviceList.push(
                     new MCMA_CORE.Service(
-                        "FFmpeg Lambda TransformService",
+                        "FFmpeg TransformService",
                         [
                             new MCMA_CORE.ServiceResource("JobAssignment", serviceUrls[prop] + "/job-assignments")
                         ],
                         "TransformJob",
                         [
                             JOB_PROFILES.CreateProxyLambda.id ? JOB_PROFILES.CreateProxyLambda.id : JOB_PROFILES.CreateProxyLambda,
-                        ]
-                    )
-                );
-                break;
-            case "transform_service_ec2_url":
-                serviceList.push(
-                    new MCMA_CORE.Service(
-                        "FFmpeg EC2 TransformService",
-                        [
-                            new MCMA_CORE.ServiceResource("JobAssignment", serviceUrls[prop] + "/job-assignments")
-                        ],
-                        "TransformJob",
-                        [
                             JOB_PROFILES.CreateProxyEC2.id ? JOB_PROFILES.CreateProxyEC2.id : JOB_PROFILES.CreateProxyEC2,
                         ]
                     )
@@ -320,7 +307,7 @@ const main = async () => {
         }
 
         // console.log(JSON.stringify(params, null, 2));
-        
+
         let data = await CognitoAdminDeleteUser(params);
         console.log("Deleting existing user");
         // console.log(JSON.stringify(data, null, 2));
