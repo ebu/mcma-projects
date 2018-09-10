@@ -12,7 +12,7 @@ resource "aws_subnet" "public" {
   depends_on              = ["aws_internet_gateway.default"]
 
   tags {
-    Name = "public"
+    Name = "${var.global_prefix}-public"
   }
 }
 

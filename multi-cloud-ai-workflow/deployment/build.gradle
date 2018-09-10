@@ -28,7 +28,7 @@ task generateTerraformTFVars {
         targetFile.append("temp_bucket = \"${environmentName}.${environmentType}.temp\"\r\n")
         targetFile.append("repository_bucket = \"${environmentName}.${environmentType}.repository\"\r\n")
         targetFile.append("website_bucket = \"${environmentName}.${environmentType}.website\"\r\n")
-        targetFile.append(("global_prefix = \"${environmentName}.${environmentType}\"\r\n").replace(".", "_"))
+        targetFile.append(("global_prefix = \"${environmentName}.${environmentType}\"\r\n").replace(".", "-"))
         targetFile.append("azure_location = \"${AzureLocation}\"\r\n")
         targetFile.append("azure_account_id = \"${AzureAccountID}\"\r\n")
         targetFile.append("azure_subscription_key = \"${AzureSubscriptionKey}\"\r\n")

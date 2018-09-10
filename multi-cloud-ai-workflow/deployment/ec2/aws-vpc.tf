@@ -9,7 +9,8 @@ provider "aws" {
 resource "aws_vpc" "default" {
   cidr_block           = "${var.aws_vpc_cidr}"
   enable_dns_hostnames = true
+
   tags {
-    Name = "mcma-vpc"
+    Name = "${var.global_prefix}-vpc"
   }
 }

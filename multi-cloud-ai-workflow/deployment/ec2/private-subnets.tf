@@ -7,7 +7,7 @@ resource "aws_subnet" "private" {
   depends_on              = ["aws_instance.nat"]
 
   tags {
-    Name = "private"
+    Name = "${var.global_prefix}-private"
   }
 }
 
