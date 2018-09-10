@@ -12,11 +12,10 @@ const appRouter = function (app) {
 
   app.post('/new-transform-job', async (req, res, next) => {
     try {
-      if (typeof req.body.job !== 'undefined') {
-
+      if (req.body) {
         res.sendStatus(200);
 
-        let job = req.body.job;
+        let job = req.body
 
         try {
             const output = await transform.start(job.input);

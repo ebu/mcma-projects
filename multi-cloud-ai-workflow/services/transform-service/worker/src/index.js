@@ -156,7 +156,10 @@ const processJobAssignment = async (event) => {
                     input: jobInput,
                     notificationEndpoint: new MCMA_CORE.NotificationEndpoint(jobAssignmentId + "/notifications")
                 }
+
+                console.log("Sending to", ec2Url, "message", message);
                 await MCMA_CORE.HTTP.post(ec2Url, message);
+                console.log("Done");
                 break;
         }
 
