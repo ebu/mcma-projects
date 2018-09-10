@@ -5,6 +5,7 @@ variable "repository_bucket" {}
 variable "website_bucket" {}
 variable "conform_workflow_id" {}
 variable "ai_workflow_id" {}
+variable "ec2_transform_service_hostname" {}
 variable "aws_account_id" {}
 variable "aws_access_key" {}
 variable "aws_secret_key" {}

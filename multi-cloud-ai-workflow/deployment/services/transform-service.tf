@@ -107,6 +107,7 @@ resource "aws_api_gateway_deployment" "transform_service_deployment" {
     "PublicUrl"                = "${local.transform_service_url}"
     "ServicesUrl"              = "${local.service_registry_url}/services"
     "WorkerLambdaFunctionName" = "${aws_lambda_function.transform-service-worker.function_name}"
+    "HostnameInstanceEC2"      = "${var.ec2_transform_service_hostname}"
   }
 }
 
