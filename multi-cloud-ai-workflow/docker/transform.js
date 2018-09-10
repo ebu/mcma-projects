@@ -89,14 +89,12 @@ async function start(jobInput) {
   fsUnlink(tempFilename);
 
   // 9. updating JobAssignment with jobOutput
-  let jobOutput = new MCMA_CORE.JobParameterBag({
+  return new MCMA_CORE.JobParameterBag({
     outputFile: new MCMA_CORE.Locator({
       awsS3Bucket: s3Params.Bucket,
       awsS3Key: s3Params.Key
     })
   });
-
-  return jobOutput;
 }
 
 module.exports = {start};

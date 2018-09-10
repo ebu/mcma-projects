@@ -10,33 +10,27 @@ const appRouter = function (app) {
     res.status(200).send('Welcome to MCMA EC2 Transform Service');
   });
 
-/*
-  let message = {
-      input: {},
-      notificationEndpoint: {},
-      output: {} // write output here.
-  }
-  */
-
   app.post('/new-transform-job', async (req, res, next) => {
     try {
       if (typeof req.body.job !== 'undefined') {
 
-        res.status(200).send({});
+        res.sendStatus(200);
 
-        let message = req.body.job;
+        let job = req.body.job;
 
         try {
-            const output = await transform.start(message.input);
-            message.status = "COMPLETED";
-            message.output = output;
+            const output = await transform.start(job.input);
+            job.status = "COMPLETED";
+            job.output = output;
         } catch (error) {
-            message.status = "FAILED";
-            message.statusMessage = error.message;
+            job.status = "FAILED";
+            job.statusMessage = error.message;
         }
 
         let resourceManager = new MCMA_CORE.ResourceManager();
-        resourceManager.sendNotification(message);
+
+        console.log('Send Callback:', job);
+        resourceManager.sendNotification(job);
 
       } else {
         res.status(500).send({error: 'No job found in given assignment'});
