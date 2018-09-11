@@ -26,7 +26,7 @@ resource "aws_cognito_identity_pool" "identity_pool" {
 }
 
 resource "aws_iam_role" "authenticated" {
-  name = "${var.global_prefix}_cognito_authenticated"
+  name = "${var.global_prefix}-${var.aws_region}-cognito-authenticated"
 
   assume_role_policy = <<EOF
 {
@@ -53,7 +53,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "authenticated" {
-  name = "${var.global_prefix}_authenticated_policy"
+  name = "${var.global_prefix}-${var.aws_region}-authenticated-policy"
   role = "${aws_iam_role.authenticated.id}"
 
   policy = <<EOF
@@ -82,7 +82,7 @@ EOF
 }
 
 resource "aws_iam_role" "unauthenticated" {
-  name = "${var.global_prefix}_cognito_unauthenticated"
+  name = "${var.global_prefix}-${var.aws_region}-cognito-unauthenticated"
 
   assume_role_policy = <<EOF
 {
@@ -109,7 +109,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "unauthenticated" {
-  name = "${var.global_prefix}_unauthenticated_policy"
+  name = "${var.global_prefix}-${var.aws_region}-unauthenticated-policy"
   role = "${aws_iam_role.unauthenticated.id}"
 
   policy = <<EOF
