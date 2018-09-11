@@ -16,7 +16,7 @@ resource "aws_instance" "app" {
 }
 
 resource "aws_iam_instance_profile" "app_iam_instance_profile" {
-  name = "${var.global_prefix}-iam-instance-profile"
+  name = "${var.global_prefix}-${var.aws_region}-iam-instance-profile"
   role = "${aws_iam_role.ec2_iam_role.id}"
 }
 
@@ -40,7 +40,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "ec2_s3_access_policy" {
-  name = "${var.global_prefix}_ec2_s3_access_policy"
+  name = "${var.global_prefix}-${var.aws_region}-ec2-s3-access-policy"
   role = "${aws_iam_role.ec2_iam_role.id}"
 
   policy = <<EOF
