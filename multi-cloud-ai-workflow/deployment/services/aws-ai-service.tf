@@ -39,8 +39,9 @@ resource "aws_lambda_function" "aws-ai-service-s3-trigger" {
 }
 
 resource "aws_s3_bucket" "aws-ai-service-output" {
-  bucket = "${var.environment_name}.${var.environment_type}.aws-ai-service-output"
-  acl    = "private"
+  bucket        = "${var.environment_name}.${var.environment_type}.aws-ai-service-output"
+  acl           = "private"
+  force_destroy = true
 }
 
 resource "aws_lambda_permission" "allow_bucket" {
