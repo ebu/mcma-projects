@@ -1,18 +1,23 @@
 #!/bin/bash
 
-#DOCKER_USER=<Docker Hub User>
-#DOCKER_PASSWORD=<Docker Hub Password>
+DOCKER_USER=user
+DOCKER_PASSWORD=password
+AWS_ACCESS_KEY_ID=awsAccessKey
+AWS_SECRET_ACCESS_KEY=awsSecretAccessKey
 
-IMAGE_NAME=${DOCKER_USER}/mcma-ec2-transformation-service
-EXT_PORT=80
+IMAGE_NAME=${DOCKER_USER}/mcma-ec2-transform-service
+EXT_PORT=8080
 INT_PORT=8080
 RETVAL=0
 
 start() {
-	docker run -p ${EXT_PORT}:${INT_PORT} -d ${IMAGE_NAME}
-	if [ $? -eq 0 ]
-		echo Please make shure you already build the image
-		then exit $?
+	docker run -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} -p ${EXT_PORT}:${INT_PORT} -d ${IMAGE_NAME}
+    RET=$?
+	if [ $RET -ne 0 ];
+    then
+        echo error code $RET
+		echo Please make sure you already build the image
+		exit $RET
 	fi
 }
 
