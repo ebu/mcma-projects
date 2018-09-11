@@ -30,7 +30,7 @@ awsRegion=<YOUR_AWS_REGION>
 # Optional settings, though without configuration some features may not work
 
 awsInstanceType=<EC2_TRANSFORM_SERVICE_INSTANCE_TYPE - DEFAULTS TO "t2.micro">
-awsInstanceCount=<EC2_TRANSFORM_SERVICE_INSTANCE_COUNT - DEFAULTS TO "0">
+awsInstanceCount=<EC2_TRANSFORM_SERVICE_INSTANCE_COUNT - DEFAULTS TO "1">
 
 AzureLocation =  <YOUR AZURE REGION - USE "trial" FOR TESTING>
 AzureAccountID = <YOUR AZURE Video Indexer Account ID> 

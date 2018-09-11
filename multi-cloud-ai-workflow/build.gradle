@@ -109,7 +109,7 @@ if (!hasProperty("awsInstanceType")) {
     ext.awsInstanceType = "t2.micro"
 }
 if (!hasProperty("awsInstanceCount")) {
-    ext.awsInstanceCount = "0"
+    ext.awsInstanceCount = "1"
 }
 
 if (!hasProperty("AzureLocation")) {
