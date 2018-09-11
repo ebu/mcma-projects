@@ -2,8 +2,10 @@
 @import 'src/styles/theme.scss';
 
 :host {
-    padding: 100px 30px;
-    width: 60%;
+    padding: 30px 30px;
+    width: 60vw;
+    display: flex;
+    flex-direction: column;
 }
 
 .job-info {
@@ -12,8 +14,8 @@
 }
 
 .job-preview-player {
-    width: 400px;
-    height: 225px;
+    width: 640px;
+    height: 360px;
 
     video {
         width: 100%;

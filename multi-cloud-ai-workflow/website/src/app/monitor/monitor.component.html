@@ -1,3 +1,4 @@
+<button mat-icon-button (click)="refresh()"><mat-icon color="primary">refresh</mat-icon></button>
 <div class="monitor-container">
     <mcma-monitor-queue [workflowJobs]="workflowJobs$ | async" (jobSelected)="onJobSelected($event)"></mcma-monitor-queue>
     <mcma-monitor-detail [workflowJob]="selectedWorkflowJob$ | async"></mcma-monitor-detail>

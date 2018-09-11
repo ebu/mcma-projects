@@ -1,17 +1,17 @@
 :host {
     display: flex;
     flex-direction: column;
-    width: 40%;
     padding: 30px;
+    width: 30vw;
 }
 
 .workflow-jobs-table {
     flex: 1;
-    margin: 0 30px;
+    margin: 0 10px;
 }
 
 .mat-paginator {
-    margin: 0 30px;
+    margin: 0 10px;
 }
 
 tr.mat-row {
