@@ -115,6 +115,7 @@ task terraformApply(type: Exec) {
 }
 
 task terraformDestroy(type: Exec) {
+    dependsOn terraformInit
     dependsOn generateTerraformTFVars
     dependsOn generateTerraformWebsiteTF
     commandLine terraformExecutable
