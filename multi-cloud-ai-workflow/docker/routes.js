@@ -1,6 +1,5 @@
 const transform = require('./transform');
 const fs = require('fs');
-const axios = require("axios");
 const MCMA_CORE = require("mcma-core");
 
 const appRouter = function (app) {
@@ -15,7 +14,7 @@ const appRouter = function (app) {
       if (req.body) {
         res.sendStatus(200);
 
-        let job = req.body
+        let job = req.body;
 
         try {
             const output = await transform.start(job.input);

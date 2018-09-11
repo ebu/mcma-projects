@@ -31,8 +31,6 @@ const ffmpeg = async (params) => {
 
 async function start(jobInput) {
 
-  console.log(jobInput);
-
   let inputFile = jobInput.inputFile;
   let outputLocation = jobInput.outputLocation;
 

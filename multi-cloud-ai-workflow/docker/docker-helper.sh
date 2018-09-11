@@ -30,7 +30,7 @@ stop() {
 
 build() {
 	stop
-	docker build -t ${IMAGE_NAME} .
+	docker build -t ${IMAGE_NAME} --no-cache .
 	start
 }
 
