@@ -21,7 +21,7 @@ resource "aws_iam_instance_profile" "app_iam_instance_profile" {
 }
 
 resource "aws_iam_role" "ec2_iam_role" {
-  name = "${var.global_prefix}-ec2-iam-role"
+  name = "${var.global_prefix}-${var.aws_region}-ec2-iam-role"
 
   assume_role_policy = <<EOF
 {
