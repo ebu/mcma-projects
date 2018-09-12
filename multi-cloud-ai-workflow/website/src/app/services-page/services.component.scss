@@ -1,0 +1,75 @@
+@import '~@angular/material/theming';
+@import 'src/styles/theme.scss';
+
+:host {
+    display: flex;
+    width: 100%;
+}
+
+.services-container {
+    display: flex;
+    
+    align-content: start;
+}
+
+.service-column {
+    display: flex;
+    flex-direction: column;
+}
+
+.services-table {
+    width: 49vw;
+    margin: 0.5vw;
+}
+
+.job-profiles-table {
+    width: 49vw;
+    margin: 0.5vw;
+}
+
+.service-resources-table {
+    width: 49vw;
+    margin: 0.5vw;
+}
+
+.resources-table {
+    width: 49vw;
+    margin: 0.5vw;
+}
+
+.mat-card {
+    margin: 0.5vw;
+}
+
+tr.mat-header-row {
+    height: 2vw;
+}
+
+tr.mat-row {
+    height: 2vw;
+}
+
+.services-table tr.mat-row {
+    cursor: pointer;
+    &:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+}
+
+.service-resources-table tr.mat-row {
+    cursor: pointer;
+    &:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+}
+
+.resources-table tr.mat-row {
+    cursor: pointer;
+    &:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+}
+
+tr.highlight {
+    background:  rgba(255, 255, 255, 0.1);
+}

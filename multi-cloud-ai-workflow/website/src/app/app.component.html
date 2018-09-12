@@ -4,15 +4,27 @@
             <img src="assets/images/cloud-logo.svg">
             <h2>MCMA</h2>
         </div>
-        <div class="nav-items" *ngIf="!(isLoggedIn$ | async)"></div>
-        <div class="nav-items" *ngIf="isLoggedIn$ | async">
-            <div class="nav-item" routerLink="run" routerLinkActive="active">
+        <div class="nav-items"
+             *ngIf="!(isLoggedIn$ | async)"></div>
+        <div class="nav-items"
+             *ngIf="isLoggedIn$ | async">
+            <div class="nav-item"
+                 routerLink="run"
+                 routerLinkActive="active">
                 <mat-icon>play_arrow</mat-icon>
                 <span>Run</span>
             </div>
-            <div class="nav-item" routerLink="monitor" routerLinkActive="active">
+            <div class="nav-item"
+                 routerLink="monitor"
+                 routerLinkActive="active">
                 <mat-icon>visibility</mat-icon>
                 <span>Monitor</span>
+            </div>
+            <div class="nav-item"
+                 routerLink="services"
+                 routerLinkActive="active">
+                <mat-icon>device_hub</mat-icon>
+                <span>Services</span>
             </div>
         </div>
         <div class="app-details">
@@ -20,11 +32,13 @@
         </div>
     </mat-toolbar>
 
-    <div class="app-content" *ngIf="isLoggedIn$ | async">
+    <div class="app-content"
+         *ngIf="isLoggedIn$ | async">
         <router-outlet></router-outlet>
     </div>
 
-    <div class="logging-in" *ngIf="!(isLoggedIn$ | async)">
+    <div class="logging-in"
+         *ngIf="!(isLoggedIn$ | async)">
         <span>Logging into Cognito...</span>
         <div class="sk-three-bounce">
             <div class="sk-child sk-bounce1"></div>

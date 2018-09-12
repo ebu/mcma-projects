@@ -1,0 +1,153 @@
+<div class="services-container">
+    <div class="services-column">
+
+        <h2>Services</h2>
+        <table class="services-table"
+               mat-table
+               [dataSource]="services">
+
+            <ng-container matColumnDef="name">
+                <th mat-header-cell
+                    *matHeaderCellDef>Service Name</th>
+                <td mat-cell
+                    *matCellDef="let service"> {{service.name}} </td>
+            </ng-container>
+
+            <ng-container matColumnDef="accepts">
+                <th mat-header-cell
+                    *matHeaderCellDef>Accepts</th>
+                <td mat-cell
+                    *matCellDef="let service"> {{service.jobType}} </td>
+            </ng-container>
+
+            <ng-container matColumnDef="created">
+                <th mat-header-cell
+                    *matHeaderCellDef>Created</th>
+                <td mat-cell
+                    *matCellDef="let service"> {{service.dateCreated}} </td>
+            </ng-container>
+
+            <ng-container matColumnDef="modified">
+                <th mat-header-cell
+                    *matHeaderCellDef>Modified</th>
+                <td mat-cell
+                    *matCellDef="let service"> {{service.dateModified}} </td>
+            </ng-container>
+
+            <tr mat-header-row
+                *matHeaderRowDef="servicesDisplayedColumns"></tr>
+            <tr mat-row
+                *matRowDef="let row; columns: servicesDisplayedColumns;"
+                [class.highlight]="row === selectedService"
+                (click)="selectService(row)"></tr>
+        </table>
+
+        <h2>Job Profiles</h2>
+        <table class="job-profiles-table"
+               mat-table
+               [dataSource]="filteredJobProfiles">
+
+            <ng-container matColumnDef="name">
+                <th mat-header-cell
+                    *matHeaderCellDef>JobProfile Name</th>
+                <td mat-cell
+                    *matCellDef="let jobProfile"> {{jobProfile.name}} </td>
+            </ng-container>
+
+            <ng-container matColumnDef="input">
+                <th mat-header-cell
+                    *matHeaderCellDef>Input Parameters</th>
+                <td mat-cell
+                    *matCellDef="let jobProfile"> {{jobProfile.input}} </td>
+            </ng-container>
+
+            <ng-container matColumnDef="output">
+                <th mat-header-cell
+                    *matHeaderCellDef>Output Parameters</th>
+                <td mat-cell
+                    *matCellDef="let jobProfile"> {{jobProfile.output}} </td>
+            </ng-container>
+
+            <tr mat-header-row
+                *matHeaderRowDef="jobProfilesDisplayedColumns"></tr>
+            <tr mat-row
+                *matRowDef="let row; columns: jobProfilesDisplayedColumns;"></tr>
+        </table>
+
+        <h2>Service Resources</h2>
+        <table class="service-resources-table"
+               mat-table
+               [dataSource]="serviceResources">
+
+            <ng-container matColumnDef="type">
+                <th mat-header-cell
+                    *matHeaderCellDef>Resource Type</th>
+                <td mat-cell
+                    *matCellDef="let serviceResource"> {{serviceResource.resourceType}} </td>
+            </ng-container>
+
+            <ng-container matColumnDef="url">
+                <th mat-header-cell
+                    *matHeaderCellDef>HTTP Endpoint</th>
+                <td mat-cell
+                    *matCellDef="let serviceResource"> {{serviceResource.httpEndpoint}} </td>
+            </ng-container>
+
+            <tr mat-header-row
+                *matHeaderRowDef="serviceResourcesDisplayedColumns"></tr>
+            <tr mat-row
+                *matRowDef="let row; columns: serviceResourcesDisplayedColumns;"
+                [class.highlight]="row === selectedServiceResource"
+                (click)="selectServiceResource(row)"></tr>
+        </table>
+
+    </div>
+    <div class="services-column">
+        <h2>Resources on Service HTTP Endpoint</h2>
+
+        <table class="resources-table"
+               mat-table
+               [dataSource]="resources">
+
+            <ng-container matColumnDef="type">
+                <th mat-header-cell
+                    *matHeaderCellDef>Type</th>
+                <td mat-cell
+                    *matCellDef="let resource"> {{resource['@type']}} </td>
+            </ng-container>
+
+            <ng-container matColumnDef="name">
+                <th mat-header-cell
+                    *matHeaderCellDef>Name</th>
+                <td mat-cell
+                    *matCellDef="let resource"> {{resource.name}} </td>
+            </ng-container>
+
+            <ng-container matColumnDef="created">
+                <th mat-header-cell
+                    *matHeaderCellDef>Created</th>
+                <td mat-cell
+                    *matCellDef="let resource"> {{resource.dateCreated}} </td>
+            </ng-container>
+
+            <ng-container matColumnDef="modified">
+                <th mat-header-cell
+                    *matHeaderCellDef>Modified</th>
+                <td mat-cell
+                    *matCellDef="let resource"> {{resource.dateModified}} </td>
+            </ng-container>
+
+            <tr mat-header-row
+                *matHeaderRowDef="resourcesDisplayedColumns"></tr>
+            <tr mat-row
+                *matRowDef="let row; columns: resourcesDisplayedColumns;"
+                [class.highlight]="row === selectedResource"
+                (click)="selectResource(row)"></tr>
+        </table>
+
+        <h2>Resource</h2>
+        <mat-card>
+            <pre>{{ selectedResourceText }}</pre>
+        </mat-card>
+    </div>
+</div>

@@ -7,6 +7,8 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { MaterialModule } from './material.module';
 import { AppRoutingModule } from './app-routing.module';
 
+import { MatCardModule } from '@angular/material';
+
 import { ConfigService } from './services/config.service';
 import { S3BucketService } from './services/s3bucket.service';
 import { CognitoAuthService } from './services/cognito-auth.service';
@@ -24,40 +26,43 @@ import { RunCompleteModalComponent } from './run/run-complete-modal/run-complete
 import { MonitorDetailComponent } from './monitor/monitor-detail/monitor-detail.component';
 import { MonitorQueueComponent } from './monitor/monitor-queue/monitor-queue.component';
 import { RunMetadataModalComponent } from './run/run-metadata-modal/run-metadata-modal.component';
+import { ServicesComponent } from './services-page/services.component';
 
 @NgModule({
-  declarations: [
-    ModalContentDirective,
-    ModalComponent,
-    FileSizePipe,
-    AppComponent,
-    RunComponent,
-    MonitorComponent,
-    RunCompleteModalComponent,
-    MonitorDetailComponent,
-    MonitorQueueComponent,
-    RunMetadataModalComponent
-  ],
-  entryComponents: [
-    RunMetadataModalComponent,
-    RunCompleteModalComponent
-  ],
-  imports: [
-    BrowserModule,
-    BrowserAnimationsModule,
-    HttpClientModule,
-    ReactiveFormsModule,
-    MaterialModule,
-    AppRoutingModule
-  ],
-  providers: [
-    ConfigService,
-    CognitoAuthService,
-    ModalService,
-    S3BucketService,
-    AuthGuard,
-    WorkflowService
-  ],
-  bootstrap: [AppComponent]
+    declarations: [
+        ModalContentDirective,
+        ModalComponent,
+        FileSizePipe,
+        AppComponent,
+        RunComponent,
+        MonitorComponent,
+        RunCompleteModalComponent,
+        MonitorDetailComponent,
+        MonitorQueueComponent,
+        RunMetadataModalComponent,
+        ServicesComponent
+    ],
+    entryComponents: [
+        RunMetadataModalComponent,
+        RunCompleteModalComponent
+    ],
+    imports: [
+        BrowserModule,
+        BrowserAnimationsModule,
+        HttpClientModule,
+        ReactiveFormsModule,
+        MaterialModule,
+        MatCardModule,
+        AppRoutingModule
+    ],
+    providers: [
+        ConfigService,
+        CognitoAuthService,
+        ModalService,
+        S3BucketService,
+        AuthGuard,
+        WorkflowService
+    ],
+    bootstrap: [AppComponent]
 })
 export class AppModule { }
