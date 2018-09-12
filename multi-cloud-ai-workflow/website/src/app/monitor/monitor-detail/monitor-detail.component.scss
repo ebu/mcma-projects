@@ -10,7 +10,7 @@
 
 .job-info {
     display: flex;
-    margin-bottom: 50px;
+    margin-bottom: 20px;
 }
 
 .job-preview-player {
@@ -32,7 +32,7 @@
 .job-field {
     display: flex;
     align-items: center;
-    height: 40px;
+    margin-bottom: 1vw;
 
     label {
         color: mat-color($mcma-primary, 600);
@@ -47,4 +47,16 @@
         font-size: 20px;
         color: white;
     }
+}
+
+tr.mat-row {
+    cursor: pointer;
+    &:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+}
+
+.celebrity-info {
+    display: flex;
+    padding-top: 1vw;
 }

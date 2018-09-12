@@ -1,36 +1,106 @@
-<div class="workflow-job-data" *ngIf="workflowJob">
+<div class="workflow-job-data"
+     *ngIf="workflowJob">
 
-  <div class="job-info">
-    <div class="job-preview-player">
-      <video controls [src]="mediaFileUrl"></video>
+    <div class="job-info">
+        <div class="job-preview-player">
+            <video #videoElement
+                   controls
+                   [src]="mediaFileUrl"></video>
+        </div>
+        <div class="job-fields">
+            <div class="job-field">
+                <label>Title:</label>
+                <span>{{ workflowJob.jobInput.metadata.name }}</span>
+            </div>
+            <div class="job-field">
+                <label>Description:</label>
+                <span>{{ workflowJob.jobInput.metadata.description }}</span>
+            </div>
+            <div class="job-field">
+                <label>File Name:</label>
+                <span>{{ workflowJob.jobInput.inputFile.awsS3Key }}</span>
+            </div>
+            <div class="job-field">
+                <label>AI Status:</label>
+                <span>{{ aiWorkflowJobStatus }}</span>
+            </div>
+        </div>
     </div>
-    <div class="job-fields">
-      <div class="job-field">
-        <label>Title:</label>
-        <span>{{ workflowJob.jobInput.metadata.name }}</span>
-      </div>
-      <div class="job-field">
-        <label>Description:</label>
-        <span>{{ workflowJob.jobInput.metadata.description }}</span>
-      </div>
-      <div class="job-field">
-        <label>File Name:</label>
-        <span>{{ workflowJob.jobInput.inputFile.awsS3Key }}</span>
-      </div>
-      <div class="job-field">
-        <label>AI Status:</label>
-        <span>{{ aiWorkflowJobStatus }}</span>
-      </div>
-    </div>
-  </div>
 
-  <div class="ai-info">
-    <mat-tab-group>
-      <mat-tab label="Transcript">{{ transcription }}</mat-tab>
-      <mat-tab label="Translation">{{ translation }}</mat-tab>
-      <mat-tab label="Celebrity">Hey its a movie star! </mat-tab>
-    </mat-tab-group>
-  </div>
+    <div class="ai-info">
+        <mat-tab-group>
+            <mat-tab label="AWS">
+                <div>
+                    <mat-tab-group>
+                        <mat-tab label="Transcript">{{ awsTranscription }}</mat-tab>
+                        <mat-tab label="Translation">{{ awsTranslation }}</mat-tab>
+                        <mat-tab label="Celebrities">Coming soon!</mat-tab>
+                    </mat-tab-group>
+                </div>
+            </mat-tab>
+            <mat-tab label="Azure">
+                <div>
+                    <mat-tab-group>
+                        <mat-tab label="Transcript">{{ azureTranscription }}</mat-tab>
+                        <mat-tab label="Celebrities">
+                            <div class="celebrity-info">
+                                <table mat-table
+                                       [dataSource]="azureCelebrities">
+
+                                    <ng-container matColumnDef="name">
+                                        <th mat-header-cell
+                                            *matHeaderCellDef> Name </th>
+                                        <td mat-cell
+                                            *matCellDef="let celebrity"> {{celebrity.name}} </td>
+                                    </ng-container>
+
+                                    <tr mat-row
+                                        *matRowDef="let row; columns: celebrityColumns"
+                                        (click)="selectAzureCelebrity(row)"></tr>
+
+                                </table>
+
+                                <div class="job-field"
+                                     style="width:50vw">
+                                    <div class="job-fields">
+                                        <div class="job-field">
+                                            <label>Name:</label>
+                                            <span>{{ selectedAzureCelebrity.name }}</span>
+                                        </div>
+                                        <div class="job-field">
+                                            <label>Title:</label>
+                                            <span>{{ selectedAzureCelebrity.title }}</span>
+                                        </div>
+                                        <div class="job-field">
+                                            <label>Description:</label>
+                                        </div>
+                                        <div class="job-field">
+                                            <span style="margin-left:5vh;">{{ selectedAzureCelebrity.description }}</span>
+                                        </div>
+                                        <div class="job-field">
+                                            <label>Appearances:</label>
+                                        </div>
+                                        <div class="job-field">
+                                            <span style="margin-left:5vh;">
+                                                <button mat-raised-button
+                                                        style="margin-right:1vw;"
+                                                        *ngFor="let instance of selectedAzureCelebrity.instances"
+                                                        (click)="seekVideoAzure(instance)">{{ instance.start }}
+                                                </button>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <img style="margin-left:2vw; width: 10vw;"
+                                         [src]="selectedAzureCelebrity.imageUrl ? selectedAzureCelebrity.imageUrl : '#'" />
+                                </div>
+
+                            </div>
+
+                        </mat-tab>
+                    </mat-tab-group>
+                </div>
+            </mat-tab>
+        </mat-tab-group>
+    </div>
 
 </div>
-
