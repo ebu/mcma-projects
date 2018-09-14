@@ -1,39 +1,44 @@
 import { Component, OnInit } from '@angular/core';
-import { Observable, BehaviorSubject } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { Observable, BehaviorSubject, of } from 'rxjs';
+import { tap, map } from 'rxjs/operators';
 
 import { WorkflowJob } from 'mcma-core';
 
 import { WorkflowService } from '../services/workflow.service';
-
+import { JobStatus } from '../models/job-statuses';
+import { WorkflowJobViewModel } from '../view-models/workflow-job-vm';
+  
 @Component({
     selector: 'mcma-monitor',
     templateUrl: './monitor.component.html',
     styleUrls: ['./monitor.component.scss']
 })
 export class MonitorComponent implements OnInit {
-    workflowJobs$: Observable<WorkflowJob>;
+  workflowJobVms$: Observable<Observable<WorkflowJobViewModel>[]>;
+  selectedWorkflowJobVm$: Observable<WorkflowJobViewModel>;
 
-    private selectedWorkflowJobSubject = new BehaviorSubject<WorkflowJob>(null);
-    selectedWorkflowJob$ = this.selectedWorkflowJobSubject.asObservable();
+  constructor(private workflowService: WorkflowService) { }
 
-    constructor(private workflowService: WorkflowService) { }
+  ngOnInit(): void {
+    this.refresh();
+  }
+  
+  refresh(): void {
+    this.workflowJobVms$ =
+      this.workflowService.getWorkflowJobs().pipe(
+        map(jobs =>
+          jobs.map(j =>
+            !JobStatus.isFinished(j)
+              ? this.workflowService.pollForCompletion(j.id)
+              : of(new WorkflowJobViewModel(j)))),
+        tap(jobs => {
+          if (jobs && jobs.length > 0) {
+            this.selectedWorkflowJobVm$ = jobs[0];
+          }
+        }));
+  }
 
-    ngOnInit() {
-        this.refresh();
-    }
-
-    refresh() {
-        this.workflowJobs$ =
-            this.workflowService.getWorkflowJobs().pipe(
-                tap(jobs => {
-                    if (jobs && jobs.length > 0) {
-                        this.selectedWorkflowJobSubject.next(jobs[0]);
-                    }
-                }));
-    }
-
-    onJobSelected(workflowJob: WorkflowJob): void {
-        this.selectedWorkflowJobSubject.next(workflowJob);
-    }
+  onJobSelected(workflowJob: Observable<WorkflowJob>): void {
+    this.selectedWorkflowJobVm$ = workflowJob;
+  }
 }

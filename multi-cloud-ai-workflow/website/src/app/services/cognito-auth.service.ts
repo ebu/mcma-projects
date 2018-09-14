@@ -19,13 +19,15 @@ export class CognitoAuthService {
     }
 
     login(userName: string, password: string): Observable<CognitoIdentityCredentials> {
+        console.log('login');
         return this.configService.get<ICognitoUserPoolData>('aws.cognito.userPool').pipe(
             switchMap(cognitoConfig => this.authenticateWithCognito(cognitoConfig, userName, password))
         );
     }
 
     autoLogin(): Observable<CognitoIdentityCredentials> {
-        return this.credentials$.pipe(switchMap(creds => !!creds ? of(creds) : this.login('mcma', '%bshgkUTv*RD$sR7')), share());
+        console.log('autoLogin');
+        return this.credentials$.pipe(switchMap(creds => !!creds ? of(creds) : this.login('mcma', '%bshgkUTv*RD$sR7')));
     }
 
     private authenticateWithCognito(cognitoConfig: ICognitoUserPoolData, userName: string, password: string): Observable<CognitoIdentityCredentials> {

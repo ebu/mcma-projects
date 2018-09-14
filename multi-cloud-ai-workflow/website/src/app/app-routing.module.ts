@@ -7,10 +7,10 @@ import { MonitorComponent } from './monitor/monitor.component';
 import { ServicesComponent } from './services-page/services.component';
 
 export const routes: Routes = [
-    { path: 'run', component: RunComponent, canActivate: [AuthGuard] },
-    { path: 'monitor', component: MonitorComponent, canActivate: [AuthGuard] },
-    { path: 'services', component: ServicesComponent, canActivate: [AuthGuard] },
-    { path: '', redirectTo: 'run', pathMatch: 'full', canActivate: [AuthGuard] }
+    { path: 'run', component: RunComponent },
+    { path: 'monitor', component: MonitorComponent },
+    { path: 'services', component: ServicesComponent },
+    { path: '', redirectTo: 'run', pathMatch: 'full' }
 ];
 
 @NgModule({

@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { Observable, of } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, share } from 'rxjs/operators';
 
 import { CognitoAuthService } from './services/cognito-auth.service';
 
@@ -15,6 +15,6 @@ export class AppComponent {
     isLoggedIn$: Observable<boolean>;
 
     constructor(private cognitoAuthService: CognitoAuthService) {
-        this.isLoggedIn$ = this.cognitoAuthService.autoLogin().pipe(map(creds => !!creds));
+        this.isLoggedIn$ = this.cognitoAuthService.autoLogin().pipe(map(creds => !!creds), share());
     }
 }

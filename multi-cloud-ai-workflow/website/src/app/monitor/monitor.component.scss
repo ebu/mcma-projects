@@ -3,12 +3,23 @@
 
 :host {
     display: flex;
+    flex-direction: column;
     flex: 1;
 }
 
 .monitor-container {
     display: flex;
-    margin: auto;
+    flex: 1;
     font-size: 18px;
     color: mat-color($mcma-primary, 300);
+}
+
+.refresh {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    button {
+        margin-top: 5px;
+    }
 }

@@ -80,6 +80,10 @@
         font-size: 18px;
         color: mat-color($mcma-primary, 300);
         font-style: italic;
+        display: flex;
+        flex: 1;
+        justify-content: center;
+        align-items: center;
     }
 
     .loading {
