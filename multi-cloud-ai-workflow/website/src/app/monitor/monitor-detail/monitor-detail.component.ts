@@ -1,6 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { Observable, of, BehaviorSubject } from 'rxjs';
-import { switchMap, withLatestFrom, filter, map } from 'rxjs/operators';
+import { switchMap, withLatestFrom, filter, map, take } from 'rxjs/operators';
 
 import { WorkflowService } from '../../services/workflow.service';
 import { ContentService } from '../../services/content.service';
@@ -35,13 +35,11 @@ export class MonitorDetailComponent {
                 )
             );
             
-            this.content$ = this.aiJobVm$.pipe(
-                filter(aiJobVm => aiJobVm && aiJobVm.isCompleted),
-                withLatestFrom(val),
-                switchMap(([aiJobVm, conformJobVm]) =>
-                    conformJobVm.contentUrl
-                        ? this.contentService.getContent(conformJobVm.contentUrl).pipe(map(c => new ContentViewModel(c)))
-                        : of(null)
+            this.content$ = val.pipe(
+                switchMap(conformJobVm =>
+                    conformJobVm.isCompleted && conformJobVm.contentUrl
+                        ? this.contentService.pollUntil(conformJobVm.contentUrl, this.aiJobVm$.pipe(map(aiJobVm => aiJobVm && aiJobVm.isFinished)))
+                        : of (null)
                 )
             );
         }
@@ -49,9 +47,8 @@ export class MonitorDetailComponent {
 
     constructor(private workflowService: WorkflowService, private contentService: ContentService) {}
 
-    selectAzureCelebrity(row: any): void {
-        console.log(row);
-        this.selectedAzureCelebrity = row;
+    seekVideoAws(timestamp: number): void {
+        this.currentTimeSubject.next(timestamp / 1000);
     }
 
     seekVideoAzure(instance: any): void {

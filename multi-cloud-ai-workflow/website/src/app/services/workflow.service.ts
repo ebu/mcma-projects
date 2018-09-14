@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, Subject, BehaviorSubject, from, timer, of } from 'rxjs';
-import { map, zip, switchMap, concatMap, share, tap, takeWhile } from 'rxjs/operators';
+import { map, zip, switchMap, concatMap, takeWhile } from 'rxjs/operators';
 
 import { ResourceManager, WorkflowJob, JobParameterBag, DescriptiveMetadata, Locator, HTTP } from 'mcma-core';
 
