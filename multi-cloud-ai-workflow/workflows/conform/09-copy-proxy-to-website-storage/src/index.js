@@ -118,7 +118,7 @@ exports.handler = async (event, context) => {
     let data = await S3GetBucketLocation({ Bucket: s3Bucket });
     console.log(JSON.stringify(data, null, 2));
     const s3SubDomain = data.LocationConstraint && data.LocationConstraint.length > 0 ? `s3-${data.LocationConstraint}` : "s3";
-    mediaFileUrl = "https://" + s3SubDomain + ".amazonaws.com/" + inputFile.awsS3Bucket + "/" + inputFile.awsS3Key;
+    mediaFileUrl = "https://" + s3SubDomain + ".amazonaws.com/" + s3Bucket + "/" + s3Key;
 
     // addin ResultPath of StepFunctions
     return new MCMA_CORE.Locator({
