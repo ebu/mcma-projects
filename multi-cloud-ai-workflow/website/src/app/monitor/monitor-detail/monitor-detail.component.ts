@@ -141,7 +141,7 @@ export class MonitorDetailComponent implements OnChanges {
 
             for (const celebrity of celebrities) {
                 if (celebrity.imageUrl === selectedAzureCelebrity.imageUrl) {
-                    this.selectAzureCelebrity = celebrity;
+                    this.selectedAzureCelebrity = celebrity;
                 }
             }
 
