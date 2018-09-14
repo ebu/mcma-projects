@@ -94,7 +94,8 @@ const processJobAssignment = async (event) => {
                 } else {
                     data = await S3GetBucketLocation({ Bucket: inputFile.awsS3Bucket });
                     console.log(JSON.stringify(data, null, 2));
-                    mediaFileUrl = "https://s3-" + data.LocationConstraint + ".amazonaws.com/" + inputFile.awsS3Bucket + "/" + inputFile.awsS3Key;
+                    const s3SubDomain = data.LocationConstraint && data.LocationConstraint.length > 0 ? `s3-${data.LocationConstraint}` : "s3";
+                    mediaFileUrl = "https://" + s3SubDomain + ".amazonaws.com/" + inputFile.awsS3Bucket + "/" + inputFile.awsS3Key;
                 }
                 let mediaFormat;
 
