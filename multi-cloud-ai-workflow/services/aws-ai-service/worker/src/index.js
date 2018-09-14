@@ -14,15 +14,26 @@ const S3DeleteObject = util.promisify(S3.deleteObject.bind(S3));
 const TranscribeService = new AWS.TranscribeService();
 const TranscribeServiceStartTranscriptionJob = util.promisify(TranscribeService.startTranscriptionJob.bind(TranscribeService));
 
+const Rekognition = new AWS.Rekognition();
+const RekognitionStartCelebrityRecognition = util.promisify(Rekognition.startCelebrityRecognition.bind(Rekognition));
+
+const RekognitionGetCelebrityRecognition = util.promisify(Rekognition.getCelebrityRecognition.bind(Rekognition));
+
+
 const Translate = new AWS.Translate({ apiVersion: '2017-07-01' });
 const TranslateText = util.promisify(Translate.translateText.bind(Translate));
 
 const MCMA_AWS = require("mcma-aws");
 const MCMA_CORE = require("mcma-core");
 
+const crypto = require("crypto");
+
 const JOB_PROFILE_TRANSCRIBE_AUDIO = "AWSTranscribeAudio";
 const JOB_PROFILE_TRANSLATE_TEXT = "AWSTranslateText";
 const JOB_PROFILE_DETECT_CELEBRITIES = "AWSDetectCelebrities";
+
+var REKO_SNS_ROLE_ARN = process.env["REKO_SNS_ROLE_ARN"];
+var SNS_TOPIC_ARN = process.env["SNS_TOPIC_ARN"];
 
 exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
@@ -34,6 +45,9 @@ exports.handler = async (event, context) => {
                 break;
             case "ProcessTranscribeJobResult":
                 await processTranscribeJobResult(event);
+                break;
+            case "ProcessRekognitionResult":
+                await processRekognitionResult(event);
                 break;
             default:
                 throw new Error("Unknown action");
@@ -160,7 +174,32 @@ const processJobAssignment = async (event) => {
                 await updateJobAssignmentStatus(resourceManager, table, jobAssignmentId, "COMPLETED");
                 break;
             case JOB_PROFILE_DETECT_CELEBRITIES:
-                throw new Error("Not Implemented");
+
+                let clientToken = crypto.randomBytes(16).toString("hex");
+                let base64JobId = new Buffer(jobAssignmentId).toString('hex');
+
+
+                params = {
+                    Video: { /* required */
+                        S3Object: {
+                            Bucket: inputFile.awsS3Bucket,
+                            Name: inputFile.awsS3Key
+                        }
+                    },
+                    ClientRequestToken: clientToken,
+                    JobTag: base64JobId,
+                    NotificationChannel: {
+                        RoleArn: REKO_SNS_ROLE_ARN,
+                        SNSTopicArn: SNS_TOPIC_ARN
+                    }
+                };
+
+                data = await RekognitionStartCelebrityRecognition(params);
+
+                console.log(JSON.stringify(data, null, 2));
+                break;
+
+
         }
     } catch (error) {
         console.error(error);
@@ -230,6 +269,128 @@ const processTranscribeJobResult = async (event) => {
         console.warn("Failed to cleanup transcribe output file");
     }
 }
+
+
+
+const processRekognitionResult = async (event) => {
+    let resourceManager = new MCMA_CORE.ResourceManager(event.stageVariables.ServicesUrl);
+    let table = new MCMA_AWS.DynamoDbTable(AWS, event.stageVariables.TableName);
+    let jobAssignmentId = event.jobAssignmentId;
+
+    // 1. Retrieving Job based on jobAssignmentId
+    let job = await retrieveJob(table, jobAssignmentId);
+
+    try {
+        // 2. Retrieve job inputParameters
+        let jobInput = await retrieveJobInput(job);
+
+        let s3Bucket = jobInput.outputLocation.awsS3Bucket;
+       
+        let rekoJobId = event.jobExternalInfo.rekoJobId;
+        let rekoJobType = event.jobExternalInfo.rekoJobType;
+        let status = event.jobExternalInfo.status;
+   
+
+        if (status != 'SUCCEEDED') {
+            throw new Error("AI Rekognition failed job info: rekognition status:" + status);
+        }
+
+        // 3. Get the result from the Rekognition service 
+
+        let data;
+
+        switch (rekoJobType) {
+            case "StartLabelDetection":
+                throw new Error("StartLabelDetection : Not implemented");
+                break;
+
+            case "StartContentModeration":
+                throw new Error("StartLabelDetection : Not implemented");
+                break;
+
+            case "StartPersonTracking":
+                throw new Error("StartLabelDetection : Not implemented");
+                break;
+
+            case "StartCelebrityRecognition":
+                var params = {
+                    JobId: rekoJobId, /* required */
+                    MaxResults: 1000000,
+                    SortBy: 'TIMESTAMP'
+                };
+                RekognitionGetCelebrityRecognition
+                data = await RekognitionGetCelebrityRecognition(params);
+
+                break;
+
+            case "StartFaceDetection":
+                throw new Error("StartLabelDetection : Not implemented");
+                break;
+
+            case "StartFaceSearch":
+                throw new Error("StartLabelDetection : Not implemented");
+                break;
+            default:
+                throw new Error("Unknown rekoJobType");
+        }
+
+
+        if (!data) {
+            throw new Error("No data was returned by AWS Rekogntion");
+        } else {
+
+            console.log("data returned by Reckognition", JSON.stringify(data, null, 2));
+            // AWS Reko may create empty json element
+            // remove them
+            walkclean(data);
+
+            
+            // 3. write Reko output file to output location
+            newS3Key = "reko_" + uuidv4() + ".json";
+            let s3Params = {
+                Bucket: s3Bucket,
+                Key: newS3Key ,
+                Body: JSON.stringify(data)
+            }
+
+
+            try {
+                await S3PutObject(s3Params);
+            } catch (error) {
+                throw new Error("Unable to write output file to bucket '" + s3Bucket + "' with key '" + newS3Key + "' due to error: " + error.message);
+            }
+
+        console.log("Wrote Reko result file to S3 bucket : " + s3Bucket + " S3 key : " + newS3Key);
+
+
+        // 4. updating JobAssignment with jobOutput
+        let jobOutput = new MCMA_CORE.JobParameterBag({
+            outputFile: new MCMA_CORE.Locator({
+                awsS3Bucket: s3Bucket,
+                awsS3Key: newS3Key
+            })
+        });
+        await updateJobAssignmentWithOutput(table, jobAssignmentId, jobOutput);
+
+        
+
+        // 5. Setting job assignment status to COMPLETED
+        await updateJobAssignmentStatus(resourceManager, table, jobAssignmentId, "COMPLETED");
+
+    }
+    } catch (error) {
+        console.error(error);
+        try {
+            await updateJobAssignmentStatus(resourceManager, table, jobAssignmentId, "FAILED", error.message);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+   }
+
+
+
 
 const validateJobProfile = (jobProfile, jobInput) => {
     if (jobProfile.name !== JOB_PROFILE_TRANSCRIBE_AUDIO &&
@@ -321,5 +482,23 @@ const putJobAssignment = async (resourceManager, table, jobAssignmentId, jobAssi
 
     if (resourceManager) {
         await resourceManager.sendNotification(jobAssignment);
+    }
+}
+
+
+function walkclean(x) {
+    var type = typeof x;
+    if (x instanceof Array) {
+        type = 'array';
+    }
+    if ((type == 'array') || (type == 'object')) {
+        for (k in x) {
+            var v = x[k];
+            if ((v === '') && (type == 'object')) {
+                delete x[k];
+            } else {
+                walkclean(v);
+            }
+        }
     }
 }
