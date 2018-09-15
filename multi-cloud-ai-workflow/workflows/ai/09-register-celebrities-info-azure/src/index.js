@@ -64,15 +64,11 @@ exports.handler = async (event, context) => {
 
     let bmContent = await retrieveResource(event.input.bmContent, "input.bmContent");
     
-    console.log("[BMContent]:", JSON.stringify(bmContent, null, 2));
-    
     let azureAiMetadata = bmContent.azureAiMetadata || {};
     azureAiMetadata = azureResult;
     bmContent.azureAiMetadata = azureAiMetadata;
 
     await resourceManager.update(bmContent);
-
-    console.log("Updated BMContent:", JSON.stringify(bmContent, null, 2));
 
     try {
         event.status = "RUNNING";

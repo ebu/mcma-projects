@@ -9,7 +9,7 @@ resource "aws_lambda_function" "ai-01-validate-workflow-input" {
   handler          = "index.handler"
   source_code_hash = "${base64sha256(file("./../workflows/ai/01-validate-workflow-input/dist/lambda.zip"))}"
   runtime          = "nodejs8.10"
-  timeout          = "30"
+  timeout          = "60"
   memory_size      = "256"
 
   environment {
@@ -29,7 +29,7 @@ resource "aws_lambda_function" "ai-02-extract-speech-to-text" {
   handler          = "index.handler"
   source_code_hash = "${base64sha256(file("./../workflows/ai/02-extract-speech-to-text/dist/lambda.zip"))}"
   runtime          = "nodejs8.10"
-  timeout          = "30"
+  timeout          = "60"
   memory_size      = "256"
 
   environment {
@@ -55,7 +55,7 @@ resource "aws_lambda_function" "ai-03-register-speech-to-text-output" {
   handler          = "index.handler"
   source_code_hash = "${base64sha256(file("./../workflows/ai/03-register-speech-to-text-output/dist/lambda.zip"))}"
   runtime          = "nodejs8.10"
-  timeout          = "30"
+  timeout          = "60"
   memory_size      = "256"
 
   environment {
@@ -75,7 +75,7 @@ resource "aws_lambda_function" "ai-04-translate-speech-transcription" {
   handler          = "index.handler"
   source_code_hash = "${base64sha256(file("./../workflows/ai/04-translate-speech-transcription/dist/lambda.zip"))}"
   runtime          = "nodejs8.10"
-  timeout          = "30"
+  timeout          = "60"
   memory_size      = "256"
 
   environment {
@@ -101,7 +101,7 @@ resource "aws_lambda_function" "ai-05-register-speech-translation" {
   handler          = "index.handler"
   source_code_hash = "${base64sha256(file("./../workflows/ai/05-register-speech-translation/dist/lambda.zip"))}"
   runtime          = "nodejs8.10"
-  timeout          = "30"
+  timeout          = "60"
   memory_size      = "256"
 
   environment {
@@ -121,7 +121,7 @@ resource "aws_lambda_function" "ai-06-detect-celebrities-aws" {
   handler          = "index.handler"
   source_code_hash = "${base64sha256(file("./../workflows/ai/06-detect-celebrities-aws/dist/lambda.zip"))}"
   runtime          = "nodejs8.10"
-  timeout          = "30"
+  timeout          = "60"
   memory_size      = "256"
 
   environment {
@@ -147,7 +147,7 @@ resource "aws_lambda_function" "ai-08-detect-celebrities-azure" {
   handler          = "index.handler"
   source_code_hash = "${base64sha256(file("./../workflows/ai/08-detect-celebrities-azure/dist/lambda.zip"))}"
   runtime          = "nodejs8.10"
-  timeout          = "30"
+  timeout          = "60"
   memory_size      = "256"
 
   environment {
@@ -173,7 +173,7 @@ resource "aws_lambda_function" "ai-07-register-celebrities-info-aws" {
   handler          = "index.handler"
   source_code_hash = "${base64sha256(file("./../workflows/ai/07-register-celebrities-info-aws/dist/lambda.zip"))}"
   runtime          = "nodejs8.10"
-  timeout          = "30"
+  timeout          = "60"
   memory_size      = "256"
 
   environment {
@@ -193,7 +193,7 @@ resource "aws_lambda_function" "ai-09-register-celebrities-info-azure" {
   handler          = "index.handler"
   source_code_hash = "${base64sha256(file("./../workflows/ai/09-register-celebrities-info-azure/dist/lambda.zip"))}"
   runtime          = "nodejs8.10"
-  timeout          = "30"
+  timeout          = "60"
   memory_size      = "256"
 
   environment {

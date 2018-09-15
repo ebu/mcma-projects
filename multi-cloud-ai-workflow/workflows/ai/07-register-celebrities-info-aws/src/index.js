@@ -64,8 +64,6 @@ exports.handler = async (event, context) => {
 
     let bmContent = await retrieveResource(event.input.bmContent, "input.bmContent");
 
-    console.log("[BMContent]:", JSON.stringify(bmContent, null, 2));
-
     if (!bmContent.awsAiMetadata) {
         bmContent.awsAiMetadata = {};
     }
@@ -73,7 +71,6 @@ exports.handler = async (event, context) => {
 
     await resourceManager.update(bmContent);
 
-    console.log("Updated BMContent:", JSON.stringify(bmContent, null, 2));
     try {
         event.status = "RUNNING";
         event.parallelProgress = { "detect-celebrities-aws": 100 };
