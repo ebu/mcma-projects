@@ -89,7 +89,7 @@ exports.handler = async (event, context) => {
                 awsS3Bucket: s3Params.Bucket,
                 awsS3Key: s3Params.Key
             }),
-            targetLanguageCode: "es",
+            targetLanguageCode: "ja",
             outputLocation: new MCMA_CORE.Locator({
                 awsS3Bucket: TEMP_BUCKET,
                 awsS3KeyPrefix: JOB_RESULTS_PREFIX
