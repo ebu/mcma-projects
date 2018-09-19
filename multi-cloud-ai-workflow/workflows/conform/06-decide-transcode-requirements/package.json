@@ -1,0 +1,16 @@
+{
+    "name": "06-decide-transcode-requirements",
+    "version": "0.0.0",
+    "description": "Decide based on technical metadata of media file, if no transcode, a short transcode (lambda) or a long transcode (ec2) is needed",
+    "private": true,
+    "engines": {
+        "node": "~8.10.0"
+    },
+    "main": "src/index.js",
+    "license": "Apache-2.0",
+    "dependencies": {
+        "aws-sdk": "^2.291.0",
+        "mcma-core": "0.0.9",
+        "node-timecodes": "^2.5.0"
+    }
+}

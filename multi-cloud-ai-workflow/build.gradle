@@ -1,0 +1,129 @@
+
+def requiredVersionNodeJS = "8.10.0"
+
+allprojects {
+    ext {
+        if (org.gradle.internal.os.OperatingSystem.current().isWindows()) {
+            nodeExecutable = ["node"]
+            ngExecutable = ["cmd", "/c", "ng"]
+            npmExecutable = ["cmd", "/c", "npm"]
+            terraformExecutable = ["cmd", "/c", "terraform"]
+        } else {
+            nodeExecutable = ["node"]
+            ngExecutable = ["ng"]
+            npmExecutable = ["npm"]
+            terraformExecutable = ["terraform"]
+        }
+
+        awsAvailableLibraries = [".bin", "aws-sdk", "base64-js", "buffer", "dynamodb-doc", "events", "ieee754", "isarray", "jmespath", "lodash", "punycode", "querystring", "sax", "url", "uuid", "xml2js", "xmlbuilder"]
+    }
+}
+
+def getVersionNodeJS = { ->
+    def stdout = new ByteArrayOutputStream();
+    def stderr = new ByteArrayOutputStream();
+    try {
+        exec {
+            commandLine nodeExecutable
+            args "--version"
+            standardOutput stdout
+            errorOutput stderr
+        }
+    } catch (Exception ex) {}
+
+    return stdout.toString().trim().replace("v", "")
+}
+
+task verifyNodeJS {
+    inputs.property("VERSION_NODE_JS", requiredVersionNodeJS)
+    outputs.upToDateWhen { getVersionNodeJS() == requiredVersionNodeJS }
+    doLast {
+        if (getVersionNodeJS() != requiredVersionNodeJS) {
+            throw new Exception("Required Node version " + requiredVersionNodeJS + " not installed");
+        }      
+    }
+}
+
+task build {
+    dependsOn "services:build"
+    dependsOn "workflows:build"
+    dependsOn "website:build"
+}
+
+task clean {}
+
+subprojects {
+    task npmInstall (type: Exec) {
+        dependsOn verifyNodeJS
+        enabled file("package.json").exists()
+        inputs.file("package.json")
+        inputs.file("package-lock.json")
+        outputs.dir("node_modules")
+        commandLine npmExecutable
+        args "install"
+    }
+
+    task npmUpdate(type: Exec) {
+        dependsOn verifyNodeJS
+        enabled file("package.json").exists()
+        inputs.file "package.json"
+        inputs.property("todaysDate", new Date().clearTime() )
+        outputs.upToDateWhen { true }
+        commandLine npmExecutable
+        args "update"
+    }
+
+    task clean(type: Delete) {
+        delete "dist"
+        delete "node_modules"
+    }
+}
+
+
+afterEvaluate {
+    // avoiding simultanous connections to npmjs.com
+    def prevTask = null
+    project.subprojects.each {
+        def task = it.tasks.find { task -> task.name.contains('npmUpdate') }
+        if (task != null) {
+            if (prevTask != null) {
+                task.mustRunAfter(prevTask)
+            }
+            prevTask = task;
+        }
+    }
+
+    prevTask = null
+    project.subprojects.each {
+        def task = it.tasks.find { task -> task.name.contains('npmInstall') }
+        if (task != null) {
+            if (prevTask != null) {
+                task.mustRunAfter(prevTask)
+            }
+            prevTask = task;
+        }
+    }
+}
+
+if (!hasProperty("awsInstanceType")) {
+    ext.awsInstanceType = "t2.micro"
+}
+if (!hasProperty("awsInstanceCount")) {
+    ext.awsInstanceCount = "1"
+}
+
+if (!hasProperty("AzureLocation")) {
+    ext.AzureLocation = "trial"
+}
+
+if (!hasProperty("AzureAccountID")) {
+    ext.AzureAccountID = "undefined"
+}
+
+if (!hasProperty("AzureSubscriptionKey")) {
+    ext.AzureSubscriptionKey = "undefined"
+}
+
+if (!hasProperty("AzureApiUrl")) {
+    ext.AzureApiUrl = "https://api.videoindexer.ai"
+}

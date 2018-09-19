@@ -1,0 +1,35 @@
+@import '~@angular/material/theming';
+@import 'src/styles/theme.scss';
+
+:host {
+    display: flex;
+    flex-direction: column;
+    height: 832px;
+    padding: 0 30px;
+    width: 30vw;
+}
+
+.workflow-jobs-table, .mat-paginator, .fill {
+    margin: 0 30px;
+}
+
+.workflow-jobs-table {
+    flex: 1;
+}
+
+tr.mat-row {
+    cursor: pointer;
+    &:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+}
+
+.fill {
+    flex: 1;
+    margin: 0 30px;
+    background: mat-color($mcma-background, 'card');
+}
+
+tr.highlight {
+    background:  rgba(255, 255, 255, 0.1);
+}

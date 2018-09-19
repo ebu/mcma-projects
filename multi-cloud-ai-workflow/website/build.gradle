@@ -1,0 +1,43 @@
+def packageJsonFile = file('package.json');
+def packageJson = new groovy.json.JsonSlurper().parseText(packageJsonFile.text);
+
+def requiredVersionAngularCLI = packageJson.devDependencies["@angular/cli"]
+
+def getVersionAngularCLI = { ->
+    def stdout = new ByteArrayOutputStream();
+    def stderr = new ByteArrayOutputStream();
+    try {
+        exec {
+            commandLine npmExecutable
+            args "list", "-g", "@angular/cli"
+            standardOutput stdout
+            errorOutput stderr
+        }
+    } catch (Exception ex) {}
+    def outputParts = stdout.toString().trim().split("@");
+    if (outputParts.length == 3) {
+        return outputParts[2];
+    }
+    return ""
+}
+
+task installAngularCLI {
+    inputs.property("VERSION_ANGULAR_CLI", requiredVersionAngularCLI);
+    outputs.upToDateWhen { getVersionAngularCLI() == requiredVersionAngularCLI }
+    doLast {
+        if (getVersionAngularCLI() != requiredVersionAngularCLI) {
+            exec {
+                commandLine npmExecutable
+                args "install", "-g", "@angular/cli@$requiredVersionAngularCLI"
+            }
+        }
+    }
+}
+
+task build (type: Exec) {
+    dependsOn npmInstall, installAngularCLI
+    inputs.dir("src")
+    outputs.dir("dist")
+    commandLine ngExecutable
+    args "build", "--prod", "--base-href", "./index.html", "--progress", "false"
+}

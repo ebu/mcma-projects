@@ -1,0 +1,14 @@
+{
+    "name": "03-create-media-asset",
+    "version": "0.0.0",
+    "description": "With Locator received from previous step, create a BMContent with provided metadata and BMEssence with Locator to file in the Media Repository",
+    "private": true,
+    "engines": {
+        "node": "~8.10.0"
+    },
+    "main": "src/index.js",
+    "license": "Apache-2.0",
+    "dependencies": {
+        "mcma-core": "0.0.9"
+    }
+}

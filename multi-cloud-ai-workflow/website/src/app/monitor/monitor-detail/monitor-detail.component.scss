@@ -1,0 +1,179 @@
+@import '~@angular/material/theming';
+@import 'src/styles/theme.scss';
+
+:host {
+    padding: 15px 30px;
+    flex: 1;
+    display: flex;
+}
+
+.workflow-job-data {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+}
+
+.job-info {
+    display: flex;
+    margin-bottom: 1vw;
+
+    mat-icon {
+        width: 30px;
+        height: 30px;
+        font-size: 30px;
+    }
+
+    span {
+        font-size: 20px;
+        margin-left: 10px;
+    }
+}
+
+.job-preview-player {
+    width: 560px;
+
+    video {
+        width: 100%;
+    }
+}
+
+.conform-status {
+    height: 315px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: mat-color($mcma-primary, 900);
+}
+
+.conform-status-icon-text {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.job-fields {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin-left: 15px;
+    margin-top: 20px;
+}
+
+.job-field {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1vw;
+
+    label {
+        color: mat-color($mcma-primary, 600);
+        width: 100px;
+        text-align: right;
+        margin-right: 15px;
+        font-size: 16px;
+        font-weight: bold;
+    }
+
+    span {
+        font-size: 20px;
+        color: white;
+    }
+    
+    a[mat-button] {
+        font-size: 18px;
+    }
+}
+
+.ai-section {
+    display: flex;
+    flex: 1;
+}
+
+.ai-data {
+    flex: 1;
+    margin-right: 50px;
+    display: flex;
+    flex-direction: column;
+}
+
+.ai-data-item {
+    margin: 25px;
+}
+
+.ai-data-group {
+    margin: 25px;
+}
+
+.ai-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ai-status {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.ai-status-header {
+    font-size: 16px;
+    color: mat-color($mcma-primary, 600);
+    font-style: italic;
+    margin-right: 15px;
+}
+
+.ai-status-icon-text {
+    display: flex;
+    align-items: center;
+
+    mat-icon {
+        width: 30px;
+        height: 30px;
+        font-size: 30px;
+    }
+
+    span {
+        font-size: 18px;
+        margin-left: 5px;
+    }
+}
+
+.ai-job-not-started {
+    flex: 1;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+
+    span {
+        font-size: 22px;
+        color: mat-color($mcma-primary, 600);
+        font-style: italic;
+    }
+}
+
+tr.mat-row {
+    cursor: pointer;
+    &:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    &.highlight {
+        background:  rgba(255, 255, 255, 0.1);
+    }
+}
+
+.celebrity-info {
+    display: flex;
+    padding-top: 1vw;
+}
+
+.celebrity-fields {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 1vw;
+}
+
+.fill {
+    flex: 1;
+}

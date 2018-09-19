@@ -1,0 +1,20 @@
+{
+  "name": "mcma-ec2-transform-service",
+  "version": "1.0.0",
+  "description": "Node.js on Docker",
+  "author": "First Last <first.last@example.com>",
+  "license": "MIT",
+  "repository": "https://github.com/ebu/mcma-projects/tree/develop/multi-cloud-ai-workflow",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js > deployment.log"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.291.0",
+    "axios": "~0.18.0",
+    "body-parser": "~1.18.2",
+    "express": "~4.16.3",
+    "mcma-aws": "0.1.0",
+    "mcma-core": "0.0.9"
+  }
+}

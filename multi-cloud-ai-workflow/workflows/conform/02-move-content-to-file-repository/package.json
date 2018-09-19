@@ -1,0 +1,15 @@
+{
+    "name": "02-move-content-to-file-repository",
+    "version": "0.0.0",
+    "description": "Moving file into media repository and passing Locator to next step",
+    "private": true,
+    "engines": {
+        "node": "~8.10.0"
+    },
+    "main": "src/index.js",
+    "license": "Apache-2.0",
+    "dependencies": {
+        "aws-sdk": "^2.291.0",
+        "mcma-core": "0.0.9"
+    }
+}

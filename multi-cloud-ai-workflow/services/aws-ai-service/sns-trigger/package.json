@@ -1,0 +1,16 @@
+{
+    "name": "aws-ai-service-sns-trigger",
+    "version": "0.0.0",
+    "description": "SNS trigger to detect finished Rekognition jobs for AWS AI Service",
+    "private": true,
+    "engines": {
+        "node": "~8.10.0"
+    },
+    "main": "src/index.js",
+    "license": "Apache-2.0",
+    "dependencies": {
+        "aws-sdk": "^2.291.0",
+        "mcma-aws": "0.1.0",
+        "mcma-core": "0.0.9"
+    }
+}

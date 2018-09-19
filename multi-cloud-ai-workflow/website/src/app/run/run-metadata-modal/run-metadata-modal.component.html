@@ -1,0 +1,20 @@
+<form [formGroup]="form" class="run-workflow-metadata-container" autocomplete="off">
+  <div class="message">
+    <mat-icon color="accent">create</mat-icon>
+    <span>Add Metadata</span>
+  </div>
+  <div class="metadata">
+    <mat-form-field class="title">
+      <mat-label>Title</mat-label>
+      <input type="text" matInput formControlName="title">
+    </mat-form-field>
+    <mat-form-field class="description">
+      <mat-label>Description</mat-label>
+      <textarea matInput formControlName="description"></textarea>
+    </mat-form-field>
+  </div>
+  <div class="actions">
+    <button type="button" mat-raised-button color="primary" (click)="close()"><mat-icon color="white">cancel</mat-icon> Cancel</button>
+    <button type="submit" mat-raised-button color="accent" (click)="confirm()"><mat-icon color="white">play_arrow</mat-icon> Run</button>
+  </div>
+</form>

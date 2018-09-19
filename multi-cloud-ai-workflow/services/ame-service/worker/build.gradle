@@ -1,0 +1,17 @@
+task copyMediaInfoBin(type: Copy) {
+    from "externals/mediainfo/18.05.x86_64.RHEL_7"
+    into "dist/staging/bin"
+}
+
+task copyMediaInfoLibs(type: Copy) {
+    from "externals/libmediainfo/18.05.x86_64.RHEL_7"
+    from "externals/libzen/0.4.37.x86_64.RHEL_7"
+    into "dist/staging/lib"
+}
+
+build.dependsOn copyMediaInfoBin
+build.dependsOn copyMediaInfoLibs
+
+build {
+    fileMode 0755
+}

@@ -2,6 +2,7 @@
 
 This repository will contain example implementations of workflows using the EBU MCMA framework.
 
-## Important note
+## Multi cloud AI workflow
 
-As this is still work in progress, please checkout the [development branch](https://github.com/ebu/mcma-projects/tree/develop) for the current status.
+This example worklow demonstrates how you can leverage AI technologies from multiple cloud vendors in a single media workflow
+For more details on this check out [the project](multi-cloud-ai-workflow/).

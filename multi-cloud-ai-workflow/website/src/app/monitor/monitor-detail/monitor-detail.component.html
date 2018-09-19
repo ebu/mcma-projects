@@ -1,0 +1,188 @@
+<div class="workflow-job-data" *ngIf="conformJobVm$ | async as conformJobVm">
+
+  <div class="job-info">
+    <div class="job-preview-player">
+      <video *ngIf="conformJobVm.isCompleted && conformJobVm.previewUrl; else statusMessage" controls [src]="conformJobVm.previewUrl" [currentTime]="currentTime$ | async"></video>
+      <ng-template #statusMessage>
+        <div class="conform-status">
+          <div class="conform-status-icon-text">
+            <mat-icon [color]="conformJobVm.statusColor">{{ conformJobVm.statusIcon }}</mat-icon>
+            <span>{{ conformJobVm.workflowJob.status }}</span>
+          </div>
+          <span *ngIf="conformJobVm.isRunning && conformJobVm.workflowJob?.progress" class="conform-status-progress">{{ conformJobVm.workflowJob.progress }}%</span>
+        </div>
+      </ng-template>
+    </div>
+    <div class="job-fields">
+      <div class="job-field">
+        <label>Title:</label>
+        <span>{{ conformJobVm.title }}</span>
+      </div>
+      <div class="job-field">
+        <label>Description:</label>
+        <span>{{ conformJobVm.description }}</span>
+      </div>
+      <div class="job-field">
+        <label>File Name:</label>
+        <span>{{ conformJobVm.fileName }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="ai-section">
+    <div class="ai-data" *ngIf="aiJobVm$ | async as aiJobVm; else aiWorkflowPending">
+      <div class="ai-state">
+        <span class="ai-status-header">AI Workflow Status:</span>
+        <div class="ai-status">
+          <div class="ai-status-icon-text">
+            <mat-icon [color]="aiJobVm.statusColor">{{ aiJobVm.statusIcon }}</mat-icon>
+            <span>{{ aiJobVm.workflowJob.status }}</span>
+          </div>
+          <span *ngIf="aiJobVm.isRunning && aiJobVm.workflowJob?.progress" class="ai-status-progress">{{ aiJobVm.workflowJob.progress }}%</span>
+        </div>
+      </div>
+      <ng-container *ngIf="content$ | async as content">
+        <mat-tab-group *ngIf="!content.noData">
+          <mat-tab label="AWS">
+            <div class="ai-data-group">
+              <mat-tab-group>
+                <mat-tab label="Transcript">
+                  <div class="ai-data-item ai-transcript-data">
+                    <span *ngIf="content?.awsTranscription; else awsTranscriptNoData">{{ content.awsTranscription }}</span>
+                    <ng-template #awsTranscriptNoData>
+                      <span *ngIf="!aiJobVm.isFinished">Still processing...</span>
+                      <span *ngIf="aiJobVm.isFinished">Data not available</span>
+                    </ng-template>
+                  </div>
+                </mat-tab>
+                <mat-tab label="Translation">
+                  <div class="ai-data-item ai-translation-data">
+                    <span *ngIf="content?.awsTranslation; else awsTranslationNoData">{{ content?.awsTranslation }}</span>
+                    <ng-template #awsTranslationNoData>
+                      <span *ngIf="!aiJobVm.isFinished">Still processing...</span>
+                      <span *ngIf="aiJobVm.isFinished">Data not available</span>
+                    </ng-template>
+                  </div>
+                </mat-tab>
+                <mat-tab label="Celebrities">
+                  <div class="ai-data-item ai-celebrity-data">
+                    <div class="ai-data-item celebrity-info" *ngIf="content?.awsCelebrities?.data?.length > 0; else awsCelebritiesNoData">
+  
+                      <table mat-table [dataSource]="content.awsCelebrities.data">
+                          <ng-container matColumnDef="name">
+                              <th mat-header-cell *matHeaderCellDef>Name</th>
+                              <td mat-cell *matCellDef="let celebrity">{{celebrity.name}} </td>
+                          </ng-container>
+  
+                          <tr mat-row *matRowDef="let row; columns: ['name']" [class.highlight]="row === content.awsCelebrities.selected" (click)="content.awsCelebrities.selected = row"></tr>
+                      </table>
+  
+                      <div class="celebrity-fields" style="flex: 1;" *ngIf="content.awsCelebrities.selected">
+                          <div class="job-fields">
+                              <div class="job-field">
+                                  <label>Name:</label>
+                                  <span>{{ content.awsCelebrities.selected.name }}</span>
+                              </div>
+                              <div class="job-field">
+                                  <label>Url:</label>
+                                  <a mat-button *ngIf="content.awsCelebrities.selected.urls[0]" target="_blank" [href]="'https://' + content.awsCelebrities.selected.urls[0]">{{ content.awsCelebrities.selected.urls[0] }}</a>
+                              </div>
+                              <div class="job-field">
+                                  <label>Appearances:</label>
+                              </div>
+                              <div class="job-field">
+                                  <span style="margin-left:5vh;">
+                                      <button mat-raised-button
+                                              style="margin-right:1vw; width: 115px; margin-bottom: 0.2vw;"
+                                              *ngFor="let timestamp of content.awsCelebrities.selected.timestamps"
+                                              (click)="currentTimeSubject.next(timestamp.seconds)">{{ timestamp.timecode }}
+                                      </button>
+                                  </span>
+                              </div>
+                          </div>
+                      </div>
+  
+                    </div>
+                    <ng-template #awsCelebritiesNoData>
+                      <span *ngIf="!aiJobVm.isFinished">Still processing...</span>
+                      <span *ngIf="aiJobVm.isFinished">Data not available</span>
+                    </ng-template>
+                  </div>
+                </mat-tab>
+              </mat-tab-group>
+            </div>
+          </mat-tab>
+          <mat-tab label="Azure">
+            <div class="ai-data-group">
+              <mat-tab-group>
+                <mat-tab label="Transcript">
+                  <div class="ai-data-item ai-transcript-data">
+                    <span *ngIf="content?.azureTranscription; else azureTranscriptNoData">{{ content?.azureTranscription }}</span>
+                    <ng-template #azureTranscriptNoData>
+                      <span *ngIf="!aiJobVm.isFinished">Still processing...</span>
+                      <span *ngIf="aiJobVm.isFinished">Data not available</span>
+                    </ng-template>
+                  </div>
+                </mat-tab>
+                <mat-tab label="Celebrities">
+                  <div class="ai-data-item celebrity-info" *ngIf="content?.azureCelebrities?.data?.length > 0; else azureCelebritiesNoData">
+
+                    <table mat-table [dataSource]="content.azureCelebrities.data">
+                        <ng-container matColumnDef="name">
+                            <th mat-header-cell *matHeaderCellDef>Name</th>
+                            <td mat-cell *matCellDef="let celebrity">{{celebrity.name}} </td>
+                        </ng-container>
+
+                        <tr mat-row *matRowDef="let row; columns: ['name']" [class.highlight]="row === content?.azureCelebrities?.selected" (click)="content.azureCelebrities.selected = row"></tr>
+                    </table>
+
+                    <div class="celebrity-fields" style="flex: 1;" *ngIf="content?.azureCelebrities?.selected">
+                        <div class="job-fields">
+                            <div class="job-field">
+                                <label>Name:</label>
+                                <span>{{ content.azureCelebrities.selected.name }}</span>
+                            </div>
+                            <div class="job-field">
+                                <label>Title:</label>
+                                <span>{{ content.azureCelebrities.selected.title }}</span>
+                            </div>
+                            <div class="job-field">
+                                <label>Description:</label>
+                            </div>
+                            <div class="job-field">
+                                <span style="margin-left:5vh;">{{ content.azureCelebrities.selected.description }}</span>
+                            </div>
+                            <div class="job-field">
+                                <label>Appearances:</label>
+                            </div>
+                            <div class="job-field">
+                                <span style="margin-left:5vh;">
+                                    <button mat-raised-button
+                                            style="margin-right:1vw;"
+                                            *ngFor="let instance of content.azureCelebrities.selected.instances"
+                                            (click)="seekVideoAzure(instance)">{{ instance.start }}
+                                    </button>
+                                </span>
+                            </div>
+                        </div>
+                        <img style="margin-left:2vw; width: 10vw;" [src]="content.azureCelebrities.selected.imageUrl ? content.azureCelebrities.selected.imageUrl : '#'" />
+                    </div>
+
+                  </div>
+                  <ng-template #azureCelebritiesNoData>
+                    <span *ngIf="!aiJobVm.isFinished">Still processing...</span>
+                    <span *ngIf="aiJobVm.isFinished">Data not available</span>
+                  </ng-template>
+                </mat-tab>
+              </mat-tab-group>
+            </div>
+          </mat-tab>
+        </mat-tab-group>
+      </ng-container>
+    </div>
+    <ng-template #aiWorkflowPending>
+      <div class="ai-job-not-started">
+        <span>AI workflow will start once the conform workflow completes</span>
+      </div>
+    </ng-template>
+  </div>

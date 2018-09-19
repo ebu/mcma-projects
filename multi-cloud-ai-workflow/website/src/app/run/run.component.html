@@ -1,0 +1,71 @@
+
+<div class="run-container">
+  <div class="s3-objects-container">
+
+    <ng-container *ngIf="bucket$ | async as bucket">
+
+      <div class="bucket-header">
+        <label class="bucket-label">Bucket:</label>
+        <span class="bucket-name">{{ bucket.name }}</span>
+        <button mat-icon-button (click)="refresh()"><mat-icon color="primary">refresh</mat-icon></button>
+        <div class="filter">
+          <input type="text" [formControl]="filter" placeholder="Filter objects...">
+        </div>
+        <button class="upload-button" mat-raised-button color="accent">
+          <label for="file-upload">
+              <mat-icon>cloud_upload</mat-icon>
+              <span>Upload</span>
+          </label>
+          <input id="file-upload" type="file" hidden (change)="uploadFileChanged($event)">
+        </button>
+      </div>
+
+      <mat-selection-list *ngIf="bucket.objects.length > 0" (selectionChange)="onSelectedObjectChanged($event)" (drop)="onDrop($event)" (dragover)="onDragOver($event)">
+        <mat-list-option *ngFor="let s3Object of objects$ | async" checkboxPosition="before" [value]="s3Object" [selected]="selectedKey === s3Object.key">
+          <div class="s3-object">
+            <span class="key">{{ s3Object.key }}</span>
+            <span class="size">{{ s3Object.size | fileSize }}</span>
+          </div>
+        </mat-list-option>
+      </mat-selection-list>
+
+      <div class="empty-bucket" *ngIf="bucket.objects.length === 0">
+        <span>Bucket is empty</span>
+      </div>
+
+      <div class="upload-progress" *ngIf="currentUpload$ | async as currentUpload">
+        <span>Uploading {{ currentUpload.key }} ({{ currentUpload.percentComplete$ | async }}%)...</span>
+        <div class="upload-progress-bar-container">
+          <div class="upload-progress-bar" [style.width]="(currentUpload.percentComplete$ | async).toString() + '%'"></div>
+        </div>
+      </div>
+
+    </ng-container>
+    
+    <div class="loading" *ngIf="isLoading">
+      <span>Loading bucket...</span>
+      <div class="sk-three-bounce">
+        <div class="sk-child sk-bounce1"></div>
+        <div class="sk-child sk-bounce2"></div>
+        <div class="sk-child sk-bounce3"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="run-workflow">
+    <button mat-raised-button color="accent" (click)="runWorkflow()" *ngIf="!(runningWorkflow$ | async)">
+      <mat-icon>play_arrow</mat-icon>
+      <span>Run Workflow</span>
+    </button>
+    <div class="running-workflow" *ngIf="runningWorkflow$ | async">
+      <span>Initiating workflow...</span>
+      <div class="sk-three-bounce">
+        <div class="sk-child sk-bounce1"></div>
+        <div class="sk-child sk-bounce2"></div>
+        <div class="sk-child sk-bounce3"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
