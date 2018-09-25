@@ -60,6 +60,21 @@ exports.handler = async (event, context) => {
     }
 
     let celebritiesResult = JSON.parse(s3Object.Body.toString());
+
+    let celebritiesMap = { };
+
+    for (let i = 0; i < celebritiesResult.Celebrities.length;) {
+        let celebrity = celebritiesResult.Celebrities[i];
+
+        let prevCelebrity = celebritiesMap[celebrity.Celebrity.Name];
+        if ((!prevCelebrity || celebrity.Timestamp - prevCelebrity.Timestamp > 3000) && celebrity.Celebrity.Confidence > 50) {
+            celebritiesMap[celebrity.Celebrity.Name] = celebrity;
+            i++;
+        } else {
+            celebritiesResult.Celebrities.splice(i, 1);
+        }
+    }
+
     console.log("AWS Celebrities result", JSON.stringify(celebritiesResult, null, 2));
 
     let bmContent = await retrieveResource(event.input.bmContent, "input.bmContent");
