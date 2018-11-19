@@ -25,6 +25,13 @@ const MCMA_CORE = require("mcma-core");
 const JOB_PROFILE_CREATE_PROXY_LAMBDA = "CreateProxyLambda";
 const JOB_PROFILE_CREATE_PROXY_EC2 = "CreateProxyEC2";
 
+const authenticator = new MCMA_CORE.AwsV4Authenticator({
+    accessKey: AWS.config.credentials.accessKeyId,
+    secretKey: AWS.config.credentials.secretAccessKey,
+    region: AWS.config.region
+});
+const authenticatedHttp = new MCMA_CORE.AuthenticatedHttp(authenticator);
+
 const ffmpeg = async (params) => {
     try {
         const { stdout, stderr } = await execFile(path.join(__dirname, 'bin/ffmpeg'), params);
@@ -60,7 +67,7 @@ const processJobAssignment = async (event) => {
 
     // init
     let variables = event.request.stageVariables;
-    let resourceManager = new MCMA_CORE.ResourceManager(variables.ServicesUrl);
+    let resourceManager = new MCMA_CORE.ResourceManager(variables.ServicesUrl, authenticator);
     let table = new MCMA_AWS.DynamoDbTable(AWS, variables.TableName);
     let jobAssignmentId = event.jobAssignmentId;
 
@@ -158,7 +165,7 @@ const processJobAssignment = async (event) => {
                 }
 
                 console.log("Sending to", ec2Url, "message", message);
-                await MCMA_CORE.HTTP.post(ec2Url, message);
+                await authenticatedHttp.post(ec2Url, message);
                 console.log("Done");
                 break;
         }
@@ -191,7 +198,7 @@ const processNotification = async (event) => {
 
     await table.put("JobAssignment", jobAssignmentId, jobAssignment);
 
-    let resourceManager = new MCMA_CORE.ResourceManager(event.request.stageVariables.ServicesUrl);
+    let resourceManager = new MCMA_CORE.ResourceManager(event.request.stageVariables.ServicesUrl, authenticator);
 
     await resourceManager.sendNotification(jobAssignment);
 }
@@ -243,7 +250,7 @@ const retrieveResource = async (resource, resourceName) => {
 
     if (type === "string") {  // if type is a string we assume it's a URL.
         try {
-            let response = await MCMA_CORE.HTTP.get(resource);
+            let response = await authenticatedHttp.get(resource);
             resource = response.data;
         } catch (error) {
             throw new Error("Failed to retrieve '" + resourceName + "' from url '" + resource + "'");

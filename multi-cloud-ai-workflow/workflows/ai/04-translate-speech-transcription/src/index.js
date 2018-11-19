@@ -22,6 +22,13 @@ const ACTIVITY_ARN = process.env.ACTIVITY_ARN;
 const JOB_PROFILE_NAME = "AWSTranslateText"
 const JOB_RESULTS_PREFIX = "AIResults/"
 
+const authenticator = new MCMA_CORE.AwsV4Authenticator({
+    accessKey: AWS.config.credentials.accessKeyId,
+    secretKey: AWS.config.credentials.secretAccessKey,
+    region: AWS.config.region
+});
+const authenticatedHttp = new MCMA_CORE.AuthenticatedHttp(authenticator);
+
 /**
  * Lambda function handler
  * @param {*} event event
@@ -32,7 +39,7 @@ exports.handler = async (event, context) => {
     console.log(SERVICE_REGISTRY_URL, TEMP_BUCKET, ACTIVITY_CALLBACK_URL, ACTIVITY_ARN);
 
     // init resource manager
-    let resourceManager = new MCMA_CORE.ResourceManager(SERVICE_REGISTRY_URL);
+    let resourceManager = new MCMA_CORE.ResourceManager(SERVICE_REGISTRY_URL, authenticator);
 
     // send update notification
     try {
@@ -110,7 +117,7 @@ const retrieveResource = async (resource, resourceName) => {
 
     if (type === "string") {  // if type is a string we assume it's a URL.
         try {
-            let response = await MCMA_CORE.HTTP.get(resource);
+            let response = await authenticatedHttp.get(resource);
             resource = response.data;
         } catch (error) {
             throw new Error("Failed to retrieve '" + resourceName + "' from url '" + resource + "'");

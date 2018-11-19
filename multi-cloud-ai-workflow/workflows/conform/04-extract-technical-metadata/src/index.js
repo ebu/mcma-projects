@@ -15,6 +15,12 @@ const TEMP_BUCKET = process.env.TEMP_BUCKET;
 const ACTIVITY_CALLBACK_URL = process.env.ACTIVITY_CALLBACK_URL;
 const ACTIVITY_ARN = process.env.ACTIVITY_ARN;
 
+const authenticator = new MCMA_CORE.AwsV4Authenticator({
+    accessKey: AWS.config.credentials.accessKeyId,
+    secretKey: AWS.config.credentials.secretAccessKey,
+    region: AWS.config.region
+});
+
 /**
  * Lambda function handler
  * @param {*} event event
@@ -25,7 +31,7 @@ exports.handler = async (event, context) => {
     console.log(SERVICE_REGISTRY_URL, TEMP_BUCKET, ACTIVITY_CALLBACK_URL, ACTIVITY_ARN);
 
     // init resource manager
-    let resourceManager = new MCMA_CORE.ResourceManager(SERVICE_REGISTRY_URL);
+    let resourceManager = new MCMA_CORE.ResourceManager(SERVICE_REGISTRY_URL, authenticator);
 
     // send update notification
     try {

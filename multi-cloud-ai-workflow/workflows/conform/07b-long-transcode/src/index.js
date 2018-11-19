@@ -21,6 +21,12 @@ const WEBSITE_BUCKET = process.env.WEBSITE_BUCKET;
 const RESOURCE_TYPE_JOB_PROFILE = "JobProfile";
 const JOB_PROFILE_NAME = "CreateProxyEC2";
 
+const authenticator = new MCMA_CORE.AwsV4Authenticator({
+    accessKey: AWS.config.credentials.accessKeyId,
+    secretKey: AWS.config.credentials.secretAccessKey,
+    region: AWS.config.region
+});
+
 /**
  * Lambda function handler
  * @param {*} event event
@@ -30,7 +36,7 @@ exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
 
     // init resource manager
-    let resourceManager = new MCMA_CORE.ResourceManager(SERVICE_REGISTRY_URL);
+    let resourceManager = new MCMA_CORE.ResourceManager(SERVICE_REGISTRY_URL, authenticator);
 
     // send update notification
     try {

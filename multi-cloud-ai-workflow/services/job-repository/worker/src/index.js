@@ -5,13 +5,20 @@ const AWS = require("aws-sdk");
 const MCMA_AWS = require("mcma-aws");
 const MCMA_CORE = require("mcma-core");
 
+const authenticator = new MCMA_CORE.AwsV4Authenticator({
+    accessKey: AWS.config.credentials.accessKeyId,
+    secretKey: AWS.config.credentials.secretAccessKey,
+    region: AWS.config.region
+});
+const authenticatedHttp = new MCMA_CORE.AuthenticatedHttp(authenticator);
+
 const createJobProcess = async (event) => {
     let jobId = event.jobId;
 
     let table = new MCMA_AWS.DynamoDbTable(AWS, event.request.stageVariables.TableName);
     let job = await table.get("Job", jobId);
 
-    let resourceManager = new MCMA_CORE.ResourceManager(event.request.stageVariables.ServicesUrl);
+    let resourceManager = new MCMA_CORE.ResourceManager(event.request.stageVariables.ServicesUrl, authenticator);
 
     try {
         let jobProcess = new MCMA_CORE.JobProcess(jobId, new MCMA_CORE.NotificationEndpoint(jobId + "/notifications"));
@@ -35,7 +42,7 @@ const deleteJobProcess = async (event) => {
     let jobProcessId = event.jobProcessId;
 
     try {
-        await MCMA_CORE.HTTP.delete(jobProcessId);
+        await authenticatedHttp.delete(jobProcessId);
     } catch (error) {
         console.log(error);
     }
@@ -63,7 +70,7 @@ const processNotification = async (event) => {
 
     await table.put("Job", jobId, job);
 
-    let resourceManager = new MCMA_CORE.ResourceManager(event.request.stageVariables.ServicesUrl);
+    let resourceManager = new MCMA_CORE.ResourceManager(event.request.stageVariables.ServicesUrl, authenticator);
 
     await resourceManager.sendNotification(job);
 }

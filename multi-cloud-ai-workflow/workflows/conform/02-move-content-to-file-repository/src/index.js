@@ -14,6 +14,12 @@ const MCMA_CORE = require("mcma-core");
 const REPOSITORY_BUCKET = process.env.REPOSITORY_BUCKET;
 const SERVICE_REGISTRY_URL = process.env.SERVICE_REGISTRY_URL;
 
+const authenticator = new MCMA_CORE.AwsV4Authenticator({
+    accessKey: AWS.config.credentials.accessKeyId,
+    secretKey: AWS.config.credentials.secretAccessKey,
+    region: AWS.config.region
+});
+
 const yyyymmdd = () => {
     let now = new Date();
     let y = now.getUTCFullYear();
@@ -30,7 +36,7 @@ const yyyymmdd = () => {
 exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
 
-    let resourceManager = new MCMA_CORE.ResourceManager(SERVICE_REGISTRY_URL);
+    let resourceManager = new MCMA_CORE.ResourceManager(SERVICE_REGISTRY_URL, authenticator);
 
     // send update notification
     try {

@@ -10,6 +10,6 @@
     "license": "Apache-2.0",
     "dependencies": {
         "aws-sdk": "^2.291.0",
-        "mcma-core": "0.0.9"
+        "mcma-core": "0.1.2"
     }
 }

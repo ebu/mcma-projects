@@ -12,6 +12,13 @@ const MCMA_CORE = require("mcma-core");
 // Environment Variable(AWS Lambda)
 const SERVICE_REGISTRY_URL = process.env.SERVICE_REGISTRY_URL;
 
+const authenticator = new MCMA_CORE.AwsV4Authenticator({
+    accessKey: AWS.config.credentials.accessKeyId,
+    secretKey: AWS.config.credentials.secretAccessKey,
+    region: AWS.config.region
+});
+const authenticatedHttp = new MCMA_CORE.AuthenticatedHttp(authenticator);
+
 /**
  * Lambda function handler
  * @param {*} event event
@@ -21,7 +28,7 @@ exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
 
     // init resource manager
-    let resourceManager = new MCMA_CORE.ResourceManager(SERVICE_REGISTRY_URL);
+    let resourceManager = new MCMA_CORE.ResourceManager(SERVICE_REGISTRY_URL, authenticator);
 
     // send update notification
     try {
@@ -41,7 +48,7 @@ exports.handler = async (event, context) => {
     console.log("[TranslationJobId]:", jobId);
 
     // get result of ai job
-    let response = await MCMA_CORE.HTTP.get(jobId);
+    let response = await authenticatedHttp.get(jobId);
     let job = response.data;
     if (!job) {
         throw new Error("Failed to obtain TranslationJob");
@@ -93,7 +100,7 @@ const retrieveResource = async (resource, resourceName) => {
 
     if (type === "string") {  // if type is a string we assume it's a URL.
         try {
-            let response = await MCMA_CORE.HTTP.get(resource);
+            let response = await authenticatedHttp.get(resource);
             resource = response.data;
         } catch (error) {
             throw new Error("Failed to retrieve '" + resourceName + "' from url '" + resource + "'");

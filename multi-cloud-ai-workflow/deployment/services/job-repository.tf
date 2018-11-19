@@ -71,7 +71,7 @@ resource "aws_api_gateway_method" "job_repository_api_method" {
   rest_api_id   = "${aws_api_gateway_rest_api.job_repository_api.id}"
   resource_id   = "${aws_api_gateway_resource.job_repository_api_resource.id}"
   http_method   = "ANY"
-  authorization = "NONE"
+  authorization = "AWS_IAM"
 }
 
 resource "aws_api_gateway_integration" "job_repository_api_method-integration" {

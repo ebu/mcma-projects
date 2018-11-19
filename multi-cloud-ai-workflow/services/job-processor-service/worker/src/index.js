@@ -7,8 +7,15 @@ const equal = require("fast-deep-equal");
 const MCMA_AWS = require("mcma-aws");
 const MCMA_CORE = require("mcma-core");
 
+const authenticator = new MCMA_CORE.AwsV4Authenticator({
+    accessKey: AWS.config.credentials.accessKeyId,
+    secretKey: AWS.config.credentials.secretAccessKey,
+    region: AWS.config.region
+});
+const authenticatedHttp = new MCMA_CORE.AuthenticatedHttp(authenticator);
+
 const createJobAssignment = async (event) => {
-    let resourceManager = new MCMA_CORE.ResourceManager(event.request.stageVariables.ServicesUrl);
+    let resourceManager = new MCMA_CORE.ResourceManager(event.request.stageVariables.ServicesUrl, authenticator);
 
     let table = new MCMA_AWS.DynamoDbTable(AWS, event.request.stageVariables.TableName);
 
@@ -20,7 +27,7 @@ const createJobAssignment = async (event) => {
         let job = jobProcess.job;
         if (typeof job === "string") {
             try {
-                let response = await MCMA_CORE.HTTP.get(job);
+                let response = await authenticatedHttp.get(job);
                 job = response.data;
             } catch (error) {
                 throw new Error("Failed to retrieve job definition from url '" + job + "'")
@@ -34,7 +41,7 @@ const createJobAssignment = async (event) => {
         let jobProfile = job.jobProfile;
         if (typeof jobProfile === "string") {
             try {
-                let response = await MCMA_CORE.HTTP.get(jobProfile);
+                let response = await authenticatedHttp.get(jobProfile);
                 jobProfile = response.data;
             } catch (error) {
                 throw new Error("Failed to retrieve job profile from url '" + jobProfile + "'")
@@ -48,7 +55,7 @@ const createJobAssignment = async (event) => {
         let jobInput = job.jobInput;
         if (typeof jobInput === "string") {
             try {
-                let response = await MCMA_CORE.HTTP.get(jobInput);
+                let response = await authenticatedHttp.get(jobInput);
                 jobInput = response.data;
             } catch (error) {
                 throw new Error("Failed to retrieve job input from url '" + jobInput + "'")
@@ -118,7 +125,7 @@ const createJobAssignment = async (event) => {
         }
 
         let jobAssignment = new MCMA_CORE.JobAssignment(jobProcess.job, new MCMA_CORE.NotificationEndpoint(jobProcessId + "/notifications"));
-        let response = await MCMA_CORE.HTTP.post(jobAssignmentEndPoint, jobAssignment);
+        let response = await authenticatedHttp.post(jobAssignmentEndPoint, jobAssignment);
         jobAssignment = response.data;
 
         jobProcess.status = "SCHEDULED";
@@ -139,7 +146,7 @@ const deleteJobAssignment = async (event) => {
     let jobAssignmentId = event.jobAssignmentId;
 
     try {
-        await MCMA_CORE.HTTP.delete(jobAssignmentId);
+        await authenticatedHttp.delete(jobAssignmentId);
     } catch (error) {
         console.log(error);
     }
@@ -167,7 +174,7 @@ const processNotification = async (event) => {
 
     await table.put("JobProcess", jobProcessId, jobProcess);
 
-    let resourceManager = new MCMA_CORE.ResourceManager(event.request.stageVariables.ServicesUrl);
+    let resourceManager = new MCMA_CORE.ResourceManager(event.request.stageVariables.ServicesUrl, authenticator);
 
     await resourceManager.sendNotification(jobProcess);
 }

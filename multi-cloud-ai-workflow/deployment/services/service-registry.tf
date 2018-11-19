@@ -56,7 +56,7 @@ resource "aws_api_gateway_method" "service_registry_api_method" {
   rest_api_id   = "${aws_api_gateway_rest_api.service_registry_api.id}"
   resource_id   = "${aws_api_gateway_resource.service_registry_api_resource.id}"
   http_method   = "ANY"
-  authorization = "NONE"
+  authorization = "AWS_IAM"
 }
 
 resource "aws_api_gateway_integration" "service_registry_api_method-integration" {

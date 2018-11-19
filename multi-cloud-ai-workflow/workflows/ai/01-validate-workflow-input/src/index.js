@@ -1,6 +1,7 @@
 //"use strict";
 
 // require
+const AWS = require("aws-sdk");
 const MCMA_CORE = require("mcma-core");
 
 // Environment Variable(AWS Lambda)
@@ -8,6 +9,14 @@ const SERVICE_REGISTRY_URL = process.env.SERVICE_REGISTRY_URL;
 const REPOSITORY_BUCKET = process.env.REPOSITORY_BUCKET;
 const TEMP_BUCKET = process.env.TEMP_BUCKET;
 const WEBSITE_BUCKET = process.env.WEBSITE_BUCKET;
+
+const authenticator = new MCMA_CORE.AwsV4Authenticator({
+    accessKey: AWS.config.credentials.accessKeyId,
+    secretKey: AWS.config.credentials.secretAccessKey,
+    region: AWS.config.region
+});
+
+const authenticatedHttp = new MCMA_CORE.AuthenticatedHttp(authenticator);
 
 /* Expecting input like the following:
 
@@ -35,7 +44,7 @@ Note that the notification endpoint is optional. But is used to notify progress 
 exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
 
-    let resourceManager = new MCMA_CORE.ResourceManager(SERVICE_REGISTRY_URL);
+    let resourceManager = new MCMA_CORE.ResourceManager(SERVICE_REGISTRY_URL, authenticator);
 
     // send update notification
     try {
@@ -95,7 +104,7 @@ const retrieveResource = async (resource, resourceName) => {
 
     if (type === "string") {  // if type is a string we assume it's a URL.
         try {
-            let response = await MCMA_CORE.HTTP.get(resource);
+            let response = await authenticatedHttp.get(resource);
             resource = response.data;
         } catch (error) {
             throw new Error("Failed to retrieve '" + resourceName + "' from url '" + resource + "'");

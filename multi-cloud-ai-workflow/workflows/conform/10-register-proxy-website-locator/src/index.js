@@ -1,16 +1,24 @@
 //"use strict";
 
 // require
+const AWS = require("aws-sdk");
 const MCMA_CORE = require("mcma-core");
 
 const SERVICE_REGISTRY_URL = process.env.SERVICE_REGISTRY_URL;
+
+const authenticator = new MCMA_CORE.AwsV4Authenticator({
+    accessKey: AWS.config.credentials.accessKeyId,
+    secretKey: AWS.config.credentials.secretAccessKey,
+    region: AWS.config.region
+});
+const authenticatedHttp = new MCMA_CORE.AuthenticatedHttp(authenticator);
 
 /**
  * get the registered BMContent
  */
 getBMContent = async(url) => {
 
-    let response = await MCMA_CORE.HTTP.get(url);
+    let response = await authenticatedHttp.get(url);
 
     if (!response.data) {
         throw new Error("Faild to obtain BMContent");
@@ -24,7 +32,7 @@ getBMContent = async(url) => {
  */
 getBMEssence = async(url) => {
 
-    let response = await MCMA_CORE.HTTP.get(url);
+    let response = await authenticatedHttp.get(url);
 
     if (!response.data) {
         throw new Error("Faild to obtain BMContent");
@@ -42,7 +50,7 @@ exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
 
     // init resource manager
-    let resourceManager = new MCMA_CORE.ResourceManager(SERVICE_REGISTRY_URL);
+    let resourceManager = new MCMA_CORE.ResourceManager(SERVICE_REGISTRY_URL, authenticator);
 
     // send update notification
     try {

@@ -17,6 +17,12 @@ const AmazonCognitoIdentity = require("amazon-cognito-identity-js");
 
 const MCMA_CORE = require("mcma-core");
 
+const authenticator = new MCMA_CORE.AwsV4Authenticator({
+    accessKey: AWS.config.credentials.accessKeyId,
+    secretKey: AWS.config.credentials.secretAccessKey,
+    region: AWS.config.region
+});
+
 const JOB_PROFILES = {
     ConformWorkflow: new MCMA_CORE.JobProfile(
         "ConformWorkflow",
@@ -409,7 +415,7 @@ const main = async () => {
         new MCMA_CORE.ServiceResource("JobProfile", jobProfilesUrl)
     ]);
 
-    let resourceManager = new MCMA_CORE.ResourceManager(servicesUrl);
+    let resourceManager = new MCMA_CORE.ResourceManager(servicesUrl, authenticator);
     let retrievedServices = await resourceManager.get("Service");
 
     for (const retrievedService of retrievedServices) {

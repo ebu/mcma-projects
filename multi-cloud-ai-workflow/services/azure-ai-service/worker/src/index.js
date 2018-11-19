@@ -21,6 +21,12 @@ let AzureLocation;
 let AzureAccountID;
 let AzureSubscriptionKey;
 
+const authenticator = new MCMA_CORE.AwsV4Authenticator({
+    accessKey: AWS.config.credentials.accessKeyId,
+    secretKey: AWS.config.credentials.secretAccessKey,
+    region: AWS.config.region
+});
+const authenticatedHttp = new MCMA_CORE.AuthenticatedHttp(authenticator);
 
 exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
@@ -44,7 +50,7 @@ exports.handler = async (event, context) => {
 }
 
 const processJobAssignment = async (event) => {
-    let resourceManager = new MCMA_CORE.ResourceManager(event.request.stageVariables.ServicesUrl);
+    let resourceManager = new MCMA_CORE.ResourceManager(event.request.stageVariables.ServicesUrl, authenticator);
 
     let table = new MCMA_AWS.DynamoDbTable(AWS, event.request.stageVariables.TableName);
     let jobAssignmentId = event.jobAssignmentId;
@@ -168,7 +174,7 @@ const processNotification = async (event) => {
     let jobAssignmentId = event.jobAssignmentId;
     let notification = event.notification;
 
-    let resourceManager = new MCMA_CORE.ResourceManager(event.request.stageVariables.ServicesUrl);
+    let resourceManager = new MCMA_CORE.ResourceManager(event.request.stageVariables.ServicesUrl, authenticator);
     let table = new MCMA_AWS.DynamoDbTable(AWS, event.request.stageVariables.TableName);
 
     let flagCounter = 0;
@@ -204,7 +210,7 @@ const processNotification = async (event) => {
         let apiToken;
 
         console.log("Generate Azure Video Indexer Token : Doing a GET on  : ", authTokenUrl);
-        let response = await MCMA_CORE.HTTP.get(authTokenUrl, {
+        let response = await authenticatedHttp.get(authTokenUrl, {
             headers: customHeaders
         });
 
@@ -218,7 +224,7 @@ const processNotification = async (event) => {
         let metadataFromAzureVideoIndexwer = AzureApiUrl + "/" + AzureLocation + "/Accounts/" + AzureAccountID + "/Videos/" + azureVideoId + "/Index?accessToken=" + apiToken + "&language=English";
 
         console.log("Get the azure video metadata : Doing a GET on  : ", metadataFromAzureVideoIndexwer);
-        let indexedVideoMetadataResponse = await MCMA_CORE.HTTP.get(metadataFromAzureVideoIndexwer);
+        let indexedVideoMetadataResponse = await authenticatedHttp.get(metadataFromAzureVideoIndexwer);
 
         let videoMetadata = indexedVideoMetadataResponse.data;
         console.log("Azure AI video metadata : ", JSON.stringify(videoMetadata, null, 2));
@@ -307,7 +313,7 @@ const retrieveResource = async (resource, resourceName) => {
 
     if (type === "string") {  // if type is a string we assume it's a URL.
         try {
-            let response = await MCMA_CORE.HTTP.get(resource);
+            let response = await authenticatedHttp.get(resource);
             resource = response.data;
         } catch (error) {
             throw new Error("Failed to retrieve '" + resourceName + "' from url '" + resource + "'");
