@@ -109,7 +109,10 @@ task terraformPlan(type: Exec) {
 }
 
 task terraformApply(type: Exec) {
-    mustRunAfter terraformPlan
+    dependsOn ":build"
+    dependsOn terraformInit
+    dependsOn generateTerraformTFVars
+    dependsOn generateTerraformWebsiteTF
     commandLine terraformExecutable
     args "apply", "-auto-approve"
 }
@@ -156,13 +159,9 @@ clean {
 task plan {}
 plan.dependsOn(terraformPlan)
 
-task apply {}
-apply.dependsOn(terraformApply)
-apply.dependsOn(updateServiceRegistry)
-
 task deploy {}
-deploy.dependsOn(plan)
-deploy.dependsOn(apply)
+deploy.dependsOn(terraformApply)
+deploy.dependsOn(updateServiceRegistry)
 
 task destroy {}
 destroy.dependsOn(terraformDestroy)
