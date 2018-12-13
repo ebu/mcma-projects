@@ -20,7 +20,8 @@ const MCMA_CORE = require("mcma-core");
 const authenticator = new MCMA_CORE.AwsV4Authenticator({
     accessKey: AWS.config.credentials.accessKeyId,
     secretKey: AWS.config.credentials.secretAccessKey,
-    region: AWS.config.region
+	sessionToken: AWS.config.credentials.sessionToken,
+	region: AWS.config.region
 });
 
 const JOB_PROFILES = {

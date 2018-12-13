@@ -18,7 +18,8 @@ const ACTIVITY_ARN = process.env.ACTIVITY_ARN;
 const authenticator = new MCMA_CORE.AwsV4Authenticator({
     accessKey: AWS.config.credentials.accessKeyId,
     secretKey: AWS.config.credentials.secretAccessKey,
-    region: AWS.config.region
+	sessionToken: AWS.config.credentials.sessionToken,
+	region: AWS.config.region
 });
 
 /**

@@ -21,12 +21,15 @@ let AzureLocation;
 let AzureAccountID;
 let AzureSubscriptionKey;
 
-const authenticator = new MCMA_CORE.AwsV4Authenticator({
+const creds = {
     accessKey: AWS.config.credentials.accessKeyId,
     secretKey: AWS.config.credentials.secretAccessKey,
-    region: AWS.config.region
-});
+	sessionToken: AWS.config.credentials.sessionToken,
+	region: AWS.config.region
+};
+const authenticator = new MCMA_CORE.AwsV4Authenticator(creds);
 const authenticatedHttp = new MCMA_CORE.AuthenticatedHttp(authenticator);
+const presignedUrlGenerator = new MCMA_CORE.AwsV4PresignedUrlGenerator(creds);
 
 exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
@@ -127,7 +130,11 @@ const processJobAssignment = async (event) => {
                                                                             privacy={string}&
                                                                             externalUrl={string}" */
 
-                let postVideoUrl = AzureApiUrl + "/" + AzureLocation + "/Accounts/" + AzureAccountID + "/Videos?accessToken=" + apiToken + "&name=" + inputFile.awsS3Key + "&callbackUrl=" + jobAssignmentId + "/notifications&videoUrl=" + mediaFileUri + "&fileName=" + inputFile.awsS3Key;
+                const callbackUrl = jobAssignmentId + "/notifications";
+                const presignedCallbackUrl = presignedUrlGenerator.generatePresignedUrl("GET", callbackUrl);
+                console.log('Presigned callback url for Video Indexer: ' + presignedCallbackUrl);
+
+                let postVideoUrl = AzureApiUrl + "/" + AzureLocation + "/Accounts/" + AzureAccountID + "/Videos?accessToken=" + apiToken + "&name=" + inputFile.awsS3Key + "&callbackUrl=" + presignedCallbackUrl + "&videoUrl=" + mediaFileUri + "&fileName=" + inputFile.awsS3Key;
 
                 console.log("Call Azure Video Indexer Video API : Doing a POST on  : ", postVideoUrl);
                 let postVideoResponse = await MCMA_CORE.HTTP.post(postVideoUrl);
