@@ -1,6 +1,7 @@
 //"use strict";
 
 const util = require('util');
+const querystring = require('querystring');
 
 const AWS = require("aws-sdk");
 const S3 = new AWS.S3();
@@ -131,7 +132,7 @@ const processJobAssignment = async (event) => {
                                                                             externalUrl={string}" */
 
                 const callbackUrl = jobAssignmentId + "/notifications";
-                const presignedCallbackUrl = presignedUrlGenerator.generatePresignedUrl("GET", callbackUrl);
+                const presignedCallbackUrl = querystring.escape(presignedUrlGenerator.generatePresignedUrl("GET", callbackUrl, 7200));
                 console.log('Presigned callback url for Video Indexer: ' + presignedCallbackUrl);
 
                 let postVideoUrl = AzureApiUrl + "/" + AzureLocation + "/Accounts/" + AzureAccountID + "/Videos?accessToken=" + apiToken + "&name=" + inputFile.awsS3Key + "&callbackUrl=" + presignedCallbackUrl + "&videoUrl=" + mediaFileUri + "&fileName=" + inputFile.awsS3Key;
