@@ -178,10 +178,7 @@ const createServices = (serviceUrls) => {
                         ],
                         "AIJob",
                         [
-                            //JOB_PROFILES.TranscribeAudio.id ? JOB_PROFILES.TranscribeAudio.id : JOB_PROFILES.TranscribeAudio,   //Will be implemented at a later time and may need to be renamed to not conflict with AWS
-                            //JOB_PROFILES.TranslateText.id ? JOB_PROFILES.TranslateText.id : JOB_PROFILES.TranslateText,
                             JOB_PROFILES.AzureExtractAllAIMetadata.id ? JOB_PROFILES.AzureExtractAllAIMetadata.id : JOB_PROFILES.AzureExtractAllAIMetadata
-
                         ]
                     )
                 );
@@ -243,14 +240,6 @@ const createServices = (serviceUrls) => {
                         [
                             JOB_PROFILES.ConformWorkflow.id ? JOB_PROFILES.ConformWorkflow.id : JOB_PROFILES.ConformWorkflow,
                             JOB_PROFILES.AiWorkflow.id ? JOB_PROFILES.AiWorkflow.id : JOB_PROFILES.AiWorkflow
-                            // ],
-                            // [
-                            //     new MCMA_CORE.Locator({ "httpEndpoint" : serviceUrls.publicBucketUrl, "awsS3Bucket": serviceUrls.publicBucket }),
-                            //     new MCMA_CORE.Locator({ "httpEndpoint" : serviceUrls.privateBucketUrl, "awsS3Bucket": serviceUrls.privateBucket })
-                            // ],
-                            // [
-                            //     new MCMA_CORE.Locator({ "httpEndpoint" : serviceUrls.publicBucketUrl, "awsS3Bucket": serviceUrls.publicBucket }),
-                            //     new MCMA_CORE.Locator({ "httpEndpoint" : serviceUrls.privateBucketUrl, "awsS3Bucket": serviceUrls.privateBucket })
                         ]
                     )
                 );
@@ -416,86 +405,90 @@ const main = async () => {
         new MCMA_CORE.ServiceResource("JobProfile", jobProfilesUrl)
     ]);
 
-    let resourceManager = new MCMA_CORE.ResourceManager(servicesUrl, authenticator);
-    let retrievedServices = await resourceManager.get("Service");
+    try {
+        let resourceManager = new MCMA_CORE.ResourceManager(servicesUrl, authenticator);
+        let retrievedServices = await resourceManager.get("Service");
 
-    for (const retrievedService of retrievedServices) {
-        if (retrievedService.name === "Service Registry") {
-            if (!serviceRegistry.id) {
-                serviceRegistry.id = retrievedService.id;
+        for (const retrievedService of retrievedServices) {
+            if (retrievedService.name === "Service Registry") {
+                if (!serviceRegistry.id) {
+                    serviceRegistry.id = retrievedService.id;
 
-                console.log("Updating Service Registry");
-                await resourceManager.update(serviceRegistry);
+                    console.log("Updating Service Registry");
+                    await resourceManager.update(serviceRegistry);
+                } else {
+                    console.log("Removing duplicate Service Registry '" + retrievedService.id + "'");
+                    await resourceManager.delete(retrievedService);
+                }
+            }
+        }
+
+        if (!serviceRegistry.id) {
+            console.log("Inserting Service Registry");
+            serviceRegistry = await resourceManager.create(serviceRegistry);
+        }
+
+        // 4. reinitializing resourceManager
+        await resourceManager.init();
+
+        // 5. Inserting / updating job profiles
+        let retrievedJobProfiles = await resourceManager.get("JobProfile");
+
+        for (const retrievedJobProfile of retrievedJobProfiles) {
+            let jobProfile = JOB_PROFILES[retrievedJobProfile.name];
+
+            if (jobProfile && !jobProfile.id) {
+                jobProfile.id = retrievedJobProfile.id;
+
+                console.log("Updating JobProfile '" + jobProfile.name + "'");
+                await resourceManager.update(jobProfile);
             } else {
-                console.log("Removing duplicate Service Registry '" + retrievedService.id + "'");
+                console.log("Removing " + (jobProfile && jobProfile.id ? "duplicate " : "") + "JobProfile '" + retrievedJobProfile.name + "'");
+                //await resourceManager.delete(jobProfile[i]);
+                await resourceManager.delete(retrievedJobProfile);
+            }
+        }
+
+        for (const jobProfileName in JOB_PROFILES) {
+            let jobProfile = JOB_PROFILES[jobProfileName];
+            if (!jobProfile.id) {
+                console.log("Inserting JobProfile '" + jobProfile.name + "'");
+                JOB_PROFILES[jobProfileName] = await resourceManager.create(jobProfile);
+            }
+        }
+
+        // 6. Inserting / updating services
+        const SERVICES = createServices(terraformOutput);
+
+        retrievedServices = await resourceManager.get("Service");
+
+        for (const retrievedService of retrievedServices) {
+            if (retrievedService.name === serviceRegistry.name) {
+                continue;
+            }
+
+            let service = SERVICES[retrievedService.name];
+
+            if (service && !service.id) {
+                service.id = retrievedService.id;
+
+                console.log("Updating Service '" + service.name + "'");
+                await resourceManager.update(service);
+            } else {
+                console.log("Removing " + (service && service.id ? "duplicate " : "") + "Service '" + retrievedService.name + "'");
                 await resourceManager.delete(retrievedService);
             }
         }
+
+        for (const serviceName in SERVICES) {
+            let service = SERVICES[serviceName];
+            if (!service.id) {
+                console.log("Inserting Service '" + service.name + "'");
+                SERVICES[serviceName] = await resourceManager.create(service);
+            }
+        };
+    } catch (error) {
+        console.error(JSON.stringify(error.response.data, null, 2));
     }
-
-    if (!serviceRegistry.id) {
-        console.log("Inserting Service Registry");
-        serviceRegistry = await resourceManager.create(serviceRegistry);
-    }
-
-    // 4. reinitializing resourceManager
-    await resourceManager.init();
-
-    // 5. Inserting / updating job profiles
-    let retrievedJobProfiles = await resourceManager.get("JobProfile");
-
-    for (const retrievedJobProfile of retrievedJobProfiles) {
-        let jobProfile = JOB_PROFILES[retrievedJobProfile.name];
-
-        if (jobProfile && !jobProfile.id) {
-            jobProfile.id = retrievedJobProfile.id;
-
-            console.log("Updating JobProfile '" + jobProfile.name + "'");
-            await resourceManager.update(jobProfile);
-        } else {
-            console.log("Removing " + (jobProfile && jobProfile.id ? "duplicate " : "") + "JobProfile '" + retrievedJobProfile.name + "'");
-            //await resourceManager.delete(jobProfile[i]);
-            await resourceManager.delete(retrievedJobProfile);
-        }
-    }
-
-    for (const jobProfileName in JOB_PROFILES) {
-        let jobProfile = JOB_PROFILES[jobProfileName];
-        if (!jobProfile.id) {
-            console.log("Inserting JobProfile '" + jobProfile.name + "'");
-            JOB_PROFILES[jobProfileName] = await resourceManager.create(jobProfile);
-        }
-    }
-
-    // 6. Inserting / updating services
-    const SERVICES = createServices(terraformOutput);
-
-    retrievedServices = await resourceManager.get("Service");
-
-    for (const retrievedService of retrievedServices) {
-        if (retrievedService.name === serviceRegistry.name) {
-            continue;
-        }
-
-        let service = SERVICES[retrievedService.name];
-
-        if (service && !service.id) {
-            service.id = retrievedService.id;
-
-            console.log("Updating Service '" + service.name + "'");
-            await resourceManager.update(service);
-        } else {
-            console.log("Removing " + (service && service.id ? "duplicate " : "") + "Service '" + retrievedService.name + "'");
-            await resourceManager.delete(retrievedService);
-        }
-    }
-
-    for (const serviceName in SERVICES) {
-        let service = SERVICES[serviceName];
-        if (!service.id) {
-            console.log("Inserting Service '" + service.name + "'");
-            SERVICES[serviceName] = await resourceManager.create(service);
-        }
-    };
 }
 main();
