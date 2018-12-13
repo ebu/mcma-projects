@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { ConfigService } from '../services/config.service';
 
-import { ResourceManager, HTTP } from "mcma-core"
+import { ConfigService } from '../services/config.service';
+import { McmaClientService } from '../services/mcma-client.service';
 
 @Component({
     selector: 'mcma-services',
@@ -30,7 +30,7 @@ export class ServicesComponent implements OnInit {
     serviceResourcesDisplayedColumns = ['type', 'url']
     resourcesDisplayedColumns = ['type', 'name', 'created', 'modified'];
 
-    constructor(private configService: ConfigService) { }
+    constructor(private configService: ConfigService, private mcmaClientService: McmaClientService) { }
 
     ngOnInit() {
         this.configService.get<string>('servicesUrl', "AAAAAAAAAAAAAAAAAAAAAA").subscribe(servicesUrl => {
@@ -40,7 +40,7 @@ export class ServicesComponent implements OnInit {
     }
 
     private initialize = async () => {
-        let resourceManager = new ResourceManager(this.servicesUrl);
+        let resourceManager = await this.mcmaClientService.resourceManager$.toPromise();
 
         let services = await resourceManager.get("Service");
 
@@ -117,7 +117,8 @@ export class ServicesComponent implements OnInit {
     }
 
     private getResources = async (httpEndpoint) => {
-        let response = await HTTP.get(httpEndpoint);
+        let http = await this.mcmaClientService.http$.toPromise();
+        let response = await http.get(httpEndpoint);
         this.resources = response.data.sort((a, b) => new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime());
     }
 

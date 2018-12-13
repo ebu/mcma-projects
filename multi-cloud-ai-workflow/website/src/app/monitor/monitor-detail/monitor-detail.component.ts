@@ -1,6 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { Observable, of, BehaviorSubject } from 'rxjs';
-import { switchMap, withLatestFrom, filter, map, take } from 'rxjs/operators';
+import { switchMap, tap, map } from 'rxjs/operators';
 
 import { WorkflowService } from '../../services/workflow.service';
 import { ContentService } from '../../services/content.service';
@@ -40,15 +40,16 @@ export class MonitorDetailComponent {
                     conformJobVm.isCompleted && conformJobVm.contentUrl
                         ? this.contentService.pollUntil(conformJobVm.contentUrl, this.aiJobVm$.pipe(map(aiJobVm => aiJobVm && aiJobVm.isFinished)))
                         : of (null)
-                )
+                ),
+                tap(contentVm => console.log('got content vm', contentVm))
             );
         }
     }
 
     constructor(private workflowService: WorkflowService, private contentService: ContentService) {}
 
-    seekVideoAws(timestamp: number): void {
-        this.currentTimeSubject.next(timestamp / 1000);
+    seekVideoAws(timestamp: { timecode: string, seconds: number }): void {
+        this.currentTimeSubject.next(timestamp.seconds);
     }
 
     seekVideoAzure(instance: any): void {

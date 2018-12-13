@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { Observable, BehaviorSubject, Subject, of } from 'rxjs';
-import { switchMap, map, zip, share } from 'rxjs/operators';
+import { Observable, BehaviorSubject, Subject, of, from } from 'rxjs';
+import { switchMap, zip } from 'rxjs/operators';
 
 import { CognitoIdentityCredentials } from 'aws-sdk';
 import { AuthenticationDetails, CognitoUserPool, CognitoUser, ICognitoUserPoolData, CognitoUserSession } from 'amazon-cognito-identity-js';
@@ -59,14 +59,16 @@ export class CognitoAuthService {
 
         this.configService.get<string>('aws.cognito.identityPool.id').pipe(
             zip(this.configService.get<string>('aws.region')),
-            map(([identityPoolId, region]) => {
+            switchMap(([identityPoolId, region]) => {
                 console.log('identity pool id = ' + identityPoolId + ', region = ' + region);
-                return new CognitoIdentityCredentials({
+                const creds = new CognitoIdentityCredentials({
                     IdentityPoolId: identityPoolId,
                     Logins: {
                         [`cognito-idp.${region}.amazonaws.com/${cognitoConfig.UserPoolId}`]: session.getIdToken().getJwtToken()
                     }
                 }, { region });
+
+                return from(creds.getPromise().then(() => creds));
             })
         ).subscribe(this.authenticatedSubject);
     }
