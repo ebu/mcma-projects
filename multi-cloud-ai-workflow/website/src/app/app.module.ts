@@ -26,6 +26,7 @@ import { MonitorDetailComponent } from './monitor/monitor-detail/monitor-detail.
 import { MonitorQueueComponent } from './monitor/monitor-queue/monitor-queue.component';
 import { RunMetadataModalComponent } from './run/run-metadata-modal/run-metadata-modal.component';
 import { ServicesComponent } from './services-page/services.component';
+import { McmaClientService } from './services/mcma-client.service';
 
 @NgModule({
   declarations: [
@@ -60,7 +61,8 @@ import { ServicesComponent } from './services-page/services.component';
     S3BucketService,
     AuthGuard,
     WorkflowService,
-    ContentService
+    ContentService,
+    McmaClientService
   ],
   bootstrap: [AppComponent]
 })

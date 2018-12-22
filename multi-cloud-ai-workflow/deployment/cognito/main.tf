@@ -75,6 +75,11 @@ resource "aws_iam_role_policy" "authenticated" {
       "Effect": "Allow",
       "Action": "S3:*",
       "Resource": "*"
+    },
+    {
+        "Effect": "Allow",
+        "Action": "execute-api:Invoke",
+        "Resource": "arn:aws:execute-api:*:*:*"
     }
   ]
 }

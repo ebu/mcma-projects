@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 import { Observable, Subject, BehaviorSubject, from, timer, of } from 'rxjs';
-import { map, zip, switchMap, concatMap, takeWhile } from 'rxjs/operators';
+import { map, zip, switchMap, concatMap, tap, takeWhile } from 'rxjs/operators';
 
-import { ResourceManager, WorkflowJob, JobParameterBag, DescriptiveMetadata, Locator, HTTP } from 'mcma-core';
+import { ResourceManager, WorkflowJob, JobParameterBag, DescriptiveMetadata, Locator, AuthenticatedHttp } from 'mcma-core';
 
 import { ConfigService } from './config.service';
+import { McmaClientService } from './mcma-client.service';
 import { JobStatus } from '../models/job-statuses';
 import { WorkflowJobViewModel } from '../view-models/workflow-job-vm';
 
@@ -14,16 +15,13 @@ export class WorkflowService {
     readonly WORKFLOW_NAME = 'ConformWorkflow';
     readonly WORKFLOW_JOB_TYPE = 'WorkflowJob';
 
-    private resourceManager$: Observable<ResourceManager>;
-
-    constructor(private configService: ConfigService) {
-        this.resourceManager$ = this.configService.get<string>('servicesUrl').pipe(map(servicesUrl => new ResourceManager(servicesUrl)));
+    constructor(private configService: ConfigService, private mcmaClientService: McmaClientService) {
     }
 
     runWorkflow(objectKey: string, metadata: DescriptiveMetadata, profileName = this.WORKFLOW_NAME): Observable<WorkflowJob> {
         const workflowJobSubject = new BehaviorSubject<WorkflowJob>(null);
         
-        const sub = this.resourceManager$.pipe(
+        const sub = this.mcmaClientService.resourceManager$.pipe(
             zip(this.configService.get<string>('aws.s3.uploadBucket')),
             switchMap(([resourceManager, uploadBucket]) => from(this.runWorkflowAsync(resourceManager, profileName, uploadBucket, objectKey, metadata)))
         ).subscribe(job => {
@@ -37,7 +35,7 @@ export class WorkflowService {
     getWorkflowJobs(): Observable<WorkflowJob[]> {
         const workflowJobsSubject = new Subject<WorkflowJob[]>();
         
-        const sub = this.resourceManager$.pipe(
+        const sub = this.mcmaClientService.resourceManager$.pipe(
             switchMap(resourceManager => from(this.getWorkflowJobsAsync(resourceManager)))
         ).subscribe(jobs => {
             sub.unsubscribe();
@@ -47,8 +45,12 @@ export class WorkflowService {
         return workflowJobsSubject.asObservable();
     }
 
-    getWorkflowJob(jobId: string): Observable<WorkflowJobViewModel> {
-        return from<WorkflowJob>(HTTP.get(jobId)).pipe(map(resp => new WorkflowJobViewModel(resp.data)));
+    private getWorkflowJob(jobId: string): Observable<any> {
+        return this.mcmaClientService.http$.pipe(switchMap(http => from<WorkflowJob>(http.get(jobId))));
+    }
+
+    getWorkflowJobVm(jobId: string): Observable<WorkflowJobViewModel> {
+        return this.getWorkflowJob(jobId).pipe(map(resp => new WorkflowJobViewModel(resp.data)));
     }
 
     pollForCompletion(workflowJobId: string, fakeRunning = false): Observable<WorkflowJobViewModel> {
@@ -58,7 +60,8 @@ export class WorkflowService {
         // when the job completes, unsubscribe from polling and load it one more time
         const sub1 =
             timer(0, 3000).pipe(
-                concatMap(() => from<WorkflowJob>(HTTP.get(workflowJobId))),
+                switchMap(() => this.mcmaClientService.http$),
+                switchMap(http => from<WorkflowJob>(http.get(workflowJobId))),
                 map(resp => resp.data),
                 takeWhile(j => !JobStatus.isFinished(j))
             ).subscribe(
@@ -68,7 +71,7 @@ export class WorkflowService {
                     // unsubscribe from polling
                     sub1.unsubscribe();
                     // get finished job data
-                    const sub2 = from<WorkflowJob>(HTTP.get(workflowJobId)).subscribe(
+                    const sub2 = this.getWorkflowJob(workflowJobId).subscribe(
                         resp => subject.next(new WorkflowJobViewModel(resp.data, fakeRunning)),
                         err => subject.error(err),
                         () => sub2.unsubscribe());

@@ -70,6 +70,17 @@ resource "aws_iam_role_policy_attachment" "role-policy-allow-steps-invoke-lambda
   policy_arn = "${aws_iam_policy.policy_steps_invoke_lambda.arn}"
 }
 
+resource "aws_iam_policy" "APIGateway_policy" {
+  name        = "${var.global_prefix}.${var.aws_region}.workflows.policy_apigateway"
+  description = "Policy to access APIGateway endpoints secured with AWS_IAM authentication"
+  policy      = "${file("policies/lambda-allow-apigateway-access.json")}"
+}
+
+resource "aws_iam_role_policy_attachment" "role-policy-api-gateway" {
+  role       = "${aws_iam_role.iam_for_exec_lambda.name}"
+  policy_arn = "${aws_iam_policy.APIGateway_policy.arn}"
+}
+
 #################################
 #  Step Functions : Lambdas used in all workflows
 #################################

@@ -74,5 +74,5 @@ output "website_bucket" {
 }
 
 output "website_url" {
-  value = "https://s3-${var.aws_region}.amazonaws.com/${var.website_bucket}/index.html"
+  value = "https://s3${var.aws_region != "us-east-1" ? "-" : ""}${var.aws_region != "us-east-1" ? var.aws_region : ""}.amazonaws.com/${var.website_bucket}/index.html"
 }

@@ -414,6 +414,7 @@ const main = async () => {
     const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator({
         accessKey: AWS.config.credentials.accessKeyId,
         secretKey: AWS.config.credentials.secretAccessKey,
+        sessionToken: AWS.config.credentials.sessionToken,
         region: AWS.config.region
     });
 

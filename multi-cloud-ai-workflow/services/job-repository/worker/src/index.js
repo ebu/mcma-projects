@@ -8,6 +8,7 @@ const MCMA_CORE = require("mcma-core");
 const authenticator = new MCMA_CORE.AwsV4Authenticator({
     accessKey: AWS.config.credentials.accessKeyId,
     secretKey: AWS.config.credentials.secretAccessKey,
+    sessionToken: AWS.config.credentials.sessionToken,
     region: AWS.config.region
 });
 const authenticatedHttp = new MCMA_CORE.AuthenticatedHttp(authenticator);

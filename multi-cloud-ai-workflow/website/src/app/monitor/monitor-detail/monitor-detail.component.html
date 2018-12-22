@@ -95,7 +95,7 @@
                                       <button mat-raised-button
                                               style="margin-right:1vw; width: 115px; margin-bottom: 0.2vw;"
                                               *ngFor="let timestamp of content.awsCelebrities.selected.timestamps"
-                                              (click)="currentTimeSubject.next(timestamp.seconds)">{{ timestamp.timecode }}
+                                              (click)="seekVideoAws(timestamp)">{{ timestamp.timecode }}
                                       </button>
                                   </span>
                               </div>

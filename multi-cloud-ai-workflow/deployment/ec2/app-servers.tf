@@ -1,14 +1,16 @@
 /* App servers */
 resource "aws_instance" "app" {
-  count                = "${var.aws_instance_count}"
-  ami                  = "${lookup(var.amis, var.aws_region)}"
-  instance_type        = "${var.aws_instance_type}"
-  subnet_id            = "${aws_subnet.private.id}"
-  security_groups      = ["${aws_security_group.default.id}"]
-  key_name             = "${aws_key_pair.deployer.key_name}"
-  source_dest_check    = false
-  user_data            = "${file("ec2/cloud-config/app.yml")}"
-  iam_instance_profile = "${aws_iam_instance_profile.app_iam_instance_profile.id}"
+  count                   = "${var.aws_instance_count}"
+  ami                     = "${lookup(var.amis, var.aws_region)}"
+  instance_type           = "${var.aws_instance_type}"
+  subnet_id               = "${aws_subnet.private.id}"
+  // we use "vpc_security_group_ids" instead of "security_groups" here to prevent destruction & recreation of the EC2 instance every time:
+  // https://github.com/hashicorp/terraform/issues/7221
+  vpc_security_group_ids  = ["${aws_security_group.default.id}"]
+  key_name                = "${aws_key_pair.deployer.key_name}"
+  source_dest_check       = false
+  user_data               = "${file("ec2/cloud-config/app.yml")}"
+  iam_instance_profile    = "${aws_iam_instance_profile.app_iam_instance_profile.id}"
 
   tags = {
     Name = "${var.global_prefix}-app-${count.index}"

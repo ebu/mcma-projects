@@ -14,6 +14,7 @@ export class ContentViewModel {
     }
 
     constructor(public content: BMContent) {
+        console.log('creating content vm', content);
         this.populateAwsData();
         this.populateAzureData();
     }
