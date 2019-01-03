@@ -239,7 +239,7 @@ const createServices = (serviceUrls) => {
                         ],
                         authType: "AWS4",
                         jobType: "WorkflowJob",
-                        jboProfiles: [
+                        jobProfiles: [
                             JOB_PROFILES.ConformWorkflow.id ? JOB_PROFILES.ConformWorkflow.id : JOB_PROFILES.ConformWorkflow,
                             JOB_PROFILES.AiWorkflow.id ? JOB_PROFILES.AiWorkflow.id : JOB_PROFILES.AiWorkflow
                         ]

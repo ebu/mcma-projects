@@ -5,13 +5,30 @@ const AWS = require("aws-sdk");
 const MCMA_AWS = require("mcma-aws");
 const MCMA_CORE = require("mcma-core");
 
-const authenticator = new MCMA_CORE.AwsV4Authenticator({
+const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator({
     accessKey: AWS.config.credentials.accessKeyId,
     secretKey: AWS.config.credentials.secretAccessKey,
     sessionToken: AWS.config.credentials.sessionToken,
     region: AWS.config.region
 });
-const authenticatedHttp = new MCMA_CORE.AuthenticatedHttp(authenticator);
+
+const authProvider = new MCMA_CORE.AuthenticatorProvider(
+    async (authType, authContext) => {
+        switch (authType) {
+            case "AWS4":
+                return authenticatorAWS4;
+        }
+    }
+);
+
+const createResourceManager = (event) => {
+    return new MCMA_CORE.ResourceManager({
+        servicesUrl: event.request.stageVariables.ServicesUrl,
+        servicesAuthType: event.request.stageVariables.ServicesAuthType,
+        servicesAuthContext: event.request.stageVariables.ServicesAuthContext,
+        authProvider
+    });
+}
 
 const createJobProcess = async (event) => {
     let jobId = event.jobId;
@@ -19,10 +36,15 @@ const createJobProcess = async (event) => {
     let table = new MCMA_AWS.DynamoDbTable(AWS, event.request.stageVariables.TableName);
     let job = await table.get("Job", jobId);
 
-    let resourceManager = new MCMA_CORE.ResourceManager(event.request.stageVariables.ServicesUrl, authenticator);
-
+    let resourceManager = createResourceManager(event);
+    
     try {
-        let jobProcess = new MCMA_CORE.JobProcess(jobId, new MCMA_CORE.NotificationEndpoint(jobId + "/notifications"));
+        let jobProcess = new MCMA_CORE.JobProcess({
+            job: jobId, 
+            notificationEndpoint: new MCMA_CORE.NotificationEndpoint({
+                httpEndpoint: jobId + "/notifications"
+            })
+        });
         jobProcess = await resourceManager.create(jobProcess);
 
         job.status = "QUEUED";
@@ -43,7 +65,8 @@ const deleteJobProcess = async (event) => {
     let jobProcessId = event.jobProcessId;
 
     try {
-        await authenticatedHttp.delete(jobProcessId);
+        let resourceManager = createResourceManager(event);
+        await resourceManager.delete(jobProcessId);
     } catch (error) {
         console.log(error);
     }
@@ -71,7 +94,7 @@ const processNotification = async (event) => {
 
     await table.put("Job", jobId, job);
 
-    let resourceManager = new MCMA_CORE.ResourceManager(event.request.stageVariables.ServicesUrl, authenticator);
+    let resourceManager = createResourceManager(event);
 
     await resourceManager.sendNotification(job);
 }

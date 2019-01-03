@@ -23,13 +23,30 @@ const MCMA_CORE = require("mcma-core");
 
 const JOB_PROFILE_EXTRACT_TECHNICAL_METADATA = "ExtractTechnicalMetadata";
 
-const authenticator = new MCMA_CORE.AwsV4Authenticator({
+const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator({
     accessKey: AWS.config.credentials.accessKeyId,
     secretKey: AWS.config.credentials.secretAccessKey,
 	sessionToken: AWS.config.credentials.sessionToken,
 	region: AWS.config.region
 });
-const authenticatedHttp = new MCMA_CORE.AuthenticatedHttp(authenticator);
+
+const authProvider = new MCMA_CORE.AuthenticatorProvider(
+    async (authType, authContext) => {
+        switch (authType) {
+            case "AWS4":
+                return authenticatorAWS4;
+        }
+    }
+);
+
+const createResourceManager = (event) => {
+    return new MCMA_CORE.ResourceManager({
+        servicesUrl: event.request.stageVariables.ServicesUrl,
+        servicesAuthType: event.request.stageVariables.ServicesAuthType,
+        servicesAuthContext: event.request.stageVariables.ServicesAuthContext,
+        authProvider
+    });
+}
 
 const mediaInfo = async (params) => {
     try {
@@ -46,7 +63,7 @@ const mediaInfo = async (params) => {
 exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
 
-    let resourceManager = new MCMA_CORE.ResourceManager(event.request.stageVariables.ServicesUrl, authenticator);
+    let resourceManager = createResourceManager(event);
 
     let table = new MCMA_AWS.DynamoDbTable(AWS, event.request.stageVariables.TableName);
     let jobAssignmentId = event.jobAssignmentId;
@@ -56,13 +73,13 @@ exports.handler = async (event, context) => {
         await updateJobAssignmentStatus(resourceManager, table, jobAssignmentId, "RUNNING");
 
         // 2. Retrieving AmeJob
-        let ameJob = await retrieveAmeJob(table, jobAssignmentId);
+        let ameJob = await retrieveAmeJob(resourceManager, table, jobAssignmentId);
 
         // 3. Retrieve JobProfile
-        let jobProfile = await retrieveJobProfile(ameJob);
+        let jobProfile = await retrieveJobProfile(resourceManager, ameJob);
 
         // 4. Retrieve job inputParameters
-        let jobInput = await retrieveJobInput(ameJob);
+        let jobInput = await retrieveJobInput(resourceManager, ameJob);
 
         // 5. Check if we support jobProfile and if we have required parameters in jobInput
         validateJobProfile(jobProfile, jobInput);
@@ -149,37 +166,28 @@ const validateJobProfile = (jobProfile, jobInput) => {
     }
 }
 
-const retrieveJobInput = async (ameJob) => {
-    return await retrieveResource(ameJob.jobInput, "ameJob.jobInput");
+const retrieveJobInput = async (resourceManager, ameJob) => {
+    return await retrieveResource(resourceManager, ameJob.jobInput, "ameJob.jobInput");
 }
 
-const retrieveJobProfile = async (ameJob) => {
-    return await retrieveResource(ameJob.jobProfile, "ameJob.jobProfile");
+const retrieveJobProfile = async (resourceManager, ameJob) => {
+    return await retrieveResource(resourceManager, ameJob.jobProfile, "ameJob.jobProfile");
 }
 
-const retrieveAmeJob = async (table, jobAssignmentId) => {
+const retrieveAmeJob = async (resourceManager, table, jobAssignmentId) => {
     let jobAssignment = await getJobAssignment(table, jobAssignmentId);
 
-    return await retrieveResource(jobAssignment.job, "jobAssignment.job");
+    return await retrieveResource(resourceManager, jobAssignment.job, "jobAssignment.job");
 }
 
-const retrieveResource = async (resource, resourceName) => {
-    let type = typeof resource;
-
+const retrieveResource = async (resourceManager, resource, resourceName) => {
     if (!resource) {
         throw new Error(resourceName + " does not exist");
     }
 
-    if (type === "string") {  // if type is a string we assume it's a URL.
-        try {
-            let response = await authenticatedHttp.get(resource);
-            resource = response.data;
-        } catch (error) {
-            throw new Error("Failed to retrieve '" + resourceName + "' from url '" + resource + "'");
-        }
-    }
+    resource = await resourceManager.resolve(resource);
 
-    type = typeof resource;
+    let type = typeof resource;
 
     if (type === "object") {
         if (Array.isArray(resource)) {

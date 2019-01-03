@@ -11,16 +11,30 @@ const S3CopyObject = util.promisify(S3.copyObject.bind(S3));
 const MCMA_CORE = require("mcma-core");
 
 // Environment Variable(AWS Lambda)
-const SERVICE_REGISTRY_URL = process.env.SERVICE_REGISTRY_URL;
 const WEBSITE_BUCKET = process.env.WEBSITE_BUCKET;
 
-const authenticator = new MCMA_CORE.AwsV4Authenticator({
+const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator({
     accessKey: AWS.config.credentials.accessKeyId,
     secretKey: AWS.config.credentials.secretAccessKey,
-	sessionToken: AWS.config.credentials.sessionToken,
-	region: AWS.config.region
+    sessionToken: AWS.config.credentials.sessionToken,
+    region: AWS.config.region
 });
-const authenticatedHttp = new MCMA_CORE.AuthenticatedHttp(authenticator);
+
+const authProvider = new MCMA_CORE.AuthenticatorProvider(
+    async (authType, authContext) => {
+        switch (authType) {
+            case "AWS4":
+                return authenticatorAWS4;
+        }
+    }
+);
+
+const resourceManager = new MCMA_CORE.ResourceManager({
+    servicesUrl: process.env.SERVICES_URL,
+    servicesAuthType: process.env.SERVICES_AUTH_TYPE,
+    servicesAuthContext: process.env.SERVICES_AUTH_CONTEXT,
+    authProvider
+});
 
 /**
  * get amejob id
@@ -42,29 +56,12 @@ function getTransformJobId(event) {
 }
 
 /**
- * get the registered BMEssence
- */
-getBMEssence = async (url) => {
-
-    let response = await authenticatedHttp.get(url);
-
-    if (!response.data) {
-        throw new Error("Faild to obtain BMEssence");
-    }
-
-    return response.data;
-}
-
-/**
  * Lambda function handler
  * @param {*} event event
  * @param {*} context context
  */
 exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
-
-    // init resource manager
-    let resourceManager = new MCMA_CORE.ResourceManager(SERVICE_REGISTRY_URL, authenticator);
 
     // send update notification
     try {
@@ -78,23 +75,16 @@ exports.handler = async (event, context) => {
     // get transform job id
     let transformJobId = getTransformJobId(event);
     // in case we did note do a transcode
-    let response;
     let outputFile;
     let copySource;
     if (!transformJobId) {
-        let bme = await getBMEssence(event.data.bmEssence);
+        let bme = await resourceManager.resolve(event.data.bmEssence);
         // copy proxy to website storage
         outputFile = bme.locations[0];
         copySource = encodeURI(outputFile.awsS3Bucket + "/" + outputFile.awsS3Key);
 
     } else {
-        // get result of transform job
-        response = await authenticatedHttp.get(transformJobId);
-        if (!response.data) {
-            throw new Error("Faild to obtain TransformJob");
-        }
-
-        let transformJob = response.data;
+        let transformJob = await resourceManager.resolve(transformJobId);
 
         // copy proxy to website storage
         outputFile = transformJob.jobOutput.outputFile;

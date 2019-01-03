@@ -83,6 +83,8 @@ resource "aws_lambda_function" "aws-ai-service-sns-trigger" {
       "TableName"                = "${aws_dynamodb_table.aws_ai_service_table.name}"
       "PublicUrl"                = "${local.aws_ai_service_url}"
       "ServicesUrl"              = "${local.services_url}"
+      "ServicesAuthType"         = "${local.services_auth_type}"
+      "ServicesAuthContext"      = "${local.services_auth_context}"
       "WorkerLambdaFunctionName" = "${aws_lambda_function.aws-ai-service-worker.function_name}"
       "ServiceOutputBucket"      = "${aws_s3_bucket.aws-ai-service-output.id}"
     }

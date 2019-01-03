@@ -12,6 +12,8 @@ const STAGE_VARIABLES = {
     TableName: process.env.TableName,
     PublicUrl: process.env.PublicUrl,
     ServicesUrl: process.env.ServicesUrl,
+    ServicesAuthType: process.env.ServicesAuthType,
+    ServicesAuthContext: process.env.ServicesAuthContext,
     WorkerLambdaFunctionName: process.env.WorkerLambdaFunctionName,
     ServiceOutputBucket: process.env.ServiceOutputBucket
 }

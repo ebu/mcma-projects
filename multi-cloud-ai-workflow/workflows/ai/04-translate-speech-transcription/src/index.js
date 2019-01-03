@@ -14,7 +14,6 @@ const S3PutObject = util.promisify(S3.putObject.bind(S3));
 const MCMA_CORE = require("mcma-core");
 
 // Environment Variable(AWS Lambda)
-const SERVICE_REGISTRY_URL = process.env.SERVICE_REGISTRY_URL;
 const TEMP_BUCKET = process.env.TEMP_BUCKET;
 const ACTIVITY_CALLBACK_URL = process.env.ACTIVITY_CALLBACK_URL;
 const ACTIVITY_ARN = process.env.ACTIVITY_ARN;
@@ -22,13 +21,28 @@ const ACTIVITY_ARN = process.env.ACTIVITY_ARN;
 const JOB_PROFILE_NAME = "AWSTranslateText"
 const JOB_RESULTS_PREFIX = "AIResults/"
 
-const authenticator = new MCMA_CORE.AwsV4Authenticator({
+const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator({
     accessKey: AWS.config.credentials.accessKeyId,
     secretKey: AWS.config.credentials.secretAccessKey,
-	sessionToken: AWS.config.credentials.sessionToken,
-	region: AWS.config.region
+    sessionToken: AWS.config.credentials.sessionToken,
+    region: AWS.config.region
 });
-const authenticatedHttp = new MCMA_CORE.AuthenticatedHttp(authenticator);
+
+const authProvider = new MCMA_CORE.AuthenticatorProvider(
+    async (authType, authContext) => {
+        switch (authType) {
+            case "AWS4":
+                return authenticatorAWS4;
+        }
+    }
+);
+
+const resourceManager = new MCMA_CORE.ResourceManager({
+    servicesUrl: process.env.SERVICES_URL,
+    servicesAuthType: process.env.SERVICES_AUTH_TYPE,
+    servicesAuthContext: process.env.SERVICES_AUTH_CONTEXT,
+    authProvider
+});
 
 /**
  * Lambda function handler
@@ -37,10 +51,7 @@ const authenticatedHttp = new MCMA_CORE.AuthenticatedHttp(authenticator);
  */
 exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
-    console.log(SERVICE_REGISTRY_URL, TEMP_BUCKET, ACTIVITY_CALLBACK_URL, ACTIVITY_ARN);
-
-    // init resource manager
-    let resourceManager = new MCMA_CORE.ResourceManager(SERVICE_REGISTRY_URL, authenticator);
+    console.log(TEMP_BUCKET, ACTIVITY_CALLBACK_URL, ACTIVITY_ARN);
 
     // send update notification
     try {
@@ -73,7 +84,7 @@ exports.handler = async (event, context) => {
     }
 
     // writing speech transcription to a textfile in temp bucket
-    let bmContent = await retrieveResource(event.input.bmContent, "input.bmContent");
+    let bmContent = await resourceManager.resolve(event.input.bmContent);
 
     if (!bmContent.awsAiMetadata ||
         !bmContent.awsAiMetadata.transcription ||
@@ -90,9 +101,9 @@ exports.handler = async (event, context) => {
     await S3PutObject(s3Params);
 
     // creating job
-    let job = new MCMA_CORE.AIJob(
-        jobProfileId,
-        new MCMA_CORE.JobParameterBag({
+    let job = new MCMA_CORE.AIJob({
+        jobProfile: jobProfileId,
+        jobInput: new MCMA_CORE.JobParameterBag({
             inputFile: new MCMA_CORE.Locator({
                 awsS3Bucket: s3Params.Bucket,
                 awsS3Key: s3Params.Key
@@ -103,37 +114,11 @@ exports.handler = async (event, context) => {
                 awsS3KeyPrefix: JOB_RESULTS_PREFIX
             })
         }),
-        new MCMA_CORE.NotificationEndpoint(ACTIVITY_CALLBACK_URL + "?taskToken=" + encodeURIComponent(taskToken)));
+        notificationEndpoint: new MCMA_CORE.NotificationEndpoint({
+            httpEndpoint: ACTIVITY_CALLBACK_URL + "?taskToken=" + encodeURIComponent(taskToken)
+        })
+    });
 
     // posting the job to the job repository
     job = await resourceManager.create(job);
-}
-
-const retrieveResource = async (resource, resourceName) => {
-    let type = typeof resource;
-
-    if (!resource) {
-        throw new Error(resourceName + " does not exist");
-    }
-
-    if (type === "string") {  // if type is a string we assume it's a URL.
-        try {
-            let response = await authenticatedHttp.get(resource);
-            resource = response.data;
-        } catch (error) {
-            throw new Error("Failed to retrieve '" + resourceName + "' from url '" + resource + "'");
-        }
-    }
-
-    type = typeof resource;
-
-    if (type === "object") {
-        if (Array.isArray(resource)) {
-            throw new Error(resourceName + " has illegal type 'Array'");
-        }
-
-        return resource;
-    } else {
-        throw new Error(resourceName + " has illegal type '" + type + "'");
-    }
 }

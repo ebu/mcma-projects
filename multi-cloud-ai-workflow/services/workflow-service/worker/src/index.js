@@ -12,13 +12,30 @@ const MCMA_CORE = require("mcma-core");
 const JOB_PROFILE_CONFORM_WORKFLOW = "ConformWorkflow";
 const JOB_PROFILE_AI_WORKFLOW = "AiWorkflow";
 
-const authenticator = new MCMA_CORE.AwsV4Authenticator({
+const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator({
     accessKey: AWS.config.credentials.accessKeyId,
     secretKey: AWS.config.credentials.secretAccessKey,
 	sessionToken: AWS.config.credentials.sessionToken,
 	region: AWS.config.region
 });
-const authenticatedHttp = new MCMA_CORE.AuthenticatedHttp(authenticator);
+
+const authProvider = new MCMA_CORE.AuthenticatorProvider(
+    async (authType, authContext) => {
+        switch (authType) {
+            case "AWS4":
+                return authenticatorAWS4;
+        }
+    }
+);
+
+const createResourceManager = (event) => {
+    return new MCMA_CORE.ResourceManager({
+        servicesUrl: event.request.stageVariables.ServicesUrl,
+        servicesAuthType: event.request.stageVariables.ServicesAuthType,
+        servicesAuthContext: event.request.stageVariables.ServicesAuthContext,
+        authProvider
+    });
+}
 
 exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
@@ -34,7 +51,7 @@ exports.handler = async (event, context) => {
 }
 
 const processJobAssignment = async (event) => {
-    let resourceManager = new MCMA_CORE.ResourceManager(event.request.stageVariables.ServicesUrl, authenticator);
+    let resourceManager = createResourceManager(event);
 
     let table = new MCMA_AWS.DynamoDbTable(AWS, event.request.stageVariables.TableName);
     let jobAssignmentId = event.jobAssignmentId;
@@ -44,13 +61,13 @@ const processJobAssignment = async (event) => {
         await updateJobAssignmentStatus(resourceManager, table, jobAssignmentId, "RUNNING");
 
         // 2. Retrieving WorkflowJob
-        let workflowJob = await retrieveWorkflowJob(table, jobAssignmentId);
+        let workflowJob = await retrieveWorkflowJob(resourceManager, table, jobAssignmentId);
 
         // 3. Retrieve JobProfile
-        let jobProfile = await retrieveJobProfile(workflowJob);
+        let jobProfile = await retrieveJobProfile(resourceManager, workflowJob);
 
         // 4. Retrieve job inputParameters
-        let jobInput = await retrieveJobInput(workflowJob);
+        let jobInput = await retrieveJobInput(resourceManager,workflowJob);
 
         // 5. Check if we support jobProfile and if we have required parameters in jobInput
         validateJobProfile(jobProfile, jobInput);
@@ -58,7 +75,9 @@ const processJobAssignment = async (event) => {
         // 6. Launch the appropriate workflow
         const workflowInput = {
             "input": jobInput,
-            "notificationEndpoint": new MCMA_CORE.NotificationEndpoint(jobAssignmentId + "/notifications")
+            "notificationEndpoint": new MCMA_CORE.NotificationEndpoint({
+                httpEndpoint: jobAssignmentId + "/notifications"
+            })
         };
 
         const params = {
@@ -108,7 +127,7 @@ const processNotification = async (event) => {
 
     await table.put("JobAssignment", jobAssignmentId, jobAssignment);
 
-    let resourceManager = new MCMA_CORE.ResourceManager(event.request.stageVariables.ServicesUrl, authenticator);
+    let resourceManager = createResourceManager(event);
 
     await resourceManager.sendNotification(jobAssignment);
 }
@@ -132,37 +151,28 @@ const validateJobProfile = (jobProfile, jobInput) => {
     }
 }
 
-const retrieveJobInput = async (job) => {
-    return await retrieveResource(job.jobInput, "job.jobInput");
+const retrieveJobInput = async (resourceManager, job) => {
+    return await retrieveResource(resourceManager, job.jobInput, "job.jobInput");
 }
 
-const retrieveJobProfile = async (job) => {
-    return await retrieveResource(job.jobProfile, "job.jobProfile");
+const retrieveJobProfile = async (resourceManager, job) => {
+    return await retrieveResource(resourceManager, job.jobProfile, "job.jobProfile");
 }
 
-const retrieveWorkflowJob = async (table, jobAssignmentId) => {
+const retrieveWorkflowJob = async (resourceManager, table, jobAssignmentId) => {
     let jobAssignment = await getJobAssignment(table, jobAssignmentId);
 
-    return await retrieveResource(jobAssignment.job, "jobAssignment.job");
+    return await retrieveResource(resourceManager, jobAssignment.job, "jobAssignment.job");
 }
 
-const retrieveResource = async (resource, resourceName) => {
-    let type = typeof resource;
-
+const retrieveResource = async (resourceManager, resource, resourceName) => {
     if (!resource) {
         throw new Error(resourceName + " does not exist");
     }
 
-    if (type === "string") {  // if type is a string we assume it's a URL.
-        try {
-            let response = await authenticatedHttp.get(resource);
-            resource = response.data;
-        } catch (error) {
-            throw new Error("Failed to retrieve '" + resourceName + "' from url '" + resource + "'");
-        }
-    }
+    resource = await resourceManager.resolve(resource);
 
-    type = typeof resource;
+    let type = typeof resource;
 
     if (type === "object") {
         if (Array.isArray(resource)) {
@@ -173,12 +183,6 @@ const retrieveResource = async (resource, resourceName) => {
     } else {
         throw new Error(resourceName + " has illegal type '" + type + "'");
     }
-}
-
-const updateJobAssignmentWithOutput = async (table, jobAssignmentId, jobOutput) => {
-    let jobAssignment = await getJobAssignment(table, jobAssignmentId);
-    jobAssignment.jobOutput = jobOutput;
-    await putJobAssignment(null, table, jobAssignmentId, jobAssignment);
 }
 
 const updateJobAssignmentStatus = async (resourceManager, table, jobAssignmentId, status, statusMessage) => {

@@ -16,9 +16,7 @@ const TranscribeServiceStartTranscriptionJob = util.promisify(TranscribeService.
 
 const Rekognition = new AWS.Rekognition();
 const RekognitionStartCelebrityRecognition = util.promisify(Rekognition.startCelebrityRecognition.bind(Rekognition));
-
 const RekognitionGetCelebrityRecognition = util.promisify(Rekognition.getCelebrityRecognition.bind(Rekognition));
-
 
 const Translate = new AWS.Translate({ apiVersion: '2017-07-01' });
 const TranslateText = util.promisify(Translate.translateText.bind(Translate));
@@ -35,13 +33,30 @@ const JOB_PROFILE_DETECT_CELEBRITIES = "AWSDetectCelebrities";
 var REKO_SNS_ROLE_ARN = process.env["REKO_SNS_ROLE_ARN"];
 var SNS_TOPIC_ARN = process.env["SNS_TOPIC_ARN"];
 
-const authenticator = new MCMA_CORE.AwsV4Authenticator({
+const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator({
     accessKey: AWS.config.credentials.accessKeyId,
     secretKey: AWS.config.credentials.secretAccessKey,
-	sessionToken: AWS.config.credentials.sessionToken,
-	region: AWS.config.region
+    sessionToken: AWS.config.credentials.sessionToken,
+    region: AWS.config.region
 });
-const authenticatedHttp = new MCMA_CORE.AuthenticatedHttp(authenticator);
+
+const authProvider = new MCMA_CORE.AuthenticatorProvider(
+    async (authType, authContext) => {
+        switch (authType) {
+            case "AWS4":
+                return authenticatorAWS4;
+        }
+    }
+);
+
+const createResourceManager = (event) => {
+    return new MCMA_CORE.ResourceManager({
+        servicesUrl: event.request.stageVariables.ServicesUrl,
+        servicesAuthType: event.request.stageVariables.ServicesAuthType,
+        servicesAuthContext: event.request.stageVariables.ServicesAuthContext,
+        authProvider
+    });
+}
 
 exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
@@ -66,7 +81,7 @@ exports.handler = async (event, context) => {
 }
 
 const processJobAssignment = async (event) => {
-    let resourceManager = new MCMA_CORE.ResourceManager(event.stageVariables.ServicesUrl, authenticator);
+    let resourceManager = createResourceManager(event);
     let table = new MCMA_AWS.DynamoDbTable(AWS, event.stageVariables.TableName);
     let jobAssignmentId = event.jobAssignmentId;
 
@@ -75,13 +90,13 @@ const processJobAssignment = async (event) => {
         await updateJobAssignmentStatus(resourceManager, table, jobAssignmentId, "RUNNING");
 
         // 2. Retrieving AiJob
-        let job = await retrieveJob(table, jobAssignmentId);
+        let job = await retrieveJob(resourceManager, table, jobAssignmentId);
 
         // 3. Retrieve JobProfile
-        let jobProfile = await retrieveJobProfile(job);
+        let jobProfile = await retrieveJobProfile(resourceManager, job);
 
         // 4. Retrieve job inputParameters
-        let jobInput = await retrieveJobInput(job);
+        let jobInput = await retrieveJobInput(resourceManager, job);
 
         // 5. Check if we support jobProfile and if we have required parameters in jobInput
         validateJobProfile(jobProfile, jobInput);
@@ -221,7 +236,7 @@ const processJobAssignment = async (event) => {
 }
 
 const processTranscribeJobResult = async (event) => {
-    let resourceManager = new MCMA_CORE.ResourceManager(event.stageVariables.ServicesUrl, authenticator);
+    let resourceManager = createResourceManager(event);
     let table = new MCMA_AWS.DynamoDbTable(AWS, event.stageVariables.TableName);
     let jobAssignmentId = event.jobAssignmentId;
 
@@ -279,10 +294,8 @@ const processTranscribeJobResult = async (event) => {
     }
 }
 
-
-
 const processRekognitionResult = async (event) => {
-    let resourceManager = new MCMA_CORE.ResourceManager(event.stageVariables.ServicesUrl, authenticator);
+    let resourceManager = createResourceManager(event);
     let table = new MCMA_AWS.DynamoDbTable(AWS, event.stageVariables.TableName);
     let jobAssignmentId = event.jobAssignmentId;
 
@@ -294,11 +307,10 @@ const processRekognitionResult = async (event) => {
         let jobInput = await retrieveJobInput(job);
 
         let s3Bucket = jobInput.outputLocation.awsS3Bucket;
-       
+
         let rekoJobId = event.jobExternalInfo.rekoJobId;
         let rekoJobType = event.jobExternalInfo.rekoJobType;
         let status = event.jobExternalInfo.status;
-   
 
         if (status != 'SUCCEEDED') {
             throw new Error("AI Rekognition failed job info: rekognition status:" + status);
@@ -353,12 +365,12 @@ const processRekognitionResult = async (event) => {
             // remove them
             walkclean(data);
 
-            
+
             // 3. write Reko output file to output location
             newS3Key = "reko_" + uuidv4() + ".json";
             let s3Params = {
                 Bucket: s3Bucket,
-                Key: newS3Key ,
+                Key: newS3Key,
                 Body: JSON.stringify(data)
             }
 
@@ -369,24 +381,24 @@ const processRekognitionResult = async (event) => {
                 throw new Error("Unable to write output file to bucket '" + s3Bucket + "' with key '" + newS3Key + "' due to error: " + error.message);
             }
 
-        console.log("Wrote Reko result file to S3 bucket : " + s3Bucket + " S3 key : " + newS3Key);
+            console.log("Wrote Reko result file to S3 bucket : " + s3Bucket + " S3 key : " + newS3Key);
 
 
-        // 4. updating JobAssignment with jobOutput
-        let jobOutput = new MCMA_CORE.JobParameterBag({
-            outputFile: new MCMA_CORE.Locator({
-                awsS3Bucket: s3Bucket,
-                awsS3Key: newS3Key
-            })
-        });
-        await updateJobAssignmentWithOutput(table, jobAssignmentId, jobOutput);
+            // 4. updating JobAssignment with jobOutput
+            let jobOutput = new MCMA_CORE.JobParameterBag({
+                outputFile: new MCMA_CORE.Locator({
+                    awsS3Bucket: s3Bucket,
+                    awsS3Key: newS3Key
+                })
+            });
+            await updateJobAssignmentWithOutput(table, jobAssignmentId, jobOutput);
 
-        
 
-        // 5. Setting job assignment status to COMPLETED
-        await updateJobAssignmentStatus(resourceManager, table, jobAssignmentId, "COMPLETED");
 
-    }
+            // 5. Setting job assignment status to COMPLETED
+            await updateJobAssignmentStatus(resourceManager, table, jobAssignmentId, "COMPLETED");
+
+        }
     } catch (error) {
         console.error(error);
         try {
@@ -396,10 +408,7 @@ const processRekognitionResult = async (event) => {
         }
     }
 
-   }
-
-
-
+}
 
 const validateJobProfile = (jobProfile, jobInput) => {
     if (jobProfile.name !== JOB_PROFILE_TRANSCRIBE_AUDIO &&
@@ -421,37 +430,28 @@ const validateJobProfile = (jobProfile, jobInput) => {
     }
 }
 
-const retrieveJobInput = async (job) => {
-    return await retrieveResource(job.jobInput, "job.jobInput");
+const retrieveJobInput = async (resourceManager, job) => {
+    return await retrieveResource(resourceManager, job.jobInput, "job.jobInput");
 }
 
-const retrieveJobProfile = async (job) => {
-    return await retrieveResource(job.jobProfile, "job.jobProfile");
+const retrieveJobProfile = async (resourceManager, job) => {
+    return await retrieveResource(resourceManager, job.jobProfile, "job.jobProfile");
 }
 
-const retrieveJob = async (table, jobAssignmentId) => {
+const retrieveJob = async (resourceManager, table, jobAssignmentId) => {
     let jobAssignment = await getJobAssignment(table, jobAssignmentId);
 
-    return await retrieveResource(jobAssignment.job, "jobAssignment.job");
+    return await retrieveResource(resourceManager, jobAssignment.job, "jobAssignment.job");
 }
 
-const retrieveResource = async (resource, resourceName) => {
-    let type = typeof resource;
-
+const retrieveResource = async (resourceManager, resource, resourceName) => {
     if (!resource) {
         throw new Error(resourceName + " does not exist");
     }
 
-    if (type === "string") {  // if type is a string we assume it's a URL.
-        try {
-            let response = await authenticatedHttp.get(resource);
-            resource = response.data;
-        } catch (error) {
-            throw new Error("Failed to retrieve '" + resourceName + "' from url '" + resource + "'");
-        }
-    }
+    resource = await resourceManager.resolve(resource);
 
-    type = typeof resource;
+    let type = typeof resource;
 
     if (type === "object") {
         if (Array.isArray(resource)) {

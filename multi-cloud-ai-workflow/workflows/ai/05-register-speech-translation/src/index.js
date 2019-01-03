@@ -9,16 +9,28 @@ const S3GetObject = util.promisify(S3.getObject.bind(S3));
 
 const MCMA_CORE = require("mcma-core");
 
-// Environment Variable(AWS Lambda)
-const SERVICE_REGISTRY_URL = process.env.SERVICE_REGISTRY_URL;
-
-const authenticator = new MCMA_CORE.AwsV4Authenticator({
+const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator({
     accessKey: AWS.config.credentials.accessKeyId,
     secretKey: AWS.config.credentials.secretAccessKey,
-	sessionToken: AWS.config.credentials.sessionToken,
-	region: AWS.config.region
+    sessionToken: AWS.config.credentials.sessionToken,
+    region: AWS.config.region
 });
-const authenticatedHttp = new MCMA_CORE.AuthenticatedHttp(authenticator);
+
+const authProvider = new MCMA_CORE.AuthenticatorProvider(
+    async (authType, authContext) => {
+        switch (authType) {
+            case "AWS4":
+                return authenticatorAWS4;
+        }
+    }
+);
+
+const resourceManager = new MCMA_CORE.ResourceManager({
+    servicesUrl: process.env.SERVICES_URL,
+    servicesAuthType: process.env.SERVICES_AUTH_TYPE,
+    servicesAuthContext: process.env.SERVICES_AUTH_CONTEXT,
+    authProvider
+});
 
 /**
  * Lambda function handler
@@ -27,9 +39,6 @@ const authenticatedHttp = new MCMA_CORE.AuthenticatedHttp(authenticator);
  */
 exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
-
-    // init resource manager
-    let resourceManager = new MCMA_CORE.ResourceManager(SERVICE_REGISTRY_URL, authenticator);
 
     // send update notification
     try {
@@ -40,7 +49,6 @@ exports.handler = async (event, context) => {
         console.warn("Failed to send notification");
     }
 
-
     // get ai job id (first non null entry in array)
     let jobId = event.data.translateJobId.find(id => id);
     if (!jobId) {
@@ -48,12 +56,7 @@ exports.handler = async (event, context) => {
     }
     console.log("[TranslationJobId]:", jobId);
 
-    // get result of ai job
-    let response = await authenticatedHttp.get(jobId);
-    let job = response.data;
-    if (!job) {
-        throw new Error("Failed to obtain TranslationJob");
-    }
+    let job = await resourceManager.resolve(jobId);
 
     // get media info
     let s3Bucket = job.jobOutput.outputFile.awsS3Bucket;
@@ -71,7 +74,7 @@ exports.handler = async (event, context) => {
     let translationResult = s3Object.Body.toString();
     console.log("Translation result", translationResult);
 
-    let bmContent = await retrieveResource(event.input.bmContent, "input.bmContent");
+    let bmContent = await resourceManager.resolve(event.input.bmContent);
 
     if (!bmContent.awsAiMetadata) {
         bmContent.awsAiMetadata = {};
@@ -89,34 +92,5 @@ exports.handler = async (event, context) => {
         await resourceManager.sendNotification(event);
     } catch (error) {
         console.warn("Failed to send notification");
-    }
-}
-
-const retrieveResource = async (resource, resourceName) => {
-    let type = typeof resource;
-
-    if (!resource) {
-        throw new Error(resourceName + " does not exist");
-    }
-
-    if (type === "string") {  // if type is a string we assume it's a URL.
-        try {
-            let response = await authenticatedHttp.get(resource);
-            resource = response.data;
-        } catch (error) {
-            throw new Error("Failed to retrieve '" + resourceName + "' from url '" + resource + "'");
-        }
-    }
-
-    type = typeof resource;
-
-    if (type === "object") {
-        if (Array.isArray(resource)) {
-            throw new Error(resourceName + " has illegal type 'Array'");
-        }
-
-        return resource;
-    } else {
-        throw new Error(resourceName + " has illegal type '" + type + "'");
     }
 }
