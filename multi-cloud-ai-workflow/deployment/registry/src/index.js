@@ -290,7 +290,10 @@ const main = async () => {
     let content = await readStdin();
     let terraformOutput = parseContent(content);
 
-    let servicesUrl = terraformOutput.service_registry_url + "/services";
+    let servicesUrl = terraformOutput.services_url;
+    let servicesAuthType = terraformOutput.services_auth_type;
+    let servicesAuthContext = terraformOutput.services_auth_context;
+
     let jobProfilesUrl = terraformOutput.service_registry_url + "/job-profiles";
 
     // 1. (Re)create cognito user for website
@@ -371,7 +374,11 @@ const main = async () => {
     // 2. Uploading configuration to website
     console.log("Uploading deployment configuration to website");
     let config = {
-        servicesUrl: servicesUrl,
+        resourceManager: {
+            servicesUrl,
+            servicesAuthType,
+            servicesAuthContext,
+        },
         aws: {
             region: terraformOutput.aws_region,
             s3: {
@@ -418,21 +425,22 @@ const main = async () => {
         region: AWS.config.region
     });
 
-    const authProvider = {
-        getAuthenticator: async (authType, authContext) => {
+    const authProvider = new MCMA_CORE.AuthenticatorProvider(
+        async (authType, authContext) => {
             switch (authType) {
                 case "AWS4":
                     return authenticatorAWS4;
             }
         }
-    }
+    );
 
     try {
-        let resourceManager = new MCMA_CORE.ResourceManager2(
-            authProvider,
+        let resourceManager = new MCMA_CORE.ResourceManager({
             servicesUrl,
-            "AWS4",
-            undefined);
+            servicesAuthType,
+            servicesAuthContext,
+            authProvider
+        });
         let retrievedServices = await resourceManager.get("Service");
 
         for (const retrievedService of retrievedServices) {

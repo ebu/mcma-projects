@@ -105,12 +105,14 @@ resource "aws_api_gateway_deployment" "azure_ai_service_deployment" {
   variables = {
     "TableName"                = "${var.global_prefix}-azure-ai-service"
     "PublicUrl"                = "${local.azure_ai_service_url}"
-    "ServicesUrl"              = "${local.service_registry_url}/services"
+    "ServicesUrl"              = "${local.services_url}"
+    "ServicesAuthType"         = "${local.services_auth_type}"
+    "ServicesAuthContext"      = "${local.services_auth_context}"
     "WorkerLambdaFunctionName" = "${aws_lambda_function.azure-ai-service-worker.function_name}"
-    "AzureApiUrl"            = "${var.azure_api_url}"
+    "AzureApiUrl"              = "${var.azure_api_url}"
     "AzureLocation"            = "${var.azure_location}"
-    "AzureAccountID"            = "${var.azure_account_id}"
-    "AzureSubscriptionKey"            = "${var.azure_subscription_key}"
+    "AzureAccountID"           = "${var.azure_account_id}"
+    "AzureSubscriptionKey"     = "${var.azure_subscription_key}"
   }
 }
 

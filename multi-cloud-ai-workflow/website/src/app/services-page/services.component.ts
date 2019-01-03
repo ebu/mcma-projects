@@ -126,8 +126,14 @@ export class ServicesComponent implements OnInit, OnDestroy {
     }
 
     private getResources = async (httpEndpoint) => {
-        let response = await this.resourceManager.authenticatedHttp.get(httpEndpoint);
-        this.resources = response.data.sort((a, b) => new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime());
+        let resourceEndpoint = await this.resourceManager.getResourceEndpoint(httpEndpoint);
+
+        if (resourceEndpoint) {
+            let response = await resourceEndpoint.get(httpEndpoint)
+            this.resources = response.data.sort((a, b) => new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime());
+        } else {
+            this.resources.length = 0;
+        }
     }
 
     selectResource(row) {
