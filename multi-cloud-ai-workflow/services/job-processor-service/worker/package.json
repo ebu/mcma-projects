@@ -12,6 +12,6 @@
         "aws-sdk": "^2.291.0",
         "fast-deep-equal": "^2.0.1",
         "mcma-aws": "0.1.0",
-        "mcma-core": "0.2.2"
+        "mcma-core": "0.2.3"
     }
 }

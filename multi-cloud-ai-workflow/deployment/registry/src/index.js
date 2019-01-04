@@ -235,7 +235,8 @@ const createServices = (serviceUrls) => {
                     new MCMA_CORE.Service({
                         name: "Workflow Service",
                         resources: [
-                            new MCMA_CORE.ResourceEndpoint({ resourceType: "JobAssignment", httpEndpoint: serviceUrls[prop] + "/job-assignments" })
+                            new MCMA_CORE.ResourceEndpoint({ resourceType: "JobAssignment", httpEndpoint: serviceUrls[prop] + "/job-assignments" }),
+                            new MCMA_CORE.ResourceEndpoint({ resourceType: "Notification", httpEndpoint: serviceUrls["workflow_service_notification_url"] })
                         ],
                         authType: "AWS4",
                         jobType: "WorkflowJob",

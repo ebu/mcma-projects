@@ -164,6 +164,10 @@ output "workflow_service_url" {
   value = "${module.services.workflow_service_url}"
 }
 
+output "workflow_service_notification_url" {
+    value = "${module.workflows.workflow_service_notification_url}"
+}
+
 output "transform_service_url" {
   value = "${module.services.transform_service_url}"
 }

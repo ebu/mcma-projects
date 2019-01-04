@@ -20,12 +20,15 @@ const WEBSITE_BUCKET = process.env.WEBSITE_BUCKET;
 const RESOURCE_TYPE_JOB_PROFILE = "JobProfile";
 const JOB_PROFILE_NAME = "CreateProxyLambda";
 
-const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator({
+const creds = {
     accessKey: AWS.config.credentials.accessKeyId,
     secretKey: AWS.config.credentials.secretAccessKey,
-    sessionToken: AWS.config.credentials.sessionToken,
-    region: AWS.config.region
-});
+	sessionToken: AWS.config.credentials.sessionToken,
+	region: AWS.config.region
+};
+
+const presignedUrlGenerator = new MCMA_CORE.AwsV4PresignedUrlGenerator(creds);
+const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator(creds);
 
 const authProvider = new MCMA_CORE.AuthenticatorProvider(
     async (authType, authContext) => {
@@ -93,7 +96,7 @@ exports.handler = async (event, context) => {
             })
         }),
         notificationEndpoint: new MCMA_CORE.NotificationEndpoint({
-            httpEndpoint: ACTIVITY_CALLBACK_URL + "?taskToken=" + encodeURIComponent(taskToken)
+            httpEndpoint: presignedUrlGenerator.generatePresignedUrl("POST", ACTIVITY_CALLBACK_URL + "?taskToken=" + encodeURIComponent(taskToken), 7200)
         })
     });
 

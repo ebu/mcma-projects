@@ -22,12 +22,15 @@ let AzureLocation;
 let AzureAccountID;
 let AzureSubscriptionKey;
 
-const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator({
+const creds = {
     accessKey: AWS.config.credentials.accessKeyId,
     secretKey: AWS.config.credentials.secretAccessKey,
 	sessionToken: AWS.config.credentials.sessionToken,
 	region: AWS.config.region
-});
+};
+
+const presignedUrlGenerator = new MCMA_CORE.AwsV4PresignedUrlGenerator(creds);
+const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator(creds);
 
 const authProvider = new MCMA_CORE.AuthenticatorProvider(
     async (authType, authContext) => {
@@ -46,8 +49,6 @@ const createResourceManager = (event) => {
         authProvider
     });
 }
-
-const presignedUrlGenerator = new MCMA_CORE.AwsV4PresignedUrlGenerator(creds);
 
 exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
