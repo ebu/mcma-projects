@@ -1,5 +1,5 @@
 {
-    "name": "azure-ai-service-worker",
+    "name": "azure-ai-service-api-handler-non-secure",
     "version": "0.0.0",
     "description": "Azure Lambda based service leveraging AWS AI services to do AI operations",
     "private": true,
@@ -11,7 +11,6 @@
     "dependencies": {
         "aws-sdk": "^2.291.0",
         "mcma-aws": "0.1.0",
-        "mcma-core": "0.1.7",
-        "url": "^0.11.0"
+        "mcma-core": "0.1.7"
     }
 }
