@@ -96,6 +96,12 @@ const processNotification = async (event) => {
 
     let resourceManager = createResourceManager(event);
 
+    if (job.notificationEndpoint) {
+        console.log(JSON.stringify(job, null, 2));
+        let resourceEndpoint = await resourceManager.getResourceEndpoint(job.notificationEndpoint.httpEndpoint);
+        console.log(JSON.stringify(resourceEndpoint, null, 2));
+    }
+
     await resourceManager.sendNotification(job);
 }
 
