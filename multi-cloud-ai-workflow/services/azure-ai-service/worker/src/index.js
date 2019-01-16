@@ -51,23 +51,28 @@ const createResourceManager = (event) => {
 }
 
 exports.handler = async (event, context) => {
-    console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
+    try {
+        console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
 
-    AzureApiUrl = event.request.stageVariables.AzureApiUrl; // "https://api.videoindexer.ai"   
-    AzureLocation = event.request.stageVariables.AzureLocation;
-    AzureAccountID = event.request.stageVariables.AzureAccountID;
-    AzureSubscriptionKey = event.request.stageVariables.AzureSubscriptionKey;
+        AzureApiUrl = event.request.stageVariables.AzureApiUrl; // "https://api.videoindexer.ai"   
+        AzureLocation = event.request.stageVariables.AzureLocation;
+        AzureAccountID = event.request.stageVariables.AzureAccountID;
+        AzureSubscriptionKey = event.request.stageVariables.AzureSubscriptionKey;
 
-    event.request.stageVariables
+        event.request.stageVariables
 
 
-    switch (event.action) {
-        case "ProcessJobAssignment":
-            await processJobAssignment(event);
-            break;
-        case "ProcessNotification":
-            await processNotification(event);
-            break;
+        switch (event.action) {
+            case "ProcessJobAssignment":
+                await processJobAssignment(event);
+                break;
+            case "ProcessNotification":
+                await processNotification(event);
+                break;
+        }
+    } catch (error) {
+        console.log("Error occurred when handling action '" + event.action + "'")
+        console.log(error.toString());
     }
 }
 

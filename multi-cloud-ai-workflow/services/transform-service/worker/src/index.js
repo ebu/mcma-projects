@@ -28,8 +28,8 @@ const JOB_PROFILE_CREATE_PROXY_EC2 = "CreateProxyEC2";
 const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator({
     accessKey: AWS.config.credentials.accessKeyId,
     secretKey: AWS.config.credentials.secretAccessKey,
-	sessionToken: AWS.config.credentials.sessionToken,
-	region: AWS.config.region
+    sessionToken: AWS.config.credentials.sessionToken,
+    region: AWS.config.region
 });
 
 const authProvider = new MCMA_CORE.AuthenticatorProvider(
@@ -69,15 +69,20 @@ const ffmpeg = async (params) => {
  * @param {*} context context
  */
 exports.handler = async (event, context) => {
-    console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
+    try {
+        console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
 
-    switch (event.action) {
-        case "ProcessJobAssignment":
-            await processJobAssignment(event);
-            break;
-        case "ProcessNotification":
-            await processNotification(event);
-            break;
+        switch (event.action) {
+            case "ProcessJobAssignment":
+                await processJobAssignment(event);
+                break;
+            case "ProcessNotification":
+                await processNotification(event);
+                break;
+        }
+    } catch (error) {
+        console.log("Error occurred when handling action '" + event.action + "'")
+        console.log(error.toString());
     }
 }
 

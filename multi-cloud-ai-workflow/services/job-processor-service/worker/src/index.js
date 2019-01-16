@@ -10,8 +10,8 @@ const MCMA_CORE = require("mcma-core");
 const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator({
     accessKey: AWS.config.credentials.accessKeyId,
     secretKey: AWS.config.credentials.secretAccessKey,
-	sessionToken: AWS.config.credentials.sessionToken,
-	region: AWS.config.region
+    sessionToken: AWS.config.credentials.sessionToken,
+    region: AWS.config.region
 });
 
 const authProvider = new MCMA_CORE.AuthenticatorProvider(
@@ -43,13 +43,13 @@ const createJobAssignment = async (event) => {
     try {
         // retrieving the job
         let job = await resourceManager.resolve(jobProcess.job);
-        
+
         // retrieving the jobProfile
         let jobProfile = await resourceManager.resolve(job.jobProfile);
-        
+
         // validating job.jobInput with required input parameters of jobProfile
         let jobInput = await resourceManager.resolve(job.jobInput);
-        
+
         if (jobProfile.inputParameters) {
             if (!Array.isArray(jobProfile.inputParameters)) {
                 throw new Error("JobProfile.inputParameters is not an array");
@@ -78,7 +78,7 @@ const createJobAssignment = async (event) => {
 
             if (service.jobType === job["@type"]) {
                 jobAssignmentResourceEndpoint = service.getResourceEndpoint("JobAssignment");
-                
+
                 if (!jobAssignmentResourceEndpoint) {
                     continue;
                 }
@@ -109,7 +109,7 @@ const createJobAssignment = async (event) => {
         }
 
         let jobAssignment = new MCMA_CORE.JobAssignment({
-            job: jobProcess.job, 
+            job: jobProcess.job,
             notificationEndpoint: new MCMA_CORE.NotificationEndpoint({
                 httpEndpoint: jobProcessId + "/notifications"
             })
@@ -171,20 +171,25 @@ const processNotification = async (event) => {
 }
 
 exports.handler = async (event, context) => {
-    console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
+    try {
+        console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
 
-    switch (event.action) {
-        case "createJobAssignment":
-            await createJobAssignment(event);
-            break;
-        case "deleteJobAssignment":
-            await deleteJobAssignment(event);
-            break;
-        case "processNotification":
-            await processNotification(event);
-            break;
-        default:
-            console.error("No handler implemented for action '" + event.action + "'.");
-            break;
+        switch (event.action) {
+            case "createJobAssignment":
+                await createJobAssignment(event);
+                break;
+            case "deleteJobAssignment":
+                await deleteJobAssignment(event);
+                break;
+            case "processNotification":
+                await processNotification(event);
+                break;
+            default:
+                console.error("No handler implemented for action '" + event.action + "'.");
+                break;
+        }
+    } catch (error) {
+        console.log("Error occurred when handling action '" + event.action + "'")
+        console.log(error.toString());
     }
 }

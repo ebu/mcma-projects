@@ -37,10 +37,10 @@ const createJobProcess = async (event) => {
     let job = await table.get("Job", jobId);
 
     let resourceManager = createResourceManager(event);
-    
+
     try {
         let jobProcess = new MCMA_CORE.JobProcess({
-            job: jobId, 
+            job: jobId,
             notificationEndpoint: new MCMA_CORE.NotificationEndpoint({
                 httpEndpoint: jobId + "/notifications"
             })
@@ -100,20 +100,25 @@ const processNotification = async (event) => {
 }
 
 exports.handler = async (event, context) => {
-    console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
+    try {
+        console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
 
-    switch (event.action) {
-        case "createJobProcess":
-            await createJobProcess(event);
-            break;
-        case "deleteJobProcess":
-            await deleteJobProcess(event);
-            break;
-        case "processNotification":
-            await processNotification(event);
-            break;
-        default:
-            console.error("No handler implemented for action '" + event.action + "'.");
-            break;
+        switch (event.action) {
+            case "createJobProcess":
+                await createJobProcess(event);
+                break;
+            case "deleteJobProcess":
+                await deleteJobProcess(event);
+                break;
+            case "processNotification":
+                await processNotification(event);
+                break;
+            default:
+                console.error("No handler implemented for action '" + event.action + "'.");
+                break;
+        }
+    } catch (error) {
+        console.log("Error occurred when handling action '" + event.action + "'")
+        console.log(error.toString());
     }
 }

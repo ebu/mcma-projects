@@ -15,8 +15,8 @@ const JOB_PROFILE_AI_WORKFLOW = "AiWorkflow";
 const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator({
     accessKey: AWS.config.credentials.accessKeyId,
     secretKey: AWS.config.credentials.secretAccessKey,
-	sessionToken: AWS.config.credentials.sessionToken,
-	region: AWS.config.region
+    sessionToken: AWS.config.credentials.sessionToken,
+    region: AWS.config.region
 });
 
 const authProvider = new MCMA_CORE.AuthenticatorProvider(
@@ -38,15 +38,20 @@ const createResourceManager = (event) => {
 }
 
 exports.handler = async (event, context) => {
-    console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
+    try {
+        console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
 
-    switch (event.action) {
-        case "ProcessJobAssignment":
-            await processJobAssignment(event);
-            break;
-        case "ProcessNotification":
-            await processNotification(event);
-            break;
+        switch (event.action) {
+            case "ProcessJobAssignment":
+                await processJobAssignment(event);
+                break;
+            case "ProcessNotification":
+                await processNotification(event);
+                break;
+        }
+    } catch (error) {
+        console.log("Error occurred when handling action '" + event.action + "'")
+        console.log(error.toString());
     }
 }
 
@@ -67,7 +72,7 @@ const processJobAssignment = async (event) => {
         let jobProfile = await retrieveJobProfile(resourceManager, workflowJob);
 
         // 4. Retrieve job inputParameters
-        let jobInput = await retrieveJobInput(resourceManager,workflowJob);
+        let jobInput = await retrieveJobInput(resourceManager, workflowJob);
 
         // 5. Check if we support jobProfile and if we have required parameters in jobInput
         validateJobProfile(jobProfile, jobInput);
