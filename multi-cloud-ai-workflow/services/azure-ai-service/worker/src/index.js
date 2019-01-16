@@ -11,8 +11,7 @@ const S3PutObject = util.promisify(S3.putObject.bind(S3));
 const MCMA_AWS = require("mcma-aws");
 const MCMA_CORE = require("mcma-core");
 const uuidv4 = require('uuid/v4');
-const url = require('url');
-
+const URL = require("url").URL;
 
 const JOB_PROFILE_TRANSCRIBE_AUDIO = "AzureTranscribeAudio";
 const JOB_PROFILE_TRANSLATE_TEXT = "AzureTranslateText";
@@ -26,8 +25,8 @@ let AzureSubscriptionKey;
 const creds = {
     accessKey: AWS.config.credentials.accessKeyId,
     secretKey: AWS.config.credentials.secretAccessKey,
-	sessionToken: AWS.config.credentials.sessionToken,
-	region: AWS.config.region
+    sessionToken: AWS.config.credentials.sessionToken,
+    region: AWS.config.region
 };
 
 const presignedUrlGenerator = new MCMA_CORE.AwsV4PresignedUrlGenerator(creds);
@@ -109,6 +108,8 @@ const processJobAssignment = async (event) => {
             mediaFileUrl = "https://" + s3SubDomain + ".amazonaws.com/" + inputFile.awsS3Bucket + "/" + inputFile.awsS3Key;
         }
 
+        let httpClient = new MCMA_CORE.HttpClient();
+
         let params, data;
 
         switch (jobProfile.name) {
@@ -123,7 +124,7 @@ const processJobAssignment = async (event) => {
                 let customHeaders = { 'Ocp-Apim-Subscription-Key': AzureSubscriptionKey };
 
                 console.log("Generate Azure Video Indexer Token : Doing a GET on  : ", authTokenUrl);
-                let response = await MCMA_CORE.HTTP.get(authTokenUrl, {
+                let response = await httpClient.get(authTokenUrl, {
                     headers: customHeaders
                 });
 
@@ -151,16 +152,16 @@ const processJobAssignment = async (event) => {
                                                                             externalUrl={string}" */
 
 
-                                                                            
 
 
-               // Generate the call back URL leveraging the non secure api gateway endpoint
-                const secureHost = url.parse(jobAssignmentId,false).host;
-                const nonSecureHost = url.parse(event.request.stageVariables.PublicUrlNonSecure,false).host;
-                
-                
-                var callbackUrl = jobAssignmentId.replace(secureHost,nonSecureHost);
-                callbackUrl = callbackUrl + "/notifications"; 
+
+                // Generate the call back URL leveraging the non secure api gateway endpoint
+
+                const secureHost = new URL(jobAssignmentId).host;
+                const nonSecureHost = new URL(event.request.stageVariables.PublicUrlNonSecure).host;
+
+                var callbackUrl = jobAssignmentId.replace(secureHost, nonSecureHost);
+                callbackUrl = callbackUrl + "/notifications";
                 callbackUrl = querystring.escape(callbackUrl);
 
                 console.log('Callback url for Video Indexer: ' + callbackUrl);
@@ -168,7 +169,8 @@ const processJobAssignment = async (event) => {
                 let postVideoUrl = AzureApiUrl + "/" + AzureLocation + "/Accounts/" + AzureAccountID + "/Videos?accessToken=" + apiToken + "&name=" + inputFile.awsS3Key + "&callbackUrl=" + callbackUrl + "&videoUrl=" + mediaFileUri + "&fileName=" + inputFile.awsS3Key;
 
                 console.log("Call Azure Video Indexer Video API : Doing a POST on  : ", postVideoUrl);
-                let postVideoResponse = await MCMA_CORE.HTTP.post(postVideoUrl);
+
+                let postVideoResponse = await httpClient.post(postVideoUrl);
 
                 console.log("Azure API RAW Response postVideoResponse", postVideoResponse);
 
@@ -248,11 +250,11 @@ const processNotification = async (event) => {
         let apiToken;
 
         console.log("Generate Azure Video Indexer Token : Doing a GET on  : ", authTokenUrl);
-        let response = await MCMA_CORE.HTTP.get(authTokenUrl, {
+        let httpClient = new MCMA_CORE.HttpClient();
+
+        let response = await httpClient.get(authTokenUrl, {
             headers: customHeaders
         });
-
-
 
 
         console.log("Azure API Token response : ", response);
@@ -266,7 +268,7 @@ const processNotification = async (event) => {
         let metadataFromAzureVideoIndexwer = AzureApiUrl + "/" + AzureLocation + "/Accounts/" + AzureAccountID + "/Videos/" + azureVideoId + "/Index?accessToken=" + apiToken + "&language=English";
 
         console.log("Get the azure video metadata : Doing a GET on  : ", metadataFromAzureVideoIndexwer);
-        let indexedVideoMetadataResponse = await MCMA_CORE.HTTP.get(metadataFromAzureVideoIndexwer);
+        let indexedVideoMetadataResponse = await httpClient.get(metadataFromAzureVideoIndexwer);
 
         let videoMetadata = indexedVideoMetadataResponse.data;
         console.log("Azure AI video metadata : ", JSON.stringify(videoMetadata, null, 2));
