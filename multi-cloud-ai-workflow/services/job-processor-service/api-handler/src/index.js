@@ -148,7 +148,7 @@ const processNotification = async (request, response) => {
             action: "ProcessNotification",
             stageVariables: request.stageVariables,
             jobProcessId,
-            notfication
+            notification
         })
     };
 
