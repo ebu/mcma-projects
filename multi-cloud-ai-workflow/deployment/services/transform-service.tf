@@ -105,9 +105,12 @@ resource "aws_api_gateway_deployment" "transform_service_deployment" {
   variables = {
     "TableName"                = "${var.global_prefix}-transform-service"
     "PublicUrl"                = "${local.transform_service_url}"
-    "ServicesUrl"              = "${local.service_registry_url}/services"
+    "ServicesUrl"              = "${local.services_url}"
+    "ServicesAuthType"         = "${local.services_auth_type}"
+    "ServicesAuthContext"      = "${local.services_auth_context}"
     "WorkerLambdaFunctionName" = "${aws_lambda_function.transform-service-worker.function_name}"
     "HostnameInstanceEC2"      = "${var.ec2_transform_service_hostname}"
+    "DeploymentHash"           = "${sha256(file("./services/transform-service.tf"))}"
   }
 }
 

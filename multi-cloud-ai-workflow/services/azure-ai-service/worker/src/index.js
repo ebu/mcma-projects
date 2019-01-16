@@ -11,8 +11,7 @@ const S3PutObject = util.promisify(S3.putObject.bind(S3));
 const MCMA_AWS = require("mcma-aws");
 const MCMA_CORE = require("mcma-core");
 const uuidv4 = require('uuid/v4');
-const url = require('url');
-
+const URL = require("url").URL;
 
 const JOB_PROFILE_TRANSCRIBE_AUDIO = "AzureTranscribeAudio";
 const JOB_PROFILE_TRANSLATE_TEXT = "AzureTranslateText";
@@ -26,38 +25,57 @@ let AzureSubscriptionKey;
 const creds = {
     accessKey: AWS.config.credentials.accessKeyId,
     secretKey: AWS.config.credentials.secretAccessKey,
-	sessionToken: AWS.config.credentials.sessionToken,
-	region: AWS.config.region
+    sessionToken: AWS.config.credentials.sessionToken,
+    region: AWS.config.region
 };
-const authenticator = new MCMA_CORE.AwsV4Authenticator(creds);
-const authenticatedHttp = new MCMA_CORE.AuthenticatedHttp(authenticator);
-const presignedUrlGenerator = new MCMA_CORE.AwsV4PresignedUrlGenerator(creds);
+
+const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator(creds);
+
+const authProvider = new MCMA_CORE.AuthenticatorProvider(
+    async (authType, authContext) => {
+        switch (authType) {
+            case "AWS4":
+                return authenticatorAWS4;
+        }
+    }
+);
+
+const createResourceManager = (event) => {
+    return new MCMA_CORE.ResourceManager({
+        servicesUrl: event.stageVariables.ServicesUrl,
+        servicesAuthType: event.stageVariables.ServicesAuthType,
+        servicesAuthContext: event.stageVariables.ServicesAuthContext,
+        authProvider
+    });
+}
 
 exports.handler = async (event, context) => {
-    console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
+    try {
+        console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
 
-    AzureApiUrl = event.request.stageVariables.AzureApiUrl; // "https://api.videoindexer.ai"   
-    AzureLocation = event.request.stageVariables.AzureLocation;
-    AzureAccountID = event.request.stageVariables.AzureAccountID;
-    AzureSubscriptionKey = event.request.stageVariables.AzureSubscriptionKey;
+        AzureApiUrl = event.stageVariables.AzureApiUrl; // "https://api.videoindexer.ai"   
+        AzureLocation = event.stageVariables.AzureLocation;
+        AzureAccountID = event.stageVariables.AzureAccountID;
+        AzureSubscriptionKey = event.stageVariables.AzureSubscriptionKey;
 
-    event.request.stageVariables
-
-
-    switch (event.action) {
-        case "ProcessJobAssignment":
-            await processJobAssignment(event);
-            break;
-        case "ProcessNotification":
-            await processNotification(event);
-            break;
+        switch (event.action) {
+            case "ProcessJobAssignment":
+                await processJobAssignment(event);
+                break;
+            case "ProcessNotification":
+                await processNotification(event);
+                break;
+        }
+    } catch (error) {
+        console.log("Error occurred when handling action '" + event.action + "'")
+        console.log(error.toString());
     }
 }
 
 const processJobAssignment = async (event) => {
-    let resourceManager = new MCMA_CORE.ResourceManager(event.request.stageVariables.ServicesUrl, authenticator);
+    let resourceManager = createResourceManager(event);
 
-    let table = new MCMA_AWS.DynamoDbTable(AWS, event.request.stageVariables.TableName);
+    let table = new MCMA_AWS.DynamoDbTable(AWS, event.stageVariables.TableName);
     let jobAssignmentId = event.jobAssignmentId;
 
     try {
@@ -65,13 +83,13 @@ const processJobAssignment = async (event) => {
         await updateJobAssignmentStatus(resourceManager, table, jobAssignmentId, "RUNNING");
 
         // 2. Retrieving Job
-        let job = await retrieveJob(table, jobAssignmentId);
+        let job = await retrieveJob(resourceManager, table, jobAssignmentId);
 
         // 3. Retrieve JobProfile
-        let jobProfile = await retrieveJobProfile(job);
+        let jobProfile = await retrieveJobProfile(resourceManager, job);
 
         // 4. Retrieve job inputParameters
-        let jobInput = await retrieveJobInput(job);
+        let jobInput = await retrieveJobInput(resourceManager, job);
 
         // 5. Check if we support jobProfile and if we have required parameters in jobInput
         validateJobProfile(jobProfile, jobInput);
@@ -91,6 +109,8 @@ const processJobAssignment = async (event) => {
             mediaFileUrl = "https://" + s3SubDomain + ".amazonaws.com/" + inputFile.awsS3Bucket + "/" + inputFile.awsS3Key;
         }
 
+        let httpClient = new MCMA_CORE.HttpClient();
+
         let params, data;
 
         switch (jobProfile.name) {
@@ -105,7 +125,7 @@ const processJobAssignment = async (event) => {
                 let customHeaders = { 'Ocp-Apim-Subscription-Key': AzureSubscriptionKey };
 
                 console.log("Generate Azure Video Indexer Token : Doing a GET on  : ", authTokenUrl);
-                let response = await MCMA_CORE.HTTP.get(authTokenUrl, {
+                let response = await httpClient.get(authTokenUrl, {
                     headers: customHeaders
                 });
 
@@ -133,16 +153,16 @@ const processJobAssignment = async (event) => {
                                                                             externalUrl={string}" */
 
 
-                                                                            
 
 
-               // Generate the call back URL leveraging the non secure api gateway endpoint
-                const secureHost = url.parse(jobAssignmentId,false).host;
-                const nonSecureHost = url.parse(event.request.stageVariables.PublicUrlNonSecure,false).host;
-                
-                
-                var callbackUrl = jobAssignmentId.replace(secureHost,nonSecureHost);
-                callbackUrl = callbackUrl + "/notifications"; 
+
+                // Generate the call back URL leveraging the non secure api gateway endpoint
+
+                const secureHost = new URL(jobAssignmentId).host;
+                const nonSecureHost = new URL(event.stageVariables.PublicUrlNonSecure).host;
+
+                var callbackUrl = jobAssignmentId.replace(secureHost, nonSecureHost);
+                callbackUrl = callbackUrl + "/notifications";
                 callbackUrl = querystring.escape(callbackUrl);
 
                 console.log('Callback url for Video Indexer: ' + callbackUrl);
@@ -150,7 +170,8 @@ const processJobAssignment = async (event) => {
                 let postVideoUrl = AzureApiUrl + "/" + AzureLocation + "/Accounts/" + AzureAccountID + "/Videos?accessToken=" + apiToken + "&name=" + inputFile.awsS3Key + "&callbackUrl=" + callbackUrl + "&videoUrl=" + mediaFileUri + "&fileName=" + inputFile.awsS3Key;
 
                 console.log("Call Azure Video Indexer Video API : Doing a POST on  : ", postVideoUrl);
-                let postVideoResponse = await MCMA_CORE.HTTP.post(postVideoUrl);
+
+                let postVideoResponse = await httpClient.post(postVideoUrl);
 
                 console.log("Azure API RAW Response postVideoResponse", postVideoResponse);
 
@@ -194,8 +215,8 @@ const processNotification = async (event) => {
     let jobAssignmentId = event.jobAssignmentId;
     let notification = event.notification;
 
-    let resourceManager = new MCMA_CORE.ResourceManager(event.request.stageVariables.ServicesUrl, authenticator);
-    let table = new MCMA_AWS.DynamoDbTable(AWS, event.request.stageVariables.TableName);
+    let resourceManager = createResourceManager(event)
+    let table = new MCMA_AWS.DynamoDbTable(AWS, event.stageVariables.TableName);
 
     let flagCounter = 0;
     let azureVideoId;
@@ -230,11 +251,11 @@ const processNotification = async (event) => {
         let apiToken;
 
         console.log("Generate Azure Video Indexer Token : Doing a GET on  : ", authTokenUrl);
-        let response = await MCMA_CORE.HTTP.get(authTokenUrl, {
+        let httpClient = new MCMA_CORE.HttpClient();
+
+        let response = await httpClient.get(authTokenUrl, {
             headers: customHeaders
         });
-
-
 
 
         console.log("Azure API Token response : ", response);
@@ -248,16 +269,16 @@ const processNotification = async (event) => {
         let metadataFromAzureVideoIndexwer = AzureApiUrl + "/" + AzureLocation + "/Accounts/" + AzureAccountID + "/Videos/" + azureVideoId + "/Index?accessToken=" + apiToken + "&language=English";
 
         console.log("Get the azure video metadata : Doing a GET on  : ", metadataFromAzureVideoIndexwer);
-        let indexedVideoMetadataResponse = await MCMA_CORE.HTTP.get(metadataFromAzureVideoIndexwer);
+        let indexedVideoMetadataResponse = await httpClient.get(metadataFromAzureVideoIndexwer);
 
         let videoMetadata = indexedVideoMetadataResponse.data;
         console.log("Azure AI video metadata : ", JSON.stringify(videoMetadata, null, 2));
 
         //Need to hydrate the destination bucket from the job input
-        let workflowJob = await retrieveJob(table, jobAssignmentId);
+        let workflowJob = await retrieveJob(resourceManager, table, jobAssignmentId);
 
         //Retrieve job inputParameters
-        let jobInput = await retrieveJobInput(workflowJob);
+        let jobInput = await retrieveJobInput(resourceManager, workflowJob);
 
         let jobOutputBucket = jobInput.outputLocation.awsS3Bucket;
         let jobOutputKeyPrefix = ((jobInput.outputLocation.awsS3KeyPrefix) ? jobInput.outputLocation.awsS3KeyPrefix : "");
@@ -314,37 +335,28 @@ const validateJobProfile = (jobProfile, jobInput) => {
     }
 }
 
-const retrieveJobInput = async (job) => {
-    return await retrieveResource(job.jobInput, "job.jobInput");
+const retrieveJobInput = async (resourceManager, job) => {
+    return await retrieveResource(resourceManager, job.jobInput, "job.jobInput");
 }
 
-const retrieveJobProfile = async (job) => {
-    return await retrieveResource(job.jobProfile, "job.jobProfile");
+const retrieveJobProfile = async (resourceManager, job) => {
+    return await retrieveResource(resourceManager, job.jobProfile, "job.jobProfile");
 }
 
-const retrieveJob = async (table, jobAssignmentId) => {
+const retrieveJob = async (resourceManager, table, jobAssignmentId) => {
     let jobAssignment = await getJobAssignment(table, jobAssignmentId);
 
-    return await retrieveResource(jobAssignment.job, "jobAssignment.job");
+    return await retrieveResource(resourceManager, jobAssignment.job, "jobAssignment.job");
 }
 
-const retrieveResource = async (resource, resourceName) => {
-    let type = typeof resource;
-
+const retrieveResource = async (resourceManager, resource, resourceName) => {
     if (!resource) {
         throw new Error(resourceName + " does not exist");
     }
 
-    if (type === "string") {  // if type is a string we assume it's a URL.
-        try {
-            let response = await authenticatedHttp.get(resource);
-            resource = response.data;
-        } catch (error) {
-            throw new Error("Failed to retrieve '" + resourceName + "' from url '" + resource + "'");
-        }
-    }
+    resource = await resourceManager.resolve(resource);
 
-    type = typeof resource;
+    let type = typeof resource;
 
     if (type === "object") {
         if (Array.isArray(resource)) {

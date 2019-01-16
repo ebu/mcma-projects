@@ -12,14 +12,10 @@ export class ContentService {
 
     getContent(contentUrl: string): Observable<BMContent> {
         //console.log('getting content at ' + contentUrl);
-        return this.mcmaClientService.http$.pipe(
-            switchMap(http => {
+        return this.mcmaClientService.resourceManager$.pipe(
+            switchMap(resourceManager => {
                 console.log('using auth http to get content at ' + contentUrl);
-                return from<BMContent>(http.get(contentUrl)).pipe(
-                    map(resp => {
-                        console.log('got content', resp.data);
-                        return resp.data;
-                    }),
+                return from<BMContent>(resourceManager.resolve(contentUrl)).pipe(
                     tap(data => {
                         console.log('got content (tap 1)', data);
                     })
@@ -47,9 +43,8 @@ export class ContentService {
         // when the job completes, unsubscribe from polling and load it one more time
         const sub1 =
             timer(0, 3000).pipe(
-                switchMap(() => this.mcmaClientService.http$),
-                switchMap(http => from<BMContent>(http.get(bmContentId))),
-                map(resp => resp.data),
+                switchMap(() => this.mcmaClientService.resourceManager$),
+                switchMap(resourceManager => from<BMContent>(resourceManager.resolve(bmContentId))),
                 takeWhile(() => !stop)
             ).subscribe(
                 content => {
@@ -62,9 +57,9 @@ export class ContentService {
                     sub1.unsubscribe();
                     // get finished job data
                     const sub2 = this.getContent(bmContentId).subscribe(
-                        resp => {
-                            console.log('emitting content vm', resp);
-                            subject.next(new ContentViewModel(resp.data));
+                        bmContent => {
+                            console.log('emitting content vm', bmContent);
+                            subject.next(new ContentViewModel(bmContent));
                         },
                         err => {
                             console.log('failed to get content vm');

@@ -58,7 +58,11 @@ const addJob = async (request, response) => {
         FunctionName: request.stageVariables.WorkerLambdaFunctionName,
         InvocationType: "Event",
         LogType: "None",
-        Payload: JSON.stringify({ "action": "createJobProcess", "request": request, "jobId": jobId })
+        Payload: JSON.stringify({
+            action: "CreateJobProcess",
+            stageVariables: request.stageVariables,
+            jobId
+        })
     };
 
     await LambdaInvoke(params);
@@ -101,7 +105,11 @@ const deleteJob = async (request, response) => {
             FunctionName: request.stageVariables.WorkerLambdaFunctionName,
             InvocationType: "Event",
             LogType: "None",
-            Payload: JSON.stringify({ "action": "deleteJobProcess", "request": request, "jobProcessId": job.jobProcess })
+            Payload: JSON.stringify({
+                action: "DeleteJobProcess",
+                stageVariables: request.stageVariables,
+                jobProcessId: job.jobProcess
+            })
         };
 
         await LambdaInvoke(params);
@@ -171,7 +179,12 @@ const processNotification = async (request, response) => {
         FunctionName: request.stageVariables.WorkerLambdaFunctionName,
         InvocationType: "Event",
         LogType: "None",
-        Payload: JSON.stringify({ "action": "processNotification", "request": request, "jobId": jobId, "notification": notification })
+        Payload: JSON.stringify({
+            action: "ProcessNotification",
+            stageVariables: request.stageVariables,
+            jobId,
+            notification
+        })
     };
 
     await LambdaInvoke(params);

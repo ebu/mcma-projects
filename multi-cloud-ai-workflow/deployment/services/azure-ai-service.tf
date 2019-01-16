@@ -13,8 +13,6 @@ resource "aws_lambda_function" "azure-ai-service-api-handler" {
   memory_size      = "256"
 }
 
-
-
 #################################
 #  aws_lambda_function : azure-ai-service-api-handler-non-secure
 #################################
@@ -29,8 +27,6 @@ resource "aws_lambda_function" "azure-ai-service-api-handler-non-secure" {
   timeout          = "30"
   memory_size      = "256"
 }
-
-
 
 #################################
 #  aws_lambda_function : azure-ai-service-worker
@@ -125,16 +121,17 @@ resource "aws_api_gateway_deployment" "azure_ai_service_deployment" {
     "TableName"                = "${var.global_prefix}-azure-ai-service"
     "PublicUrl"                = "${local.azure_ai_service_url}"
     "PublicUrlNonSecure"       = "${local.azure_ai_service_non_secure_url}"
-    "ServicesUrl"              = "${local.service_registry_url}/services"
+    "ServicesUrl"              = "${local.services_url}"
+    "ServicesAuthType"         = "${local.services_auth_type}"
+    "ServicesAuthContext"      = "${local.services_auth_context}"
     "WorkerLambdaFunctionName" = "${aws_lambda_function.azure-ai-service-worker.function_name}"
-    "AzureApiUrl"            = "${var.azure_api_url}"
+    "AzureApiUrl"              = "${var.azure_api_url}"
     "AzureLocation"            = "${var.azure_location}"
-    "AzureAccountID"            = "${var.azure_account_id}"
-    "AzureSubscriptionKey"            = "${var.azure_subscription_key}"
+    "AzureAccountID"           = "${var.azure_account_id}"
+    "AzureSubscriptionKey"     = "${var.azure_subscription_key}"
+    "DeploymentHash"           = "${sha256(file("./services/azure-ai-service.tf"))}"
   }
 }
-
-
 
 ##############################
 #  aws_api_gateway_rest_api:  azure_ai_service_api_non_secure
@@ -151,7 +148,7 @@ resource "aws_api_gateway_resource" "azure_ai_service_api_resource_non_secure" {
 }
 
 resource "aws_api_gateway_method" "azure_ai_service_api_method_non_secure" {
-  rest_api_id   = "${aws_api_gateway_rest_api.azure_ai_service_api_non_secure.id}"  
+  rest_api_id   = "${aws_api_gateway_rest_api.azure_ai_service_api_non_secure.id}"
   resource_id   = "${aws_api_gateway_resource.azure_ai_service_api_resource_non_secure.id}"
   http_method   = "ANY"
   authorization = "NONE"
@@ -189,21 +186,19 @@ resource "aws_api_gateway_deployment" "azure_ai_service_deployment_non_secure" {
     "TableName"                = "${var.global_prefix}-azure-ai-service"
     "PublicUrl"                = "${local.azure_ai_service_url}"
     "PublicUrlNonSecure"       = "${local.azure_ai_service_non_secure_url}"
-    "ServicesUrl"              = "${local.service_registry_url}/services"
+    "ServicesUrl"              = "${local.services_url}"
+    "ServicesAuthType"         = "${local.services_auth_type}"
+    "ServicesAuthContext"      = "${local.services_auth_context}"
     "WorkerLambdaFunctionName" = "${aws_lambda_function.azure-ai-service-worker.function_name}"
-    "AzureApiUrl"            = "${var.azure_api_url}"
+    "AzureApiUrl"              = "${var.azure_api_url}"
     "AzureLocation"            = "${var.azure_location}"
-    "AzureAccountID"            = "${var.azure_account_id}"
-    "AzureSubscriptionKey"            = "${var.azure_subscription_key}"
+    "AzureAccountID"           = "${var.azure_account_id}"
+    "AzureSubscriptionKey"     = "${var.azure_subscription_key}"
+    "DeploymentHash"           = "${sha256(file("./services/azure-ai-service.tf"))}"
   }
 }
 
-
-
-
 ###########################################################################
-
-
 
 output "azure_ai_service_url" {
   value = "${local.azure_ai_service_url}"
@@ -213,10 +208,7 @@ output "azure_ai_service_non_secure_url" {
   value = "${local.azure_ai_service_non_secure_url}"
 }
 
-
-
 locals {
-  azure_ai_service_url = "https://${aws_api_gateway_rest_api.azure_ai_service_api.id}.execute-api.${var.aws_region}.amazonaws.com/${var.environment_type}"
+  azure_ai_service_url            = "https://${aws_api_gateway_rest_api.azure_ai_service_api.id}.execute-api.${var.aws_region}.amazonaws.com/${var.environment_type}"
   azure_ai_service_non_secure_url = "https://${aws_api_gateway_rest_api.azure_ai_service_api_non_secure.id}.execute-api.${var.aws_region}.amazonaws.com/${var.environment_type}"
 }
-

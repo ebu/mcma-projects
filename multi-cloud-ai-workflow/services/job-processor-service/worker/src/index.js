@@ -7,64 +7,48 @@ const equal = require("fast-deep-equal");
 const MCMA_AWS = require("mcma-aws");
 const MCMA_CORE = require("mcma-core");
 
-const authenticator = new MCMA_CORE.AwsV4Authenticator({
+const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator({
     accessKey: AWS.config.credentials.accessKeyId,
     secretKey: AWS.config.credentials.secretAccessKey,
-	sessionToken: AWS.config.credentials.sessionToken,
-	region: AWS.config.region
+    sessionToken: AWS.config.credentials.sessionToken,
+    region: AWS.config.region
 });
-const authenticatedHttp = new MCMA_CORE.AuthenticatedHttp(authenticator);
+
+const authProvider = new MCMA_CORE.AuthenticatorProvider(
+    async (authType, authContext) => {
+        switch (authType) {
+            case "AWS4":
+                return authenticatorAWS4;
+        }
+    }
+);
+
+const createResourceManager = (event) => {
+    return new MCMA_CORE.ResourceManager({
+        servicesUrl: event.stageVariables.ServicesUrl,
+        servicesAuthType: event.stageVariables.ServicesAuthType,
+        servicesAuthContext: event.stageVariables.ServicesAuthContext,
+        authProvider
+    });
+}
 
 const createJobAssignment = async (event) => {
-    let resourceManager = new MCMA_CORE.ResourceManager(event.request.stageVariables.ServicesUrl, authenticator);
+    let resourceManager = createResourceManager(event);
 
-    let table = new MCMA_AWS.DynamoDbTable(AWS, event.request.stageVariables.TableName);
+    let table = new MCMA_AWS.DynamoDbTable(AWS, event.stageVariables.TableName);
 
     let jobProcessId = event.jobProcessId;
     let jobProcess = await table.get("JobProcess", jobProcessId);
 
     try {
         // retrieving the job
-        let job = jobProcess.job;
-        if (typeof job === "string") {
-            try {
-                let response = await authenticatedHttp.get(job);
-                job = response.data;
-            } catch (error) {
-                throw new Error("Failed to retrieve job definition from url '" + job + "'")
-            }
-        }
-        if (!job) {
-            throw new Error("JobProcess is missing a job definition")
-        }
+        let job = await resourceManager.resolve(jobProcess.job);
 
         // retrieving the jobProfile
-        let jobProfile = job.jobProfile;
-        if (typeof jobProfile === "string") {
-            try {
-                let response = await authenticatedHttp.get(jobProfile);
-                jobProfile = response.data;
-            } catch (error) {
-                throw new Error("Failed to retrieve job profile from url '" + jobProfile + "'")
-            }
-        }
-        if (!jobProfile) {
-            throw new Error("Job is missing jobProfile");
-        }
+        let jobProfile = await resourceManager.resolve(job.jobProfile);
 
         // validating job.jobInput with required input parameters of jobProfile
-        let jobInput = job.jobInput;
-        if (typeof jobInput === "string") {
-            try {
-                let response = await authenticatedHttp.get(jobInput);
-                jobInput = response.data;
-            } catch (error) {
-                throw new Error("Failed to retrieve job input from url '" + jobInput + "'")
-            }
-        }
-        if (!jobInput) {
-            throw new Error("Job is missing jobInput");
-        }
+        let jobInput = await resourceManager.resolve(job.jobInput);
 
         if (jobProfile.inputParameters) {
             if (!Array.isArray(jobProfile.inputParameters)) {
@@ -82,21 +66,20 @@ const createJobAssignment = async (event) => {
         let services = await resourceManager.get("Service");
 
         let selectedService;
-        let jobAssignmentEndPoint;
+        let jobAssignmentResourceEndpoint;
 
-        for (service of services) {
-            jobAssignmentEndPoint = null;
+        for (let service of services) {
+            try {
+                service = new MCMA_CORE.Service(service, authProvider);
+            } catch (error) {
+                console.warn("Failed to instantiate json " + JSON.stringify(service) + " as a Service due to error " + error.message);
+            }
+            jobAssignmentResourceEndpoint = null;
 
             if (service.jobType === job["@type"]) {
-                if (service.resources) {
-                    for (serviceResource of service.resources) {
-                        if (serviceResource.resourceType === "JobAssignment") {
-                            jobAssignmentEndPoint = serviceResource.httpEndpoint;
-                        }
-                    }
-                }
+                jobAssignmentResourceEndpoint = service.getResourceEndpoint("JobAssignment");
 
-                if (!jobAssignmentEndPoint) {
+                if (!jobAssignmentResourceEndpoint) {
                     continue;
                 }
 
@@ -121,12 +104,18 @@ const createJobAssignment = async (event) => {
             }
         }
 
-        if (!jobAssignmentEndPoint) {
+        if (!jobAssignmentResourceEndpoint) {
             throw new Error("Failed to find service that could execute the " + job["@type"]);
         }
 
-        let jobAssignment = new MCMA_CORE.JobAssignment(jobProcess.job, new MCMA_CORE.NotificationEndpoint(jobProcessId + "/notifications"));
-        let response = await authenticatedHttp.post(jobAssignmentEndPoint, jobAssignment);
+        let jobAssignment = new MCMA_CORE.JobAssignment({
+            job: jobProcess.job,
+            notificationEndpoint: new MCMA_CORE.NotificationEndpoint({
+                httpEndpoint: jobProcessId + "/notifications"
+            })
+        });
+
+        let response = await jobAssignmentResourceEndpoint.post(jobAssignment);
         jobAssignment = response.data;
 
         jobProcess.status = "SCHEDULED";
@@ -147,7 +136,8 @@ const deleteJobAssignment = async (event) => {
     let jobAssignmentId = event.jobAssignmentId;
 
     try {
-        await authenticatedHttp.delete(jobAssignmentId);
+        let resourceManager = createResourceManager(event);
+        await resourceManager.delete(jobAssignmentId);
     } catch (error) {
         console.log(error);
     }
@@ -157,7 +147,7 @@ const processNotification = async (event) => {
     let jobProcessId = event.jobProcessId;
     let notification = event.notification;
 
-    let table = new MCMA_AWS.DynamoDbTable(AWS, event.request.stageVariables.TableName);
+    let table = new MCMA_AWS.DynamoDbTable(AWS, event.stageVariables.TableName);
 
     let jobProcess = await table.get("JobProcess", jobProcessId);
 
@@ -175,26 +165,31 @@ const processNotification = async (event) => {
 
     await table.put("JobProcess", jobProcessId, jobProcess);
 
-    let resourceManager = new MCMA_CORE.ResourceManager(event.request.stageVariables.ServicesUrl, authenticator);
+    let resourceManager = createResourceManager(event);
 
     await resourceManager.sendNotification(jobProcess);
 }
 
 exports.handler = async (event, context) => {
-    console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
+    try {
+        console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
 
-    switch (event.action) {
-        case "createJobAssignment":
-            await createJobAssignment(event);
-            break;
-        case "deleteJobAssignment":
-            await deleteJobAssignment(event);
-            break;
-        case "processNotification":
-            await processNotification(event);
-            break;
-        default:
-            console.error("No handler implemented for action '" + event.action + "'.");
-            break;
+        switch (event.action) {
+            case "CreateJobAssignment":
+                await createJobAssignment(event);
+                break;
+            case "DeleteJobAssignment":
+                await deleteJobAssignment(event);
+                break;
+            case "ProcessNotification":
+                await processNotification(event);
+                break;
+            default:
+                console.error("No handler implemented for action '" + event.action + "'.");
+                break;
+        }
+    } catch (error) {
+        console.log("Error occurred when handling action '" + event.action + "'")
+        console.log(error.toString());
     }
 }

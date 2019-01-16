@@ -8,4 +8,6 @@ variable "aws_access_key" {}
 variable "aws_secret_key" {}
 variable "aws_region" {}
 variable "environment_type" {}
-variable "service_registry_url" {}
+variable "services_url" {}
+variable "services_auth_type" {}
+variable "services_auth_context" {}
