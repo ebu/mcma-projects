@@ -43,9 +43,9 @@ const authProvider = new MCMA_CORE.AuthenticatorProvider(
 
 const createResourceManager = (event) => {
     return new MCMA_CORE.ResourceManager({
-        servicesUrl: event.request.stageVariables.ServicesUrl,
-        servicesAuthType: event.request.stageVariables.ServicesAuthType,
-        servicesAuthContext: event.request.stageVariables.ServicesAuthContext,
+        servicesUrl: event.stageVariables.ServicesUrl,
+        servicesAuthType: event.stageVariables.ServicesAuthType,
+        servicesAuthContext: event.stageVariables.ServicesAuthContext,
         authProvider
     });
 }
@@ -54,13 +54,10 @@ exports.handler = async (event, context) => {
     try {
         console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
 
-        AzureApiUrl = event.request.stageVariables.AzureApiUrl; // "https://api.videoindexer.ai"   
-        AzureLocation = event.request.stageVariables.AzureLocation;
-        AzureAccountID = event.request.stageVariables.AzureAccountID;
-        AzureSubscriptionKey = event.request.stageVariables.AzureSubscriptionKey;
-
-        event.request.stageVariables
-
+        AzureApiUrl = event.stageVariables.AzureApiUrl; // "https://api.videoindexer.ai"   
+        AzureLocation = event.stageVariables.AzureLocation;
+        AzureAccountID = event.stageVariables.AzureAccountID;
+        AzureSubscriptionKey = event.stageVariables.AzureSubscriptionKey;
 
         switch (event.action) {
             case "ProcessJobAssignment":
@@ -79,7 +76,7 @@ exports.handler = async (event, context) => {
 const processJobAssignment = async (event) => {
     let resourceManager = createResourceManager(event);
 
-    let table = new MCMA_AWS.DynamoDbTable(AWS, event.request.stageVariables.TableName);
+    let table = new MCMA_AWS.DynamoDbTable(AWS, event.stageVariables.TableName);
     let jobAssignmentId = event.jobAssignmentId;
 
     try {
@@ -163,7 +160,7 @@ const processJobAssignment = async (event) => {
                 // Generate the call back URL leveraging the non secure api gateway endpoint
 
                 const secureHost = new URL(jobAssignmentId).host;
-                const nonSecureHost = new URL(event.request.stageVariables.PublicUrlNonSecure).host;
+                const nonSecureHost = new URL(event.stageVariables.PublicUrlNonSecure).host;
 
                 var callbackUrl = jobAssignmentId.replace(secureHost, nonSecureHost);
                 callbackUrl = callbackUrl + "/notifications";
@@ -220,7 +217,7 @@ const processNotification = async (event) => {
     let notification = event.notification;
 
     let resourceManager = createResourceManager(event)
-    let table = new MCMA_AWS.DynamoDbTable(AWS, event.request.stageVariables.TableName);
+    let table = new MCMA_AWS.DynamoDbTable(AWS, event.stageVariables.TableName);
 
     let flagCounter = 0;
     let azureVideoId;

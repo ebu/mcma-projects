@@ -44,10 +44,10 @@ exports.handler = async (event, context) => {
                 InvocationType: "Event",
                 LogType: "None",
                 Payload: JSON.stringify({
-                    "action": "ProcessTranscribeJobResult",
-                    "stageVariables": STAGE_VARIABLES,
-                    "jobAssignmentId": jobAssignmentId,
-                    "outputFile": new MCMA_CORE.Locator({ awsS3Bucket: awsS3Bucket, awsS3Key: awsS3Key })
+                    action: "ProcessTranscribeJobResult",
+                    stageVariables: STAGE_VARIABLES,
+                    jobAssignmentId,
+                    outputFile: new MCMA_CORE.Locator({ awsS3Bucket: awsS3Bucket, awsS3Key: awsS3Key })
                 })
             };
 

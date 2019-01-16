@@ -30,9 +30,9 @@ const authProvider = new MCMA_CORE.AuthenticatorProvider(
 
 const createResourceManager = (event) => {
     return new MCMA_CORE.ResourceManager({
-        servicesUrl: event.request.stageVariables.ServicesUrl,
-        servicesAuthType: event.request.stageVariables.ServicesAuthType,
-        servicesAuthContext: event.request.stageVariables.ServicesAuthContext,
+        servicesUrl: event.stageVariables.ServicesUrl,
+        servicesAuthType: event.stageVariables.ServicesAuthType,
+        servicesAuthContext: event.stageVariables.ServicesAuthContext,
         authProvider
     });
 }
@@ -58,7 +58,7 @@ exports.handler = async (event, context) => {
 const processJobAssignment = async (event) => {
     let resourceManager = createResourceManager(event);
 
-    let table = new MCMA_AWS.DynamoDbTable(AWS, event.request.stageVariables.TableName);
+    let table = new MCMA_AWS.DynamoDbTable(AWS, event.stageVariables.TableName);
     let jobAssignmentId = event.jobAssignmentId;
 
     try {
@@ -91,10 +91,10 @@ const processJobAssignment = async (event) => {
 
         switch (jobProfile.name) {
             case JOB_PROFILE_CONFORM_WORKFLOW:
-                params.stateMachineArn = event.request.stageVariables.ConformWorkflowId;
+                params.stateMachineArn = event.stageVariables.ConformWorkflowId;
                 break;
             case JOB_PROFILE_AI_WORKFLOW:
-                params.stateMachineArn = event.request.stageVariables.AiWorkflowId;
+                params.stateMachineArn = event.stageVariables.AiWorkflowId;
                 break;
         }
 
@@ -118,7 +118,7 @@ const processNotification = async (event) => {
     let jobAssignmentId = event.jobAssignmentId;
     let notification = event.notification;
 
-    let table = new MCMA_AWS.DynamoDbTable(AWS, event.request.stageVariables.TableName);
+    let table = new MCMA_AWS.DynamoDbTable(AWS, event.stageVariables.TableName);
 
     let jobAssignment = await table.get("JobAssignment", jobAssignmentId);
 

@@ -51,9 +51,9 @@ const authProvider = new MCMA_CORE.AuthenticatorProvider(
 
 const createResourceManager = (event) => {
     return new MCMA_CORE.ResourceManager({
-        servicesUrl: event.request.stageVariables.ServicesUrl,
-        servicesAuthType: event.request.stageVariables.ServicesAuthType,
-        servicesAuthContext: event.request.stageVariables.ServicesAuthContext,
+        servicesUrl: event.stageVariables.ServicesUrl,
+        servicesAuthType: event.stageVariables.ServicesAuthType,
+        servicesAuthContext: event.stageVariables.ServicesAuthContext,
         authProvider
     });
 }

@@ -31,16 +31,16 @@ exports.handler = async (event, context) => {
             //let awsS3Key = record.s3.object.key;
 
             // check if the payload contains data from SNS
-            if(!record.Sns) {
+            if (!record.Sns) {
                 throw new Error("The payload doesn't contain expected data : Sns");
             }
 
-            if(!record.Sns.Message) {
+            if (!record.Sns.Message) {
                 throw new Error("The payload doesn't contain expected data : Sns.Message");
             }
 
-            let message =  JSON.parse( record.Sns.Message);
-            console.log("SNS Message == > ",JSON.stringify(message));
+            let message = JSON.parse(record.Sns.Message);
+            console.log("SNS Message == > ", JSON.stringify(message));
 
 
             let rekoJobId = message.JobId;
@@ -48,16 +48,16 @@ exports.handler = async (event, context) => {
             let status = message.Status;
             let jobAssignmentId;
             let jobAssignment;
-        
+
             let jt = message.JobTag.toString();
             console.log("jt:", jt);
-        
-             if (jt != null) {
-                jobAssignmentId  = new Buffer(jt, 'hex').toString('ascii');
-             } else {
+
+            if (jt != null) {
+                jobAssignmentId = new Buffer(jt, 'hex').toString('ascii');
+            } else {
                 return callback("The jobAssignment couldn't be found in the SNS message");
-             }
-        
+            }
+
             console.log('rekoJobId:', rekoJobId);
             console.log('rekoJobType:', rekoJobType);
             console.log('status:', status);
@@ -65,7 +65,7 @@ exports.handler = async (event, context) => {
 
 
 
-          //  let transcribeJobUUID = awsS3Key.substring(awsS3Key.indexOf("-") + 1, awsS3Key.lastIndexOf("."));
+            //  let transcribeJobUUID = awsS3Key.substring(awsS3Key.indexOf("-") + 1, awsS3Key.lastIndexOf("."));
 
             //let jobAssignmentId = STAGE_VARIABLES.PublicUrl + "/job-assignments/" + transcribeJobUUID;
 
@@ -75,14 +75,14 @@ exports.handler = async (event, context) => {
                 InvocationType: "Event",
                 LogType: "None",
                 Payload: JSON.stringify({
-                    "action": "ProcessRekognitionResult",
-                    "stageVariables": STAGE_VARIABLES,
-                    "jobAssignmentId": jobAssignmentId,
-                    "jobExternalInfo": { 
-                                  "rekoJobId": rekoJobId,
-                                  "rekoJobType": rekoJobType,
-                                  "status": status
-                       }
+                    action: "ProcessRekognitionResult",
+                    stageVariables: STAGE_VARIABLES,
+                    jobAssignmentId,
+                    jobExternalInfo: {
+                        rekoJobId,
+                        rekoJobType,
+                        status
+                    }
                 })
             };
 

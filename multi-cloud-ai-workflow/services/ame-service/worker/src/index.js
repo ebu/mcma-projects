@@ -26,8 +26,8 @@ const JOB_PROFILE_EXTRACT_TECHNICAL_METADATA = "ExtractTechnicalMetadata";
 const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator({
     accessKey: AWS.config.credentials.accessKeyId,
     secretKey: AWS.config.credentials.secretAccessKey,
-	sessionToken: AWS.config.credentials.sessionToken,
-	region: AWS.config.region
+    sessionToken: AWS.config.credentials.sessionToken,
+    region: AWS.config.region
 });
 
 const authProvider = new MCMA_CORE.AuthenticatorProvider(
@@ -41,9 +41,9 @@ const authProvider = new MCMA_CORE.AuthenticatorProvider(
 
 const createResourceManager = (event) => {
     return new MCMA_CORE.ResourceManager({
-        servicesUrl: event.request.stageVariables.ServicesUrl,
-        servicesAuthType: event.request.stageVariables.ServicesAuthType,
-        servicesAuthContext: event.request.stageVariables.ServicesAuthContext,
+        servicesUrl: event.stageVariables.ServicesUrl,
+        servicesAuthType: event.stageVariables.ServicesAuthType,
+        servicesAuthContext: event.stageVariables.ServicesAuthContext,
         authProvider
     });
 }
@@ -65,7 +65,7 @@ exports.handler = async (event, context) => {
 
     let resourceManager = createResourceManager(event);
 
-    let table = new MCMA_AWS.DynamoDbTable(AWS, event.request.stageVariables.TableName);
+    let table = new MCMA_AWS.DynamoDbTable(AWS, event.stageVariables.TableName);
     let jobAssignmentId = event.jobAssignmentId;
 
     try {

@@ -71,7 +71,7 @@ const addJobAssignment = async (request, response) => {
         Payload: JSON.stringify({
             action: "ProcessJobAssignment",
             stageVariables: request.stageVariables,
-            jobAssignmentId: jobAssignmentId
+            jobAssignmentId
         })
     };
 

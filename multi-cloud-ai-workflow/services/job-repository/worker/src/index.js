@@ -23,9 +23,9 @@ const authProvider = new MCMA_CORE.AuthenticatorProvider(
 
 const createResourceManager = (event) => {
     return new MCMA_CORE.ResourceManager({
-        servicesUrl: event.request.stageVariables.ServicesUrl,
-        servicesAuthType: event.request.stageVariables.ServicesAuthType,
-        servicesAuthContext: event.request.stageVariables.ServicesAuthContext,
+        servicesUrl: event.stageVariables.ServicesUrl,
+        servicesAuthType: event.stageVariables.ServicesAuthType,
+        servicesAuthContext: event.stageVariables.ServicesAuthContext,
         authProvider
     });
 }
@@ -33,7 +33,7 @@ const createResourceManager = (event) => {
 const createJobProcess = async (event) => {
     let jobId = event.jobId;
 
-    let table = new MCMA_AWS.DynamoDbTable(AWS, event.request.stageVariables.TableName);
+    let table = new MCMA_AWS.DynamoDbTable(AWS, event.stageVariables.TableName);
     let job = await table.get("Job", jobId);
 
     let resourceManager = createResourceManager(event);
@@ -76,7 +76,7 @@ const processNotification = async (event) => {
     let jobId = event.jobId;
     let notification = event.notification;
 
-    let table = new MCMA_AWS.DynamoDbTable(AWS, event.request.stageVariables.TableName);
+    let table = new MCMA_AWS.DynamoDbTable(AWS, event.stageVariables.TableName);
 
     let job = await table.get("Job", jobId);
 
@@ -96,12 +96,6 @@ const processNotification = async (event) => {
 
     let resourceManager = createResourceManager(event);
 
-    if (job.notificationEndpoint) {
-        console.log(JSON.stringify(job, null, 2));
-        let resourceEndpoint = await resourceManager.getResourceEndpoint(job.notificationEndpoint.httpEndpoint);
-        console.log(JSON.stringify(resourceEndpoint, null, 2));
-    }
-
     await resourceManager.sendNotification(job);
 }
 
@@ -110,13 +104,13 @@ exports.handler = async (event, context) => {
         console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
 
         switch (event.action) {
-            case "createJobProcess":
+            case "CreateJobProcess":
                 await createJobProcess(event);
                 break;
-            case "deleteJobProcess":
+            case "DeleteJobProcess":
                 await deleteJobProcess(event);
                 break;
-            case "processNotification":
+            case "ProcessNotification":
                 await processNotification(event);
                 break;
             default:

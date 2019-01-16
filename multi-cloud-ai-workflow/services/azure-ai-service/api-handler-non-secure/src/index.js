@@ -41,7 +41,12 @@ const processNotification = async (request, response) => {
         FunctionName: request.stageVariables.WorkerLambdaFunctionName,
         InvocationType: "Event",
         LogType: "None",
-        Payload: JSON.stringify({ "action": "ProcessNotification", "request": request, "jobAssignmentId": jobAssignmentId, "notification": notification })
+        Payload: JSON.stringify({
+            action: "ProcessNotification",
+            stageVariables: request.stageVariables,
+            jobAssignmentId,
+            notification
+        })
     };
 
     console.log("Invoking Lambda : ", params);

@@ -25,9 +25,9 @@ const authProvider = new MCMA_CORE.AuthenticatorProvider(
 
 const createResourceManager = (event) => {
     return new MCMA_CORE.ResourceManager({
-        servicesUrl: event.request.stageVariables.ServicesUrl,
-        servicesAuthType: event.request.stageVariables.ServicesAuthType,
-        servicesAuthContext: event.request.stageVariables.ServicesAuthContext,
+        servicesUrl: event.stageVariables.ServicesUrl,
+        servicesAuthType: event.stageVariables.ServicesAuthType,
+        servicesAuthContext: event.stageVariables.ServicesAuthContext,
         authProvider
     });
 }
@@ -35,7 +35,7 @@ const createResourceManager = (event) => {
 const createJobAssignment = async (event) => {
     let resourceManager = createResourceManager(event);
 
-    let table = new MCMA_AWS.DynamoDbTable(AWS, event.request.stageVariables.TableName);
+    let table = new MCMA_AWS.DynamoDbTable(AWS, event.stageVariables.TableName);
 
     let jobProcessId = event.jobProcessId;
     let jobProcess = await table.get("JobProcess", jobProcessId);
@@ -147,7 +147,7 @@ const processNotification = async (event) => {
     let jobProcessId = event.jobProcessId;
     let notification = event.notification;
 
-    let table = new MCMA_AWS.DynamoDbTable(AWS, event.request.stageVariables.TableName);
+    let table = new MCMA_AWS.DynamoDbTable(AWS, event.stageVariables.TableName);
 
     let jobProcess = await table.get("JobProcess", jobProcessId);
 
@@ -175,13 +175,13 @@ exports.handler = async (event, context) => {
         console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
 
         switch (event.action) {
-            case "createJobAssignment":
+            case "CreateJobAssignment":
                 await createJobAssignment(event);
                 break;
-            case "deleteJobAssignment":
+            case "DeleteJobAssignment":
                 await deleteJobAssignment(event);
                 break;
-            case "processNotification":
+            case "ProcessNotification":
                 await processNotification(event);
                 break;
             default:

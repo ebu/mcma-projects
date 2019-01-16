@@ -43,9 +43,9 @@ const authProvider = new MCMA_CORE.AuthenticatorProvider(
 
 const createResourceManager = (event) => {
     return new MCMA_CORE.ResourceManager({
-        servicesUrl: event.request.stageVariables.ServicesUrl,
-        servicesAuthType: event.request.stageVariables.ServicesAuthType,
-        servicesAuthContext: event.request.stageVariables.ServicesAuthContext,
+        servicesUrl: event.stageVariables.ServicesUrl,
+        servicesAuthType: event.stageVariables.ServicesAuthType,
+        servicesAuthContext: event.stageVariables.ServicesAuthContext,
         authProvider
     });
 }
@@ -89,7 +89,7 @@ exports.handler = async (event, context) => {
 const processJobAssignment = async (event) => {
 
     // init
-    let variables = event.request.stageVariables;
+    let variables = event.stageVariables;
     let resourceManager = createResourceManager(event);
     let table = new MCMA_AWS.DynamoDbTable(AWS, variables.TableName);
     let jobAssignmentId = event.jobAssignmentId;
@@ -209,7 +209,7 @@ const processNotification = async (event) => {
     let jobAssignmentId = event.jobAssignmentId;
     let notification = event.notification;
 
-    let table = new MCMA_AWS.DynamoDbTable(AWS, event.request.stageVariables.TableName);
+    let table = new MCMA_AWS.DynamoDbTable(AWS, event.stageVariables.TableName);
 
     let jobAssignment = await table.get("JobAssignment", jobAssignmentId);
 
