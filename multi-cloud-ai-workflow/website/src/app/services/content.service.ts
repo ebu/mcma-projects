@@ -57,9 +57,9 @@ export class ContentService {
                     sub1.unsubscribe();
                     // get finished job data
                     const sub2 = this.getContent(bmContentId).subscribe(
-                        resp => {
-                            console.log('emitting content vm', resp);
-                            subject.next(new ContentViewModel(resp.data));
+                        bmContent => {
+                            console.log('emitting content vm', bmContent);
+                            subject.next(new ContentViewModel(bmContent));
                         },
                         err => {
                             console.log('failed to get content vm');

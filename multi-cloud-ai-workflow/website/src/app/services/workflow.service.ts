@@ -71,7 +71,7 @@ export class WorkflowService {
                     sub1.unsubscribe();
                     // get finished job data
                     const sub2 = this.getWorkflowJob(workflowJobId).subscribe(
-                        resp => subject.next(new WorkflowJobViewModel(resp.data, fakeRunning)),
+                        workflowJob => subject.next(new WorkflowJobViewModel(workflowJob, fakeRunning)),
                         err => subject.error(err),
                         () => sub2.unsubscribe());
                 }
