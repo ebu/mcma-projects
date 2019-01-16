@@ -188,7 +188,8 @@ resource "aws_api_gateway_deployment" "workflow_activity_callback_handler_deploy
   stage_name  = "${var.environment_type}"
 
   variables = {
-    "PublicUrl" = "${local.workflow_activity_callback_handler_url}"
+    "PublicUrl"      = "${local.workflow_activity_callback_handler_url}"
+    "DeploymentHash" = "${sha256(file("./workflows/main.tf"))}"
   }
 }
 

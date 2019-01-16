@@ -110,6 +110,7 @@ resource "aws_api_gateway_deployment" "transform_service_deployment" {
     "ServicesAuthContext"      = "${local.services_auth_context}"
     "WorkerLambdaFunctionName" = "${aws_lambda_function.transform-service-worker.function_name}"
     "HostnameInstanceEC2"      = "${var.ec2_transform_service_hostname}"
+    "DeploymentHash"           = "${sha256(file("./services/transform-service.tf"))}"
   }
 }
 

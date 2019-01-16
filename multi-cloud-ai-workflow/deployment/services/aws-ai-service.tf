@@ -368,6 +368,7 @@ resource "aws_api_gateway_deployment" "aws_ai_service_deployment" {
     "ServicesAuthContext"      = "${local.services_auth_context}"
     "WorkerLambdaFunctionName" = "${aws_lambda_function.aws-ai-service-worker.function_name}"
     "ServiceOutputBucket"      = "${aws_s3_bucket.aws-ai-service-output.id}"
+    "DeploymentHash"           = "${sha256(file("./services/aws-ai-service.tf"))}"
   }
 }
 

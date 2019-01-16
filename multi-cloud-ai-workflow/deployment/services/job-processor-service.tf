@@ -109,6 +109,7 @@ resource "aws_api_gateway_deployment" "job_processor_service_deployment" {
     "ServicesAuthType"         = "${local.services_auth_type}"
     "ServicesAuthContext"      = "${local.services_auth_context}"
     "WorkerLambdaFunctionName" = "${aws_lambda_function.job-processor-service-worker.function_name}"
+    "DeploymentHash"           = "${sha256(file("./services/job-processor-service.tf"))}"
   }
 }
 

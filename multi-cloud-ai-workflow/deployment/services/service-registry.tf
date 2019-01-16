@@ -140,8 +140,9 @@ resource "aws_api_gateway_deployment" "service_registry_deployment" {
   stage_name  = "${var.environment_type}"
 
   variables = {
-    "TableName" = "${var.global_prefix}-service-registry"
-    "PublicUrl" = "${local.service_registry_url}"
+    "TableName"      = "${var.global_prefix}-service-registry"
+    "PublicUrl"      = "${local.service_registry_url}"
+    "DeploymentHash" = "${sha256(file("./services/service-registry.tf"))}"
   }
 }
 
