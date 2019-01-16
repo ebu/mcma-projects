@@ -24,11 +24,10 @@ const JOB_RESULTS_PREFIX = "AIResults/"
 const creds = {
     accessKey: AWS.config.credentials.accessKeyId,
     secretKey: AWS.config.credentials.secretAccessKey,
-	sessionToken: AWS.config.credentials.sessionToken,
-	region: AWS.config.region
+    sessionToken: AWS.config.credentials.sessionToken,
+    region: AWS.config.region
 };
 
-const presignedUrlGenerator = new MCMA_CORE.AwsV4PresignedUrlGenerator(creds);
 const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator(creds);
 
 const authProvider = new MCMA_CORE.AuthenticatorProvider(
@@ -103,6 +102,9 @@ exports.handler = async (event, context) => {
 
     await S3PutObject(s3Params);
 
+    let notificationUrl = ACTIVITY_CALLBACK_URL + "?taskToken=" + encodeURIComponent(taskToken);
+    console.log("NotificationUrl:", notificationUrl);
+
     // creating job
     let job = new MCMA_CORE.AIJob({
         jobProfile: jobProfileId,
@@ -118,7 +120,7 @@ exports.handler = async (event, context) => {
             })
         }),
         notificationEndpoint: new MCMA_CORE.NotificationEndpoint({
-            httpEndpoint: presignedUrlGenerator.generatePresignedUrl("POST", ACTIVITY_CALLBACK_URL + "?taskToken=" + encodeURIComponent(taskToken), 7200)
+            httpEndpoint: notificationUrl
         })
     });
 

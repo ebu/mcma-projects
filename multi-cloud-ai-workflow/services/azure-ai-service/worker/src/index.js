@@ -29,7 +29,6 @@ const creds = {
     region: AWS.config.region
 };
 
-const presignedUrlGenerator = new MCMA_CORE.AwsV4PresignedUrlGenerator(creds);
 const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator(creds);
 
 const authProvider = new MCMA_CORE.AuthenticatorProvider(

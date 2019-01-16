@@ -18,11 +18,10 @@ const ACTIVITY_ARN = process.env.ACTIVITY_ARN;
 const creds = {
     accessKey: AWS.config.credentials.accessKeyId,
     secretKey: AWS.config.credentials.secretAccessKey,
-	sessionToken: AWS.config.credentials.sessionToken,
-	region: AWS.config.region
+    sessionToken: AWS.config.credentials.sessionToken,
+    region: AWS.config.region
 };
 
-const presignedUrlGenerator = new MCMA_CORE.AwsV4PresignedUrlGenerator(creds);
 const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator(creds);
 
 const authProvider = new MCMA_CORE.AuthenticatorProvider(
@@ -60,7 +59,7 @@ exports.handler = async (event, context) => {
     }
 
     // get activity task
-    let data = await StepFunctionsGetActivityTask({ activityArn: ACTIVITY_ARN});
+    let data = await StepFunctionsGetActivityTask({ activityArn: ACTIVITY_ARN });
 
     let taskToken = data.taskToken;
     if (!taskToken) {
@@ -71,7 +70,7 @@ exports.handler = async (event, context) => {
     event = JSON.parse(data.input);
 
     // get job profiles filtered by name
-    let jobProfiles = await resourceManager.get("JobProfile", { name : "ExtractTechnicalMetadata"});
+    let jobProfiles = await resourceManager.get("JobProfile", { name: "ExtractTechnicalMetadata" });
 
     let jobProfileId = jobProfiles.length ? jobProfiles[0].id : null;
 
@@ -81,16 +80,13 @@ exports.handler = async (event, context) => {
     }
 
     let notificationUrl = ACTIVITY_CALLBACK_URL + "?taskToken=" + encodeURIComponent(taskToken);
-    let signedNotificationUrl = presignedUrlGenerator.generatePresignedUrl("POST", notificationUrl, 7200);
-    console.log("Credentials:", JSON.stringify(creds, null, 2));
     console.log("NotificationUrl:", notificationUrl);
-    console.log("Signed notification url", signedNotificationUrl)
 
     // creating ame job
     let ameJob = new MCMA_CORE.AmeJob({
         jobProfile: jobProfileId,
         jobInput: new MCMA_CORE.JobParameterBag({
-            inputFile: event.data.repositoryFile, 
+            inputFile: event.data.repositoryFile,
             outputLocation: new MCMA_CORE.Locator({
                 awsS3Bucket: TEMP_BUCKET,
                 awsS3KeyPrefix: "AmeJobResults/"
