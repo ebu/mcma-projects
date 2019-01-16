@@ -59,9 +59,9 @@ const createResourceManager = (event) => {
 }
 
 exports.handler = async (event, context) => {
-    console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
-
     try {
+        console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
+
         switch (event.action) {
             case "ProcessJobAssignment":
                 await processJobAssignment(event);
@@ -241,11 +241,11 @@ const processTranscribeJobResult = async (event) => {
     let jobAssignmentId = event.jobAssignmentId;
 
     // 1. Retrieving Job based on jobAssignmentId
-    let job = await retrieveJob(table, jobAssignmentId);
+    let job = await retrieveJob(resourceManager, table, jobAssignmentId);
 
     try {
         // 2. Retrieve job inputParameters
-        let jobInput = await retrieveJobInput(job);
+        let jobInput = await retrieveJobInput(resourceManager, job);
 
         // 3. Copy transcribe output file to output location
         let copySource = encodeURI(event.outputFile.awsS3Bucket + "/" + event.outputFile.awsS3Key);
@@ -300,11 +300,11 @@ const processRekognitionResult = async (event) => {
     let jobAssignmentId = event.jobAssignmentId;
 
     // 1. Retrieving Job based on jobAssignmentId
-    let job = await retrieveJob(table, jobAssignmentId);
+    let job = await retrieveJob(resourceManager, table, jobAssignmentId);
 
     try {
         // 2. Retrieve job inputParameters
-        let jobInput = await retrieveJobInput(job);
+        let jobInput = await retrieveJobInput(resourceManager, job);
 
         let s3Bucket = jobInput.outputLocation.awsS3Bucket;
 
@@ -383,7 +383,6 @@ const processRekognitionResult = async (event) => {
 
             console.log("Wrote Reko result file to S3 bucket : " + s3Bucket + " S3 key : " + newS3Key);
 
-
             // 4. updating JobAssignment with jobOutput
             let jobOutput = new MCMA_CORE.JobParameterBag({
                 outputFile: new MCMA_CORE.Locator({
@@ -392,8 +391,6 @@ const processRekognitionResult = async (event) => {
                 })
             });
             await updateJobAssignmentWithOutput(table, jobAssignmentId, jobOutput);
-
-
 
             // 5. Setting job assignment status to COMPLETED
             await updateJobAssignmentStatus(resourceManager, table, jobAssignmentId, "COMPLETED");

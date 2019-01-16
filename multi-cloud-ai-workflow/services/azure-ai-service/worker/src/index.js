@@ -276,10 +276,10 @@ const processNotification = async (event) => {
         console.log("Azure AI video metadata : ", JSON.stringify(videoMetadata, null, 2));
 
         //Need to hydrate the destination bucket from the job input
-        let workflowJob = await retrieveJob(table, jobAssignmentId);
+        let workflowJob = await retrieveJob(resourceManager, table, jobAssignmentId);
 
         //Retrieve job inputParameters
-        let jobInput = await retrieveJobInput(workflowJob);
+        let jobInput = await retrieveJobInput(resourceManager, workflowJob);
 
         let jobOutputBucket = jobInput.outputLocation.awsS3Bucket;
         let jobOutputKeyPrefix = ((jobInput.outputLocation.awsS3KeyPrefix) ? jobInput.outputLocation.awsS3KeyPrefix : "");
