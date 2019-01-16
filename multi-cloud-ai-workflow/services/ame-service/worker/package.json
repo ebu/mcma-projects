@@ -11,6 +11,6 @@
     "dependencies": {
         "aws-sdk": "^2.291.0",
         "mcma-aws": "0.1.0",
-        "mcma-core": "0.2.3"
+        "mcma-core": "0.2.4"
     }
 }
