@@ -9,6 +9,7 @@ data "template_file" "s3_public_read_write_policy_upload" {
 
   vars {
     bucket_name = "${var.upload_bucket}"
+    aws_account_id = "${var.aws_account_id}"
   }
 }
 
