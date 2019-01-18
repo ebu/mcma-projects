@@ -48,7 +48,7 @@ module "services" {
   conform_workflow_id = "${module.workflows.conform_workflow_id}"
   ai_workflow_id      = "${module.workflows.ai_workflow_id}"
 
-  #   ec2_transform_service_hostname = "${module.ec2.elb.hostname}"
+    ec2_transform_service_hostname = "${module.ec2.elb.hostname}"
 
   aws_account_id = "${var.aws_account_id}"
   aws_access_key = "${var.aws_access_key}"
@@ -87,18 +87,18 @@ module "workflows" {
 }
 
 # Comment the ec2 module in case you don't want to deploy ec2 instances
-# module "ec2" {
-#   source = "./ec2"
+module "ec2" {
+  source = "./ec2"
 
-#   global_prefix = "${var.global_prefix}"
+  global_prefix = "${var.global_prefix}"
 
-#   aws_account_id     = "${var.aws_account_id}"
-#   aws_access_key     = "${var.aws_access_key}"
-#   aws_secret_key     = "${var.aws_secret_key}"
-#   aws_region         = "${var.aws_region}"
-#   aws_instance_type  = "${var.aws_instance_type}"
-#   aws_instance_count = "${var.aws_instance_count}"
-# }
+  aws_account_id     = "${var.aws_account_id}"
+  aws_access_key     = "${var.aws_access_key}"
+  aws_secret_key     = "${var.aws_secret_key}"
+  aws_region         = "${var.aws_region}"
+  aws_instance_type  = "${var.aws_instance_type}"
+  aws_instance_count = "${var.aws_instance_count}"
+}
 
 output "aws_region" {
   value = "${var.aws_region}"
@@ -180,7 +180,7 @@ output "azure_ai_service_url" {
   value = "${module.services.azure_ai_service_url}"
 }
 
-# output "ec2_transform_service_hostname" {
-#   value = "${module.ec2.elb.hostname}"
-# }
+output "ec2_transform_service_hostname" {
+  value = "${module.ec2.elb.hostname}"
+}
 
