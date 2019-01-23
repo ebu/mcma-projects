@@ -4,8 +4,8 @@ provider "aws" {
   region     = "${var.aws_region}"
 }
 
-data "template_file" "s3_public_read_write_policy_upload" {
-  template = "${file("policies/s3-public-read-write.json")}"
+data "template_file" "s3_authenticated_read_write_policy_upload" {
+  template = "${file("policies/s3-authenticated-read-write.json")}"
 
   vars {
     bucket_name = "${var.upload_bucket}"
@@ -15,8 +15,8 @@ data "template_file" "s3_public_read_write_policy_upload" {
 
 resource "aws_s3_bucket" "upload" {
   bucket = "${var.upload_bucket}"
-  acl    = "public-read-write"
-  policy = "${data.template_file.s3_public_read_write_policy_upload.rendered}"
+  acl    = "private"
+  policy = "${data.template_file.s3_authenticated_read_write_policy_upload.rendered}"
   force_destroy = true
   cors_rule {
     allowed_headers = ["*"]
