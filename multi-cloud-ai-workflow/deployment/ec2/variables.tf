@@ -39,6 +39,10 @@ variable "aws_ec2_private_subnet_cidr" {
 variable "aws_account_id" {}
 variable "global_prefix" {}
 
+variable "services_url" {}
+variable "services_auth_type" {}
+variable "services_auth_context" {}
+
 /* Ubuntu 16.04 amis by region */
 variable "amis" {
   description = "Base AMI to launch the instances with"

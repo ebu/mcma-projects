@@ -48,18 +48,18 @@ module "services" {
   conform_workflow_id = "${module.workflows.conform_workflow_id}"
   ai_workflow_id      = "${module.workflows.ai_workflow_id}"
 
-    ec2_transform_service_hostname = "${module.ec2.elb.hostname}"
+  ec2_transform_service_hostname = "${module.ec2.elb.hostname}"
 
-  aws_account_id = "${var.aws_account_id}"
-  aws_access_key = "${var.aws_access_key}"
-  aws_secret_key = "${var.aws_secret_key}"
-  aws_region     = "${var.aws_region}"
+  aws_account_id         = "${var.aws_account_id}"
+  aws_access_key         = "${var.aws_access_key}"
+  aws_secret_key         = "${var.aws_secret_key}"
+  aws_region             = "${var.aws_region}"
   azure_location         = "${var.azure_location}"
   azure_account_id       = "${var.azure_account_id}"
   azure_subscription_key = "${var.azure_subscription_key}"
   azure_api_url          = "${var.azure_api_url}"
-  environment_name = "${var.environment_name}"
-  environment_type = "${var.environment_type}"
+  environment_name       = "${var.environment_name}"
+  environment_type       = "${var.environment_type}"
 }
 
 module "workflows" {
@@ -98,6 +98,10 @@ module "ec2" {
   aws_region         = "${var.aws_region}"
   aws_instance_type  = "${var.aws_instance_type}"
   aws_instance_count = "${var.aws_instance_count}"
+
+  services_url          = "${module.services.services_url}"
+  services_auth_type    = "${module.services.services_auth_type}"
+  services_auth_context = "${module.services.services_auth_context}"
 }
 
 output "aws_region" {
@@ -165,7 +169,7 @@ output "workflow_service_url" {
 }
 
 output "workflow_service_notification_url" {
-    value = "${module.workflows.workflow_service_notification_url}"
+  value = "${module.workflows.workflow_service_notification_url}"
 }
 
 output "transform_service_url" {
@@ -183,4 +187,3 @@ output "azure_ai_service_url" {
 output "ec2_transform_service_hostname" {
   value = "${module.ec2.elb.hostname}"
 }
-
