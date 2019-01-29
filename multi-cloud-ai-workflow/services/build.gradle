@@ -6,6 +6,7 @@ task build {
     dependsOn "aws-ai-service:sns-trigger:build"
     dependsOn "aws-ai-service:worker:build"
     dependsOn "azure-ai-service:api-handler:build"
+    dependsOn "azure-ai-service:api-handler-non-secure:build"
     dependsOn "azure-ai-service:worker:build"
     dependsOn "job-processor-service:api-handler:build"
     dependsOn "job-processor-service:worker:build"

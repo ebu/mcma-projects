@@ -25,6 +25,31 @@ const MCMA_CORE = require("mcma-core");
 const JOB_PROFILE_CREATE_PROXY_LAMBDA = "CreateProxyLambda";
 const JOB_PROFILE_CREATE_PROXY_EC2 = "CreateProxyEC2";
 
+const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator({
+    accessKey: AWS.config.credentials.accessKeyId,
+    secretKey: AWS.config.credentials.secretAccessKey,
+    sessionToken: AWS.config.credentials.sessionToken,
+    region: AWS.config.region
+});
+
+const authProvider = new MCMA_CORE.AuthenticatorProvider(
+    async (authType, authContext) => {
+        switch (authType) {
+            case "AWS4":
+                return authenticatorAWS4;
+        }
+    }
+);
+
+const createResourceManager = (event) => {
+    return new MCMA_CORE.ResourceManager({
+        servicesUrl: event.stageVariables.ServicesUrl,
+        servicesAuthType: event.stageVariables.ServicesAuthType,
+        servicesAuthContext: event.stageVariables.ServicesAuthContext,
+        authProvider
+    });
+}
+
 const ffmpeg = async (params) => {
     try {
         const { stdout, stderr } = await execFile(path.join(__dirname, 'bin/ffmpeg'), params);
@@ -44,23 +69,28 @@ const ffmpeg = async (params) => {
  * @param {*} context context
  */
 exports.handler = async (event, context) => {
-    console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
+    try {
+        console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
 
-    switch (event.action) {
-        case "ProcessJobAssignment":
-            await processJobAssignment(event);
-            break;
-        case "ProcessNotification":
-            await processNotification(event);
-            break;
+        switch (event.action) {
+            case "ProcessJobAssignment":
+                await processJobAssignment(event);
+                break;
+            case "ProcessNotification":
+                await processNotification(event);
+                break;
+        }
+    } catch (error) {
+        console.log("Error occurred when handling action '" + event.action + "'")
+        console.log(error.toString());
     }
 }
 
 const processJobAssignment = async (event) => {
 
     // init
-    let variables = event.request.stageVariables;
-    let resourceManager = new MCMA_CORE.ResourceManager(variables.ServicesUrl);
+    let variables = event.stageVariables;
+    let resourceManager = createResourceManager(event);
     let table = new MCMA_AWS.DynamoDbTable(AWS, variables.TableName);
     let jobAssignmentId = event.jobAssignmentId;
 
@@ -72,15 +102,15 @@ const processJobAssignment = async (event) => {
 
         // 2. Retrieving TransformJob
         // console.log("2. Retrieving TransformJob");
-        let transformJob = await retrieveTranformJob(table, jobAssignmentId);
+        let transformJob = await retrieveTransformJob(resourceManager, table, jobAssignmentId);
 
         // 3. Retrieve JobProfile
         // console.log("3. Retrieve JobProfile");
-        let jobProfile = await retrieveJobProfile(transformJob);
+        let jobProfile = await retrieveJobProfile(resourceManager, transformJob);
 
         // 4. Retrieve job inputParameters
         // console.log("4. Retrieve job inputParameters");
-        let jobInput = await retrieveJobInput(transformJob);
+        let jobInput = await retrieveJobInput(resourceManager, transformJob);
 
         // 5. Check if we support jobProfile and if we have required parameters in jobInput
         // console.log("5. Check if we support jobProfile and if we have required parameters in jobInput");
@@ -154,11 +184,13 @@ const processJobAssignment = async (event) => {
 
                 let message = {
                     input: jobInput,
-                    notificationEndpoint: new MCMA_CORE.NotificationEndpoint(jobAssignmentId + "/notifications")
+                    notificationEndpoint: new MCMA_CORE.NotificationEndpoint({
+                        httpEndpoint: jobAssignmentId + "/notifications"
+                    })
                 }
 
                 console.log("Sending to", ec2Url, "message", message);
-                await MCMA_CORE.HTTP.post(ec2Url, message);
+                await authenticatedHttp.post(ec2Url, message);
                 console.log("Done");
                 break;
         }
@@ -177,7 +209,7 @@ const processNotification = async (event) => {
     let jobAssignmentId = event.jobAssignmentId;
     let notification = event.notification;
 
-    let table = new MCMA_AWS.DynamoDbTable(AWS, event.request.stageVariables.TableName);
+    let table = new MCMA_AWS.DynamoDbTable(AWS, event.stageVariables.TableName);
 
     let jobAssignment = await table.get("JobAssignment", jobAssignmentId);
 
@@ -191,7 +223,7 @@ const processNotification = async (event) => {
 
     await table.put("JobAssignment", jobAssignmentId, jobAssignment);
 
-    let resourceManager = new MCMA_CORE.ResourceManager(event.request.stageVariables.ServicesUrl);
+    let resourceManager = createResourceManager(event);
 
     await resourceManager.sendNotification(jobAssignment);
 }
@@ -220,37 +252,28 @@ const validateJobProfile = (jobProfile, jobInput) => {
     }
 }
 
-const retrieveJobInput = async (transformJob) => {
-    return await retrieveResource(transformJob.jobInput, "transformJob.jobInput");
+const retrieveJobInput = async (resourceManager, transformJob) => {
+    return await retrieveResource(resourceManager, transformJob.jobInput, "transformJob.jobInput");
 }
 
-const retrieveJobProfile = async (transformJob) => {
-    return await retrieveResource(transformJob.jobProfile, "transformJob.jobProfile");
+const retrieveJobProfile = async (resourceManager, transformJob) => {
+    return await retrieveResource(resourceManager, transformJob.jobProfile, "transformJob.jobProfile");
 }
 
-const retrieveTranformJob = async (table, jobAssignmentId) => {
+const retrieveTransformJob = async (resourceManager, table, jobAssignmentId) => {
     let jobAssignment = await getJobAssignment(table, jobAssignmentId);
 
-    return await retrieveResource(jobAssignment.job, "jobAssignment.job");
+    return await retrieveResource(resourceManager, jobAssignment.job, "jobAssignment.job");
 }
 
-const retrieveResource = async (resource, resourceName) => {
-    let type = typeof resource;
-
+const retrieveResource = async (resourceManager, resource, resourceName) => {
     if (!resource) {
         throw new Error(resourceName + " does not exist");
     }
 
-    if (type === "string") {  // if type is a string we assume it's a URL.
-        try {
-            let response = await MCMA_CORE.HTTP.get(resource);
-            resource = response.data;
-        } catch (error) {
-            throw new Error("Failed to retrieve '" + resourceName + "' from url '" + resource + "'");
-        }
-    }
+    resource = await resourceManager.resolve(resource);
 
-    type = typeof resource;
+    let type = typeof resource;
 
     if (type === "object") {
         if (Array.isArray(resource)) {

@@ -68,7 +68,11 @@ const addJobAssignment = async (request, response) => {
         FunctionName: request.stageVariables.WorkerLambdaFunctionName,
         InvocationType: "Event",
         LogType: "None",
-        Payload: JSON.stringify({ "action": "processJobAssignment", "request": request, "jobAssignmentId": jobAssignmentId })
+        Payload: JSON.stringify({
+            action: "ProcessJobAssignment",
+            stageVariables: request.stageVariables,
+            jobAssignmentId
+        })
     };
 
     await LambdaInvoke(params);

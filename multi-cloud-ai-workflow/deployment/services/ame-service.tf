@@ -71,7 +71,7 @@ resource "aws_api_gateway_method" "ame_service_api_method" {
   rest_api_id   = "${aws_api_gateway_rest_api.ame_service_api.id}"
   resource_id   = "${aws_api_gateway_resource.ame_service_api_resource.id}"
   http_method   = "ANY"
-  authorization = "NONE"
+  authorization = "AWS_IAM"
 }
 
 resource "aws_api_gateway_integration" "ame_service_api_method-integration" {
@@ -105,8 +105,11 @@ resource "aws_api_gateway_deployment" "ame_service_deployment" {
   variables = {
     "TableName"                = "${var.global_prefix}-ame-service"
     "PublicUrl"                = "${local.ame_service_url}"
-    "ServicesUrl"              = "${local.service_registry_url}/services"
+    "ServicesUrl"              = "${local.services_url}"
+    "ServicesAuthType"         = "${local.services_auth_type}"
+    "ServicesAuthContext"      = "${local.services_auth_context}"
     "WorkerLambdaFunctionName" = "${aws_lambda_function.ame-service-worker.function_name}"
+    "DeploymentHash"           = "${sha256(file("./services/ame-service.tf"))}"
   }
 }
 

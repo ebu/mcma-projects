@@ -9,8 +9,28 @@ const S3GetObject = util.promisify(S3.getObject.bind(S3));
 
 const MCMA_CORE = require("mcma-core");
 
-// Environment Variable(AWS Lambda)
-const SERVICE_REGISTRY_URL = process.env.SERVICE_REGISTRY_URL;
+const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator({
+    accessKey: AWS.config.credentials.accessKeyId,
+    secretKey: AWS.config.credentials.secretAccessKey,
+    sessionToken: AWS.config.credentials.sessionToken,
+    region: AWS.config.region
+});
+
+const authProvider = new MCMA_CORE.AuthenticatorProvider(
+    async (authType, authContext) => {
+        switch (authType) {
+            case "AWS4":
+                return authenticatorAWS4;
+        }
+    }
+);
+
+const resourceManager = new MCMA_CORE.ResourceManager({
+    servicesUrl: process.env.SERVICES_URL,
+    servicesAuthType: process.env.SERVICES_AUTH_TYPE,
+    servicesAuthContext: process.env.SERVICES_AUTH_CONTEXT,
+    authProvider
+});
 
 /**
  * get amejob id
@@ -29,19 +49,6 @@ function getAmeJobId(event) {
     return id;
 }
 
-/**
- * get the registered BMContent
- */
-getBMContent = async(url) => {
-
-    let response = await MCMA_CORE.HTTP.get(url);
-
-    if (!response.data) {
-        throw new Error("Faild to obtain BMContent");
-    }
-
-    return response.data;
-}
 
 /**
  * Create New BMEssence Object
@@ -67,9 +74,6 @@ function createBMEssence(bmContent, location, mediainfo) {
 exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
 
-    // init resource manager
-    let resourceManager = new MCMA_CORE.ResourceManager(SERVICE_REGISTRY_URL);
-
     // send update notification
     try {
         event.status = "RUNNING";
@@ -87,14 +91,11 @@ exports.handler = async (event, context) => {
     console.log("[AmeJobID]:", ameJobId);
 
     // get result of ame job
-    let response = await MCMA_CORE.HTTP.get(ameJobId);
-    if (!response.data) {
-        throw new Error("Faild to obtain AmeJob");
-    }
+    let ameJob = await resourceManager.resolve(ameJobId);
 
     // get media info
-    let s3Bucket = response.data.jobOutput.outputFile.awsS3Bucket;
-    let s3Key = response.data.jobOutput.outputFile.awsS3Key;
+    let s3Bucket = ameJob.jobOutput.outputFile.awsS3Bucket;
+    let s3Key = ameJob.jobOutput.outputFile.awsS3Key;
     let s3Object;
     try {
         s3Object = await S3GetObject({
@@ -107,7 +108,7 @@ exports.handler = async (event, context) => {
     let mediainfo = JSON.parse(s3Object.Body.toString());
 
     // acquire the registered BMContent
-    let bmc = await getBMContent(event.data.bmContent);
+    let bmc = await resourceManager.resolve(event.data.bmContent);
 
     console.log("[BMContent]:", JSON.stringify(bmc, null, 2));
 

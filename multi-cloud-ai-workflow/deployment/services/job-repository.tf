@@ -67,11 +67,63 @@ resource "aws_api_gateway_resource" "job_repository_api_resource" {
   path_part   = "{proxy+}"
 }
 
+resource "aws_api_gateway_method" "job_repository_options_method" {
+  rest_api_id   = "${aws_api_gateway_rest_api.job_repository_api.id}"
+  resource_id   = "${aws_api_gateway_resource.job_repository_api_resource.id}"
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_method_response" "job_repository_options_200" {
+  rest_api_id = "${aws_api_gateway_rest_api.job_repository_api.id}"
+  resource_id = "${aws_api_gateway_resource.job_repository_api_resource.id}"
+  http_method = "${aws_api_gateway_method.job_repository_options_method.http_method}"
+  status_code = "200"
+
+  response_models = {
+    "application/json" = "Empty"
+  }
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+resource "aws_api_gateway_integration" "job_repository_options_integration" {
+  rest_api_id = "${aws_api_gateway_rest_api.job_repository_api.id}"
+  resource_id = "${aws_api_gateway_resource.job_repository_api_resource.id}"
+  http_method = "${aws_api_gateway_method.job_repository_options_method.http_method}"
+  type        = "MOCK"
+
+  request_templates = {
+    "application/json" = "{ \"statusCode\": 200 }"
+  }
+}
+
+resource "aws_api_gateway_integration_response" "job_repository_options_integration_response" {
+  rest_api_id = "${aws_api_gateway_rest_api.job_repository_api.id}"
+  resource_id = "${aws_api_gateway_resource.job_repository_api_resource.id}"
+  http_method = "${aws_api_gateway_method.job_repository_options_method.http_method}"
+  status_code = "${aws_api_gateway_method_response.job_repository_options_200.status_code}"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT,PATCH,DELETE'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+
+  response_templates = {
+    "application/json" = ""
+  }
+}
+
 resource "aws_api_gateway_method" "job_repository_api_method" {
   rest_api_id   = "${aws_api_gateway_rest_api.job_repository_api.id}"
   resource_id   = "${aws_api_gateway_resource.job_repository_api_resource.id}"
   http_method   = "ANY"
-  authorization = "NONE"
+  authorization = "AWS_IAM"
 }
 
 resource "aws_api_gateway_integration" "job_repository_api_method-integration" {
@@ -105,8 +157,11 @@ resource "aws_api_gateway_deployment" "job_repository_deployment" {
   variables = {
     "TableName"                = "${var.global_prefix}-job-repository"
     "PublicUrl"                = "${local.job_repository_url}"
-    "ServicesUrl"              = "${local.service_registry_url}/services"
+    "ServicesUrl"              = "${local.services_url}"
+    "ServicesAuthType"         = "${local.services_auth_type}"
+    "ServicesAuthContext"      = "${local.services_auth_context}"
     "WorkerLambdaFunctionName" = "${aws_lambda_function.job-repository-worker.function_name}"
+    "DeploymentHash"           = "${sha256(file("./services/job-repository.tf"))}"
   }
 }
 

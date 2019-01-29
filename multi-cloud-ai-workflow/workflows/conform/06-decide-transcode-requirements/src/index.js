@@ -1,6 +1,7 @@
 //"use strict";
 
 // require
+const AWS = require("aws-sdk");
 const MCMA_CORE = require("mcma-core");
 
 // Local Define
@@ -13,19 +14,28 @@ const VIDEO_BITRATE_MB = 2;
 const SERVICE_REGISTRY_URL = process.env.SERVICE_REGISTRY_URL;
 const THESHOLD_SECONDS = parseInt(process.env.THESHOLD_SECONDS);
 
-/**
- * get the registered BMEssence
- */
-getBMEssence = async(url) => {
+const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator({
+    accessKey: AWS.config.credentials.accessKeyId,
+    secretKey: AWS.config.credentials.secretAccessKey,
+    sessionToken: AWS.config.credentials.sessionToken,
+    region: AWS.config.region
+});
 
-    let response = await MCMA_CORE.HTTP.get(url);
-
-    if (!response.data) {
-        throw new Error("Faild to obtain BMContent");
+const authProvider = new MCMA_CORE.AuthenticatorProvider(
+    async (authType, authContext) => {
+        switch (authType) {
+            case "AWS4":
+                return authenticatorAWS4;
+        }
     }
+);
 
-    return response.data;
-}
+const resourceManager = new MCMA_CORE.ResourceManager({
+    servicesUrl: process.env.SERVICES_URL,
+    servicesAuthType: process.env.SERVICES_AUTH_TYPE,
+    servicesAuthContext: process.env.SERVICES_AUTH_CONTEXT,
+    authProvider
+});
 
 /**
  * calcutate seconds
@@ -46,9 +56,6 @@ function calcSeconds(hour, minute, seconds) {
 exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
 
-    // init resource manager
-    let resourceManager = new MCMA_CORE.ResourceManager(SERVICE_REGISTRY_URL);
-
     // send update notification
     try {
         event.status = "RUNNING";
@@ -59,7 +66,7 @@ exports.handler = async (event, context) => {
     }
 
     // acquire the registered BMEssence
-    let bme = await getBMEssence(event.data.bmEssence);
+    let bme = await resourceManager.resolve(event.data.bmEssence);
     
     let technicalMetadata = bme.technicalMetadata;
 

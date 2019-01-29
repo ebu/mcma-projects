@@ -38,8 +38,9 @@ task verifyNodeJS {
     inputs.property("VERSION_NODE_JS", requiredVersionNodeJS)
     outputs.upToDateWhen { getVersionNodeJS() == requiredVersionNodeJS }
     doLast {
-        if (getVersionNodeJS() != requiredVersionNodeJS) {
-            throw new Exception("Required Node version " + requiredVersionNodeJS + " not installed");
+        def versionNodeJs = getVersionNodeJS()
+        if (versionNodeJs != requiredVersionNodeJS) {
+            throw new Exception("Required Node version " + requiredVersionNodeJS + " not installed. Detected version " + versionNodeJs);
         }      
     }
 }

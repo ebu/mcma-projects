@@ -7,8 +7,28 @@ const S3 = new AWS.S3();
 
 const MCMA_CORE = require("mcma-core");
 
-// Environment Variable(AWS Lambda)
-const SERVICE_REGISTRY_URL = process.env.SERVICE_REGISTRY_URL;
+const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator({
+    accessKey: AWS.config.credentials.accessKeyId,
+    secretKey: AWS.config.credentials.secretAccessKey,
+    sessionToken: AWS.config.credentials.sessionToken,
+    region: AWS.config.region
+});
+
+const authProvider = new MCMA_CORE.AuthenticatorProvider(
+    async (authType, authContext) => {
+        switch (authType) {
+            case "AWS4":
+                return authenticatorAWS4;
+        }
+    }
+);
+
+const resourceManager = new MCMA_CORE.ResourceManager({
+    servicesUrl: process.env.SERVICES_URL,
+    servicesAuthType: process.env.SERVICES_AUTH_TYPE,
+    servicesAuthContext: process.env.SERVICES_AUTH_CONTEXT,
+    authProvider
+});
 
 /**
  * get amejob id
@@ -17,7 +37,7 @@ const SERVICE_REGISTRY_URL = process.env.SERVICE_REGISTRY_URL;
 function getTransformJobId(event) {
     let id;
 
-    if( event.data.transformJob ) {
+    if (event.data.transformJob) {
         event.data.transformJob.forEach(element => {
             if (element) {
                 id = element;
@@ -30,34 +50,6 @@ function getTransformJobId(event) {
 }
 
 /**
- * get the registered BMContent
- */
-getBMContent = async(url) => {
-
-    let response = await MCMA_CORE.HTTP.get(url);
-
-    if (!response.data) {
-        throw new Error("Faild to obtain BMContent");
-    }
-
-    return response.data;
-}
-
-/**
- * get the registered BMEssence
- */
-getBMEssence = async(url) => {
-
-    let response = await MCMA_CORE.HTTP.get(url);
-
-    if (!response.data) {
-        throw new Error("Faild to obtain BMContent");
-    }
-
-    return response.data;
-}
-
-/**
  * Create New BMEssence Object
  * @param {*} bmContent the URL to the BMContent
  * @param {*} location point to copies of the media file
@@ -66,7 +58,7 @@ function createBMEssence(bmContent, location) {
     // init bmcontent
     let bmEssence = new MCMA_CORE.BMEssence({
         "bmContent": bmContent.id,
-        "locations": [ location ],
+        "locations": [location],
     });
     return bmEssence;
 }
@@ -78,9 +70,6 @@ function createBMEssence(bmContent, location) {
  */
 exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
-
-    // init resource manager
-    let resourceManager = new MCMA_CORE.ResourceManager(SERVICE_REGISTRY_URL);
 
     // send update notification
     try {
@@ -95,22 +84,19 @@ exports.handler = async (event, context) => {
     let transformJobId = getTransformJobId(event);
 
     // in case we did note do a transcode
-    if(!transformJobId) {
+    if (!transformJobId) {
         return event.data.bmEssence;
     }
 
     // get result of transform job
-    let response = await MCMA_CORE.HTTP.get(transformJobId);
-    if(!response.data) {
-        throw new Error("Faild to obtain TransformJob");
-    }
+    let transformJob = await resourceManager.resolve(transformJobId);
 
     // get media info
-    let s3Bucket = response.data.jobOutput.outputFile.awsS3Bucket;
-    let s3Key = response.data.jobOutput.outputFile.awsS3Key;
+    let s3Bucket = transformJob.jobOutput.outputFile.awsS3Bucket;
+    let s3Key = transformJob.jobOutput.outputFile.awsS3Key;
 
     // acquire the registered BMContent
-    let bmc = await getBMContent(event.data.bmContent);
+    let bmc = await resourceManager.resolve(event.data.bmContent);
 
     // create BMEssence
     let locator = new MCMA_CORE.Locator({

@@ -70,6 +70,17 @@ resource "aws_iam_role_policy_attachment" "role-policy-allow-steps-invoke-lambda
   policy_arn = "${aws_iam_policy.policy_steps_invoke_lambda.arn}"
 }
 
+resource "aws_iam_policy" "APIGateway_policy" {
+  name        = "${var.global_prefix}.${var.aws_region}.workflows.policy_apigateway"
+  description = "Policy to access APIGateway endpoints secured with AWS_IAM authentication"
+  policy      = "${file("policies/lambda-allow-apigateway-access.json")}"
+}
+
+resource "aws_iam_role_policy_attachment" "role-policy-api-gateway" {
+  role       = "${aws_iam_role.iam_for_exec_lambda.name}"
+  policy_arn = "${aws_iam_policy.APIGateway_policy.arn}"
+}
+
 #################################
 #  Step Functions : Lambdas used in all workflows
 #################################
@@ -86,7 +97,9 @@ resource "aws_lambda_function" "process-workflow-completion" {
 
   environment {
     variables = {
-      SERVICE_REGISTRY_URL = "${var.service_registry_url}"
+      SERVICES_URL          = "${var.services_url}"
+      SERVICES_AUTH_TYPE    = "${var.services_auth_type}"
+      SERVICES_AUTH_CONTEXT = "${var.services_auth_context}"
     }
   }
 }
@@ -103,7 +116,9 @@ resource "aws_lambda_function" "process-workflow-failure" {
 
   environment {
     variables = {
-      SERVICE_REGISTRY_URL = "${var.service_registry_url}"
+      SERVICES_URL          = "${var.services_url}"
+      SERVICES_AUTH_TYPE    = "${var.services_auth_type}"
+      SERVICES_AUTH_CONTEXT = "${var.services_auth_context}"
     }
   }
 }
@@ -141,7 +156,7 @@ resource "aws_api_gateway_method" "workflow_activity_callback_handler_method" {
   rest_api_id   = "${aws_api_gateway_rest_api.workflow_activity_callback_handler.id}"
   resource_id   = "${aws_api_gateway_resource.workflow_activity_callback_handler_resource.id}"
   http_method   = "ANY"
-  authorization = "NONE"
+  authorization = "AWS_IAM"
 }
 
 resource "aws_api_gateway_integration" "workflow_activity_callback_handler_method-integration" {
@@ -173,8 +188,13 @@ resource "aws_api_gateway_deployment" "workflow_activity_callback_handler_deploy
   stage_name  = "${var.environment_type}"
 
   variables = {
-    "PublicUrl" = "${local.workflow_activity_callback_handler_url}"
+    "PublicUrl"      = "${local.workflow_activity_callback_handler_url}"
+    "DeploymentHash" = "${sha256(file("./workflows/main.tf"))}"
   }
+}
+
+output "workflow_service_notification_url" {
+  value = "${local.workflow_activity_callback_handler_url}"
 }
 
 locals {

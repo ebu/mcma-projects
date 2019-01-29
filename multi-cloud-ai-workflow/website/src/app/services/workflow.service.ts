@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 import { Observable, Subject, BehaviorSubject, from, timer, of } from 'rxjs';
-import { map, zip, switchMap, concatMap, takeWhile } from 'rxjs/operators';
+import { map, zip, switchMap, concatMap, tap, takeWhile } from 'rxjs/operators';
 
-import { ResourceManager, WorkflowJob, JobParameterBag, DescriptiveMetadata, Locator, HTTP } from 'mcma-core';
+import { ResourceManager, WorkflowJob, JobParameterBag, DescriptiveMetadata, Locator, AuthenticatedHttp } from 'mcma-core';
 
 import { ConfigService } from './config.service';
+import { McmaClientService } from './mcma-client.service';
 import { JobStatus } from '../models/job-statuses';
 import { WorkflowJobViewModel } from '../view-models/workflow-job-vm';
 
@@ -14,16 +15,13 @@ export class WorkflowService {
     readonly WORKFLOW_NAME = 'ConformWorkflow';
     readonly WORKFLOW_JOB_TYPE = 'WorkflowJob';
 
-    private resourceManager$: Observable<ResourceManager>;
-
-    constructor(private configService: ConfigService) {
-        this.resourceManager$ = this.configService.get<string>('servicesUrl').pipe(map(servicesUrl => new ResourceManager(servicesUrl)));
+    constructor(private configService: ConfigService, private mcmaClientService: McmaClientService) {
     }
 
     runWorkflow(objectKey: string, metadata: DescriptiveMetadata, profileName = this.WORKFLOW_NAME): Observable<WorkflowJob> {
         const workflowJobSubject = new BehaviorSubject<WorkflowJob>(null);
-        
-        const sub = this.resourceManager$.pipe(
+
+        const sub = this.mcmaClientService.resourceManager$.pipe(
             zip(this.configService.get<string>('aws.s3.uploadBucket')),
             switchMap(([resourceManager, uploadBucket]) => from(this.runWorkflowAsync(resourceManager, profileName, uploadBucket, objectKey, metadata)))
         ).subscribe(job => {
@@ -36,8 +34,8 @@ export class WorkflowService {
 
     getWorkflowJobs(): Observable<WorkflowJob[]> {
         const workflowJobsSubject = new Subject<WorkflowJob[]>();
-        
-        const sub = this.resourceManager$.pipe(
+
+        const sub = this.mcmaClientService.resourceManager$.pipe(
             switchMap(resourceManager => from(this.getWorkflowJobsAsync(resourceManager)))
         ).subscribe(jobs => {
             sub.unsubscribe();
@@ -47,19 +45,23 @@ export class WorkflowService {
         return workflowJobsSubject.asObservable();
     }
 
-    getWorkflowJob(jobId: string): Observable<WorkflowJobViewModel> {
-        return from<WorkflowJob>(HTTP.get(jobId)).pipe(map(resp => new WorkflowJobViewModel(resp.data)));
+    private getWorkflowJob(jobId: string): Observable<any> {
+        return this.mcmaClientService.resourceManager$.pipe(switchMap(resourceManager => from<WorkflowJob>(resourceManager.resolve(jobId))));
+    }
+
+    getWorkflowJobVm(jobId: string): Observable<WorkflowJobViewModel> {
+        return this.getWorkflowJob(jobId).pipe(map(workflowJob => new WorkflowJobViewModel(workflowJob)));
     }
 
     pollForCompletion(workflowJobId: string, fakeRunning = false): Observable<WorkflowJobViewModel> {
         const subject = new BehaviorSubject<WorkflowJobViewModel>(null);
-        
+
         // poll until completion, emitting every 3 secs until the job is completed
         // when the job completes, unsubscribe from polling and load it one more time
         const sub1 =
             timer(0, 3000).pipe(
-                concatMap(() => from<WorkflowJob>(HTTP.get(workflowJobId))),
-                map(resp => resp.data),
+                switchMap(() => this.mcmaClientService.resourceManager$),
+                switchMap(resourceManager => from<WorkflowJob>(resourceManager.resolve(workflowJobId))),
                 takeWhile(j => !JobStatus.isFinished(j))
             ).subscribe(
                 job => subject.next(new WorkflowJobViewModel(job, fakeRunning)),
@@ -68,8 +70,8 @@ export class WorkflowService {
                     // unsubscribe from polling
                     sub1.unsubscribe();
                     // get finished job data
-                    const sub2 = from<WorkflowJob>(HTTP.get(workflowJobId)).subscribe(
-                        resp => subject.next(new WorkflowJobViewModel(resp.data, fakeRunning)),
+                    const sub2 = this.getWorkflowJob(workflowJobId).subscribe(
+                        workflowJob => subject.next(new WorkflowJobViewModel(workflowJob, fakeRunning)),
                         err => subject.error(err),
                         () => sub2.unsubscribe());
                 }
@@ -100,16 +102,16 @@ export class WorkflowService {
         const jobProfileId = await this.getJobProfileIdAsync(resourceManager, profileName);
 
         // creating workflow job
-        let workflowJob = new WorkflowJob(
-            jobProfileId,
-            new JobParameterBag({
+        let workflowJob = new WorkflowJob({
+            jobProfile: jobProfileId,
+            jobInput: new JobParameterBag({
                 metadata: metadata,
                 inputFile: new Locator({
                     awsS3Bucket: uploadBucket,
                     awsS3Key: objectKey
                 })
             })
-        );
+        });
 
         // posting the workflowJob to the job repository
         workflowJob = await resourceManager.create(workflowJob);
@@ -124,11 +126,11 @@ export class WorkflowService {
 
         const jobs: WorkflowJob[] = await resourceManager.get(this.WORKFLOW_JOB_TYPE);
         console.log('All jobs', jobs);
-        
+
         const filteredJobs = jobs.filter(j => j['@type'] === this.WORKFLOW_JOB_TYPE && j.jobProfile && j.jobProfile === jobProfileId);
         console.log('Filtered jobs', filteredJobs);
 
-        filteredJobs.sort((a, b) => new Date(b.dateCreated).getTime() -  new Date(a.dateCreated).getTime());
+        filteredJobs.sort((a, b) => new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime());
 
         console.log("Sorted jobs'", filteredJobs);
 

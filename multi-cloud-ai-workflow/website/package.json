@@ -27,7 +27,7 @@
         "core-js": "^2.5.4",
         "es6-promisify": "^6.0.0",
         "hammerjs": "^2.0.8",
-        "mcma-core": "0.0.9",
+        "mcma-core": "0.2.5",
         "rxjs": "^6.2.2",
         "spinkit": "^1.2.5",
         "stream": "^0.0.2",

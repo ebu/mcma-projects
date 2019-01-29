@@ -1,16 +1,15 @@
-import { Component, OnInit } from '@angular/core';
-import { ConfigService } from '../services/config.service';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 
-import { ResourceManager, HTTP } from "mcma-core"
+import { ConfigService } from '../services/config.service';
+import { McmaClientService } from '../services/mcma-client.service';
+import { Subscription } from 'rxjs';
 
 @Component({
     selector: 'mcma-services',
     templateUrl: './services.component.html',
     styleUrls: ['./services.component.scss']
 })
-export class ServicesComponent implements OnInit {
-
-    private servicesUrl;
+export class ServicesComponent implements OnInit, OnDestroy {
 
     services = [];
     selectedService;
@@ -29,24 +28,34 @@ export class ServicesComponent implements OnInit {
     jobProfilesDisplayedColumns = ['name', 'input', 'output']
     serviceResourcesDisplayedColumns = ['type', 'url']
     resourcesDisplayedColumns = ['type', 'name', 'created', 'modified'];
+    resourceManager: any;
 
-    constructor(private configService: ConfigService) { }
+    resourceManagerSubscription: Subscription;
+
+    constructor(private configService: ConfigService, private mcmaClientService: McmaClientService) { }
 
     ngOnInit() {
-        this.configService.get<string>('servicesUrl', "AAAAAAAAAAAAAAAAAAAAAA").subscribe(servicesUrl => {
-            this.servicesUrl = servicesUrl;
-            this.initialize();
-        })
+        this.resourceManagerSubscription = this.mcmaClientService.resourceManager$.subscribe(resourceManager => {
+            this.resourceManager = resourceManager;
+             if (this.resourceManager) {
+                 this.initialize();  
+             }
+        });
+    }
+
+    ngOnDestroy() {
+        if (this.resourceManagerSubscription) {
+            this.resourceManagerSubscription.unsubscribe();
+            this.resourceManagerSubscription = null;
+        }
     }
 
     private initialize = async () => {
-        let resourceManager = new ResourceManager(this.servicesUrl);
-
-        let services = await resourceManager.get("Service");
+        let services = await this.resourceManager.get("Service");
 
         this.services = services.sort((a, b) => a.name.localeCompare(b.name));
 
-        let jobProfiles = await resourceManager.get("JobProfile");
+        let jobProfiles = await this.resourceManager.get("JobProfile");
 
         this.jobProfiles = {};
 
@@ -117,8 +126,14 @@ export class ServicesComponent implements OnInit {
     }
 
     private getResources = async (httpEndpoint) => {
-        let response = await HTTP.get(httpEndpoint);
-        this.resources = response.data.sort((a, b) => new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime());
+        let resourceEndpoint = await this.resourceManager.getResourceEndpoint(httpEndpoint);
+
+        if (resourceEndpoint) {
+            let response = await resourceEndpoint.get(httpEndpoint)
+            this.resources = response.data.sort((a, b) => new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime());
+        } else {
+            this.resources.length = 0;
+        }
     }
 
     selectResource(row) {

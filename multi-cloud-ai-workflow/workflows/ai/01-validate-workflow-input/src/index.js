@@ -1,13 +1,37 @@
 //"use strict";
 
 // require
+const AWS = require("aws-sdk");
 const MCMA_CORE = require("mcma-core");
 
 // Environment Variable(AWS Lambda)
-const SERVICE_REGISTRY_URL = process.env.SERVICE_REGISTRY_URL;
 const REPOSITORY_BUCKET = process.env.REPOSITORY_BUCKET;
 const TEMP_BUCKET = process.env.TEMP_BUCKET;
 const WEBSITE_BUCKET = process.env.WEBSITE_BUCKET;
+
+const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator({
+    accessKey: AWS.config.credentials.accessKeyId,
+    secretKey: AWS.config.credentials.secretAccessKey,
+    sessionToken: AWS.config.credentials.sessionToken,
+    region: AWS.config.region
+});
+
+const authProvider = new MCMA_CORE.AuthenticatorProvider(
+    async (authType, authContext) => {
+        switch (authType) {
+            case "AWS4":
+                return authenticatorAWS4;
+        }
+    }
+);
+
+const resourceManager = new MCMA_CORE.ResourceManager({
+    servicesUrl: process.env.SERVICES_URL,
+    servicesAuthType: process.env.SERVICES_AUTH_TYPE,
+    servicesAuthContext: process.env.SERVICES_AUTH_CONTEXT,
+    authProvider
+});
+
 
 /* Expecting input like the following:
 
@@ -35,8 +59,6 @@ Note that the notification endpoint is optional. But is used to notify progress 
 exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
 
-    let resourceManager = new MCMA_CORE.ResourceManager(SERVICE_REGISTRY_URL);
-
     // send update notification
     try {
         event.status = "RUNNING";
@@ -61,8 +83,8 @@ exports.handler = async (event, context) => {
         throw new Error("Missing input.bmEssence");
     }
 
-    let bmContent = await retrieveResource(input.bmContent, "input.bmContent");
-    let bmEssence = await retrieveResource(input.bmEssence, "input.bmEssence");
+    let bmContent = await resourceManager.resolve(input.bmContent);
+    let bmEssence = await resourceManager.resolve(input.bmEssence);
 
     console.log(JSON.stringify(bmContent, null, 2), JSON.stringify(bmEssence, null, 2));
 
@@ -84,33 +106,4 @@ exports.handler = async (event, context) => {
     }
 
     return mediaFileLocator;
-}
-
-const retrieveResource = async (resource, resourceName) => {
-    let type = typeof resource;
-
-    if (!resource) {
-        throw new Error(resourceName + " does not exist");
-    }
-
-    if (type === "string") {  // if type is a string we assume it's a URL.
-        try {
-            let response = await MCMA_CORE.HTTP.get(resource);
-            resource = response.data;
-        } catch (error) {
-            throw new Error("Failed to retrieve '" + resourceName + "' from url '" + resource + "'");
-        }
-    }
-
-    type = typeof resource;
-
-    if (type === "object") {
-        if (Array.isArray(resource)) {
-            throw new Error(resourceName + " has illegal type 'Array'");
-        }
-
-        return resource;
-    } else {
-        throw new Error(resourceName + " has illegal type '" + type + "'");
-    }
 }

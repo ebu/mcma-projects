@@ -4,18 +4,19 @@ provider "aws" {
   region     = "${var.aws_region}"
 }
 
-data "template_file" "s3_public_read_write_policy_upload" {
-  template = "${file("policies/s3-public-read-write.json")}"
+data "template_file" "s3_authenticated_read_write_policy_upload" {
+  template = "${file("policies/s3-authenticated-read-write.json")}"
 
   vars {
     bucket_name = "${var.upload_bucket}"
+    aws_account_id = "${var.aws_account_id}"
   }
 }
 
 resource "aws_s3_bucket" "upload" {
   bucket = "${var.upload_bucket}"
-  acl    = "public-read-write"
-  policy = "${data.template_file.s3_public_read_write_policy_upload.rendered}"
+  acl    = "private"
+  policy = "${data.template_file.s3_authenticated_read_write_policy_upload.rendered}"
   force_destroy = true
   cors_rule {
     allowed_headers = ["*"]
@@ -74,5 +75,5 @@ output "website_bucket" {
 }
 
 output "website_url" {
-  value = "https://s3-${var.aws_region}.amazonaws.com/${var.website_bucket}/index.html"
+  value = "https://s3${var.aws_region != "us-east-1" ? "-" : ""}${var.aws_region != "us-east-1" ? var.aws_region : ""}.amazonaws.com/${var.website_bucket}/index.html"
 }
