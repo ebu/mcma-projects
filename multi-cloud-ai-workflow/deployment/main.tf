@@ -1,4 +1,16 @@
 #########################
+# Provider registration 
+#########################
+
+provider "aws" {
+  version = "~> 1.59"
+
+  access_key = "${var.aws_access_key}"
+  secret_key = "${var.aws_secret_key}"
+  region     = "${var.aws_region}"
+}
+
+#########################
 # Module registration 
 # Run a terraform get on each module before executing this script
 #########################
