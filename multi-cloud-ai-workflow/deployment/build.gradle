@@ -93,6 +93,7 @@ task generateAwsCredentialsJson {
 }
 
 task terraformInit(type: Exec) {
+    enabled false
     inputs.file "main.tf"
     outputs.upToDateWhen { file(".terraform").exists() }
     commandLine terraformExecutable
@@ -100,6 +101,7 @@ task terraformInit(type: Exec) {
 }
 
 task terraformPlan(type: Exec) {
+    enabled false
     dependsOn ":build"
     dependsOn terraformInit
     dependsOn generateTerraformTFVars
@@ -109,6 +111,7 @@ task terraformPlan(type: Exec) {
 }
 
 task terraformApply(type: Exec) {
+    enabled false
     dependsOn ":build"
     dependsOn terraformInit
     dependsOn generateTerraformTFVars
@@ -118,6 +121,7 @@ task terraformApply(type: Exec) {
 }
 
 task terraformDestroy(type: Exec) {
+    enabled false
     dependsOn terraformInit
     dependsOn generateTerraformTFVars
     dependsOn generateTerraformWebsiteTF
@@ -126,6 +130,7 @@ task terraformDestroy(type: Exec) {
 }
 
 task terraformOutput(type: Exec) {
+    enabled false
     mustRunAfter terraformApply
     inputs.file("terraform.tfstate")
     outputs.file("terraform.output")
@@ -137,6 +142,7 @@ task terraformOutput(type: Exec) {
 }
 
 task updateServiceRegistry(type: Exec) {
+    enabled false
     dependsOn generateAwsCredentialsJson
     dependsOn terraformOutput
     dependsOn "registry:npmInstall"
