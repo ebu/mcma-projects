@@ -33,10 +33,10 @@ const main = async () => {
     try {
         let params = convertTerraformOutputToJSON(fs.readFileSync(process.argv[2], "utf8"));
 
-        let name = "Service Registry";
-        let url = params.service_registry_url;
-        let authType = params.services_auth_type;
-        let authContext = params.services_auth_context;
+        let name = "Job Repository";
+        let url = params.job_repository_url;
+        let authType = params.job_repository_auth_type;
+        let authContext = params.job_repository_auth_context;
 
         let servicesUrl = params.services_url;
         let servicesAuthType = params.services_auth_type;
@@ -45,8 +45,13 @@ const main = async () => {
         let service = new MCMA_CORE.Service({
             name,
             resources: [
-                new MCMA_CORE.ResourceEndpoint({ resourceType: "Service", httpEndpoint: servicesUrl }),
-                new MCMA_CORE.ResourceEndpoint({ resourceType: "JobProfile", httpEndpoint: url + "/job-profiles" })
+                new MCMA_CORE.ResourceEndpoint({ resourceType: "AmeJob", httpEndpoint: url + "/jobs" }),
+                new MCMA_CORE.ResourceEndpoint({ resourceType: "AIJob", httpEndpoint: url + "/jobs" }),
+                new MCMA_CORE.ResourceEndpoint({ resourceType: "CaptureJob", httpEndpoint: url + "/jobs" }),
+                new MCMA_CORE.ResourceEndpoint({ resourceType: "QAJob", httpEndpoint: url + "/jobs" }),
+                new MCMA_CORE.ResourceEndpoint({ resourceType: "TransferJob", httpEndpoint: url + "/jobs" }),
+                new MCMA_CORE.ResourceEndpoint({ resourceType: "TransformJob", httpEndpoint: url + "/jobs" }),
+                new MCMA_CORE.ResourceEndpoint({ resourceType: "WorkflowJob", httpEndpoint: url + "/jobs" })
             ],
             authType,
             authContext

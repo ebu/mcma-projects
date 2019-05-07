@@ -33,24 +33,11 @@ const main = async () => {
     try {
         let params = convertTerraformOutputToJSON(fs.readFileSync(process.argv[2], "utf8"));
 
-        let name = "Service Registry";
-        let url = params.service_registry_url;
-        let authType = params.services_auth_type;
-        let authContext = params.services_auth_context;
+        let name = "Job Repository";
 
         let servicesUrl = params.services_url;
         let servicesAuthType = params.services_auth_type;
         let servicesAuthContext = params.services_auth_context;
-
-        let service = new MCMA_CORE.Service({
-            name,
-            resources: [
-                new MCMA_CORE.ResourceEndpoint({ resourceType: "Service", httpEndpoint: servicesUrl }),
-                new MCMA_CORE.ResourceEndpoint({ resourceType: "JobProfile", httpEndpoint: url + "/job-profiles" })
-            ],
-            authType,
-            authContext
-        });
 
         const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator({
             accessKey: AWS.config.credentials.accessKeyId,
@@ -80,21 +67,9 @@ const main = async () => {
 
         for (const retrievedService of retrievedServices) {
             if (retrievedService.name === name) {
-                if (!service.id) {
-                    service.id = retrievedService.id;
-
-                    console.log("Updating " + name);
-                    await resourceManager.update(service);
-                } else {
-                    console.log("Removing duplicate " + name + " '" + retrievedService.id + "'");
-                    await resourceManager.delete(retrievedService);
-                }
+                console.log("Removing " + name + " '" + retrievedService.id + "'");
+                await resourceManager.delete(retrievedService);
             }
-        }
-
-        if (!service.id) {
-            console.log("Inserting " + name);
-            service = await resourceManager.create(service);
         }
     } catch (error) {
         if (error.response) {

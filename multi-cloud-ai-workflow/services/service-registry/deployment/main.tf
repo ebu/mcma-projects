@@ -18,7 +18,18 @@ resource "aws_iam_role" "iam_for_exec_lambda" {
   name               = "${format("%.64s", "${var.global_prefix}.${var.aws_region}.service-registry.lambda_exec_role")}"
   assume_role_policy = "${file("./../../../deployment/policies/lambda-assume-role.json")}"
 }
-  
+
+resource "aws_iam_policy" "log_policy" {
+  name        = "${var.global_prefix}.${var.aws_region}.service-registry.policy_log"
+  description = "Policy to write to log"
+  policy      = "${file("./../../../deployment/policies/lambda-allow-log-write.json")}"
+}
+
+resource "aws_iam_role_policy_attachment" "role-policy-log" {
+  role       = "${aws_iam_role.iam_for_exec_lambda.name}"
+  policy_arn = "${aws_iam_policy.log_policy.arn}"
+}
+
 resource "aws_iam_policy" "DynamoDB_policy" {
   name        = "${var.global_prefix}.${var.aws_region}.service-registry.policy_dynamodb"
   description = "Policy to Access DynamoDB"
@@ -54,7 +65,6 @@ resource "aws_dynamodb_table" "service_registry_table" {
   stream_enabled   = true
   stream_view_type = "NEW_IMAGE"
 }
-
 
 #################################
 #  aws_lambda_function : service-registry-api-handler
@@ -158,7 +168,7 @@ resource "aws_lambda_permission" "apigw_service-registry-api-handler" {
   action        = "lambda:InvokeFunction"
   function_name = "${aws_lambda_function.service-registry-api-handler.arn}"
   principal     = "apigateway.amazonaws.com"
-  source_arn = "arn:aws:execute-api:${var.aws_region}:${var.aws_account_id}:${aws_api_gateway_rest_api.service_registry_api.id}/*/${aws_api_gateway_method.service_registry_api_method.http_method}/*"
+  source_arn    = "arn:aws:execute-api:${var.aws_region}:${var.aws_account_id}:${aws_api_gateway_rest_api.service_registry_api.id}/*/${aws_api_gateway_method.service_registry_api_method.http_method}/*"
 }
 
 resource "aws_api_gateway_deployment" "service_registry_deployment" {
@@ -189,9 +199,9 @@ output "services_auth_type" {
   value = "${local.services_auth_type}"
 }
 
-output "services_auth_context" {
-  value = "${local.services_auth_context}"
-}
+# output "services_auth_context" {
+#   value = "${local.services_auth_context}"
+# }
 
 locals {
   service_registry_url  = "https://${aws_api_gateway_rest_api.service_registry_api.id}.execute-api.${var.aws_region}.amazonaws.com/${var.environment_type}"

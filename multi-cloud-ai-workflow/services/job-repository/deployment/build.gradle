@@ -1,13 +1,25 @@
+
+def service_registry = new Properties();
+
 task generateTerraformTFVars {
+    dependsOn ":services:service-registry:deployment:terraformOutput"
+
     inputs.property("ENVIRONMENT_NAME", "${environmentName}")
     inputs.property("ENVIRONMENT_TYPE", "${environmentType}")
     inputs.property("AWS_ACCOUNT_ID", "${awsAccountId}")
     inputs.property("AWS_ACCESS_KEY", "${awsAccessKey}")
     inputs.property("AWS_SECRET_KEY", "${awsSecretKey}")
     inputs.property("AWS_REGION", "${awsRegion}")
-
+    inputs.file "${rootDir}/services/service-registry/deployment/terraform.output"
+    
     outputs.file("${projectDir}/terraform.tfvars")
     doLast {
+        // loading service registry terraform output properties
+        Properties props = new Properties();
+        file ("${rootDir}/services/service-registry/deployment/terraform.output").withInputStream {
+            stream -> props.load(stream);
+        }
+
         def targetFile = new File("${projectDir}/terraform.tfvars")
         targetFile.write("environment_name = \"${environmentName}\"\r\n")
         targetFile.append("environment_type = \"${environmentType}\"\r\n")
@@ -16,6 +28,9 @@ task generateTerraformTFVars {
         targetFile.append("aws_secret_key = \"${awsSecretKey}\"\r\n")
         targetFile.append("aws_region = \"${awsRegion}\"\r\n")
         targetFile.append(("global_prefix = \"${environmentName}.${environmentType}\"\r\n").replace(".", "-"))
+        targetFile.append("services_url = \"${props.services_url}\"\r\n")
+        targetFile.append("services_auth_type = \"${props.services_auth_type}\"\r\n")
+        targetFile.append("services_auth_context = \"${props.services_auth_context}\"\r\n")
     }
 }
 
@@ -42,7 +57,8 @@ task terraformInit(type: Exec) {
 }
 
 task terraformPlan(type: Exec) {
-    dependsOn project(":services:service-registry:api-handler").build
+    dependsOn project(":services:job-repository:api-handler").build
+    dependsOn project(":services:job-repository:worker").build
     dependsOn terraformInit
     dependsOn generateTerraformTFVars
     commandLine terraformExecutable
@@ -50,7 +66,8 @@ task terraformPlan(type: Exec) {
 }
 
 task terraformApply(type: Exec) {
-    dependsOn project(":services:service-registry:api-handler").build
+    dependsOn project(":services:job-repository:api-handler").build
+    dependsOn project(":services:job-repository:worker").build
     dependsOn terraformInit
     dependsOn generateTerraformTFVars
     commandLine terraformExecutable
@@ -87,6 +104,19 @@ task runPostDeployScript(type: Exec) {
     args "post-deploy.js", "terraform.output"
 }
 
+task runPreDestroyScript(type: Exec) {
+    dependsOn generateAwsCredentialsJson
+    dependsOn terraformOutput
+    dependsOn npmInstall
+    inputs.file("${projectDir}/terraform.output")
+    inputs.file("${projectDir}/pre-destroy.js")
+    inputs.file("${projectDir}/package.json")
+    outputs.upToDateWhen { false }
+    commandLine nodeExecutable
+    args "pre-destroy.js", "terraform.output"
+}
+terraformDestroy.mustRunAfter(runPreDestroyScript)
+
 task plan {}
 plan.dependsOn(terraformPlan)
 
@@ -95,10 +125,10 @@ deploy.dependsOn(terraformApply)
 deploy.dependsOn(runPostDeployScript)
 
 task destroy {}
+destroy.dependsOn(runPreDestroyScript)
 destroy.dependsOn(terraformDestroy)
-destroy.dependsOn(clean)
 
 task terraformTaint(type: Exec) {
     commandLine terraformExecutable
-    args "taint", "aws_api_gateway_deployment.service_registry_deployment"
+    args "taint", "aws_api_gateway_deployment.job_repository_deployment"
 }
