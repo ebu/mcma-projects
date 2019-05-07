@@ -57,8 +57,7 @@ task terraformInit(type: Exec) {
 }
 
 task terraformPlan(type: Exec) {
-    dependsOn project(":services:job-processor-service:api-handler").build
-    dependsOn project(":services:job-processor-service:worker").build
+    dependsOn project(":services:media-repository:api-handler").build
     dependsOn terraformInit
     dependsOn generateTerraformTFVars
     commandLine terraformExecutable
@@ -66,8 +65,7 @@ task terraformPlan(type: Exec) {
 }
 
 task terraformApply(type: Exec) {
-    dependsOn project(":services:job-processor-service:api-handler").build
-    dependsOn project(":services:job-processor-service:worker").build
+    dependsOn project(":services:media-repository:api-handler").build
     dependsOn terraformInit
     dependsOn generateTerraformTFVars
     commandLine terraformExecutable
@@ -130,5 +128,5 @@ destroy.dependsOn(terraformDestroy)
 
 task terraformTaint(type: Exec) {
     commandLine terraformExecutable
-    args "taint", "aws_api_gateway_deployment.job_processor_service_deployment"
+    args "taint", "aws_api_gateway_deployment.media_repository_deployment"
 }
