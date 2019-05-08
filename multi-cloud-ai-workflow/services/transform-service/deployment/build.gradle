@@ -1,0 +1,134 @@
+
+def service_registry = new Properties();
+
+task generateTerraformTFVars {
+    dependsOn ":services:service-registry:deployment:terraformOutput"
+
+    inputs.property("ENVIRONMENT_NAME", "${environmentName}")
+    inputs.property("ENVIRONMENT_TYPE", "${environmentType}")
+    inputs.property("AWS_ACCOUNT_ID", "${awsAccountId}")
+    inputs.property("AWS_ACCESS_KEY", "${awsAccessKey}")
+    inputs.property("AWS_SECRET_KEY", "${awsSecretKey}")
+    inputs.property("AWS_REGION", "${awsRegion}")
+    inputs.file "${rootDir}/services/service-registry/deployment/terraform.output"
+
+    outputs.file("${projectDir}/terraform.tfvars")
+    doLast {
+        // loading service registry terraform output properties
+        Properties props = new Properties();
+        file ("${rootDir}/services/service-registry/deployment/terraform.output").withInputStream {
+            stream -> props.load(stream);
+        }
+
+        def targetFile = new File("${projectDir}/terraform.tfvars")
+        targetFile.write("environment_name = \"${environmentName}\"\r\n")
+        targetFile.append("environment_type = \"${environmentType}\"\r\n")
+        targetFile.append("aws_account_id = \"${awsAccountId}\"\r\n")
+        targetFile.append("aws_access_key = \"${awsAccessKey}\"\r\n")
+        targetFile.append("aws_secret_key = \"${awsSecretKey}\"\r\n")
+        targetFile.append("aws_region = \"${awsRegion}\"\r\n")
+        targetFile.append(("global_prefix = \"${environmentName}.${environmentType}\"\r\n").replace(".", "-"))
+        targetFile.append("services_url = \"${props.services_url}\"\r\n")
+        targetFile.append("services_auth_type = \"${props.services_auth_type}\"\r\n")
+        targetFile.append("services_auth_context = \"${props.services_auth_context}\"\r\n")
+    }
+}
+
+task generateAwsCredentialsJson {
+    inputs.property("AWS_ACCESS_KEY", "${awsAccessKey}")
+    inputs.property("AWS_SECRET_KEY", "${awsSecretKey}")
+    inputs.property("AWS_REGION", "${awsRegion}")
+    outputs.file("${projectDir}/aws-credentials.json")
+    doLast {
+        def targetFile = new File("${projectDir}/aws-credentials.json")
+        targetFile.write("{\r\n")
+        targetFile.append("    \"accessKeyId\": \"${awsAccessKey}\",\r\n")
+        targetFile.append("    \"secretAccessKey\": \"${awsSecretKey}\",\r\n")
+        targetFile.append("    \"region\": \"${awsRegion}\"\r\n")
+        targetFile.append("}\r\n")
+    }
+}
+
+task terraformInit(type: Exec) {
+    inputs.file "main.tf"
+    outputs.upToDateWhen { file(".terraform").exists() }
+    commandLine terraformExecutable
+    args "init"
+}
+
+task terraformPlan(type: Exec) {
+    dependsOn project(":services:transform-service:api-handler").build
+    dependsOn project(":services:transform-service:worker").build
+    dependsOn terraformInit
+    dependsOn generateTerraformTFVars
+    commandLine terraformExecutable
+    args "plan"
+}
+
+task terraformApply(type: Exec) {
+    dependsOn project(":services:transform-service:api-handler").build
+    dependsOn project(":services:transform-service:worker").build
+    dependsOn terraformInit
+    dependsOn generateTerraformTFVars
+    commandLine terraformExecutable
+    args "apply", "-auto-approve"
+}
+
+task terraformDestroy(type: Exec) {
+    dependsOn terraformInit
+    dependsOn generateTerraformTFVars
+    commandLine terraformExecutable
+    args "destroy", "-force"
+}
+
+task terraformOutput(type: Exec) {
+    mustRunAfter terraformApply
+    inputs.file("terraform.tfstate")
+    outputs.file("terraform.output")
+    commandLine terraformExecutable
+    args "output"
+    doFirst {
+        standardOutput new FileOutputStream("${projectDir}/terraform.output")
+    }
+}
+
+task runPostDeployScript(type: Exec) {
+    dependsOn generateAwsCredentialsJson
+    dependsOn terraformOutput
+    dependsOn npmInstall
+    inputs.file("${projectDir}/terraform.output")
+    inputs.file("${projectDir}/post-deploy.js")
+    inputs.file("${projectDir}/package.json")
+    outputs.upToDateWhen { false }
+    commandLine nodeExecutable
+    args "post-deploy.js", "terraform.output"
+}
+
+task runPreDestroyScript(type: Exec) {
+    dependsOn generateAwsCredentialsJson
+    dependsOn terraformOutput
+    dependsOn npmInstall
+    inputs.file("${projectDir}/terraform.output")
+    inputs.file("${projectDir}/pre-destroy.js")
+    inputs.file("${projectDir}/package.json")
+    outputs.upToDateWhen { false }
+    commandLine nodeExecutable
+    args "pre-destroy.js", "terraform.output"
+}
+terraformDestroy.mustRunAfter(runPreDestroyScript)
+
+task plan {}
+plan.dependsOn(terraformPlan)
+
+task deploy {}
+deploy.dependsOn(terraformApply)
+deploy.dependsOn(runPostDeployScript)
+
+task destroy {}
+destroy.dependsOn(runPreDestroyScript)
+destroy.dependsOn(terraformDestroy)
+
+task terraformTaint(type: Exec) {
+    commandLine terraformExecutable
+    args "taint", "aws_api_gateway_deployment.transform_service_deployment"
+}
