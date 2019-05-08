@@ -62,7 +62,7 @@ const main = async () => {
             authProvider
         });
 
-        // fetch all services and insert/update service
+        // fetch all services and remove service
         let retrievedServices = await resourceManager.get("Service");
 
         for (const retrievedService of retrievedServices) {
