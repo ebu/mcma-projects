@@ -41,7 +41,6 @@ resource "aws_iam_role_policy_attachment" "role-policy-DynamoDB" {
   policy_arn = "${aws_iam_policy.DynamoDB_policy.arn}"
 }
 
-
 ##################################
 # AI Rekognition  - Roles
 ##################################
@@ -286,7 +285,6 @@ resource "aws_lambda_function" "aws-ai-service-worker" {
   }
 }
 
-
 ##################################
 # AI Rekognition  - SNS
 ##################################
@@ -354,7 +352,6 @@ resource "aws_iam_role_policy_attachment" "role-policy-lambda-full-access-SNS-to
   policy_arn = "arn:aws:iam::aws:policy/AWSLambdaFullAccess"
 }
 
-
 ##############################
 #  aws_api_gateway_rest_api:  aws_ai_service_api
 ##############################
@@ -368,7 +365,6 @@ resource "aws_api_gateway_resource" "aws_ai_service_api_resource" {
   parent_id   = "${aws_api_gateway_rest_api.aws_ai_service_api.root_resource_id}"
   path_part   = "{proxy+}"
 }
-
 
 resource "aws_api_gateway_method" "aws_ai_service_options_method" {
   rest_api_id   = "${aws_api_gateway_rest_api.aws_ai_service_api.id}"
@@ -443,7 +439,7 @@ resource "aws_lambda_permission" "apigw_aws-ai-service-api-handler" {
   action        = "lambda:InvokeFunction"
   function_name = "${aws_lambda_function.aws-ai-service-api-handler.arn}"
   principal     = "apigateway.amazonaws.com"
-  source_arn = "arn:aws:execute-api:${var.aws_region}:${var.aws_account_id}:${aws_api_gateway_rest_api.aws_ai_service_api.id}/*/${aws_api_gateway_method.aws_ai_service_api_method.http_method}/*"
+  source_arn    = "arn:aws:execute-api:${var.aws_region}:${var.aws_account_id}:${aws_api_gateway_rest_api.aws_ai_service_api.id}/*/${aws_api_gateway_method.aws_ai_service_api_method.http_method}/*"
 }
 
 resource "aws_api_gateway_deployment" "aws_ai_service_deployment" {
