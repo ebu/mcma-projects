@@ -10,8 +10,32 @@ AWS.config.loadFromPath('./aws-credentials.json');
 const MCMA_CORE = require("mcma-core");
 
 const JOB_PROFILES = {
-    ExtractTechnicalMetadata: new MCMA_CORE.JobProfile({
-        name: "ExtractTechnicalMetadata",
+    AWSTranscribeAudio: new MCMA_CORE.JobProfile({
+        name: "AWSTranscribeAudio",
+        inputParameters: [
+            new MCMA_CORE.JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
+            new MCMA_CORE.JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
+        ],
+        outputParameters: [
+            new MCMA_CORE.JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
+        ]
+    }),
+    AWSTranslateText: new MCMA_CORE.JobProfile({
+        name: "AWSTranslateText",
+        inputParameters: [
+            new MCMA_CORE.JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
+            new MCMA_CORE.JobParameter({ parameterName: "targetLanguageCode", parameterType: "awsLanguageCode" }),
+            new MCMA_CORE.JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
+        ],
+        outputParameters: [
+            new MCMA_CORE.JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
+        ],
+        optionalInputParameters: [
+            new MCMA_CORE.JobParameter({ parameterName: "sourceLanguageCode", parameterType: "awsLanguageCode" })
+        ]
+    }),
+    AWSDetectCelebrities: new MCMA_CORE.JobProfile({
+        name: "AWSDetectCelebrities",
         inputParameters: [
             new MCMA_CORE.JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
             new MCMA_CORE.JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
@@ -102,10 +126,10 @@ const main = async () => {
         }
 
         // 3. Inserting / Updating service
-        let name = "MediaInfo AME Service";
-        let url = params.ame_service_url;
-        let authType = params.ame_service_auth_type;
-        let authContext = params.ame_service_auth_context;
+        let name = "AWS AI Service";
+        let url = params.aws_ai_service_url;
+        let authType = params.aws_ai_service_auth_type;
+        let authContext = params.aws_ai_service_auth_context;
 
         let service = new MCMA_CORE.Service({
             name,
@@ -114,9 +138,11 @@ const main = async () => {
             ],
             authType,
             authContext,
-            jobType: "AmeJob",
+            jobType: "AIJob",
             jobProfiles: [
-                JOB_PROFILES.ExtractTechnicalMetadata.id ? JOB_PROFILES.ExtractTechnicalMetadata.id : JOB_PROFILES.ExtractTechnicalMetadata
+                JOB_PROFILES.AWSTranscribeAudio.id ? JOB_PROFILES.AWSTranscribeAudio.id : JOB_PROFILES.AWSTranscribeAudio,
+                JOB_PROFILES.AWSTranslateText.id ? JOB_PROFILES.AWSTranslateText.id : JOB_PROFILES.AWSTranslateText,
+                JOB_PROFILES.AWSDetectCelebrities.id ? JOB_PROFILES.AWSDetectCelebrities.id : JOB_PROFILES.AWSDetectCelebrities
             ]
         });
 

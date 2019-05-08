@@ -33,29 +33,11 @@ const main = async () => {
     try {
         let params = convertTerraformOutputToJSON(fs.readFileSync(process.argv[2], "utf8"));
 
-        let name = "Job Repository";
-        let url = params.job_repository_url;
-        let authType = params.job_repository_auth_type;
-        let authContext = params.job_repository_auth_context;
+        let name = "AWS AI Service";
 
         let servicesUrl = params.services_url;
         let servicesAuthType = params.services_auth_type;
         let servicesAuthContext = params.services_auth_context;
-
-        let service = new MCMA_CORE.Service({
-            name,
-            resources: [
-                new MCMA_CORE.ResourceEndpoint({ resourceType: "AmeJob", httpEndpoint: url + "/jobs" }),
-                new MCMA_CORE.ResourceEndpoint({ resourceType: "AIJob", httpEndpoint: url + "/jobs" }),
-                new MCMA_CORE.ResourceEndpoint({ resourceType: "CaptureJob", httpEndpoint: url + "/jobs" }),
-                new MCMA_CORE.ResourceEndpoint({ resourceType: "QAJob", httpEndpoint: url + "/jobs" }),
-                new MCMA_CORE.ResourceEndpoint({ resourceType: "TransferJob", httpEndpoint: url + "/jobs" }),
-                new MCMA_CORE.ResourceEndpoint({ resourceType: "TransformJob", httpEndpoint: url + "/jobs" }),
-                new MCMA_CORE.ResourceEndpoint({ resourceType: "WorkflowJob", httpEndpoint: url + "/jobs" })
-            ],
-            authType,
-            authContext
-        });
 
         const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator({
             accessKey: AWS.config.credentials.accessKeyId,
@@ -80,26 +62,14 @@ const main = async () => {
             authProvider
         });
 
-        // fetch all services and insert/update service
+        // fetch all services and remove service
         let retrievedServices = await resourceManager.get("Service");
 
         for (const retrievedService of retrievedServices) {
             if (retrievedService.name === name) {
-                if (!service.id) {
-                    service.id = retrievedService.id;
-
-                    console.log("Updating " + name);
-                    await resourceManager.update(service);
-                } else {
-                    console.log("Removing duplicate " + name + " '" + retrievedService.id + "'");
-                    await resourceManager.delete(retrievedService);
-                }
+                console.log("Removing " + name + " '" + retrievedService.id + "'");
+                await resourceManager.delete(retrievedService);
             }
-        }
-
-        if (!service.id) {
-            console.log("Inserting " + name);
-            service = await resourceManager.create(service);
         }
     } catch (error) {
         if (error.response) {

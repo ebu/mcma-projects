@@ -10,18 +10,18 @@ AWS.config.loadFromPath('./aws-credentials.json');
 const MCMA_CORE = require("mcma-core");
 
 const convertTerraformOutputToJSON = (content) => {
-    let serviceUrls = {};
+    let object = {};
 
     let lines = content.split("\n");
     for (const line of lines) {
         var parts = line.split(" = ");
 
         if (parts.length === 2) {
-            serviceUrls[parts[0]] = parts[1];
+            object[parts[0]] = parts[1];
         }
     }
 
-    return serviceUrls;
+    return object;
 }
 
 const main = async () => {
