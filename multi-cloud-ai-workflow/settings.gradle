@@ -53,5 +53,4 @@ include "deployment",
         "workflows:ai:08-detect-celebrities-azure",
         "workflows:ai:09-register-celebrities-info-azure",
         "workflows:process-workflow-completion",
-        "workflows:process-workflow-failure",
-        "workflows:workflow-activity-callback-handler"
+        "workflows:process-workflow-failure"
