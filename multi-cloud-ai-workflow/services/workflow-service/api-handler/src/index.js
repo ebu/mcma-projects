@@ -154,6 +154,49 @@ const processNotification = async (request, response) => {
     await LambdaInvoke(params);
 }
 
+const processActivityNotification = async (request, response) => {
+    console.log("processActivityNotification()", JSON.stringify(request, null, 2));
+
+    let notification = request.body;
+
+    if (!notification) {
+        response.statusCode = MCMA_AWS.HTTP_BAD_REQUEST;
+        response.statusMessage = "Missing notification in request body";
+        return;
+    }
+
+    if (!notification.content) {
+        response.statusCode = MCMA_AWS.HTTP_BAD_REQUEST;
+        response.statusMessage = "Missing notification content";
+        return;
+    }
+
+    if (!notification.content.status) {
+        response.statusCode = MCMA_AWS.HTTP_BAD_REQUEST;
+        response.statusMessage = "Missing notification content status";
+        return;
+    }
+
+    switch (notification.content.status) {
+        case "COMPLETED":
+            await SendTaskSuccess({
+                taskToken: request.queryStringParameters.taskToken,
+                output: JSON.stringify(notification.source)
+            });
+            break;
+        case "FAILED":
+            let error = notification.content["@type"] + " failed execution";
+            let cause = notification.content["@type"] + " with id '" + notification.source + "' failed execution with statusMessage '" + notification.content.statusMessage + "'";
+
+            await SendTaskFailure({
+                taskToken: request.queryStringParameters.taskToken,
+                error: error,
+                cause: JSON.stringify(cause)
+            });
+            break;
+    }
+}
+
 // Initializing rest controller for API Gateway Endpoint
 const restController = new MCMA_AWS.ApiGatewayRestController();
 
@@ -166,6 +209,9 @@ restController.addRoute("DELETE", "/job-assignments/{id}", deleteJobAssignment);
 
 // adding route for notifications from workflow
 restController.addRoute("POST", "/job-assignments/{id}/notifications", processNotification);
+
+// adding route for activity task notifications
+restController.addRoute("POST", "/activity-notifications", processActivityNotification);
 
 exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));

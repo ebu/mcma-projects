@@ -10,23 +10,24 @@ AWS.config.loadFromPath('./aws-credentials.json');
 const MCMA_CORE = require("mcma-core");
 
 const JOB_PROFILES = {
-    ConformWorkflow: new MCMA_CORE.JobProfile({
-        name: "ConformWorkflow",
+    AWSStepFunctions: new MCMA_CORE.JobProfile({
+        name: "AWSStepFunctions",
         inputParameters: [
-            new MCMA_CORE.JobParameter({ parameterName: "metadata", parameterType: "DescriptiveMetadata" }),
-            new MCMA_CORE.JobParameter({ parameterName: "inputFile", parameterType: "Locator" })
+            new MCMA_CORE.JobParameter({ parameterName: "workflow", parameterType: "AWSStepFunctionsWorkflow" }),
+            new MCMA_CORE.JobParameter({ parameterName: "input", parameterType: "JobParameterBag" })
         ],
         outputParameters: [
-            new MCMA_CORE.JobParameter({ parameterName: "websiteMediaFile", parameterType: "Locator" }),
-            new MCMA_CORE.JobParameter({ parameterName: "aiWorkflow", parameterType: "WorkflowJob" }),
-            new MCMA_CORE.JobParameter({ parameterName: "bmContent", parameterType: "BMContent" })
+            new MCMA_CORE.JobParameter({ parameterName: "output", parameterType: "JobParameterBag" })
         ]
     }),
-    AiWorkflow: new MCMA_CORE.JobProfile({
-        name: "AiWorkflow",
+    AmazonSimpleWorkflow: new MCMA_CORE.JobProfile({
+        name: "AmazonSimpleWorkflow",
         inputParameters: [
-            new MCMA_CORE.JobParameter({ parameterName: "bmContent", parameterType: "BMContent" }),
-            new MCMA_CORE.JobParameter({ parameterName: "bmEssence", parameterType: "BMEssence" })
+            new MCMA_CORE.JobParameter({ parameterName: "workflow", parameterType: "AmazonSimpleWorkflow" }),
+            new MCMA_CORE.JobParameter({ parameterName: "input", parameterType: "JobParameterBag" })
+        ],
+        outputParameters: [
+            new MCMA_CORE.JobParameter({ parameterName: "output", parameterType: "JobParameterBag" })
         ]
     })
 }
@@ -113,7 +114,6 @@ const main = async () => {
         // 3. Inserting / Updating service
         let name = "Workflow Service";
         let url = params.workflow_service_url;
-        let notificationUrl = params.workflow_service_notification_url
         let authType = params.workflow_service_auth_type;
         let authContext = params.workflow_service_auth_context;
 
@@ -121,14 +121,14 @@ const main = async () => {
             name,
             resources: [
                 new MCMA_CORE.ResourceEndpoint({ resourceType: "JobAssignment", httpEndpoint: url + "/job-assignments" }),
-                // new MCMA_CORE.ResourceEndpoint({ resourceType: "Notification", httpEndpoint: notificationUrl })
+                new MCMA_CORE.ResourceEndpoint({ resourceType: "Notification", httpEndpoint: url + "/activity-notifications" })
             ],
             authType,
             authContext,
             jobType: "WorkflowJob",
             jobProfiles: [
-                JOB_PROFILES.ConformWorkflow.id ? JOB_PROFILES.ConformWorkflow.id : JOB_PROFILES.ConformWorkflow,
-                JOB_PROFILES.AiWorkflow.id ? JOB_PROFILES.AiWorkflow.id : JOB_PROFILES.AiWorkflow
+                JOB_PROFILES.AWSStepFunctions.id ? JOB_PROFILES.AWSStepFunctions.id : JOB_PROFILES.AWSStepFunctions,
+                JOB_PROFILES.AmazonSimpleWorkflow.id ? JOB_PROFILES.AmazonSimpleWorkflow.id : JOB_PROFILES.AmazonSimpleWorkflow
             ]
         });
 
