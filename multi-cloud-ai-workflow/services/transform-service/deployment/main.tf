@@ -10,9 +10,9 @@ provider "aws" {
   region     = "${var.aws_region}"
 }
 
-##################################
+######################################
 # aws_iam_role : iam_for_exec_lambda
-##################################
+######################################
 
 resource "aws_iam_role" "iam_for_exec_lambda" {
   name               = "${format("%.64s", "${var.global_prefix}-lambda-exec-role")}"
@@ -64,7 +64,7 @@ resource "aws_iam_role_policy_attachment" "role_policy_apigateway" {
 }
 
 resource "aws_iam_policy" "s3_policy" {
-  name        = "${format("%.64s", "${var.global_prefix}-s3-policy")}"
+  name        = "${var.global_prefix}-policy-s3"
   description = "Policy to allow S3 access"
   policy      = "${file("../../../policies/allow-full-s3.json")}"
 }

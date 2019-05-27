@@ -10,50 +10,65 @@ provider "aws" {
   region     = "${var.aws_region}"
 }
 
-#################################
+#######################################
 #  aws_iam_role : iam_for_exec_lambda
-#################################
+#######################################
 
 resource "aws_iam_role" "iam_for_exec_lambda" {
-  name               = "${format("${var.global_prefix}-lambda_exec_role")}"
-  assume_role_policy = "${file("../../../deployment/policies/lambda-assume-role.json")}"
+  name               = "${format("%.64s", "${var.global_prefix}-lambda-exec-role")}"
+  assume_role_policy = "${file("../../../policies/lambda-allow-assume-role.json")}"
 }
 
 resource "aws_iam_policy" "log_policy" {
-  name        = "${var.global_prefix}-policy_log"
+  name        = "${var.global_prefix}-policy-log"
   description = "Policy to write to log"
-  policy      = "${file("../../../deployment/policies/lambda-allow-log-write.json")}"
+  policy      = "${file("../../../policies/allow-full-logs.json")}"
 }
 
-resource "aws_iam_role_policy_attachment" "role-policy-log" {
+resource "aws_iam_role_policy_attachment" "role_policy_log" {
   role       = "${aws_iam_role.iam_for_exec_lambda.name}"
   policy_arn = "${aws_iam_policy.log_policy.arn}"
 }
 
-resource "aws_iam_policy" "S3_policy" {
-  name        = "${var.global_prefix}-policy_s3"
-  description = "Policy to access S3 bucket objects"
-  policy      = "${file("../../../deployment/policies/lambda-allow-s3-access.json")}"
+resource "aws_iam_policy" "s3_policy" {
+  name        = "${var.global_prefix}-policy-s3"
+  description = "Policy to allow S3 access"
+  policy      = "${file("../../../policies/allow-full-s3.json")}"
 }
 
-resource "aws_iam_role_policy_attachment" "role-policy-S3" {
+resource "aws_iam_role_policy_attachment" "lambda_role_policy_s3" {
   role       = "${aws_iam_role.iam_for_exec_lambda.name}"
-  policy_arn = "${aws_iam_policy.S3_policy.arn}"
+  policy_arn = "${aws_iam_policy.s3_policy.arn}"
 }
 
-resource "aws_iam_policy" "steps_policy" {
-  name        = "${var.global_prefix}-policy_steps"
-  description = "Policy to allow lambda functions manage step functions"
-  policy      = "${file("../../../deployment/policies/lambda-allow-steps-access.json")}"
+resource "aws_iam_policy" "apigateway_policy" {
+  name        = "${var.global_prefix}-policy-apigateway"
+  description = "Policy to allow invoking AWS4 secured Api gateway endpoints"
+  policy      = "${file("../../../policies/allow-invoke-apigateway.json")}"
 }
 
-resource "aws_iam_role_policy_attachment" "role-policy-steps" {
+resource "aws_iam_role_policy_attachment" "role_policy_apigateway" {
   role       = "${aws_iam_role.iam_for_exec_lambda.name}"
-  policy_arn = "${aws_iam_policy.steps_policy.arn}"
+  policy_arn = "${aws_iam_policy.apigateway_policy.arn}"
 }
 
-data "template_file" "steps-assume-role" {
-  template = "${file("../../../deployment/policies/steps-assume-role.json")}"
+resource "aws_iam_policy" "states_policy" {
+  name        = "${var.global_prefix}-policy-states"
+  description = "Policy to allow accessing AWS Step function state machines"
+  policy      = "${file("../../../policies/allow-full-states.json")}"
+}
+
+resource "aws_iam_role_policy_attachment" "role_policy_states" {
+  role       = "${aws_iam_role.iam_for_exec_lambda.name}"
+  policy_arn = "${aws_iam_policy.states_policy.arn}"
+}
+
+###################################################
+#  aws_iam_role : iam_for_state_machine_execution
+###################################################
+
+data "template_file" "states_assume_role" {
+  template = "${file("../../../policies/states-allow-assume-role.json")}"
 
   vars {
     aws_region = "${var.aws_region}"
@@ -61,32 +76,20 @@ data "template_file" "steps-assume-role" {
 }
 
 resource "aws_iam_role" "iam_for_state_machine_execution" {
-  name               = "${format("${var.global_prefix}-steps_exec_role")}"
-  assume_role_policy = "${data.template_file.steps-assume-role.rendered}"
+  name               = "${format("%.64s", "${var.global_prefix}-states-exec-role")}"
+  assume_role_policy = "${data.template_file.states_assume_role.rendered}"
 }
 
-resource "aws_iam_policy" "policy_steps_invoke_lambda" {
-  name        = "${var.global_prefix}-policy_steps_invoke_lambda"
-  description = "Policy to allow step functions to invoke lambdas"
-  policy      = "${file("../../../deployment/policies/steps-allow-invoke-lambda.json")}"
+resource "aws_iam_policy" "lambda_policy" {
+  name        = "${var.global_prefix}-policy-lambda"
+  description = "Policy to allow invoking lambda functions"
+  policy      = "${file("../../../policies/allow-invoke-lambda.json")}"
 }
 
-resource "aws_iam_role_policy_attachment" "role-policy-allow-steps-invoke-lambda" {
+resource "aws_iam_role_policy_attachment" "states_role_policy_lambda" {
   role       = "${aws_iam_role.iam_for_state_machine_execution.name}"
-  policy_arn = "${aws_iam_policy.policy_steps_invoke_lambda.arn}"
+  policy_arn = "${aws_iam_policy.lambda_policy.arn}"
 }
-
-resource "aws_iam_policy" "APIGateway_policy" {
-  name        = "${var.global_prefix}-policy_apigateway"
-  description = "Policy to access APIGateway endpoints secured with AWS_IAM authentication"
-  policy      = "${file("../../../deployment/policies/lambda-allow-apigateway-access.json")}"
-}
-
-resource "aws_iam_role_policy_attachment" "role-policy-api-gateway" {
-  role       = "${aws_iam_role.iam_for_exec_lambda.name}"
-  policy_arn = "${aws_iam_policy.APIGateway_policy.arn}"
-}
-
 
 #################################
 #  Step Functions : Workflow activity callback handler
@@ -138,7 +141,7 @@ resource "aws_lambda_permission" "apigw_workflow-activity-callback-handler" {
   action        = "lambda:InvokeFunction"
   function_name = "${aws_lambda_function.workflow-activity-callback-handler.arn}"
   principal     = "apigateway.amazonaws.com"
-  source_arn = "arn:aws:execute-api:${var.aws_region}:${var.aws_account_id}:${aws_api_gateway_rest_api.workflow_activity_callback_handler.id}/*/${aws_api_gateway_method.workflow_activity_callback_handler_method.http_method}/*"
+  source_arn    = "arn:aws:execute-api:${var.aws_region}:${var.aws_account_id}:${aws_api_gateway_rest_api.workflow_activity_callback_handler.id}/*/${aws_api_gateway_method.workflow_activity_callback_handler_method.http_method}/*"
 }
 
 resource "aws_api_gateway_deployment" "workflow_activity_callback_handler_deployment" {
@@ -159,7 +162,6 @@ resource "aws_api_gateway_deployment" "workflow_activity_callback_handler_deploy
 locals {
   workflow_activity_callback_handler_url = "https://${aws_api_gateway_rest_api.workflow_activity_callback_handler.id}.execute-api.${var.aws_region}.amazonaws.com/${var.environment_type}/notifications"
 }
-
 
 #################################
 #  Step Functions : Lambdas used in steps of workflow
@@ -341,7 +343,7 @@ resource "aws_lambda_function" "conform-06-decide-transcode-requirements" {
       REPOSITORY_BUCKET     = "${var.repository_bucket}"
       TEMP_BUCKET           = "${var.temp_bucket}"
       WEBSITE_BUCKET        = "${var.website_bucket}"
-      THESHOLD_SECONDS      = "30"
+      THRESHOLD_SECONDS     = "30"
     }
   }
 }

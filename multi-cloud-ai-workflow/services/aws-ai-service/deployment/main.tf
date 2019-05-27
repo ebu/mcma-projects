@@ -75,7 +75,7 @@ resource "aws_iam_role_policy_attachment" "lambda_role_policy_rekognition" {
 }
 
 resource "aws_iam_policy" "s3_policy" {
-  name        = "${format("%.64s", "${var.global_prefix}-s3-policy")}"
+  name        = "${var.global_prefix}-policy-s3"
   description = "Policy to allow S3 access"
   policy      = "${file("../../../policies/allow-full-s3.json")}"
 }
@@ -83,6 +83,27 @@ resource "aws_iam_policy" "s3_policy" {
 resource "aws_iam_role_policy_attachment" "lambda_role_policy_s3" {
   role       = "${aws_iam_role.iam_for_exec_lambda.name}"
   policy_arn = "${aws_iam_policy.s3_policy.arn}"
+}
+
+resource "aws_iam_policy" "pass_role_iam_policy" {
+  name        = "${var.global_prefix}-policy-pass-role"
+  description = "Policy to allow lambda to pass role to another principal"
+  policy      = "${file("../../../policies/allow-pass-role-iam.json")}"
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_role_policy_pass_role_iam" {
+  role       = "${aws_iam_role.iam_for_exec_lambda.name}"
+  policy_arn = "${aws_iam_policy.pass_role_iam_policy.arn}"
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_role_policy_amazon_transcribe_full_access" {
+  role       = "${aws_iam_role.iam_for_exec_lambda.name}"
+  policy_arn = "arn:aws:iam::aws:policy/AmazonTranscribeFullAccess"
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_role_policy_amazon_translate_read_only" {
+  role       = "${aws_iam_role.iam_for_exec_lambda.name}"
+  policy_arn = "arn:aws:iam::aws:policy/TranslateReadOnly"
 }
 
 ##################################
@@ -96,7 +117,7 @@ resource "aws_iam_role" "iam_role_for_reko" {
 }
 
 resource "aws_iam_policy" "sns_policy" {
-  name        = "${format("%.64s", "${var.global_prefix}-reko-to-sns-policy")}"
+  name        = "${var.global_prefix}-policy-reko-to-sns"
   description = "Policy for Reko to access SNS"
 
   policy = <<EOF
