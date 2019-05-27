@@ -80,13 +80,22 @@ const main = async () => {
 
         for (const retrievedWorkflow of retrievedWorkflows) {
             if (retrievedWorkflow.name === name) {
-                console.log("Disassociating workflow " + name + " '" + retrievedWorkflow.id + "'");
-                await resourceManager.delete(retrievedWorkflow);
+                if (!workflow.id) {
+                    workflow.id = retrievedWorkflow.id;
+
+                    console.log("Updating " + name);
+                    await resourceManager.update(workflow);
+                } else {
+                    console.log("Removing duplicate " + name + " '" + retrievedWorkflow.id + "'");
+                    await resourceManager.delete(retrievedWorkflow);
+                }
             }
         }
-        
-        console.log("Associating workflow " + name);
-        workflow = await resourceManager.create(workflow);
+
+        if (!workflow.id) {
+            console.log("Inserting " + name);
+            workflow = await resourceManager.create(workflow);
+        }
     } catch (error) {
         if (error.response) {
             console.error(JSON.stringify(error.response.data.message, null, 2));

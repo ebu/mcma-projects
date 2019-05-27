@@ -84,6 +84,7 @@ const main = async () => {
             if (retrievedService.name === name) {
                 if (!service.id) {
                     service.id = retrievedService.id;
+                    service.jobProfiles = retrievedService.jobProfiles;
 
                     console.log("Updating " + name);
                     await resourceManager.update(service);

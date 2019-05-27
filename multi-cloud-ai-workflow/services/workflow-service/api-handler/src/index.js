@@ -130,9 +130,15 @@ const addWorkflow = async (request, response) => {
         return;
     }
 
-    if (!workflow["@type"]) {
+    if (workflow["@type"] !== "AWSStepFunctionsWorkflow") {
         response.statusCode = MCMA_AWS.HTTP_BAD_REQUEST;
         response.statusMessage = "Missing '@type' property.";
+        return;
+    }
+
+    if (!workflow.stateMachineArn) {
+        response.statusCode = MCMA_AWS.HTTP_BAD_REQUEST;
+        response.statusMessage = "Missing 'stateMachineArn' property.";
         return;
     }
 
@@ -157,7 +163,7 @@ const addWorkflow = async (request, response) => {
         InvocationType: "Event",
         LogType: "None",
         Payload: JSON.stringify({
-            action: "CreateJobProfile",
+            action: "SetJobProfile",
             stageVariables: request.stageVariables,
             workflowId: workflowId
         })
@@ -179,6 +185,61 @@ const getWorkflow = async (request, response) => {
         response.statusCode = MCMA_AWS.HTTP_NOT_FOUND;
         response.statusMessage = "No resource found on path '" + request.path + "'.";
     }
+}
+
+const putWorkflow = async (request, response) => {
+    console.log("putWorkflow()", JSON.stringify(request, null, 2));
+
+    let workflow = request.body;
+    if (!workflow) {
+        response.statusCode = MCMA_AWS.HTTP_BAD_REQUEST;
+        response.statusMessage = "Missing request body.";
+        return;
+    }
+
+    if (workflow["@type"] !== "AWSStepFunctionsWorkflow") {
+        response.statusCode = MCMA_AWS.HTTP_BAD_REQUEST;
+        response.statusMessage = "Missing '@type' property.";
+        return;
+    }
+
+    if (!workflow.stateMachineArn) {
+        response.statusCode = MCMA_AWS.HTTP_BAD_REQUEST;
+        response.statusMessage = "Missing 'stateMachineArn' property.";
+        return;
+    }
+
+    let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
+
+    let workflowId = request.stageVariables.PublicUrl + request.path;
+    let oldWorkflow = await table.get("Workflow", workflowId);
+
+    workflow.id = workflowId;
+    workflow.jobProfile = oldWorkflow ? oldWorkflow.jobProfile : undefined;;
+    workflow.dateModified = new Date().toISOString();
+    if (!workflow.dateCreated) {
+        workflow.dateCreated = workflow.dateModified;
+    }
+
+    await table.put("Workflow", workflowId, workflow);
+
+    response.body = workflow;
+
+    console.log(JSON.stringify(response, null, 2));
+
+    // invoking worker lambda function that will create a job profile based on workflow definition and adds it in the service registry.
+    var params = {
+        FunctionName: request.stageVariables.WorkerLambdaFunctionName,
+        InvocationType: "Event",
+        LogType: "None",
+        Payload: JSON.stringify({
+            action: "SetJobProfile",
+            stageVariables: request.stageVariables,
+            workflowId: workflowId
+        })
+    };
+
+    await LambdaInvoke(params);
 }
 
 const deleteWorkflow = async (request, response) => {
@@ -272,6 +333,7 @@ restController.addRoute("DELETE", "/job-assignments/{id}", deleteJobAssignment);
 restController.addRoute("GET", "/workflows", getWorkflows);
 restController.addRoute("POST", "/workflows", addWorkflow);
 restController.addRoute("GET", "/workflows/{id}", getWorkflow);
+restController.addRoute("PUT", "/workflows/{id}", putWorkflow);
 restController.addRoute("DELETE", "/workflows/{id}", deleteWorkflow);
 
 // adding route for notifications from workflow

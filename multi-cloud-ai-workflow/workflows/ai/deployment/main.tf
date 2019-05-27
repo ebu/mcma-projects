@@ -460,7 +460,7 @@ data "template_file" "ai-workflow" {
 }
 
 resource "aws_sfn_state_machine" "ai-workflow" {
-  name       = "${var.global_prefix}-state-machine"
+  name       = "${var.global_prefix}"
   role_arn   = "${aws_iam_role.iam_for_state_machine_execution.arn}"
   definition = "${data.template_file.ai-workflow.rendered}"
 }

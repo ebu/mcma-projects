@@ -45,8 +45,8 @@ exports.handler = async (event, context) => {
             case "ProcessNotification":
                 await processNotification(event);
                 break;
-            case "CreateJobProfile":
-                await createJobProfile(event);
+            case "SetJobProfile":
+                await setJobProfile(event);
                 break;
             case "DeleteJobProfile":
                 await deleteJobProfile(event);
@@ -134,7 +134,7 @@ const processNotification = async (event) => {
     await resourceManager.sendNotification(jobAssignment);
 }
 
-const createJobProfile = async (event) => {
+const setJobProfile = async (event) => {
     let resourceManager = createResourceManager(event);
 
     let table = new MCMA_AWS.DynamoDbTable(AWS, event.stageVariables.TableName);
@@ -154,6 +154,7 @@ const createJobProfile = async (event) => {
             }
 
             jobProfile = new MCMA_CORE.JobProfile({
+                id: workflow.jobProfile,
                 name: workflow.name,
                 inputParameters: workflow.inputParameters,
                 outputParameters: workflow.outputParameters,
@@ -164,7 +165,13 @@ const createJobProfile = async (event) => {
             throw new Error("Unsupported workflow type '" + workflow["@type"] + "'");
     }
 
-    jobProfile = await resourceManager.create(jobProfile);
+    if (jobProfile.id) {
+        console.log("Updating job profile in Service Registry", JSON.stringify(jobProfile, null, 2));
+        jobProfile = await resourceManager.update(jobProfile);
+    } else {
+        console.log("Inserting job profile in Service Registry", JSON.stringify(jobProfile, null, 2));
+        jobProfile = await resourceManager.create(jobProfile);
+    }
 
     workflow.jobProfile = jobProfile.id;
     await table.put("Workflow", workflowId, workflow);
@@ -174,7 +181,7 @@ const createJobProfile = async (event) => {
 
 const deleteJobProfile = async (event) => {
     let resourceManager = createResourceManager(event);
-    
+
     let jobProfileId = event.jobProfileId;
 
     let jobProfile = await resourceManager.resolve(jobProfileId);
@@ -203,7 +210,7 @@ const updateServiceInRegistry = async (event, resourceManager) => {
     }
 
     workflowService.jobProfiles = [];
-    
+
     let table = new MCMA_AWS.DynamoDbTable(AWS, event.stageVariables.TableName);
     let workflows = await table.getAll("Workflow");
 

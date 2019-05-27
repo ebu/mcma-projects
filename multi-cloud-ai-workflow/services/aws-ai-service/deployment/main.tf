@@ -74,6 +74,17 @@ resource "aws_iam_role_policy_attachment" "lambda_role_policy_rekognition" {
   policy_arn = "${aws_iam_policy.rekognition_policy.arn}"
 }
 
+resource "aws_iam_policy" "s3_policy" {
+  name        = "${format("%.64s", "${var.global_prefix}-s3-policy")}"
+  description = "Policy to allow S3 access"
+  policy      = "${file("../../../policies/allow-full-s3.json")}"
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_role_policy_s3" {
+  role       = "${aws_iam_role.iam_for_exec_lambda.name}"
+  policy_arn = "${aws_iam_policy.s3_policy.arn}"
+}
+
 ##################################
 # AI Rekognition  - Roles
 ##################################

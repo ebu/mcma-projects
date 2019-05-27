@@ -63,6 +63,17 @@ resource "aws_iam_role_policy_attachment" "role_policy_apigateway" {
   policy_arn = "${aws_iam_policy.apigateway_policy.arn}"
 }
 
+resource "aws_iam_policy" "states_policy" {
+  name        = "${var.global_prefix}-policy-states"
+  description = "Policy to allow accessing AWS Step function state machines"
+  policy      = "${file("../../../policies/allow-full-states.json")}"
+}
+
+resource "aws_iam_role_policy_attachment" "role_policy_states" {
+  role       = "${aws_iam_role.iam_for_exec_lambda.name}"
+  policy_arn = "${aws_iam_policy.states_policy.arn}"
+}
+
 ##################################
 # aws_dynamodb_table : workflow_service_table
 ##################################
