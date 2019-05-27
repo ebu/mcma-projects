@@ -15,30 +15,52 @@ provider "aws" {
 ##################################
 
 resource "aws_iam_role" "iam_for_exec_lambda" {
-  name               = "${format("%.64s", "${var.global_prefix}.${var.aws_region}.azure-ai-service.lambda_exec_role")}"
-  assume_role_policy = "${file("./../../../deployment/policies/lambda-assume-role.json")}"
+  name               = "${format("%.64s", "${var.global_prefix}-lambda-exec-role")}"
+  assume_role_policy = "${file("../../../policies/lambda-allow-assume-role.json")}"
 }
 
 resource "aws_iam_policy" "log_policy" {
-  name        = "${var.global_prefix}.${var.aws_region}.azure-ai-service.policy_log"
+  name        = "${var.global_prefix}-policy-log"
   description = "Policy to write to log"
-  policy      = "${file("./../../../deployment/policies/lambda-allow-log-write.json")}"
+  policy      = "${file("../../../policies/allow-full-logs.json")}"
 }
 
-resource "aws_iam_role_policy_attachment" "role-policy-log" {
+resource "aws_iam_role_policy_attachment" "role_policy_log" {
   role       = "${aws_iam_role.iam_for_exec_lambda.name}"
   policy_arn = "${aws_iam_policy.log_policy.arn}"
 }
 
-resource "aws_iam_policy" "DynamoDB_policy" {
-  name        = "${var.global_prefix}.${var.aws_region}.azure-ai-service.policy_dynamodb"
+resource "aws_iam_policy" "dynamodb_policy" {
+  name        = "${var.global_prefix}-policy-dynamodb"
   description = "Policy to Access DynamoDB"
-  policy      = "${file("./../../../deployment/policies/lambda-allow-dynamodb-access.json")}"
+  policy      = "${file("../../../policies/allow-full-dynamodb.json")}"
 }
 
-resource "aws_iam_role_policy_attachment" "role-policy-DynamoDB" {
+resource "aws_iam_role_policy_attachment" "role_policy_dynamodb" {
   role       = "${aws_iam_role.iam_for_exec_lambda.name}"
-  policy_arn = "${aws_iam_policy.DynamoDB_policy.arn}"
+  policy_arn = "${aws_iam_policy.dynamodb_policy.arn}"
+}
+
+resource "aws_iam_policy" "lambda_policy" {
+  name        = "${var.global_prefix}-policy-lambda"
+  description = "Policy to allow invoking lambda functions"
+  policy      = "${file("../../../policies/allow-invoke-lambda.json")}"
+}
+
+resource "aws_iam_role_policy_attachment" "role_policy_lambda" {
+  role       = "${aws_iam_role.iam_for_exec_lambda.name}"
+  policy_arn = "${aws_iam_policy.lambda_policy.arn}"
+}
+
+resource "aws_iam_policy" "apigateway_policy" {
+  name        = "${var.global_prefix}-policy-apigateway"
+  description = "Policy to allow invoking AWS4 secured Api gateway endpoints"
+  policy      = "${file("../../../policies/allow-invoke-apigateway.json")}"
+}
+
+resource "aws_iam_role_policy_attachment" "role_policy_apigateway" {
+  role       = "${aws_iam_role.iam_for_exec_lambda.name}"
+  policy_arn = "${aws_iam_policy.apigateway_policy.arn}"
 }
 
 ##################################
@@ -46,7 +68,7 @@ resource "aws_iam_role_policy_attachment" "role-policy-DynamoDB" {
 ##################################
 
 resource "aws_dynamodb_table" "azure_ai_service_table" {
-  name           = "${var.global_prefix}-azure-ai-service"
+  name           = "${var.global_prefix}"
   read_capacity  = 1
   write_capacity = 1
   hash_key       = "resource_type"
@@ -72,7 +94,7 @@ resource "aws_dynamodb_table" "azure_ai_service_table" {
 
 resource "aws_lambda_function" "azure-ai-service-api-handler" {
   filename         = "./../api-handler/dist/lambda.zip"
-  function_name    = "${format("%.64s", "${var.global_prefix}-azure-ai-service-api-handler")}"
+  function_name    = "${format("%.64s", "${var.global_prefix}-api-handler")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
   source_code_hash = "${base64sha256(file("./../api-handler/dist/lambda.zip"))}"
@@ -87,7 +109,7 @@ resource "aws_lambda_function" "azure-ai-service-api-handler" {
 
 resource "aws_lambda_function" "azure-ai-service-api-handler-non-secure" {
   filename         = "./../api-handler-non-secure/dist/lambda.zip"
-  function_name    = "${format("%.64s", "${var.global_prefix}-azure-ai-service-api-handler-non-secure")}"
+  function_name    = "${format("%.64s", "${var.global_prefix}-api-handler-non-secure")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
   source_code_hash = "${base64sha256(file("./../api-handler-non-secure/dist/lambda.zip"))}"
@@ -102,7 +124,7 @@ resource "aws_lambda_function" "azure-ai-service-api-handler-non-secure" {
 
 resource "aws_lambda_function" "azure-ai-service-worker" {
   filename         = "./../worker/dist/lambda.zip"
-  function_name    = "${format("%.64s", "${var.global_prefix}-azure-ai-service-worker")}"
+  function_name    = "${format("%.64s", "${var.global_prefix}-worker")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
   source_code_hash = "${base64sha256(file("./../worker/dist/lambda.zip"))}"
@@ -115,7 +137,7 @@ resource "aws_lambda_function" "azure-ai-service-worker" {
 #  aws_api_gateway_rest_api:  azure_ai_service_api
 ##############################
 resource "aws_api_gateway_rest_api" "azure_ai_service_api" {
-  name        = "${var.global_prefix}-azure-ai-service"
+  name        = "${var.global_prefix}"
   description = "Azure AI Service Rest Api"
 }
 
@@ -213,7 +235,7 @@ resource "aws_api_gateway_deployment" "azure_ai_service_deployment" {
   stage_name  = "${var.environment_type}"
 
   variables = {
-    "TableName"                = "${var.global_prefix}-azure-ai-service"
+    "TableName"                = "${aws_dynamodb_table.azure_ai_service_table.name}"
     "PublicUrl"                = "${local.azure_ai_service_url}"
     "PublicUrlNonSecure"       = "${local.azure_ai_service_non_secure_url}"
     "ServicesUrl"              = "${var.services_url}"
@@ -232,7 +254,7 @@ resource "aws_api_gateway_deployment" "azure_ai_service_deployment" {
 #  aws_api_gateway_rest_api:  azure_ai_service_api_non_secure
 ##############################
 resource "aws_api_gateway_rest_api" "azure_ai_service_api_non_secure" {
-  name        = "${var.global_prefix}-azure-ai-service-non-secure"
+  name        = "${var.global_prefix}-non-secure"
   description = "Azure AI Service Non Secure Rest Api For Callbacks by Azure Service"
 }
 
@@ -276,7 +298,7 @@ resource "aws_api_gateway_deployment" "azure_ai_service_deployment_non_secure" {
   stage_name  = "${var.environment_type}"
 
   variables = {
-    "TableName"                = "${var.global_prefix}-azure-ai-service"
+    "TableName"                = "${aws_dynamodb_table.azure_ai_service_table.name}"
     "PublicUrl"                = "${local.azure_ai_service_url}"
     "PublicUrlNonSecure"       = "${local.azure_ai_service_non_secure_url}"
     "ServicesUrl"              = "${var.services_url}"

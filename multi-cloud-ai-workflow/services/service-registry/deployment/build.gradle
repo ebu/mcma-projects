@@ -15,7 +15,7 @@ task generateTerraformTFVars {
         targetFile.append("aws_access_key = \"${awsAccessKey}\"\r\n")
         targetFile.append("aws_secret_key = \"${awsSecretKey}\"\r\n")
         targetFile.append("aws_region = \"${awsRegion}\"\r\n")
-        targetFile.append(("global_prefix = \"${environmentName}.${environmentType}\"\r\n").replace(".", "-"))
+        targetFile.append(("global_prefix = \"${environmentName}-${awsRegion}-${environmentType}-service-registry\"\r\n").replace(".", "-"))
     }
 }
 

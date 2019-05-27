@@ -15,30 +15,63 @@ provider "aws" {
 ##################################
 
 resource "aws_iam_role" "iam_for_exec_lambda" {
-  name               = "${format("%.64s", "${var.global_prefix}.${var.aws_region}.aws-ai-service.lambda_exec_role")}"
-  assume_role_policy = "${file("./../../../deployment/policies/lambda-assume-role.json")}"
+  name               = "${format("%.64s", "${var.global_prefix}-lambda-exec-role")}"
+  assume_role_policy = "${file("../../../policies/lambda-allow-assume-role.json")}"
 }
 
 resource "aws_iam_policy" "log_policy" {
-  name        = "${var.global_prefix}.${var.aws_region}.aws-ai-service.policy_log"
+  name        = "${var.global_prefix}-policy-log"
   description = "Policy to write to log"
-  policy      = "${file("./../../../deployment/policies/lambda-allow-log-write.json")}"
+  policy      = "${file("../../../policies/allow-full-logs.json")}"
 }
 
-resource "aws_iam_role_policy_attachment" "role-policy-log" {
+resource "aws_iam_role_policy_attachment" "lambda_role_policy_log" {
   role       = "${aws_iam_role.iam_for_exec_lambda.name}"
   policy_arn = "${aws_iam_policy.log_policy.arn}"
 }
 
-resource "aws_iam_policy" "DynamoDB_policy" {
-  name        = "${var.global_prefix}.${var.aws_region}.aws-ai-service.policy_dynamodb"
+resource "aws_iam_policy" "dynamodb_policy" {
+  name        = "${var.global_prefix}-policy-dynamodb"
   description = "Policy to Access DynamoDB"
-  policy      = "${file("./../../../deployment/policies/lambda-allow-dynamodb-access.json")}"
+  policy      = "${file("../../../policies/allow-full-dynamodb.json")}"
 }
 
-resource "aws_iam_role_policy_attachment" "role-policy-DynamoDB" {
+resource "aws_iam_role_policy_attachment" "lambda_role_policy_dynamodb" {
   role       = "${aws_iam_role.iam_for_exec_lambda.name}"
-  policy_arn = "${aws_iam_policy.DynamoDB_policy.arn}"
+  policy_arn = "${aws_iam_policy.dynamodb_policy.arn}"
+}
+
+resource "aws_iam_policy" "lambda_policy" {
+  name        = "${var.global_prefix}-policy-lambda"
+  description = "Policy to allow invoking lambda functions"
+  policy      = "${file("../../../policies/allow-invoke-lambda.json")}"
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_role_policy_lambda" {
+  role       = "${aws_iam_role.iam_for_exec_lambda.name}"
+  policy_arn = "${aws_iam_policy.lambda_policy.arn}"
+}
+
+resource "aws_iam_policy" "apigateway_policy" {
+  name        = "${var.global_prefix}-policy-apigateway"
+  description = "Policy to allow invoking AWS4 secured Api gateway endpoints"
+  policy      = "${file("../../../policies/allow-invoke-apigateway.json")}"
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_role_policy_apigateway" {
+  role       = "${aws_iam_role.iam_for_exec_lambda.name}"
+  policy_arn = "${aws_iam_policy.apigateway_policy.arn}"
+}
+
+resource "aws_iam_policy" "rekognition_policy" {
+  name        = "${format("%.64s", "${var.global_prefix}-reko-policy")}"
+  description = "Policy to Access rekognition"
+  policy      = "${file("../../../policies/allow-full-rekognition.json")}"
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_role_policy_rekognition" {
+  role       = "${aws_iam_role.iam_for_exec_lambda.name}"
+  policy_arn = "${aws_iam_policy.rekognition_policy.arn}"
 }
 
 ##################################
@@ -46,28 +79,13 @@ resource "aws_iam_role_policy_attachment" "role-policy-DynamoDB" {
 ##################################
 
 # Allows Rekognition to call AWS services on your behalf
-resource "aws_iam_role" "iam_role_Reko_to_SNS" {
-  name = "${format("%.64s", "${var.global_prefix}.${var.aws_region}.services.reko_to_sns_role")}"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "rekognition.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole",
-      "Condition": {}
-    }
-  ]
-}
-EOF
+resource "aws_iam_role" "iam_role_for_reko" {
+  name               = "${format("%.64s", "${var.global_prefix}-reko-exec-role")}"
+  assume_role_policy = "${file("../../../policies/rekognition-allow-assume-role.json")}"
 }
 
-resource "aws_iam_policy" "aws_iam_policy_Reko_to_SNS" {
-  name        = "${format("%.64s", "${var.global_prefix}.${var.aws_region}.reko_to_sns_policy")}"
+resource "aws_iam_policy" "sns_policy" {
+  name        = "${format("%.64s", "${var.global_prefix}-reko-to-sns-policy")}"
   description = "Policy for Reko to access SNS"
 
   policy = <<EOF
@@ -102,47 +120,24 @@ resource "aws_iam_policy" "aws_iam_policy_Reko_to_SNS" {
 EOF
 }
 
-resource "aws_iam_policy" "rekognition_policy" {
-  name        = "${format("%.64s", "${var.global_prefix}.${var.aws_region}.reko_policy")}"
-  description = "Policy to Access rekognition"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": "rekognition:*",
-      "Resource": "*"
-    }
-  ]
-}
-EOF
+resource "aws_iam_role_policy_attachment" "reko_role_policy_sns" {
+  role       = "${aws_iam_role.iam_role_for_reko.name}"
+  policy_arn = "${aws_iam_policy.sns_policy.arn}"
 }
 
-resource "aws_iam_role_policy_attachment" "role-policy-rekognition" {
-  role       = "${aws_iam_role.iam_for_exec_lambda.name}"
-  policy_arn = "${aws_iam_policy.rekognition_policy.arn}"
-}
-
-resource "aws_iam_role_policy_attachment" "role-policy-reko-to-SNS" {
-  role       = "${aws_iam_role.iam_role_Reko_to_SNS.name}"
-  policy_arn = "${aws_iam_policy.aws_iam_policy_Reko_to_SNS.arn}"
-}
-
-resource "aws_iam_role_policy_attachment" "role-policy-log-reko-to-SNS" {
-  role       = "${aws_iam_role.iam_role_Reko_to_SNS.name}"
+resource "aws_iam_role_policy_attachment" "reko_role_policy_log" {
+  role       = "${aws_iam_role.iam_role_for_reko.name}"
   policy_arn = "${aws_iam_policy.log_policy.arn}"
 }
 
-resource "aws_iam_role_policy_attachment" "role-policy-rekognition-reko-to-SNS" {
-  role       = "${aws_iam_role.iam_role_Reko_to_SNS.name}"
-  policy_arn = "${aws_iam_policy.rekognition_policy.arn}"
+resource "aws_iam_role_policy_attachment" "reko_role_policy_lambda" {
+  role       = "${aws_iam_role.iam_role_for_reko.name}"
+  policy_arn = "${aws_iam_policy.lambda_policy.arn}"
 }
 
-resource "aws_iam_role_policy_attachment" "role-policy-lambda-full-access-reko-to-SNS" {
-  role       = "${aws_iam_role.iam_role_Reko_to_SNS.name}"
-  policy_arn = "arn:aws:iam::aws:policy/AWSLambdaFullAccess"
+resource "aws_iam_role_policy_attachment" "reko_role_policy_rekognition" {
+  role       = "${aws_iam_role.iam_role_for_reko.name}"
+  policy_arn = "${aws_iam_policy.rekognition_policy.arn}"
 }
 
 ##################################
@@ -150,7 +145,7 @@ resource "aws_iam_role_policy_attachment" "role-policy-lambda-full-access-reko-t
 ##################################
 
 resource "aws_dynamodb_table" "aws_ai_service_table" {
-  name           = "${var.global_prefix}-aws-ai-service"
+  name           = "${var.global_prefix}"
   read_capacity  = 1
   write_capacity = 1
   hash_key       = "resource_type"
@@ -176,7 +171,7 @@ resource "aws_dynamodb_table" "aws_ai_service_table" {
 
 resource "aws_lambda_function" "aws-ai-service-api-handler" {
   filename         = "./../api-handler/dist/lambda.zip"
-  function_name    = "${format("%.64s", "${var.global_prefix}-aws-ai-service-api-handler")}"
+  function_name    = "${format("%.64s", "${var.global_prefix}-api-handler")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
   source_code_hash = "${base64sha256(file("./../api-handler/dist/lambda.zip"))}"
@@ -191,7 +186,7 @@ resource "aws_lambda_function" "aws-ai-service-api-handler" {
 
 resource "aws_lambda_function" "aws-ai-service-s3-trigger" {
   filename         = "./../s3-trigger/dist/lambda.zip"
-  function_name    = "${format("%.64s", "${var.global_prefix}-aws-ai-service-s3-trigger")}"
+  function_name    = "${format("%.64s", "${var.global_prefix}-s3-trigger")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
   source_code_hash = "${base64sha256(file("./../s3-trigger/dist/lambda.zip"))}"
@@ -242,7 +237,7 @@ resource "aws_s3_bucket_notification" "aws-ai-service-output-bucket-notification
 
 resource "aws_lambda_function" "aws-ai-service-sns-trigger" {
   filename         = "./../sns-trigger/dist/lambda.zip"
-  function_name    = "${format("%.64s", "${var.global_prefix}-aws-ai-service-sns-trigger")}"
+  function_name    = "${format("%.64s", "${var.global_prefix}-sns-trigger")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
   source_code_hash = "${base64sha256(file("./../sns-trigger/dist/lambda.zip"))}"
@@ -269,7 +264,7 @@ resource "aws_lambda_function" "aws-ai-service-sns-trigger" {
 
 resource "aws_lambda_function" "aws-ai-service-worker" {
   filename         = "./../worker/dist/lambda.zip"
-  function_name    = "${format("%.64s", "${var.global_prefix}-aws-ai-service-worker")}"
+  function_name    = "${format("%.64s", "${var.global_prefix}-worker")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
   source_code_hash = "${base64sha256(file("./../worker/dist/lambda.zip"))}"
@@ -279,7 +274,7 @@ resource "aws_lambda_function" "aws-ai-service-worker" {
 
   environment {
     variables = {
-      REKO_SNS_ROLE_ARN = "${aws_iam_role.iam_role_Reko_to_SNS.arn}"
+      REKO_SNS_ROLE_ARN = "${aws_iam_role.iam_role_for_reko.arn}"
       SNS_TOPIC_ARN     = "${aws_sns_topic.sns_topic_reko_output.arn}"
     }
   }
@@ -298,7 +293,7 @@ resource "aws_lambda_permission" "aws_lambda_permission_with_sns" {
 }
 
 resource "aws_sns_topic" "sns_topic_reko_output" {
-  name = "${format("%.256s", "AmazonRekognition_${var.global_prefix}_${var.aws_region}")}"
+  name = "${format("%.256s", "AmazonRekognition-${var.global_prefix}")}"
 }
 
 resource "aws_sns_topic_subscription" "aws_sns_topic_sub_lambda" {
@@ -307,56 +302,12 @@ resource "aws_sns_topic_subscription" "aws_sns_topic_sub_lambda" {
   endpoint  = "${aws_lambda_function.aws-ai-service-sns-trigger.arn}"
 }
 
-resource "aws_iam_role" "aws_iam_role_sns_to_lambda" {
-  name = "${format("%.64s", "${var.global_prefix}.${var.aws_region}.services.sns_to_lambda_role")}"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy_attachment" "role-policy-SNS-to-Lambda" {
-  role       = "${aws_iam_role.aws_iam_role_sns_to_lambda.name}"
-  policy_arn = "${aws_iam_policy.aws_iam_policy_Reko_to_SNS.arn}"
-}
-
-resource "aws_iam_role_policy_attachment" "role-policy-log-SNS-to-Lambda" {
-  role       = "${aws_iam_role.aws_iam_role_sns_to_lambda.name}"
-  policy_arn = "${aws_iam_policy.log_policy.arn}"
-}
-
-resource "aws_iam_role_policy_attachment" "role-policy-rekognition-SNS-to-Lambda" {
-  role       = "${aws_iam_role.aws_iam_role_sns_to_lambda.name}"
-  policy_arn = "${aws_iam_policy.rekognition_policy.arn}"
-}
-
-resource "aws_iam_role_policy_attachment" "role-policy-DynamoDB-SNS-to-Lambda" {
-  role       = "${aws_iam_role.aws_iam_role_sns_to_lambda.name}"
-  policy_arn = "${aws_iam_policy.DynamoDB_policy.arn}"
-}
-
-resource "aws_iam_role_policy_attachment" "role-policy-lambda-full-access-SNS-to-Lambda" {
-  role       = "${aws_iam_role.aws_iam_role_sns_to_lambda.name}"
-  policy_arn = "arn:aws:iam::aws:policy/AWSLambdaFullAccess"
-}
 
 ##############################
 #  aws_api_gateway_rest_api:  aws_ai_service_api
 ##############################
 resource "aws_api_gateway_rest_api" "aws_ai_service_api" {
-  name        = "${var.global_prefix}-aws-ai-service"
+  name        = "${var.global_prefix}"
   description = "AWS AI Service Rest Api"
 }
 

@@ -68,7 +68,7 @@ resource "aws_iam_role_policy_attachment" "role_policy_apigateway" {
 ##################################
 
 resource "aws_dynamodb_table" "workflow_service_table" {
-  name           = "${var.global_prefix}-table"
+  name           = "${var.global_prefix}"
   read_capacity  = 1
   write_capacity = 1
   hash_key       = "resource_type"
@@ -122,7 +122,7 @@ resource "aws_lambda_function" "workflow-service-worker" {
 #  aws_api_gateway_rest_api:  workflow_service_api
 ##############################
 resource "aws_api_gateway_rest_api" "workflow_service_api" {
-  name        = "${var.global_prefix}-workflow-service"
+  name        = "${var.global_prefix}"
   description = "Workflow Service Rest Api"
 }
 

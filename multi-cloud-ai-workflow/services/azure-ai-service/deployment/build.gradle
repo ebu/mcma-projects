@@ -33,7 +33,7 @@ task generateTerraformTFVars {
         targetFile.append("aws_access_key = \"${awsAccessKey}\"\r\n")
         targetFile.append("aws_secret_key = \"${awsSecretKey}\"\r\n")
         targetFile.append("aws_region = \"${awsRegion}\"\r\n")
-        targetFile.append(("global_prefix = \"${environmentName}.${environmentType}\"\r\n").replace(".", "-"))
+        targetFile.append(("global_prefix = \"${environmentName}-${awsRegion}-${environmentType}-azure-ai-service\"\r\n").replace(".", "-"))
         targetFile.append("services_url = \"${props.services_url}\"\r\n")
         targetFile.append("services_auth_type = \"${props.services_auth_type}\"\r\n")
         targetFile.append("services_auth_context = \"${props.services_auth_context}\"\r\n")
