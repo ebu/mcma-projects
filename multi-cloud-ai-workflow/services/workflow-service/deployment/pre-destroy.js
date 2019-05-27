@@ -33,7 +33,7 @@ const main = async () => {
     try {
         let params = convertTerraformOutputToJSON(fs.readFileSync(process.argv[2], "utf8"));
 
-        let name = "MediaInfo AME Service";
+        let name = "Workflow Service";
 
         let servicesUrl = params.services_url;
         let servicesAuthType = params.services_auth_type;

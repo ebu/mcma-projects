@@ -69,7 +69,7 @@ const main = async () => {
 
         for (const retrievedWorkflow of retrievedWorkflows) {
             if (retrievedWorkflow.name === name) {
-                console.log("Disassociating workflow " + name + " '" + retrievedWorkflow.id + "'");
+                console.log("Removing " + name + " '" + retrievedWorkflow.id + "'");
                 await resourceManager.delete(retrievedWorkflow);
             }
         }
