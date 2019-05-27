@@ -1,0 +1,15 @@
+{
+    "name": "process-workflow-failure",
+    "version": "0.0.0",
+    "description": "Lambda to send notification on workflow failure",
+    "private": true,
+    "engines": {
+        "node": "~8.10.0"
+    },
+    "main": "src/index.js",
+    "license": "Apache-2.0",
+    "dependencies": {
+        "aws-sdk": "^2.448.0",
+        "mcma-core": "0.2.5"
+    }
+}

@@ -110,6 +110,110 @@ const deleteJobAssignment = async (request, response) => {
     await table.delete("JobAssignment", jobAssignmentId);
 }
 
+const getWorkflows = async (request, response) => {
+    console.log("getWorkflows()", JSON.stringify(request, null, 2));
+
+    let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
+
+    response.body = await table.getAll("Workflow");
+
+    console.log(JSON.stringify(response, null, 2));
+}
+
+const addWorkflow = async (request, response) => {
+    console.log("addWorkflow()", JSON.stringify(request, null, 2));
+
+    let workflow = request.body;
+    if (!workflow) {
+        response.statusCode = MCMA_AWS.HTTP_BAD_REQUEST;
+        response.statusMessage = "Missing request body.";
+        return;
+    }
+
+    if (!workflow["@type"]) {
+        response.statusCode = MCMA_AWS.HTTP_BAD_REQUEST;
+        response.statusMessage = "Missing '@type' property.";
+        return;
+    }
+
+    let workflowId = request.stageVariables.PublicUrl + "/workflows/" + uuidv4();
+    workflow.id = workflowId;
+    workflow.dateCreated = new Date().toISOString();
+    workflow.dateModified = workflow.dateCreated;
+
+    let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
+
+    await table.put("Workflow", workflowId, workflow);
+
+    response.statusCode = MCMA_AWS.HTTP_CREATED;
+    response.headers.Location = workflow.id;
+    response.body = workflow;
+
+    console.log(JSON.stringify(response, null, 2));
+
+    // invoking worker lambda function that will create a job profile based on workflow definition and adds it in the service registry.
+    var params = {
+        FunctionName: request.stageVariables.WorkerLambdaFunctionName,
+        InvocationType: "Event",
+        LogType: "None",
+        Payload: JSON.stringify({
+            action: "CreateJobProfile",
+            stageVariables: request.stageVariables,
+            workflowId: workflowId
+        })
+    };
+
+    await LambdaInvoke(params);
+}
+
+const getWorkflow = async (request, response) => {
+    console.log("getWorkflow()", JSON.stringify(request, null, 2));
+
+    let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
+
+    let workflowId = request.stageVariables.PublicUrl + request.path;
+
+    response.body = await table.get("Workflow", workflowId);
+
+    if (response.body === null) {
+        response.statusCode = MCMA_AWS.HTTP_NOT_FOUND;
+        response.statusMessage = "No resource found on path '" + request.path + "'.";
+    }
+}
+
+const deleteWorkflow = async (request, response) => {
+    console.log("deleteWorkflow()", JSON.stringify(request, null, 2));
+
+    let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
+
+    let workflowId = request.stageVariables.PublicUrl + request.path;
+
+    let workflow = await table.get("Workflow", workflowId);
+    if (!workflow) {
+        response.statusCode = MCMA_AWS.HTTP_NOT_FOUND;
+        response.statusMessage = "No resource found on path '" + request.path + "'.";
+        return;
+    }
+
+    await table.delete("Workflow", workflowId);
+
+    // invoking worker lambda function that will delete the JobProcess created for this Job
+    if (workflow.jobProfile) {
+        var params = {
+            FunctionName: request.stageVariables.WorkerLambdaFunctionName,
+            InvocationType: "Event",
+            LogType: "None",
+            Payload: JSON.stringify({
+                action: "DeleteJobProfile",
+                stageVariables: request.stageVariables,
+                jobProfileId: workflow.jobProfile
+            })
+        };
+
+        await LambdaInvoke(params);
+    }
+}
+
 const processNotification = async (request, response) => {
     console.log("processNotification()", JSON.stringify(request, null, 2));
 
@@ -154,64 +258,24 @@ const processNotification = async (request, response) => {
     await LambdaInvoke(params);
 }
 
-const processActivityNotification = async (request, response) => {
-    console.log("processActivityNotification()", JSON.stringify(request, null, 2));
-
-    let notification = request.body;
-
-    if (!notification) {
-        response.statusCode = MCMA_AWS.HTTP_BAD_REQUEST;
-        response.statusMessage = "Missing notification in request body";
-        return;
-    }
-
-    if (!notification.content) {
-        response.statusCode = MCMA_AWS.HTTP_BAD_REQUEST;
-        response.statusMessage = "Missing notification content";
-        return;
-    }
-
-    if (!notification.content.status) {
-        response.statusCode = MCMA_AWS.HTTP_BAD_REQUEST;
-        response.statusMessage = "Missing notification content status";
-        return;
-    }
-
-    switch (notification.content.status) {
-        case "COMPLETED":
-            await SendTaskSuccess({
-                taskToken: request.queryStringParameters.taskToken,
-                output: JSON.stringify(notification.source)
-            });
-            break;
-        case "FAILED":
-            let error = notification.content["@type"] + " failed execution";
-            let cause = notification.content["@type"] + " with id '" + notification.source + "' failed execution with statusMessage '" + notification.content.statusMessage + "'";
-
-            await SendTaskFailure({
-                taskToken: request.queryStringParameters.taskToken,
-                error: error,
-                cause: JSON.stringify(cause)
-            });
-            break;
-    }
-}
-
 // Initializing rest controller for API Gateway Endpoint
 const restController = new MCMA_AWS.ApiGatewayRestController();
 
-// adding routes for GET, POST and DELETE
+// adding routes for GET, POST and DELETE for job-assignments
 restController.addRoute("GET", "/job-assignments", getJobAssignments);
 restController.addRoute("POST", "/job-assignments", addJobAssignment);
 restController.addRoute("DELETE", "/job-assignments", deleteJobAssignments);
 restController.addRoute("GET", "/job-assignments/{id}", getJobAssignment);
 restController.addRoute("DELETE", "/job-assignments/{id}", deleteJobAssignment);
 
+// adding routes for GET, POST and DELETE for workflows
+restController.addRoute("GET", "/workflows", getWorkflows);
+restController.addRoute("POST", "/workflows", addWorkflow);
+restController.addRoute("GET", "/workflows/{id}", getWorkflow);
+restController.addRoute("DELETE", "/workflows/{id}", deleteWorkflow);
+
 // adding route for notifications from workflow
 restController.addRoute("POST", "/job-assignments/{id}/notifications", processNotification);
-
-// adding route for activity task notifications
-restController.addRoute("POST", "/activity-notifications", processActivityNotification);
 
 exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));

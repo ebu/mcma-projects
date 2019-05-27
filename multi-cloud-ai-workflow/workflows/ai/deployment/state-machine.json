@@ -1,0 +1,306 @@
+{
+    "Comment": "AI Workflow",
+    "StartAt": "01-validate-workflow-input",
+    "States": {
+        "01-validate-workflow-input": {
+            "Type": "Task",
+            "Resource": "${lambda-01-validate-workflow-input}",
+            "ResultPath": "$.data.mediaFileLocator",
+            "Next": "02-ai-extraction-parent",
+            "Catch": [
+                {
+                    "ErrorEquals": [
+                        "States.ALL"
+                    ],
+                    "ResultPath": "$.error",
+                    "Next": "Process-Failure"
+                }
+            ]
+        },
+        "02-ai-extraction-parent": {
+            "Type": "Parallel",
+            "Branches": [
+                {
+                    "StartAt": "02-extract-speech-to-text-parent",
+                    "States": {
+                        "02-extract-speech-to-text-parent": {
+                            "Type": "Parallel",
+                            "Branches": [
+                                {
+                                    "StartAt": "02-extract-speech-to-text",
+                                    "States": {
+                                        "02-extract-speech-to-text": {
+                                            "Type": "Task",
+                                            "Resource": "${lambda-02-extract-speech-to-text}",
+                                            "End": true
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt": "02-wait-for-job-completion",
+                                    "States": {
+                                        "02-wait-for-job-completion": {
+                                            "Type": "Task",
+                                            "Resource": "${activity-02-extract-speech-to-text}",
+                                            "TimeoutSeconds": 3600,
+                                            "HeartbeatSeconds": 1800,
+                                            "End": true
+                                        }
+                                    }
+                                }
+                            ],
+                            "ResultPath": "$.data.transcribeJobId",
+                            "Next": "03-register-speech-to-text-output",
+                            "Catch": [
+                                {
+                                    "ErrorEquals": [
+                                        "States.ALL"
+                                    ],
+                                    "ResultPath": "$.error",
+                                    "Next": "process-failure-branch-1"
+                                }
+                            ]
+                        },
+                        "03-register-speech-to-text-output": {
+                            "Type": "Task",
+                            "Resource": "${lambda-03-register-speech-to-text-output}",
+                            "ResultPath": null,
+                            "Next": "04-translate-speech-transcription-parent",
+                            "Catch": [
+                                {
+                                    "ErrorEquals": [
+                                        "States.ALL"
+                                    ],
+                                    "ResultPath": "$.error",
+                                    "Next": "process-failure-branch-1"
+                                }
+                            ]
+                        },
+                        "04-translate-speech-transcription-parent": {
+                            "Type": "Parallel",
+                            "Branches": [
+                                {
+                                    "StartAt": "04-translate-speech-transcription",
+                                    "States": {
+                                        "04-translate-speech-transcription": {
+                                            "Type": "Task",
+                                            "Resource": "${lambda-04-translate-speech-transcription}",
+                                            "End": true
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt": "04-wait-for-job-completion",
+                                    "States": {
+                                        "04-wait-for-job-completion": {
+                                            "Type": "Task",
+                                            "Resource": "${activity-04-translate-speech-transcription}",
+                                            "TimeoutSeconds": 3600,
+                                            "HeartbeatSeconds": 1800,
+                                            "End": true
+                                        }
+                                    }
+                                }
+                            ],
+                            "ResultPath": "$.data.translateJobId",
+                            "Next": "05-register-speech-translation",
+                            "Catch": [
+                                {
+                                    "ErrorEquals": [
+                                        "States.ALL"
+                                    ],
+                                    "ResultPath": "$.error",
+                                    "Next": "process-failure-branch-1"
+                                }
+                            ]
+                        },
+                        "05-register-speech-translation": {
+                            "Type": "Task",
+                            "Resource": "${lambda-05-register-speech-translation}",
+                            "ResultPath": null,
+                            "Next": "process-completion-branch-1",
+                            "Catch": [
+                                {
+                                    "ErrorEquals": [
+                                        "States.ALL"
+                                    ],
+                                    "ResultPath": "$.error",
+                                    "Next": "process-failure-branch-1"
+                                }
+                            ]
+                        },
+                        "process-failure-branch-1": {
+                            "Type": "Pass",
+                            "End": true
+                        },
+                        "process-completion-branch-1": {
+                            "Type": "Pass",
+                            "End": true
+                        }
+                    }
+                },
+                {
+                    "StartAt": "06-detect-celebrities-aws-parent",
+                    "States": {
+                        "06-detect-celebrities-aws-parent": {
+                            "Type": "Parallel",
+                            "Branches": [
+                                {
+                                    "StartAt": "06-detect-celebrities-aws",
+                                    "States": {
+                                        "06-detect-celebrities-aws": {
+                                            "Type": "Task",
+                                            "Resource": "${lambda-06-detect-celebrities-aws}",
+                                            "End": true
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt": "06-wait-for-job-completion",
+                                    "States": {
+                                        "06-wait-for-job-completion": {
+                                            "Type": "Task",
+                                            "Resource": "${activity-06-detect-celebrities-aws}",
+                                            "TimeoutSeconds": 3600,
+                                            "HeartbeatSeconds": 1800,
+                                            "End": true
+                                        }
+                                    }
+                                }
+                            ],
+                            "ResultPath": "$.data.awsCelebritiesJobId",
+                            "Next": "07-register-celebrities-info-aws",
+                            "Catch": [
+                                {
+                                    "ErrorEquals": [
+                                        "States.ALL"
+                                    ],
+                                    "ResultPath": "$.error",
+                                    "Next": "process-failure-branch-2"
+                                }
+                            ]
+                        },
+                        "07-register-celebrities-info-aws": {
+                            "Type": "Task",
+                            "Resource": "${lambda-07-register-celebrities-info-aws}",
+                            "ResultPath": null,
+                            "Next": "process-completion-branch-2",
+                            "Catch": [
+                                {
+                                    "ErrorEquals": [
+                                        "States.ALL"
+                                    ],
+                                    "ResultPath": "$.error",
+                                    "Next": "process-failure-branch-2"
+                                }
+                            ]
+                        },
+                        "process-failure-branch-2": {
+                            "Type": "Pass",
+                            "End": true
+                        },
+                        "process-completion-branch-2": {
+                            "Type": "Pass",
+                            "End": true
+                        }
+                    }
+                },
+                {
+                    "StartAt": "08-detect-celebrities-azure-parent",
+                    "States": {
+                        "08-detect-celebrities-azure-parent": {
+                            "Type": "Parallel",
+                            "Branches": [
+                                {
+                                    "StartAt": "08-detect-celebrities-azure",
+                                    "States": {
+                                        "08-detect-celebrities-azure": {
+                                            "Type": "Task",
+                                            "Resource": "${lambda-08-detect-celebrities-azure}",
+                                            "End": true
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt": "08-wait-for-job-completion",
+                                    "States": {
+                                        "08-wait-for-job-completion": {
+                                            "Type": "Task",
+                                            "Resource": "${activity-08-detect-celebrities-azure}",
+                                            "TimeoutSeconds": 3600,
+                                            "HeartbeatSeconds": 1800,
+                                            "End": true
+                                        }
+                                    }
+                                }
+                            ],
+                            "ResultPath": "$.data.azureCelebritiesJobId",
+                            "Next": "09-register-celebrities-info-azure",
+                            "Catch": [
+                                {
+                                    "ErrorEquals": [
+                                        "States.ALL"
+                                    ],
+                                    "ResultPath": "$.error",
+                                    "Next": "process-failure-branch-3"
+                                }
+                            ]
+                        },
+                        "09-register-celebrities-info-azure": {
+                            "Type": "Task",
+                            "Resource": "${lambda-09-register-celebrities-info-azure}",
+                            "ResultPath": null,
+                            "Next": "process-completion-branch-3",
+                            "Catch": [
+                                {
+                                    "ErrorEquals": [
+                                        "States.ALL"
+                                    ],
+                                    "ResultPath": "$.error",
+                                    "Next": "process-failure-branch-3"
+                                }
+                            ]
+                        },
+                        "process-failure-branch-3": {
+                            "Type": "Pass",
+                            "End": true
+                        },
+                        "process-completion-branch-3": {
+                            "Type": "Pass",
+                            "End": true
+                        }
+                    }
+                }
+            ],
+            "ResultPath": null,
+            "Next": "Process-Completion",
+            "Catch": [
+                {
+                    "ErrorEquals": [
+                        "States.ALL"
+                    ],
+                    "ResultPath": "$.error",
+                    "Next": "Process-Failure"
+                }
+            ]
+        },
+        "Process-Completion": {
+            "Type": "Task",
+            "Resource": "${lambda-process-workflow-completion}",
+            "ResultPath": null,
+            "Next": "Completed"
+        },
+        "Process-Failure": {
+            "Type": "Task",
+            "Resource": "${lambda-process-workflow-failure}",
+            "ResultPath": null,
+            "Next": "Failed"
+        },
+        "Failed": {
+            "Type": "Fail"
+        },
+        "Completed": {
+            "Type": "Succeed"
+        }
+    }
+}

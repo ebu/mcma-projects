@@ -1,0 +1,38 @@
+task build {
+    dependsOn "01-validate-workflow-input:build"
+    dependsOn "02-move-content-to-file-repository:build"
+    dependsOn "03-create-media-asset:build"
+    dependsOn "04-extract-technical-metadata:build"
+    dependsOn "05-register-technical-metadata:build"
+    dependsOn "06-decide-transcode-requirements:build"
+    dependsOn "07a-short-transcode:build"
+    dependsOn "07b-long-transcode:build"
+    dependsOn "08-register-proxy-essence:build"
+    dependsOn "09-copy-proxy-to-website-storage:build"
+    dependsOn "10-register-proxy-website-locator:build"
+    dependsOn "11-start-ai-workflow:build"
+    dependsOn "12a-process-workflow-completion:build"
+    dependsOn "12b-process-workflow-failure:build"
+    dependsOn "activity-callback-handler:build"
+}
+
+subprojects {
+    task copyNodeModules (type: Copy) {
+        dependsOn npmInstall
+        from "node_modules"
+        into "dist/staging/node_modules"
+        exclude awsAvailableLibraries
+    }
+
+    task copySource (type: Copy) {
+        from "src"
+        into "dist/staging/"
+    }
+
+    task build (type: Zip) {
+        dependsOn copySource, copyNodeModules
+        archiveName "lambda.zip"
+        destinationDir file("dist")
+        from "dist/staging"
+    }
+}

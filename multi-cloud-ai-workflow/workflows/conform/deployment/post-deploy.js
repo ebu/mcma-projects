@@ -60,44 +60,38 @@ const main = async () => {
             servicesAuthContext,
             authProvider
         });
-     
-        // 2. Inserting / Updating service
-        let name = "Workflow Service";
-        let url = params.workflow_service_url;
-        let authType = params.workflow_service_auth_type;
-        let authContext = params.workflow_service_auth_context;
 
-        let service = new MCMA_CORE.Service({
+        // 2. Inserting / Replacing workflow
+        let name = "ConformWorkflow";
+        let workflowType = "AWSStepFunctionsWorkflow";
+        let stateMachineArn = params.state_machine_arn;
+       
+        let workflow = {
+            "@type": workflowType,
             name,
-            resources: [
-                new MCMA_CORE.ResourceEndpoint({ resourceType: "JobAssignment", httpEndpoint: url + "/job-assignments" }),
-                new MCMA_CORE.ResourceEndpoint({ resourceType: "AWSStepFunctionsWorkflow", httpEndpoint: url + "/workflows" })
+            inputParameters: [
+                new MCMA_CORE.JobParameter({ parameterName: "metadata", parameterType: "DescriptiveMetadata" }),
+                new MCMA_CORE.JobParameter({ parameterName: "inputFile", parameterType: "Locator" })
             ],
-            authType,
-            authContext,
-            jobType: "WorkflowJob"
-        });
+            outputParameters: [
+                new MCMA_CORE.JobParameter({ parameterName: "websiteMediaFile", parameterType: "Locator" }),
+                new MCMA_CORE.JobParameter({ parameterName: "aiWorkflow", parameterType: "WorkflowJob" }),
+                new MCMA_CORE.JobParameter({ parameterName: "bmContent", parameterType: "BMContent" })
+            ],
+            stateMachineArn
+        };
 
-        let retrievedServices = await resourceManager.get("Service");
+        let retrievedWorkflows = await resourceManager.get(workflowType);
 
-        for (const retrievedService of retrievedServices) {
-            if (retrievedService.name === name) {
-                if (!service.id) {
-                    service.id = retrievedService.id;
-
-                    console.log("Updating " + name);
-                    await resourceManager.update(service);
-                } else {
-                    console.log("Removing duplicate " + name + " '" + retrievedService.id + "'");
-                    await resourceManager.delete(retrievedService);
-                }
+        for (const retrievedWorkflow of retrievedWorkflows) {
+            if (retrievedWorkflow.name === name) {
+                console.log("Disassociating workflow " + name + " '" + retrievedWorkflow.id + "'");
+                await resourceManager.delete(retrievedWorkflow);
             }
         }
-
-        if (!service.id) {
-            console.log("Inserting " + name);
-            service = await resourceManager.create(service);
-        }
+        
+        console.log("Associating workflow " + name);
+        workflow = await resourceManager.create(workflow);
     } catch (error) {
         if (error.response) {
             console.error(JSON.stringify(error.response.data.message, null, 2));

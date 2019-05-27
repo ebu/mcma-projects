@@ -9,9 +9,6 @@ const StepFunctionsStartExection = util.promisify(StepFunctions.startExecution.b
 const MCMA_AWS = require("mcma-aws");
 const MCMA_CORE = require("mcma-core");
 
-const JOB_PROFILE_CONFORM_WORKFLOW = "ConformWorkflow";
-const JOB_PROFILE_AI_WORKFLOW = "AiWorkflow";
-
 const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator({
     accessKey: AWS.config.credentials.accessKeyId,
     secretKey: AWS.config.credentials.secretAccessKey,
@@ -48,6 +45,14 @@ exports.handler = async (event, context) => {
             case "ProcessNotification":
                 await processNotification(event);
                 break;
+            case "CreateJobProfile":
+                await createJobProfile(event);
+                break;
+            case "DeleteJobProfile":
+                await deleteJobProfile(event);
+                break;
+            default:
+                throw new Error("Not implemented");
         }
     } catch (error) {
         console.log("Error occurred when handling action '" + event.action + "'")
@@ -75,7 +80,7 @@ const processJobAssignment = async (event) => {
         let jobInput = await retrieveJobInput(resourceManager, workflowJob);
 
         // 5. Check if we support jobProfile and if we have required parameters in jobInput
-        validateJobProfile(jobProfile, jobInput);
+        let workflow = await findWorkflowForJobProfile(table, jobProfile, jobInput);
 
         // 6. Launch the appropriate workflow
         const workflowInput = {
@@ -86,17 +91,9 @@ const processJobAssignment = async (event) => {
         };
 
         const params = {
+            stateMachineArn: workflow.stateMachineArn,
             input: JSON.stringify(workflowInput)
         };
-
-        switch (jobProfile.name) {
-            case JOB_PROFILE_CONFORM_WORKFLOW:
-                params.stateMachineArn = event.stageVariables.ConformWorkflowId;
-                break;
-            case JOB_PROFILE_AI_WORKFLOW:
-                params.stateMachineArn = event.stageVariables.AiWorkflowId;
-                break;
-        }
 
         let data = await StepFunctionsStartExection(params);
 
@@ -137,9 +134,100 @@ const processNotification = async (event) => {
     await resourceManager.sendNotification(jobAssignment);
 }
 
-const validateJobProfile = (jobProfile, jobInput) => {
-    if (jobProfile.name !== JOB_PROFILE_CONFORM_WORKFLOW &&
-        jobProfile.name !== JOB_PROFILE_AI_WORKFLOW) {
+const createJobProfile = async (event) => {
+    let resourceManager = createResourceManager(event);
+
+    let table = new MCMA_AWS.DynamoDbTable(AWS, event.stageVariables.TableName);
+    let workflowId = event.workflowId;
+
+    let workflow = await table.get("Workflow", workflowId);
+    if (!workflow) {
+        throw new Error("Workflow with id '" + workflowId + "' not found");
+    }
+
+    let jobProfile;
+
+    switch (workflow["@type"]) {
+        case "AWSStepFunctionsWorkflow":
+            if (!workflow.stateMachineArn) {
+                throw new Error("AWSStepFunctionsWorkflow misses property stateMachineArn");
+            }
+
+            jobProfile = new MCMA_CORE.JobProfile({
+                name: workflow.name,
+                inputParameters: workflow.inputParameters,
+                outputParameters: workflow.outputParameters,
+                optionalInputParameters: workflow.optionalInputParameters
+            });
+            break;
+        default:
+            throw new Error("Unsupported workflow type '" + workflow["@type"] + "'");
+    }
+
+    jobProfile = await resourceManager.create(jobProfile);
+
+    workflow.jobProfile = jobProfile.id;
+    await table.put("Workflow", workflowId, workflow);
+
+    await updateServiceInRegistry(event, resourceManager);
+}
+
+const deleteJobProfile = async (event) => {
+    let resourceManager = createResourceManager(event);
+    
+    let jobProfileId = event.jobProfileId;
+
+    let jobProfile = await resourceManager.resolve(jobProfileId);
+    if (jobProfile) {
+        await resourceManager.delete(jobProfile);
+    }
+
+    await updateServiceInRegistry(event, resourceManager);
+}
+
+const updateServiceInRegistry = async (event, resourceManager) => {
+    let workflowService;
+
+    let services = await resourceManager.get("Service");
+    for (const service of services) {
+        for (const resourceEndpoint of service.resources) {
+            if (resourceEndpoint.httpEndpoint.startsWith(event.stageVariables.PublicUrl)) {
+                workflowService = service;
+            }
+        }
+    }
+
+    if (!workflowService) {
+        console.warn("Update Workflow Service in Service Registry failed: Not found");
+        return;
+    }
+
+    workflowService.jobProfiles = [];
+    
+    let table = new MCMA_AWS.DynamoDbTable(AWS, event.stageVariables.TableName);
+    let workflows = await table.getAll("Workflow");
+
+    for (const workflow of workflows) {
+        if (workflow.jobProfile) {
+            workflowService.jobProfiles.push(workflow.jobProfile);
+        }
+    }
+
+    console.log("Updating workflow service in Service Registry", JSON.stringify(workflowService, null, 2));
+    await resourceManager.update(workflowService);
+}
+
+const findWorkflowForJobProfile = async (table, jobProfile, jobInput) => {
+    let workflows = await table.getAll("Workflow");
+
+    let workflow;
+    for (wf of workflows) {
+        if (wf.jobProfile === jobProfile.id) {
+            workflow = wf;
+        }
+    }
+
+    if (!workflow) {
         throw new Error("JobProfile '" + jobProfile.name + "' is not supported");
     }
 
@@ -154,6 +242,8 @@ const validateJobProfile = (jobProfile, jobInput) => {
             }
         }
     }
+
+    return workflow;
 }
 
 const retrieveJobInput = async (resourceManager, job) => {

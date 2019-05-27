@@ -60,44 +60,20 @@ const main = async () => {
             servicesAuthContext,
             authProvider
         });
-     
-        // 2. Inserting / Updating service
-        let name = "Workflow Service";
-        let url = params.workflow_service_url;
-        let authType = params.workflow_service_auth_type;
-        let authContext = params.workflow_service_auth_context;
 
-        let service = new MCMA_CORE.Service({
-            name,
-            resources: [
-                new MCMA_CORE.ResourceEndpoint({ resourceType: "JobAssignment", httpEndpoint: url + "/job-assignments" }),
-                new MCMA_CORE.ResourceEndpoint({ resourceType: "AWSStepFunctionsWorkflow", httpEndpoint: url + "/workflows" })
-            ],
-            authType,
-            authContext,
-            jobType: "WorkflowJob"
-        });
+        // 2. Removing workflow
+        let name = "AiWorkflow";
+        let workflowType = "AWSStepFunctionsWorkflow";
+        
+        let retrievedWorkflows = await resourceManager.get(workflowType);
 
-        let retrievedServices = await resourceManager.get("Service");
-
-        for (const retrievedService of retrievedServices) {
-            if (retrievedService.name === name) {
-                if (!service.id) {
-                    service.id = retrievedService.id;
-
-                    console.log("Updating " + name);
-                    await resourceManager.update(service);
-                } else {
-                    console.log("Removing duplicate " + name + " '" + retrievedService.id + "'");
-                    await resourceManager.delete(retrievedService);
-                }
+        for (const retrievedWorkflow of retrievedWorkflows) {
+            if (retrievedWorkflow.name === name) {
+                console.log("Disassociating workflow " + name + " '" + retrievedWorkflow.id + "'");
+                await resourceManager.delete(retrievedWorkflow);
             }
         }
 
-        if (!service.id) {
-            console.log("Inserting " + name);
-            service = await resourceManager.create(service);
-        }
     } catch (error) {
         if (error.response) {
             console.error(JSON.stringify(error.response.data.message, null, 2));
