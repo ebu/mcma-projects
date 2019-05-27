@@ -181,11 +181,11 @@ resource "aws_dynamodb_table" "aws_ai_service_table" {
 #################################
 
 resource "aws_lambda_function" "aws-ai-service-api-handler" {
-  filename         = "./../api-handler/dist/lambda.zip"
+  filename         = "../api-handler/dist/lambda.zip"
   function_name    = "${format("%.64s", "${var.global_prefix}-api-handler")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("./../api-handler/dist/lambda.zip"))}"
+  source_code_hash = "${base64sha256(file("../api-handler/dist/lambda.zip"))}"
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
@@ -196,11 +196,11 @@ resource "aws_lambda_function" "aws-ai-service-api-handler" {
 #################################
 
 resource "aws_lambda_function" "aws-ai-service-s3-trigger" {
-  filename         = "./../s3-trigger/dist/lambda.zip"
+  filename         = "../s3-trigger/dist/lambda.zip"
   function_name    = "${format("%.64s", "${var.global_prefix}-s3-trigger")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("./../s3-trigger/dist/lambda.zip"))}"
+  source_code_hash = "${base64sha256(file("../s3-trigger/dist/lambda.zip"))}"
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
@@ -247,11 +247,11 @@ resource "aws_s3_bucket_notification" "aws-ai-service-output-bucket-notification
 #################################
 
 resource "aws_lambda_function" "aws-ai-service-sns-trigger" {
-  filename         = "./../sns-trigger/dist/lambda.zip"
+  filename         = "../sns-trigger/dist/lambda.zip"
   function_name    = "${format("%.64s", "${var.global_prefix}-sns-trigger")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("./../sns-trigger/dist/lambda.zip"))}"
+  source_code_hash = "${base64sha256(file("../sns-trigger/dist/lambda.zip"))}"
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
@@ -274,11 +274,11 @@ resource "aws_lambda_function" "aws-ai-service-sns-trigger" {
 #################################
 
 resource "aws_lambda_function" "aws-ai-service-worker" {
-  filename         = "./../worker/dist/lambda.zip"
+  filename         = "../worker/dist/lambda.zip"
   function_name    = "${format("%.64s", "${var.global_prefix}-worker")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("./../worker/dist/lambda.zip"))}"
+  source_code_hash = "${base64sha256(file("../worker/dist/lambda.zip"))}"
   runtime          = "nodejs8.10"
   timeout          = "300"
   memory_size      = "3008"

@@ -104,11 +104,11 @@ resource "aws_dynamodb_table" "azure_ai_service_table" {
 #################################
 
 resource "aws_lambda_function" "azure-ai-service-api-handler" {
-  filename         = "./../api-handler/dist/lambda.zip"
+  filename         = "../api-handler/dist/lambda.zip"
   function_name    = "${format("%.64s", "${var.global_prefix}-api-handler")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("./../api-handler/dist/lambda.zip"))}"
+  source_code_hash = "${base64sha256(file("../api-handler/dist/lambda.zip"))}"
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
@@ -119,11 +119,11 @@ resource "aws_lambda_function" "azure-ai-service-api-handler" {
 #################################
 
 resource "aws_lambda_function" "azure-ai-service-api-handler-non-secure" {
-  filename         = "./../api-handler-non-secure/dist/lambda.zip"
+  filename         = "../api-handler-non-secure/dist/lambda.zip"
   function_name    = "${format("%.64s", "${var.global_prefix}-api-handler-non-secure")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("./../api-handler-non-secure/dist/lambda.zip"))}"
+  source_code_hash = "${base64sha256(file("../api-handler-non-secure/dist/lambda.zip"))}"
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
@@ -134,11 +134,11 @@ resource "aws_lambda_function" "azure-ai-service-api-handler-non-secure" {
 #################################
 
 resource "aws_lambda_function" "azure-ai-service-worker" {
-  filename         = "./../worker/dist/lambda.zip"
+  filename         = "../worker/dist/lambda.zip"
   function_name    = "${format("%.64s", "${var.global_prefix}-worker")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("./../worker/dist/lambda.zip"))}"
+  source_code_hash = "${base64sha256(file("../worker/dist/lambda.zip"))}"
   runtime          = "nodejs8.10"
   timeout          = "300"
   memory_size      = "3008"
