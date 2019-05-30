@@ -7,7 +7,7 @@ resource "aws_lambda_function" "media-repository-api-handler" {
   function_name    = "${format("%.64s", "${var.global_prefix}-media-repository-api-handler")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("./../services/media-repository/api-handler/dist/lambda.zip"))}"
+  source_code_hash = "${filebase64sha256("./../services/media-repository/api-handler/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
@@ -142,7 +142,7 @@ resource "aws_api_gateway_deployment" "media_repository_deployment" {
   variables = {
     "TableName"      = "${var.global_prefix}-media-repository"
     "PublicUrl"      = "${local.media_repository_url}"
-    "DeploymentHash" = "${sha256(file("./services/media-repository.tf"))}"
+    "DeploymentHash" = "${filesha256("./services/media-repository.tf")}"
   }
 }
 

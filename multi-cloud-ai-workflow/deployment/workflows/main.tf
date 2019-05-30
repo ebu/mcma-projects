@@ -43,7 +43,7 @@ resource "aws_iam_role_policy_attachment" "role-policy-steps" {
 data "template_file" "steps-assume-role" {
   template = "${file("policies/steps-assume-role.json")}"
 
-  vars {
+  vars = {
     aws_region = "${var.aws_region}"
   }
 }
@@ -84,7 +84,7 @@ resource "aws_lambda_function" "process-workflow-completion" {
   function_name    = "${format("%.64s", "${var.global_prefix}-process-workflow-completion")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("./../workflows/process-workflow-completion/dist/lambda.zip"))}"
+  source_code_hash = "${filebase64sha256("./../workflows/process-workflow-completion/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
@@ -103,7 +103,7 @@ resource "aws_lambda_function" "process-workflow-failure" {
   function_name    = "${format("%.64s", "${var.global_prefix}-process-workflow-failure")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("./../workflows/process-workflow-failure/dist/lambda.zip"))}"
+  source_code_hash = "${filebase64sha256("./../workflows/process-workflow-failure/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
@@ -126,7 +126,7 @@ resource "aws_lambda_function" "workflow-activity-callback-handler" {
   function_name    = "${format("%.64s", "${var.global_prefix}-workflow-activity-callback-handler")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("./../workflows/workflow-activity-callback-handler/dist/lambda.zip"))}"
+  source_code_hash = "${filebase64sha256("./../workflows/workflow-activity-callback-handler/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
@@ -183,7 +183,7 @@ resource "aws_api_gateway_deployment" "workflow_activity_callback_handler_deploy
 
   variables = {
     "PublicUrl"      = "${local.workflow_activity_callback_handler_url}"
-    "DeploymentHash" = "${sha256(file("./workflows/main.tf"))}"
+    "DeploymentHash" = "${filesha256("./workflows/main.tf")}"
   }
 }
 

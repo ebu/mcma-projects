@@ -3,7 +3,7 @@
 #########################
 
 provider "aws" {
-  version = "~> 1.59"
+  version = "~> 2.7"
 
   access_key = "${var.aws_access_key}"
   secret_key = "${var.aws_secret_key}"
@@ -70,7 +70,7 @@ resource "aws_iam_role_policy_attachment" "role_policy_states" {
 data "template_file" "states_assume_role" {
   template = "${file("../../../policies/states-allow-assume-role.json")}"
 
-  vars {
+  vars = {
     aws_region = "${var.aws_region}"
   }
 }
@@ -100,7 +100,7 @@ resource "aws_lambda_function" "workflow-activity-callback-handler" {
   function_name    = "${format("%.64s", "${var.global_prefix}-activity-callback-handler")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("../activity-callback-handler/dist/lambda.zip"))}"
+  source_code_hash = "${filebase64sha256("../activity-callback-handler/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
@@ -155,7 +155,7 @@ resource "aws_api_gateway_deployment" "workflow_activity_callback_handler_deploy
 
   variables = {
     "PublicUrl"      = "${local.workflow_activity_callback_handler_url}"
-    "DeploymentHash" = "${sha256(file("main.tf"))}"
+    "DeploymentHash" = "${filesha256("main.tf")}"
   }
 }
 
@@ -172,7 +172,7 @@ resource "aws_lambda_function" "process-workflow-completion" {
   function_name    = "${format("%.64s", "${var.global_prefix}-process-completion")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("../12a-process-workflow-completion/dist/lambda.zip"))}"
+  source_code_hash = "${filebase64sha256("../12a-process-workflow-completion/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
@@ -191,7 +191,7 @@ resource "aws_lambda_function" "process-workflow-failure" {
   function_name    = "${format("%.64s", "${var.global_prefix}-process-failure")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("../12b-process-workflow-failure/dist/lambda.zip"))}"
+  source_code_hash = "${filebase64sha256("../12b-process-workflow-failure/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
@@ -214,7 +214,7 @@ resource "aws_lambda_function" "conform-01-validate-workflow-input" {
   function_name    = "${format("%.64s", "${var.global_prefix}-01-validate-workflow-input")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("../01-validate-workflow-input/dist/lambda.zip"))}"
+  source_code_hash = "${filebase64sha256("../01-validate-workflow-input/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
@@ -236,7 +236,7 @@ resource "aws_lambda_function" "conform-02-move-content-to-file-repository" {
   function_name    = "${format("%.64s", "${var.global_prefix}-02-move-content-to-file-repository")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("../02-move-content-to-file-repository/dist/lambda.zip"))}"
+  source_code_hash = "${filebase64sha256("../02-move-content-to-file-repository/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
@@ -258,7 +258,7 @@ resource "aws_lambda_function" "conform-03-create-media-asset" {
   function_name    = "${format("%.64s", "${var.global_prefix}-03-create-media-asset")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("../03-create-media-asset/dist/lambda.zip"))}"
+  source_code_hash = "${filebase64sha256("../03-create-media-asset/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
@@ -280,7 +280,7 @@ resource "aws_lambda_function" "conform-04-extract-technical-metadata" {
   function_name    = "${format("%.64s", "${var.global_prefix}-04-extract-technical-metadata")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("../04-extract-technical-metadata/dist/lambda.zip"))}"
+  source_code_hash = "${filebase64sha256("../04-extract-technical-metadata/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
@@ -308,7 +308,7 @@ resource "aws_lambda_function" "conform-05-register-technical-metadata" {
   function_name    = "${format("%.64s", "${var.global_prefix}-05-register-technical-metadata")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("../05-register-technical-metadata/dist/lambda.zip"))}"
+  source_code_hash = "${filebase64sha256("../05-register-technical-metadata/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
@@ -330,7 +330,7 @@ resource "aws_lambda_function" "conform-06-decide-transcode-requirements" {
   function_name    = "${format("%.64s", "${var.global_prefix}-06-decide-transcode-requirements")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("../06-decide-transcode-requirements/dist/lambda.zip"))}"
+  source_code_hash = "${filebase64sha256("../06-decide-transcode-requirements/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
@@ -353,7 +353,7 @@ resource "aws_lambda_function" "conform-07a-short-transcode" {
   function_name    = "${format("%.64s", "${var.global_prefix}-07a-short-transcode")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("../07a-short-transcode/dist/lambda.zip"))}"
+  source_code_hash = "${filebase64sha256("../07a-short-transcode/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
@@ -379,7 +379,7 @@ resource "aws_lambda_function" "conform-07b-long-transcode" {
   function_name    = "${format("%.64s", "${var.global_prefix}-07b-long-transcode")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("../07b-long-transcode/dist/lambda.zip"))}"
+  source_code_hash = "${filebase64sha256("../07b-long-transcode/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
@@ -407,7 +407,7 @@ resource "aws_lambda_function" "conform-08-register-proxy-essence" {
   function_name    = "${format("%.64s", "${var.global_prefix}-08-register-proxy-essence")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("../08-register-proxy-essence/dist/lambda.zip"))}"
+  source_code_hash = "${filebase64sha256("../08-register-proxy-essence/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
@@ -429,7 +429,7 @@ resource "aws_lambda_function" "conform-09-copy-proxy-to-website-storage" {
   function_name    = "${format("%.64s", "${var.global_prefix}-09-copy-proxy-to-website-storage")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("../09-copy-proxy-to-website-storage/dist/lambda.zip"))}"
+  source_code_hash = "${filebase64sha256("../09-copy-proxy-to-website-storage/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
@@ -451,7 +451,7 @@ resource "aws_lambda_function" "conform-10-register-proxy-website-locator" {
   function_name    = "${format("%.64s", "${var.global_prefix}-10-register-proxy-website-locator")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("../10-register-proxy-website-locator/dist/lambda.zip"))}"
+  source_code_hash = "${filebase64sha256("../10-register-proxy-website-locator/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
@@ -473,7 +473,7 @@ resource "aws_lambda_function" "conform-11-start-ai-workflow" {
   function_name    = "${format("%.64s", "${var.global_prefix}-11-start-ai-workflow")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("../11-start-ai-workflow/dist/lambda.zip"))}"
+  source_code_hash = "${filebase64sha256("../11-start-ai-workflow/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
@@ -497,7 +497,7 @@ resource "aws_lambda_function" "conform-11-start-ai-workflow" {
 data "template_file" "conform-workflow" {
   template = "${file("state-machine.json")}"
 
-  vars {
+  vars = {
     lambda-01-validate-workflow-input         = "${aws_lambda_function.conform-01-validate-workflow-input.arn}"
     lambda-02-move-content-to-file-repository = "${aws_lambda_function.conform-02-move-content-to-file-repository.arn}"
     lambda-03-create-media-asset              = "${aws_lambda_function.conform-03-create-media-asset.arn}"

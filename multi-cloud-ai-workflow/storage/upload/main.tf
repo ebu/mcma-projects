@@ -3,7 +3,7 @@
 #########################
 
 provider "aws" {
-  version = "~> 1.59"
+  version = "~> 2.7"
 
   access_key = "${var.aws_access_key}"
   secret_key = "${var.aws_secret_key}"
@@ -13,7 +13,7 @@ provider "aws" {
 data "template_file" "s3_authenticated_read_write_policy_upload" {
   template = "${file("../../deployment/policies/s3-authenticated-read-write.json")}"
 
-  vars {
+  vars = {
     bucket_name    = "${var.bucket_name}"
     aws_account_id = "${var.aws_account_id}"
   }

@@ -3,7 +3,7 @@
 #########################
 
 provider "aws" {
-  version = "~> 1.59"
+  version = "~> 2.7"
 
   access_key = "${var.aws_access_key}"
   secret_key = "${var.aws_secret_key}"
@@ -17,7 +17,7 @@ provider "aws" {
 data "template_file" "s3_public_read_policy_website" {
   template = "${file("../../deployment/policies/s3-public-read.json")}"
 
-  vars {
+  vars = {
     bucket_name = "${var.website_bucket}"
   }
 }
@@ -184,7 +184,7 @@ EOF
 resource "aws_cognito_identity_pool_roles_attachment" "main" {
   identity_pool_id = "${aws_cognito_identity_pool.identity_pool.id}"
 
-  roles {
+  roles = {
     "authenticated"   = "${aws_iam_role.authenticated.arn}"
     "unauthenticated" = "${aws_iam_role.unauthenticated.arn}"
   }

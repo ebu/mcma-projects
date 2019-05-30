@@ -3,7 +3,7 @@
 #########################
 
 provider "aws" {
-  version = "~> 1.59"
+  version = "~> 2.7"
 
   access_key = "${var.aws_access_key}"
   secret_key = "${var.aws_secret_key}"
@@ -70,7 +70,7 @@ resource "aws_iam_role_policy_attachment" "lambda_role_policy_states" {
 data "template_file" "states_assume_role" {
   template = "${file("../../../policies/states-allow-assume-role.json")}"
 
-  vars {
+  vars = {
     aws_region = "${var.aws_region}"
   }
 }
@@ -100,7 +100,7 @@ resource "aws_lambda_function" "workflow-activity-callback-handler" {
   function_name    = "${format("%.64s", "${var.global_prefix}-activity-callback-handler")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("../activity-callback-handler/dist/lambda.zip"))}"
+  source_code_hash = "${filebase64sha256("../activity-callback-handler/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
@@ -155,7 +155,7 @@ resource "aws_api_gateway_deployment" "workflow_activity_callback_handler_deploy
 
   variables = {
     "PublicUrl"      = "${local.workflow_activity_callback_handler_url}"
-    "DeploymentHash" = "${sha256(file("main.tf"))}"
+    "DeploymentHash" = "${filesha256("main.tf")}"
   }
 }
 
@@ -173,7 +173,7 @@ resource "aws_lambda_function" "process-workflow-completion" {
   function_name    = "${format("%.64s", "${var.global_prefix}-process-workflow-completion")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("../10a-process-workflow-completion/dist/lambda.zip"))}"
+  source_code_hash = "${filebase64sha256("../10a-process-workflow-completion/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
@@ -192,7 +192,7 @@ resource "aws_lambda_function" "process-workflow-failure" {
   function_name    = "${format("%.64s", "${var.global_prefix}-process-workflow-failure")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("../10b-process-workflow-failure/dist/lambda.zip"))}"
+  source_code_hash = "${filebase64sha256("../10b-process-workflow-failure/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
@@ -215,7 +215,7 @@ resource "aws_lambda_function" "ai-01-validate-workflow-input" {
   function_name    = "${format("%.64s", "${var.global_prefix}-01-validate-workflow-input")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("../01-validate-workflow-input/dist/lambda.zip"))}"
+  source_code_hash = "${filebase64sha256("../01-validate-workflow-input/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "60"
   memory_size      = "256"
@@ -237,7 +237,7 @@ resource "aws_lambda_function" "ai-02-extract-speech-to-text" {
   function_name    = "${format("%.64s", "${var.global_prefix}-02-extract-speech-to-text")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("../02-extract-speech-to-text/dist/lambda.zip"))}"
+  source_code_hash = "${filebase64sha256("../02-extract-speech-to-text/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "60"
   memory_size      = "256"
@@ -265,7 +265,7 @@ resource "aws_lambda_function" "ai-03-register-speech-to-text-output" {
   function_name    = "${format("%.64s", "${var.global_prefix}-03-register-speech-to-text-output")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("../03-register-speech-to-text-output/dist/lambda.zip"))}"
+  source_code_hash = "${filebase64sha256("../03-register-speech-to-text-output/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "60"
   memory_size      = "256"
@@ -287,7 +287,7 @@ resource "aws_lambda_function" "ai-04-translate-speech-transcription" {
   function_name    = "${format("%.64s", "${var.global_prefix}-04-translate-speech-transcription")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("../04-translate-speech-transcription/dist/lambda.zip"))}"
+  source_code_hash = "${filebase64sha256("../04-translate-speech-transcription/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "60"
   memory_size      = "256"
@@ -315,7 +315,7 @@ resource "aws_lambda_function" "ai-05-register-speech-translation" {
   function_name    = "${format("%.64s", "${var.global_prefix}-05-register-speech-translation")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("../05-register-speech-translation/dist/lambda.zip"))}"
+  source_code_hash = "${filebase64sha256("../05-register-speech-translation/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "60"
   memory_size      = "256"
@@ -337,7 +337,7 @@ resource "aws_lambda_function" "ai-06-detect-celebrities-aws" {
   function_name    = "${format("%.64s", "${var.global_prefix}-06-detect-celebrities-aws")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("../06-detect-celebrities-aws/dist/lambda.zip"))}"
+  source_code_hash = "${filebase64sha256("../06-detect-celebrities-aws/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "60"
   memory_size      = "256"
@@ -365,7 +365,7 @@ resource "aws_lambda_function" "ai-08-detect-celebrities-azure" {
   function_name    = "${format("%.64s", "${var.global_prefix}-08-detect-celebrities-azure")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("../08-detect-celebrities-azure/dist/lambda.zip"))}"
+  source_code_hash = "${filebase64sha256("../08-detect-celebrities-azure/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "60"
   memory_size      = "256"
@@ -393,7 +393,7 @@ resource "aws_lambda_function" "ai-07-register-celebrities-info-aws" {
   function_name    = "${format("%.64s", "${var.global_prefix}-07-register-celebrities-info-aws")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("../07-register-celebrities-info-aws/dist/lambda.zip"))}"
+  source_code_hash = "${filebase64sha256("../07-register-celebrities-info-aws/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "60"
   memory_size      = "256"
@@ -415,7 +415,7 @@ resource "aws_lambda_function" "ai-09-register-celebrities-info-azure" {
   function_name    = "${format("%.64s", "${var.global_prefix}-09-register-celebrities-info-azure")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("../09-register-celebrities-info-azure/dist/lambda.zip"))}"
+  source_code_hash = "${filebase64sha256("../09-register-celebrities-info-azure/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "60"
   memory_size      = "256"
@@ -439,7 +439,7 @@ resource "aws_lambda_function" "ai-09-register-celebrities-info-azure" {
 data "template_file" "ai-workflow" {
   template = "${file("state-machine.json")}"
 
-  vars {
+  vars = {
     lambda-01-validate-workflow-input          = "${aws_lambda_function.ai-01-validate-workflow-input.arn}"
     lambda-02-extract-speech-to-text           = "${aws_lambda_function.ai-02-extract-speech-to-text.arn}"
     activity-02-extract-speech-to-text         = "${aws_sfn_activity.ai-02-extract-speech-to-text.id}"

@@ -67,7 +67,7 @@ task generateTerraformWebsiteTF {
                 targetFile.append("  key          = \"" + f.relativePath + "\"\r\n")
                 targetFile.append("  source       = \"" + f.file.path.replace("\\", "/") + "\"\r\n")
                 targetFile.append("  content_type = \"" + mimeType + "\"\r\n")
-                targetFile.append("  etag         = \"\${md5(file(\"" + f.file.path.replace("\\", "/") + "\"))}\"\r\n")
+                targetFile.append("  etag         = \"\${filemd5(\"" + f.file.path.replace("\\", "/") + "\")}\"\r\n")
                 targetFile.append("}\r\n\r\n")
             }
         }

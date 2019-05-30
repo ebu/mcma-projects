@@ -3,7 +3,7 @@
 #########################
 
 provider "aws" {
-  version = "~> 1.59"
+  version = "~> 2.7"
 
   access_key = "${var.aws_access_key}"
   secret_key = "${var.aws_secret_key}"
@@ -206,7 +206,7 @@ resource "aws_lambda_function" "aws-ai-service-api-handler" {
   function_name    = "${format("%.64s", "${var.global_prefix}-api-handler")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("../api-handler/dist/lambda.zip"))}"
+  source_code_hash = "${filebase64sha256("../api-handler/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
@@ -221,7 +221,7 @@ resource "aws_lambda_function" "aws-ai-service-s3-trigger" {
   function_name    = "${format("%.64s", "${var.global_prefix}-s3-trigger")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("../s3-trigger/dist/lambda.zip"))}"
+  source_code_hash = "${filebase64sha256("../s3-trigger/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
@@ -272,7 +272,7 @@ resource "aws_lambda_function" "aws-ai-service-sns-trigger" {
   function_name    = "${format("%.64s", "${var.global_prefix}-sns-trigger")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("../sns-trigger/dist/lambda.zip"))}"
+  source_code_hash = "${filebase64sha256("../sns-trigger/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
@@ -299,7 +299,7 @@ resource "aws_lambda_function" "aws-ai-service-worker" {
   function_name    = "${format("%.64s", "${var.global_prefix}-worker")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("../worker/dist/lambda.zip"))}"
+  source_code_hash = "${filebase64sha256("../worker/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "300"
   memory_size      = "3008"
@@ -442,7 +442,7 @@ resource "aws_api_gateway_deployment" "aws_ai_service_deployment" {
     "ServicesAuthContext"      = "${var.services_auth_context}"
     "WorkerLambdaFunctionName" = "${aws_lambda_function.aws-ai-service-worker.function_name}"
     "ServiceOutputBucket"      = "${aws_s3_bucket.aws-ai-service-output.id}"
-    "DeploymentHash"           = "${sha256(file("main.tf"))}"
+    "DeploymentHash"           = "${filesha256("main.tf")}"
   }
 }
 
