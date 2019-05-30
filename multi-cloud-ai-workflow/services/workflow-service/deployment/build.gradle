@@ -105,6 +105,8 @@ task runPostDeployScript(type: Exec) {
 }
 
 task runPreDestroyScript(type: Exec) {
+    mustRunAfter ":workflows:ai:deployment:runPreDestroyScript"
+    mustRunAfter ":workflows:conform:deployment:runPreDestroyScript"
     dependsOn generateAwsCredentialsJson
     dependsOn terraformOutput
     dependsOn npmInstall

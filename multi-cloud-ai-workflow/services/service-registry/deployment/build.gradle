@@ -58,6 +58,14 @@ task terraformApply(type: Exec) {
 }
 
 task terraformDestroy(type: Exec) {
+    mustRunAfter ":services:ame-service:deployment:runPreDestroyScript"
+    mustRunAfter ":services:aws-ai-service:deployment:runPreDestroyScript"
+    mustRunAfter ":services:azure-ai-service:deployment:runPreDestroyScript"
+    mustRunAfter ":services:job-processor-service:deployment:runPreDestroyScript"
+    mustRunAfter ":services:job-repository:deployment:runPreDestroyScript"
+    mustRunAfter ":services:media-repository:deployment:runPreDestroyScript"
+    mustRunAfter ":services:transform-service:deployment:runPreDestroyScript"
+    mustRunAfter ":services:workflow-service:deployment:runPreDestroyScript"
     dependsOn terraformInit
     dependsOn generateTerraformTFVars
     commandLine terraformExecutable

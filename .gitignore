@@ -11,3 +11,4 @@ terraform.output
 aws-credentials.json
 /multi-cloud-ai-workflow/website/src/config.json
 /multi-cloud-ai-workflow/website/deployment/files.tf
+.terraform.tfstate.lock.info
