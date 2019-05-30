@@ -93,6 +93,7 @@ task terraformOutput(type: Exec) {
 }
 
 task runPostDeployScript(type: Exec) {
+    mustRunAfter ":services:service-registry:deployment:runPostDeployScript"
     dependsOn generateAwsCredentialsJson
     dependsOn terraformOutput
     dependsOn npmInstall
