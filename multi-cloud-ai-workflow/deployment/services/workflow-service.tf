@@ -7,7 +7,7 @@ resource "aws_lambda_function" "workflow-service-api-handler" {
   function_name    = "${format("%.64s", "${var.global_prefix}-workflow-service-api-handler")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("./../services/workflow-service/api-handler/dist/lambda.zip"))}"
+  source_code_hash = "${filebase64sha256("./../services/workflow-service/api-handler/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
@@ -22,7 +22,7 @@ resource "aws_lambda_function" "workflow-service-worker" {
   function_name    = "${format("%.64s", "${var.global_prefix}-workflow-service-worker")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("./../services/workflow-service/worker/dist/lambda.zip"))}"
+  source_code_hash = "${filebase64sha256("./../services/workflow-service/worker/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "300"
   memory_size      = "3008"
@@ -111,7 +111,7 @@ resource "aws_api_gateway_deployment" "workflow_service_deployment" {
     "WorkerLambdaFunctionName" = "${aws_lambda_function.workflow-service-worker.function_name}"
     "ConformWorkflowId"        = "${var.conform_workflow_id}"
     "AiWorkflowId"             = "${var.ai_workflow_id}"
-    "DeploymentHash"           = "${sha256(file("./services/workflow-service.tf"))}"
+    "DeploymentHash"           = "${filesha256("./services/workflow-service.tf")}"
   }
 }
 
