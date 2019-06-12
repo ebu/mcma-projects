@@ -7,6 +7,7 @@ node_modules/
 dist/
 gradle.properties
 /multi-cloud-ai-workflow/deployment/storage/website.tf
-/multi-cloud-ai-workflow/deployment/terraform.output
-/multi-cloud-ai-workflow/deployment/aws-credentials.json
+terraform.output
+aws-credentials.json
 /multi-cloud-ai-workflow/website/src/config.json
+/multi-cloud-ai-workflow/website/deployment/files.tf

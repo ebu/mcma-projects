@@ -7,7 +7,7 @@ resource "aws_lambda_function" "service-registry-api-handler" {
   function_name    = "${format("%.64s", "${var.global_prefix}-service-registry-api-handler")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${base64sha256(file("./../services/service-registry/api-handler/dist/lambda.zip"))}"
+  source_code_hash = "${filebase64sha256("./../services/service-registry/api-handler/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "30"
   memory_size      = "256"
@@ -142,7 +142,7 @@ resource "aws_api_gateway_deployment" "service_registry_deployment" {
   variables = {
     "TableName"      = "${var.global_prefix}-service-registry"
     "PublicUrl"      = "${local.service_registry_url}"
-    "DeploymentHash" = "${sha256(file("./services/service-registry.tf"))}"
+    "DeploymentHash" = "${filesha256("./services/service-registry.tf")}"
   }
 }
 
