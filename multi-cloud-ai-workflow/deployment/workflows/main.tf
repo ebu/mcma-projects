@@ -1,3 +1,11 @@
+#########################
+# Provider registration 
+#########################
+
+provider "template" {
+    version = "~> 2.1"
+}
+
 #################################
 #  aws_iam_role : iam_for_exec_lambda
 #################################

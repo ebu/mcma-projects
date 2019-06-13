@@ -1,3 +1,11 @@
+#########################
+# Provider registration 
+#########################
+
+provider "template" {
+    version = "~> 2.1"
+}
+
 data "template_file" "s3_authenticated_read_write_policy_upload" {
   template = "${file("policies/s3-authenticated-read-write.json")}"
 
