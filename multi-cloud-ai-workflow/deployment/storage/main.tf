@@ -1,7 +1,15 @@
+#########################
+# Provider registration 
+#########################
+
+provider "template" {
+    version = "~> 2.1"
+}
+
 data "template_file" "s3_authenticated_read_write_policy_upload" {
   template = "${file("policies/s3-authenticated-read-write.json")}"
 
-  vars {
+  vars = {
     bucket_name = "${var.upload_bucket}"
     aws_account_id = "${var.aws_account_id}"
   }
@@ -36,7 +44,7 @@ resource "aws_s3_bucket" "temp" {
 data "template_file" "s3_public_read_policy_website" {
   template = "${file("policies/s3-public-read.json")}"
 
-  vars {
+  vars = {
     bucket_name = "${var.website_bucket}"
   }
 }

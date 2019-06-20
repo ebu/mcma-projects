@@ -10,8 +10,8 @@
     "license": "Apache-2.0",
     "dependencies": {
         "amazon-cognito-identity-js": "^2.0.30",
-        "aws-sdk": "^2.407.0",
+        "aws-sdk": "^2.473.0",
         "mcma-core": "0.3.5",
-        "node-fetch": "^2.3.0"
+        "node-fetch": "^2.6.0"
     }
 }

@@ -1,5 +1,4 @@
 variable "global_prefix" {}
-variable "upload_bucket" {}
 variable "temp_bucket" {}
 variable "repository_bucket" {}
 variable "website_bucket" {}

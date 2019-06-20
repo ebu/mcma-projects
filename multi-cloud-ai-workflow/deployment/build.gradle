@@ -70,7 +70,7 @@ task generateTerraformWebsiteTF {
                 targetFile.append("  key          = \"" + f.relativePath + "\"\r\n")
                 targetFile.append("  source       = \"" + f.file.path.replace("\\", "/") + "\"\r\n")
                 targetFile.append("  content_type = \"" + mimeType + "\"\r\n")
-                targetFile.append("  etag         = \"\${md5(file(\"" + f.file.path.replace("\\", "/") + "\"))}\"\r\n")
+                targetFile.append("  etag         = \"\${filemd5(\"" + f.file.path.replace("\\", "/") + "\")}\"\r\n")
                 targetFile.append("}\r\n\r\n")
             }
         }
@@ -166,3 +166,23 @@ deploy.dependsOn(updateServiceRegistry)
 task destroy {}
 destroy.dependsOn(terraformDestroy)
 destroy.dependsOn(clean)
+
+task terraformTaintJobRepository(type: Exec) {
+    commandLine terraformExecutable
+    args "taint", "-module=services", "aws_api_gateway_deployment.job_repository_deployment"
+}
+
+task terraformTaintServiceRegistry(type: Exec) {
+    commandLine terraformExecutable
+    args "taint", "-module=services", "aws_api_gateway_deployment.service_registry_deployment"
+}
+
+task terraformTaintMediaRepository(type: Exec) {
+    commandLine terraformExecutable
+    args "taint", "-module=services", "aws_api_gateway_deployment.media_repository_deployment"
+}
+
+task terraformTaint
+terraformTaint.dependsOn(terraformTaintJobRepository)
+terraformTaint.dependsOn(terraformTaintServiceRegistry)
+terraformTaint.dependsOn(terraformTaintMediaRepository)
