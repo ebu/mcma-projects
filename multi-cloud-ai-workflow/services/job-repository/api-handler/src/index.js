@@ -1,210 +1,89 @@
 //"use strict";
+const { Job } = require("mcma-core");
+const { McmaApiRouteCollection, HttpStatusCode } = require("mcma-api");
+const { awsDefaultRoutes, invokeLambdaWorker, DynamoDbTable } = require("mcma-aws");
 
-const util = require('util');
+const workerInvoker = new invokeLambdaWorker();
 
-const AWS = require("aws-sdk");
-const Lambda = new AWS.Lambda({ apiVersion: "2015-03-31" });
-const LambdaInvoke = util.promisify(Lambda.invoke.bind(Lambda));
+const invokeCreateJobProcess = async (ctx, job) => {
+    await workerInvoker.invoke(
+        ctx.workerFunctionName(),
+        {
+            operationName: "createJobProcess",
+            contextVariables: ctx.getAllContextVariables(),
+            input: {
+                jobId: job.id
+            }
+        });
+};
 
-const MCMA_AWS = require("mcma-aws");
-const uuidv4 = require('uuid/v4');
-
-// async functions to handle the different routes.
-
-const getJobs = async (request, response) => {
-    console.log("getJobs()", JSON.stringify(request, null, 2));
-
-    let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
-
-    response.body = await table.getAll("Job");
-
-    console.log(JSON.stringify(response, null, 2));
-}
-
-const addJob = async (request, response) => {
-    console.log("addJob()", JSON.stringify(request, null, 2));
-
-    let job = request.body;
-    if (!job) {
-        response.statusCode = MCMA_AWS.HTTP_BAD_REQUEST;
-        response.statusMessage = "Missing request body.";
-        return;
-    }
-
-    if (!job["@type"]) {
-        response.statusCode = MCMA_AWS.HTTP_BAD_REQUEST;
-        response.statusMessage = "Missing '@type' property.";
-        return;
-    }
-
-    let jobId = request.stageVariables.PublicUrl + "/jobs/" + uuidv4();
-    job.id = jobId;
-    job.status = "NEW";
-    job.dateCreated = new Date().toISOString();
-    job.dateModified = job.dateCreated;
-
-    let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
-
-    await table.put("Job", jobId, job);
-
-    response.statusCode = MCMA_AWS.HTTP_CREATED;
-    response.headers.Location = job.id;
-    response.body = job;
-
-    console.log(JSON.stringify(response, null, 2));
-
-    // invoking worker lambda function that will create a job process for this new job
-    var params = {
-        FunctionName: request.stageVariables.WorkerLambdaFunctionName,
-        InvocationType: "Event",
-        LogType: "None",
-        Payload: JSON.stringify({
-            action: "CreateJobProcess",
-            stageVariables: request.stageVariables,
-            jobId
-        })
-    };
-
-    await LambdaInvoke(params);
-}
-
-const getJob = async (request, response) => {
-    console.log("getJob()", JSON.stringify(request, null, 2));
-
-    let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
-
-    let jobId = request.stageVariables.PublicUrl + request.path;
-
-    response.body = await table.get("Job", jobId);
-
-    if (response.body === null) {
-        response.statusCode = MCMA_AWS.HTTP_NOT_FOUND;
-        response.statusMessage = "No resource found on path '" + request.path + "'.";
-    }
-}
-
-const deleteJob = async (request, response) => {
-    console.log("deleteJob()", JSON.stringify(request, null, 2));
-
-    let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
-
-    let jobId = request.stageVariables.PublicUrl + request.path;
-
-    let job = await table.get("Job", jobId);
-    if (!job) {
-        response.statusCode = MCMA_AWS.HTTP_NOT_FOUND;
-        response.statusMessage = "No resource found on path '" + request.path + "'.";
-        return;
-    }
-
-    await table.delete("Job", jobId);
-
-    // invoking worker lambda function that will delete the JobProcess created for this Job
+const invokeDeleteJobProcess = async (ctx, job) => {
     if (job.jobProcess) {
-        var params = {
-            FunctionName: request.stageVariables.WorkerLambdaFunctionName,
-            InvocationType: "Event",
-            LogType: "None",
-            Payload: JSON.stringify({
-                action: "DeleteJobProcess",
-                stageVariables: request.stageVariables,
-                jobProcessId: job.jobProcess
-            })
-        };
-
-        await LambdaInvoke(params);
+        await workerInvoker.invoke(
+            ctx.workerFunctionName(),
+            {
+                operationName: "deleteJobProcess",
+                contextVariables: ctx.getAllContextVariables(),
+                input: {
+                    jobProcessId: job.jobProcess
+                }
+            });
     }
-}
+};
 
-const stopJob = async (request, response) => {
-    let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
-
-    let jobId = request.stageVariables.PublicUrl + "/jobs/" + request.pathVariables.id;
-
-    let job = await table.get("Job", jobId);
-    if (!job) {
-        response.statusCode = MCMA_AWS.HTTP_NOT_FOUND;
-        response.statusMessage = "No resource found on path '" + request.path + "'.";
-        return;
-    }
-
+const stopJob = async (_request, response) => {
     response.statusCode = MCMA_AWS.HTTP_NOT_IMPLEMENTED;
     response.statusMessage = "Stopping job is not implemented";
-}
+};
 
-const cancelJob = async (request, response) => {
-    let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
-
-    let jobId = request.stageVariables.PublicUrl + "/jobs/" + request.pathVariables.id;
-
-    let job = await table.get("Job", jobId);
-    if (!job) {
-        response.statusCode = MCMA_AWS.HTTP_NOT_FOUND;
-        response.statusMessage = "No resource found on path '" + request.path + "'.";
-        return;
-    }
-
+const cancelJob = async (_request, response) => {
     response.statusCode = MCMA_AWS.HTTP_NOT_IMPLEMENTED;
     response.statusMessage = "Canceling job is not implemented";
-}
+};
 
-const processNotification = async (request, response) => {
-    let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
+const processNotification = async (requestContext) => {
+    let table = new DynamoDbTable(Job, requestContext.tableName());
 
-    let jobId = request.stageVariables.PublicUrl + "/jobs/" + request.pathVariables.id;
-
-    let job = await table.get("Job", jobId);
-    if (!job) {
-        response.statusCode = MCMA_AWS.HTTP_NOT_FOUND;
-        response.statusMessage = "No resource found on path '" + request.path + "'.";
+    let job = await table.get(requestContext.publicUrl() + "/jobs/" + requestContext.request.pathVariables.id);
+    if (!requestContext.resourceIfFound(job, false)) {
         return;
     }
 
-    let notification = request.body;
-
+    let notification = requestContext.isBadRequestDueToMissingBody();
     if (!notification) {
-        response.statusCode = MCMA_AWS.HTTP_BAD_REQUEST;
-        response.statusMessage = "Missing notification in request body";
         return;
     }
 
     if (job.jobProcess !== notification.source) {
-        response.statusCode = MCMA_AWS.HTTP_BAD_REQUEST;
-        response.statusMessage = "Unexpected notification from '" + notification.source + "'.";
+        requestContext.response.statusCode = HttpStatusCode.BAD_REQUEST;
+        requestContext.response.statusMessage = "Unexpected notification from '" + notification.source + "'.";
         return;
     }
 
-    // invoking worker lambda function that will process the notification
-    var params = {
-        FunctionName: request.stageVariables.WorkerLambdaFunctionName,
-        InvocationType: "Event",
-        LogType: "None",
-        Payload: JSON.stringify({
-            action: "ProcessNotification",
-            stageVariables: request.stageVariables,
-            jobId,
-            notification
-        })
-    };
-
-    await LambdaInvoke(params);
+    await workerInvoker.invoke(
+        requestContext.workerFunctionName(),
+        {
+            operationName: "ProcessNotification",
+            contextVariables: requestContext.getAllContextVariables(),
+            input: {
+                jobId,
+                notification
+            }
+        });
 }
 
-// Initializing rest controller for API Gateway Endpoint
-const restController = new MCMA_AWS.ApiGatewayRestController();
+const routeCollection = new McmaApiRouteCollection();
 
-// adding routes for GET, POST and DELETE for jobs
-restController.addRoute("GET", "/jobs", getJobs);
-restController.addRoute("POST", "/jobs", addJob);
-restController.addRoute("GET", "/jobs/{id}", getJob);
-restController.addRoute("DELETE", "/jobs/{id}", deleteJob);
+const jobRoutes = awsDefaultRoutes(Job).withDynamoDb().addAll();
+jobRoutes.route(r => r.create).configure(r => r.onCompleted(invokeCreateJobProcess));
+jobRoutes.route(r => r.delete).configure(r => r.onCompleted(invokeDeleteJobProcess));
 
-// adding routes for job actions
-restController.addRoute("POST", "/jobs/{id}/stop", stopJob);
-restController.addRoute("POST", "/jobs/{id}/cancel", cancelJob);
+routeCollection.addRoutes(jobRoutes)
+    .addRoute("POST", "/jobs/{id}/stop", stopJob)
+    .addRoute("POST", "/jobs/{id}/cancel", cancelJob)
+    .addRoute("POST", "/jobs/{id}/notifications", processNotification);
 
-// adding route for callback notifications
-restController.addRoute("POST", "/jobs/{id}/notifications", processNotification);
+const restController = routeCollection.toApiGatewayApiController();
 
 exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));

@@ -70,17 +70,17 @@ exports.handler = async (event, context) => {
     
     let technicalMetadata = bme.technicalMetadata;
 
-    let ebuCoreMain = technicalMetadata['ebucore:ebuCoreMain'];
-    let coreMetadata = ebuCoreMain['ebucore:coreMetadata'][0];
-    let containerFormat = coreMetadata['ebucore:format'][0]['ebucore:containerFormat'][0];
-    let duration = coreMetadata['ebucore:format'][0]['ebucore:duration'][0]
+    let ebuCoreMain = technicalMetadata["ebucore:ebuCoreMain"];
+    let coreMetadata = ebuCoreMain["ebucore:coreMetadata"][0];
+    let containerFormat = coreMetadata["ebucore:format"][0]["ebucore:containerFormat"][0];
+    let duration = coreMetadata["ebucore:format"][0]["ebucore:duration"][0]
 
     // vaildate parameters
     let video = {
-        codec: containerFormat['ebucore:codec'][0]['ebucore:codecIdentifier'][0]['dc:identifier'][0]['#value'],
-        bitRate: coreMetadata['ebucore:format'][0]['ebucore:videoFormat'][0]['ebucore:bitRate'][0]['#value'],
-        format: coreMetadata['ebucore:format'][0]['ebucore:videoFormat'][0]['@videoFormatName'],
-        normalPlayTime: duration['ebucore:normalPlayTime'][0]['#value']
+        codec: containerFormat["ebucore:codec"][0]["ebucore:codecIdentifier"][0]["dc:identifier"][0]["#value"],
+        bitRate: coreMetadata["ebucore:format"][0]["ebucore:videoFormat"][0]["ebucore:bitRate"][0]["#value"],
+        format: coreMetadata["ebucore:format"][0]["ebucore:videoFormat"][0]["@videoFormatName"],
+        normalPlayTime: duration["ebucore:normalPlayTime"][0]["#value"]
     }
 
     let codec = video.codec;

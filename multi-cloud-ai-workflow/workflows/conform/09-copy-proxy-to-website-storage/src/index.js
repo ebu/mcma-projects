@@ -2,7 +2,7 @@
 
 // require
 const util = require("util");
-const uuidv4 = require('uuid/v4');
+const uuidv4 = require("uuid/v4");
 
 const AWS = require("aws-sdk");
 const S3 = new AWS.S3()

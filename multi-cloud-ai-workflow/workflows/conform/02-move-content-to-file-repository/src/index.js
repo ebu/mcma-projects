@@ -2,7 +2,7 @@
 
 // require
 const util = require("util");
-const uuidv4 = require('uuid/v4');
+const uuidv4 = require("uuid/v4");
 
 const AWS = require("aws-sdk");
 const S3 = new AWS.S3()
@@ -39,8 +39,8 @@ const resourceManager = new MCMA_CORE.ResourceManager({
 const yyyymmdd = () => {
     let now = new Date();
     let y = now.getUTCFullYear();
-    let m = ('' + (now.getUTCMonth() + 1)).padStart(2, '0');
-    let d = ('' + (now.getUTCDate() + 1)).padStart(2, '0');
+    let m = ("" + (now.getUTCMonth() + 1)).padStart(2, "0");
+    let d = ("" + (now.getUTCDate() + 1)).padStart(2, "0");
     return y + m + d;
 }
 

@@ -1,25 +1,17 @@
 //"use strict";
 
-const util = require('util');
+const util = require("util");
 
 const AWS = require("aws-sdk");
 const Lambda = new AWS.Lambda({ apiVersion: "2015-03-31" });
 const LambdaInvoke = util.promisify(Lambda.invoke.bind(Lambda));
 
-const MCMA_CORE = require("mcma-core");
+const { Logger, Locator, EnvironmentVariableProvider } = require("mcma-core");
 
-const STAGE_VARIABLES = {
-    TableName: process.env.TableName,
-    PublicUrl: process.env.PublicUrl,
-    ServicesUrl: process.env.ServicesUrl,
-    ServicesAuthType: process.env.ServicesAuthType,
-    ServicesAuthContext: process.env.ServicesAuthContext,
-    WorkerLambdaFunctionName: process.env.WorkerLambdaFunctionName,
-    ServiceOutputBucket: process.env.ServiceOutputBucket
-}
+const environmentVariableProvider = new EnvironmentVariableProvider();
 
 exports.handler = async (event, context) => {
-    console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
+    Logger.debug(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
 
     if (!event || !event.Records) {
         return;
@@ -34,26 +26,28 @@ exports.handler = async (event, context) => {
                 throw new Error("S3 key '" + awsS3Key + "' is not an expected file name for transcribe output")
             }
 
-            let transcribeJobUUID = awsS3Key.substring(awsS3Key.indexOf("-") + 1, awsS3Key.lastIndexOf("."));
+            const transcribeJobUUID = awsS3Key.substring(awsS3Key.indexOf("-") + 1, awsS3Key.lastIndexOf("."));
 
-            let jobAssignmentId = STAGE_VARIABLES.PublicUrl + "/job-assignments/" + transcribeJobUUID;
+            const jobAssignmentId = environmentVariableProvider.publicUrl() + "/job-assignments/" + transcribeJobUUID;
 
             // invoking worker lambda function that will process the results of transcription job
-            var params = {
-                FunctionName: STAGE_VARIABLES.WorkerLambdaFunctionName,
+            const params = {
+                FunctionName: environmentVariableProvider.getRequiredContextVariable("WorkerFunctionName"),
                 InvocationType: "Event",
                 LogType: "None",
                 Payload: JSON.stringify({
-                    action: "ProcessTranscribeJobResult",
-                    stageVariables: STAGE_VARIABLES,
-                    jobAssignmentId,
-                    outputFile: new MCMA_CORE.Locator({ awsS3Bucket: awsS3Bucket, awsS3Key: awsS3Key })
+                    operationName: "ProcessTranscribeJobResult",
+                    contextVariables: environmentVariableProvider.getAllContextVariables(),
+                    input: {
+                        jobAssignmentId,
+                        outputFile: new Locator({ awsS3Bucket: awsS3Bucket, awsS3Key: awsS3Key })
+                    }
                 })
             };
 
             await LambdaInvoke(params);
         } catch (error) {
-            console.log("Failed processing record", record, error);
+            Logger.error("Failed processing record", record, error);
         }
     }
 

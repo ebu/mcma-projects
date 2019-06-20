@@ -4,7 +4,7 @@ const util = require("util");
 const uuidv4 = require("uuid/v4");
 
 const AWS = require("aws-sdk");
-AWS.config.loadFromPath('./aws-credentials.json');
+AWS.config.loadFromPath("./aws-credentials.json");
 const S3 = new AWS.S3();
 const S3PutObject = util.promisify(S3.putObject.bind(S3));
 
@@ -12,7 +12,7 @@ const Cognito = new AWS.CognitoIdentityServiceProvider();
 const CognitoAdminCreateUser = util.promisify(Cognito.adminCreateUser.bind(Cognito));
 const CognitoAdminDeleteUser = util.promisify(Cognito.adminDeleteUser.bind(Cognito));
 
-global.fetch = require('node-fetch');
+global.fetch = require("node-fetch");
 const AmazonCognitoIdentity = require("amazon-cognito-identity-js");
 
 const MCMA_CORE = require("mcma-core");
@@ -262,13 +262,13 @@ const createServices = (serviceUrls) => {
 const readStdin = async () => {
     let content = "";
 
-    process.stdin.on('data', (data) => {
+    process.stdin.on("data", (data) => {
         content += data.toString();
     });
 
     return await new Promise((resolve, reject) => {
-        process.stdin.on('end', () => resolve(content));
-        process.stdin.on('error', reject);
+        process.stdin.on("end", () => resolve(content));
+        process.stdin.on("error", reject);
     });
 }
 

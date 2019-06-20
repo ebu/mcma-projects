@@ -11,7 +11,9 @@
     "dependencies": {
         "aws-sdk": "^2.407.0",
         "fast-deep-equal": "^2.0.1",
-        "mcma-aws": "0.1.0",
-        "mcma-core": "0.2.5"
+        "mcma-core": "0.3.5",
+        "mcma-data": "0.3.5",
+        "mcma-worker": "0.3.5",
+        "mcma-aws": "0.3.5"
     }
 }

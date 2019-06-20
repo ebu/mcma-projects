@@ -1,124 +1,25 @@
 //"use strict";
 
-const AWS = require("aws-sdk");
+const { WorkerBuilder } = require("mcma-worker");
 
-const MCMA_AWS = require("mcma-aws");
-const MCMA_CORE = require("mcma-core");
+const createJobProcess = require("./operations/create-job-process");
+const deleteJobProcess = require("./operations/delete-job-process");
+const processNotification = require("./operations/process-notification");
 
-const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator({
-    accessKey: AWS.config.credentials.accessKeyId,
-    secretKey: AWS.config.credentials.secretAccessKey,
-    sessionToken: AWS.config.credentials.sessionToken,
-    region: AWS.config.region
-});
-
-const authProvider = new MCMA_CORE.AuthenticatorProvider(
-    async (authType, authContext) => {
-        switch (authType) {
-            case "AWS4":
-                return authenticatorAWS4;
-        }
-    }
-);
-
-const createResourceManager = (event) => {
-    return new MCMA_CORE.ResourceManager({
-        servicesUrl: event.stageVariables.ServicesUrl,
-        servicesAuthType: event.stageVariables.ServicesAuthType,
-        servicesAuthContext: event.stageVariables.ServicesAuthContext,
-        authProvider
-    });
-}
-
-const createJobProcess = async (event) => {
-    let jobId = event.jobId;
-
-    let table = new MCMA_AWS.DynamoDbTable(AWS, event.stageVariables.TableName);
-    let job = await table.get("Job", jobId);
-
-    let resourceManager = createResourceManager(event);
-
-    try {
-        let jobProcess = new MCMA_CORE.JobProcess({
-            job: jobId,
-            notificationEndpoint: new MCMA_CORE.NotificationEndpoint({
-                httpEndpoint: jobId + "/notifications"
-            })
-        });
-        jobProcess = await resourceManager.create(jobProcess);
-
-        job.status = "QUEUED";
-        job.jobProcess = jobProcess.id;
-    } catch (error) {
-        job.status = "FAILED";
-        job.statusMessage = "Failed to create JobProcess due to error '" + error.message + "'";
-    }
-
-    job.dateModified = new Date().toISOString();
-
-    await table.put("Job", jobId, job);
-
-    await resourceManager.sendNotification(job);
-}
-
-const deleteJobProcess = async (event) => {
-    let jobProcessId = event.jobProcessId;
-
-    try {
-        let resourceManager = createResourceManager(event);
-        await resourceManager.delete(jobProcessId);
-    } catch (error) {
-        console.log(error);
-    }
-}
-
-const processNotification = async (event) => {
-    let jobId = event.jobId;
-    let notification = event.notification;
-
-    let table = new MCMA_AWS.DynamoDbTable(AWS, event.stageVariables.TableName);
-
-    let job = await table.get("Job", jobId);
-
-    // not updating job if it already was marked as completed or failed.
-    if (job.status === "COMPLETED" || job.status === "FAILED") {
-        console.log("Ignoring update of job that tried to change state from " + job.status + " to " + notification.content.status)
-        return;
-    }
-
-    job.status = notification.content.status;
-    job.statusMessage = notification.content.statusMessage;
-    job.progress = notification.content.progress;
-    job.jobOutput = notification.content.jobOutput;
-    job.dateModified = new Date().toISOString();
-
-    await table.put("Job", jobId, job);
-
-    let resourceManager = createResourceManager(event);
-
-    await resourceManager.sendNotification(job);
-}
+const worker =
+    new WorkerBuilder()
+        .handleOperation("CreateJobProcess", x => x.handle(createJobProcess))
+        .handleOperation("DeleteJobProcess", x => x.handle(deleteJobProcess))
+        .handleOperation("ProcessJobNotification", x => x.handle(processNotification))
+        .build();
 
 exports.handler = async (event, context) => {
     try {
         console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
-
-        switch (event.action) {
-            case "CreateJobProcess":
-                await createJobProcess(event);
-                break;
-            case "DeleteJobProcess":
-                await deleteJobProcess(event);
-                break;
-            case "ProcessNotification":
-                await processNotification(event);
-                break;
-            default:
-                console.error("No handler implemented for action '" + event.action + "'.");
-                break;
-        }
+        
+        await worker.doWork(event);
     } catch (error) {
-        console.log("Error occurred when handling action '" + event.action + "'")
+        console.log("Error occurred when handling action '" + event.operationName + "'")
         console.log(error.toString());
     }
-}
+};
