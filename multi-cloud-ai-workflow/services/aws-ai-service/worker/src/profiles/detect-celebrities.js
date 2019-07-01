@@ -1,18 +1,22 @@
+const util = require("util");
 const uuidv4 = require("uuid/v4");
 const crypto = require("crypto");
 
 const AWS = require('aws-sdk');
+const S3 = new AWS.S3();
+const S3PutObject = util.promisify(S3.putObject.bind(S3));
+
 const Rekognition = new AWS.Rekognition();
 const RekognitionStartCelebrityRecognition = util.promisify(Rekognition.startCelebrityRecognition.bind(Rekognition));
 const RekognitionGetCelebrityRecognition = util.promisify(Rekognition.getCelebrityRecognition.bind(Rekognition));
 
-const { Logger, EnvironmentVariableProvider, Locator, JobAssignment } = require("mcma-core");
+const { Logger, EnvironmentVariableProvider, Locator, JobAssignment, AIJob } = require("mcma-core");
 const { WorkerJobHelper } = require("mcma-worker");
-const { dynamoDbTableProvider, getAwsV4ResourceManager } = require("mcma-aws");
+const { DynamoDbTableProvider, getAwsV4ResourceManager } = require("mcma-aws");
 
 const environmentVariableProvider = new EnvironmentVariableProvider();
 
-function detectCelebrities(workerJobHelper) {
+async function detectCelebrities(workerJobHelper) {
     const inputFile = workerJobHelper.getJobInput().inputFile;
     const clientToken = crypto.randomBytes(16).toString("hex");
     const base64JobId = new Buffer(workerJobHelper.getJobAssignmentId()).toString("hex");
@@ -27,8 +31,8 @@ function detectCelebrities(workerJobHelper) {
         ClientRequestToken: clientToken,
         JobTag: base64JobId,
         NotificationChannel: {
-            RoleArn: environmentVariableProvider.getRequiredContextVariable("REKO_SNS_ROLE_ARN"),
-            SNSTopicArn: environmentVariableProvider.getRequiredContextVariable("SNS_TOPIC_ARN")
+            RoleArn: environmentVariableProvider.getRequiredContextVariable("RekoSnsRoleArn"),
+            SNSTopicArn: environmentVariableProvider.getRequiredContextVariable("SnsTopicArn")
         }
     };
 
@@ -39,9 +43,12 @@ function detectCelebrities(workerJobHelper) {
 
 detectCelebrities.profileName = "AWSDetectCelebrities";
 
+const dynamoDbTableProvider = new DynamoDbTableProvider(JobAssignment);
+
 const processRekognitionResult = async (request) => {
     const workerJobHelper = new WorkerJobHelper(
-        dynamoDbTableProvider(JobAssignment).table(request.tableName()),
+        AIJob,
+        dynamoDbTableProvider.table(request.tableName()),
         getAwsV4ResourceManager(request),
         request,
         request.input.jobAssignmentId
@@ -128,7 +135,7 @@ const processRekognitionResult = async (request) => {
             Logger.exception(error);
         }
     }
-}
+};
 
 function walkclean(x) {
     var type = typeof x;
@@ -136,7 +143,7 @@ function walkclean(x) {
         type = "array";
     }
     if ((type == "array") || (type == "object")) {
-        for (k in x) {
+        for (let k in x) {
             var v = x[k];
             if ((v === "") && (type == "object")) {
                 delete x[k];

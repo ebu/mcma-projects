@@ -1,37 +1,12 @@
 //"use strict";
-
-// require
-const AWS = require("aws-sdk");
-const MCMA_CORE = require("mcma-core");
+const { EnvironmentVariableProvider } = require("mcma-core");
+const { getAwsV4ResourceManager } = require("mcma-aws");
 
 // Environment Variable(AWS Lambda)
-const REPOSITORY_BUCKET = process.env.REPOSITORY_BUCKET;
-const TEMP_BUCKET = process.env.TEMP_BUCKET;
-const WEBSITE_BUCKET = process.env.WEBSITE_BUCKET;
+const WebsiteBucket = process.env.WebsiteBucket;
 
-const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator({
-    accessKey: AWS.config.credentials.accessKeyId,
-    secretKey: AWS.config.credentials.secretAccessKey,
-    sessionToken: AWS.config.credentials.sessionToken,
-    region: AWS.config.region
-});
-
-const authProvider = new MCMA_CORE.AuthenticatorProvider(
-    async (authType, authContext) => {
-        switch (authType) {
-            case "AWS4":
-                return authenticatorAWS4;
-        }
-    }
-);
-
-const resourceManager = new MCMA_CORE.ResourceManager({
-    servicesUrl: process.env.SERVICES_URL,
-    servicesAuthType: process.env.SERVICES_AUTH_TYPE,
-    servicesAuthContext: process.env.SERVICES_AUTH_CONTEXT,
-    authProvider
-});
-
+const environmentVariableProvider = new EnvironmentVariableProvider();
+const resourceManager = getAwsV4ResourceManager(environmentVariableProvider);
 
 /* Expecting input like the following:
 
@@ -65,7 +40,7 @@ exports.handler = async (event, context) => {
         event.progress = 0;
         await resourceManager.sendNotification(event);
     } catch (error) {
-        console.warn("Failed to send notification");
+        console.warn("Failed to send notification", error);
     }
 
     // check the input and return mediaFileLocator which service as input for the AI workflows
@@ -92,7 +67,7 @@ exports.handler = async (event, context) => {
 
     // find the media locator in the website bucket with public httpEndpoint
     for (const locator of bmEssence.locations) {
-        if (locator.awsS3Bucket === WEBSITE_BUCKET) {
+        if (locator.awsS3Bucket === WebsiteBucket) {
             mediaFileLocator = locator;
         } 
     }

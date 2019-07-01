@@ -6,29 +6,33 @@ const StepFunctions = new AWS.StepFunctions();
 const SendTaskSuccess = util.promisify(StepFunctions.sendTaskSuccess.bind(StepFunctions));
 const SendTaskFailure = util.promisify(StepFunctions.sendTaskFailure.bind(StepFunctions));
 
-const MCMA_AWS = require("mcma-aws");
+const { HttpStatusCode, McmaApiRouteCollection } = require("mcma-api");
+require("mcma-aws");
 
 // async functions to handle the different routes.
 
-const processNotification = async (request, response) => {
+const processNotification = async (requestContext) => {
+    const request = requestContext.request;
+    const response = requestContext.response;
+
     console.log("processNotification()", JSON.stringify(request, null, 2));
 
     let notification = request.body;
 
     if (!notification) {
-        response.statusCode = MCMA_AWS.HTTP_BAD_REQUEST;
+        response.statusCode = HttpStatusCode.BAD_REQUEST;
         response.statusMessage = "Missing notification in request body";
         return;
     }
 
     if (!notification.content) {
-        response.statusCode = MCMA_AWS.HTTP_BAD_REQUEST;
+        response.statusCode = HttpStatusCode.BAD_REQUEST;
         response.statusMessage = "Missing notification content";
         return;
     }
 
     if (!notification.content.status) {
-        response.statusCode = MCMA_AWS.HTTP_BAD_REQUEST;
+        response.statusCode = HttpStatusCode.BAD_REQUEST;
         response.statusMessage = "Missing notification content status";
         return;
     }
@@ -54,10 +58,10 @@ const processNotification = async (request, response) => {
 }
 
 // Initializing rest controller for API Gateway Endpoint
-const restController = new MCMA_AWS.ApiGatewayRestController();
+const routes = new McmaApiRouteCollection();
+routes.addRoute("POST", "/notifications", processNotification);
 
-// adding routes
-restController.addRoute("POST", "/notifications", processNotification);
+const restController = routes.toApiGatewayApiController();
 
 exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));

@@ -6,12 +6,11 @@ const { awsDefaultRoutes } = require("mcma-aws");
 const controller =
     new McmaApiRouteCollection()
         .addRoutes(awsDefaultRoutes(BMContent).withDynamoDb("bm-contents").addAll().build())
-        .addRoutes(awsDefaultRoutes(BMEssence).withDynamoDb("bm-essence").addAll().build())
+        .addRoutes(awsDefaultRoutes(BMEssence).withDynamoDb("bm-essences").addAll().build())
         .toApiGatewayApiController();
 
 exports.handler = async (event, context) => {
-    Logger.debug(request);
-    Logger.debug(event);
+    Logger.debug(JSON.stringify(event, null, 2),JSON.stringify(event, null, 2));
 
     const resp = await controller.handleRequest(event, context);
     Logger.debug(resp);

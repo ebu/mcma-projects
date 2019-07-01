@@ -3,10 +3,8 @@ const { Job } = require("mcma-core");
 const { McmaApiRouteCollection, HttpStatusCode } = require("mcma-api");
 const { awsDefaultRoutes, invokeLambdaWorker, DynamoDbTable } = require("mcma-aws");
 
-const workerInvoker = new invokeLambdaWorker();
-
 const invokeCreateJobProcess = async (ctx, job) => {
-    await workerInvoker.invoke(
+    await invokeLambdaWorker(
         ctx.workerFunctionName(),
         {
             operationName: "createJobProcess",
@@ -19,7 +17,7 @@ const invokeCreateJobProcess = async (ctx, job) => {
 
 const invokeDeleteJobProcess = async (ctx, job) => {
     if (job.jobProcess) {
-        await workerInvoker.invoke(
+        await invokeLambdaWorker(
             ctx.workerFunctionName(),
             {
                 operationName: "deleteJobProcess",
@@ -32,12 +30,12 @@ const invokeDeleteJobProcess = async (ctx, job) => {
 };
 
 const stopJob = async (_request, response) => {
-    response.statusCode = MCMA_AWS.HTTP_NOT_IMPLEMENTED;
+    response.statusCode = HttpStatusCode.NOT_IMPLEMENTED;
     response.statusMessage = "Stopping job is not implemented";
 };
 
 const cancelJob = async (_request, response) => {
-    response.statusCode = MCMA_AWS.HTTP_NOT_IMPLEMENTED;
+    response.statusCode = HttpStatusCode.NOT_IMPLEMENTED;
     response.statusMessage = "Canceling job is not implemented";
 };
 
@@ -60,13 +58,13 @@ const processNotification = async (requestContext) => {
         return;
     }
 
-    await workerInvoker.invoke(
+    await invokeLambdaWorker(
         requestContext.workerFunctionName(),
         {
             operationName: "ProcessNotification",
             contextVariables: requestContext.getAllContextVariables(),
             input: {
-                jobId,
+                jobId: job.id,
                 notification
             }
         });
@@ -74,9 +72,10 @@ const processNotification = async (requestContext) => {
 
 const routeCollection = new McmaApiRouteCollection();
 
-const jobRoutes = awsDefaultRoutes(Job).withDynamoDb().addAll();
-jobRoutes.route(r => r.create).configure(r => r.onCompleted(invokeCreateJobProcess));
-jobRoutes.route(r => r.delete).configure(r => r.onCompleted(invokeDeleteJobProcess));
+const jobRoutesBuilder = awsDefaultRoutes(Job).withDynamoDb().addAll();
+jobRoutesBuilder.route(r => r.create).configure(r => r.onCompleted(invokeCreateJobProcess));
+jobRoutesBuilder.route(r => r.delete).configure(r => r.onCompleted(invokeDeleteJobProcess));
+const jobRoutes = jobRoutesBuilder.build();
 
 routeCollection.addRoutes(jobRoutes)
     .addRoute("POST", "/jobs/{id}/stop", stopJob)

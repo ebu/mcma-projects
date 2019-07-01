@@ -103,13 +103,13 @@ resource "aws_api_gateway_deployment" "ame_service_deployment" {
   stage_name  = "${var.environment_type}"
 
   variables = {
-    "TableName"                = "${var.global_prefix}-ame-service"
-    "PublicUrl"                = "${local.ame_service_url}"
-    "ServicesUrl"              = "${local.services_url}"
-    "ServicesAuthType"         = "${local.services_auth_type}"
-    "ServicesAuthContext"      = "${local.services_auth_context}"
-    "WorkerLambdaFunctionName" = "${aws_lambda_function.ame-service-worker.function_name}"
-    "DeploymentHash"           = "${filesha256("./services/ame-service.tf")}"
+    "TableName"           = "${var.global_prefix}-ame-service"
+    "PublicUrl"           = "${local.ame_service_url}"
+    "ServicesUrl"         = "${local.services_url}"
+    "ServicesAuthType"    = "${local.services_auth_type}"
+    "ServicesAuthContext" = "${local.services_auth_context}"
+    "WorkerFunctionName"  = "${aws_lambda_function.ame-service-worker.function_name}"
+    "DeploymentHash"      = "${filesha256("./services/ame-service.tf")}"
   }
 }
 

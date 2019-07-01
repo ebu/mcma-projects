@@ -1,6 +1,6 @@
 //"use strict";
 const { Logger, TransformJob } = require("mcma-core");
-const { WorkerBuilder } = require("mcma-worker");
+const { WorkerBuilder, WorkerRequest } = require("mcma-worker");
 require("mcma-aws");
 
 const { createProxyLambda } = require("./profiles/create-proxy-lambda");
@@ -18,7 +18,7 @@ exports.handler = async (event, context) => {
     try {
         Logger.debug(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
         
-        await worker.doWork(event);
+        await worker.doWork(new WorkerRequest(event));
 
     } catch (error) {
         Logger.error("Error occurred when handling action '" + event.operationName + "'")

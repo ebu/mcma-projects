@@ -1,11 +1,7 @@
 //"use strict";
 
-const AWS = require("aws-sdk");
-
 const { Job, JobStatus } = require("mcma-core");
 const { getAwsV4ResourceManager, DynamoDbTable } = require("mcma-aws");
-
-const createResourceManager = getAwsV4ResourceManager.getResourceManager;
 
 const processNotification = async (event) => {
     let jobId = event.input.jobId;
@@ -29,7 +25,7 @@ const processNotification = async (event) => {
 
     await table.put(jobId, job);
 
-    let resourceManager = createResourceManager(event);
+    let resourceManager = getAwsV4ResourceManager(event);
 
     await resourceManager.sendNotification(job);
 }

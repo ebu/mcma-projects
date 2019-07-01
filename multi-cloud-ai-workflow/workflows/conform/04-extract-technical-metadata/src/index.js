@@ -7,38 +7,17 @@ const AWS = require("aws-sdk");
 const StepFunctions = new AWS.StepFunctions();
 const StepFunctionsGetActivityTask = util.promisify(StepFunctions.getActivityTask.bind(StepFunctions));
 
-const MCMA_CORE = require("mcma-core");
+const { EnvironmentVariableProvider, AmeJob, JobParameterBag, Locator, NotificationEndpoint, JobProfile } = require("mcma-core");
+const { getAwsV4ResourceManager } = require("mcma-aws");
+
+const environmentVariableProvider = new EnvironmentVariableProvider();
+const resourceManager = getAwsV4ResourceManager(environmentVariableProvider);
 
 // Environment Variable(AWS Lambda)
 
-const TEMP_BUCKET = process.env.TEMP_BUCKET;
-const ACTIVITY_CALLBACK_URL = process.env.ACTIVITY_CALLBACK_URL;
-const ACTIVITY_ARN = process.env.ACTIVITY_ARN;
-
-const creds = {
-    accessKey: AWS.config.credentials.accessKeyId,
-    secretKey: AWS.config.credentials.secretAccessKey,
-    sessionToken: AWS.config.credentials.sessionToken,
-    region: AWS.config.region
-};
-
-const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator(creds);
-
-const authProvider = new MCMA_CORE.AuthenticatorProvider(
-    async (authType, authContext) => {
-        switch (authType) {
-            case "AWS4":
-                return authenticatorAWS4;
-        }
-    }
-);
-
-const resourceManager = new MCMA_CORE.ResourceManager({
-    servicesUrl: process.env.SERVICES_URL,
-    servicesAuthType: process.env.SERVICES_AUTH_TYPE,
-    servicesAuthContext: process.env.SERVICES_AUTH_CONTEXT,
-    authProvider
-});
+const TempBucket = process.env.TempBucket;
+const ActivityCallbackUrl = process.env.ActivityCallbackUrl;
+const ActivityArn = process.env.ActivityArn;
 
 /**
  * Lambda function handler
@@ -47,7 +26,7 @@ const resourceManager = new MCMA_CORE.ResourceManager({
  */
 exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
-    console.log(TEMP_BUCKET, ACTIVITY_CALLBACK_URL, ACTIVITY_ARN);
+    console.log(TempBucket, ActivityCallbackUrl, ActivityArn);
 
     // send update notification
     try {
@@ -55,11 +34,11 @@ exports.handler = async (event, context) => {
         event.progress = 27;
         await resourceManager.sendNotification(event);
     } catch (error) {
-        console.warn("Failed to send notification");
+        console.warn("Failed to send notification", error);
     }
 
     // get activity task
-    let data = await StepFunctionsGetActivityTask({ activityArn: ACTIVITY_ARN });
+    let data = await StepFunctionsGetActivityTask({ activityArn: ActivityArn });
 
     let taskToken = data.taskToken;
     if (!taskToken) {
@@ -70,7 +49,7 @@ exports.handler = async (event, context) => {
     event = JSON.parse(data.input);
 
     // get job profiles filtered by name
-    let jobProfiles = await resourceManager.get("JobProfile", { name: "ExtractTechnicalMetadata" });
+    let jobProfiles = await resourceManager.get(JobProfile, { name: "ExtractTechnicalMetadata" });
 
     let jobProfileId = jobProfiles.length ? jobProfiles[0].id : null;
 
@@ -79,20 +58,20 @@ exports.handler = async (event, context) => {
         throw new Error("JobProfile 'ExtractTechnicalMetadata' not found");
     }
 
-    let notificationUrl = ACTIVITY_CALLBACK_URL + "?taskToken=" + encodeURIComponent(taskToken);
+    let notificationUrl = ActivityCallbackUrl + "?taskToken=" + encodeURIComponent(taskToken);
     console.log("NotificationUrl:", notificationUrl);
 
     // creating ame job
-    let ameJob = new MCMA_CORE.AmeJob({
+    let ameJob = new AmeJob({
         jobProfile: jobProfileId,
-        jobInput: new MCMA_CORE.JobParameterBag({
+        jobInput: new JobParameterBag({
             inputFile: event.data.repositoryFile,
-            outputLocation: new MCMA_CORE.Locator({
-                awsS3Bucket: TEMP_BUCKET,
+            outputLocation: new Locator({
+                awsS3Bucket: TempBucket,
                 awsS3KeyPrefix: "AmeJobResults/"
             })
         }),
-        notificationEndpoint: new MCMA_CORE.NotificationEndpoint({
+        notificationEndpoint: new NotificationEndpoint({
             httpEndpoint: notificationUrl
         })
     });

@@ -103,13 +103,13 @@ resource "aws_api_gateway_deployment" "job_processor_service_deployment" {
   stage_name  = "${var.environment_type}"
 
   variables = {
-    "TableName"                = "${var.global_prefix}-job-processor-service"
-    "PublicUrl"                = "${local.job_processor_service_url}"
-    "ServicesUrl"              = "${local.services_url}"
-    "ServicesAuthType"         = "${local.services_auth_type}"
-    "ServicesAuthContext"      = "${local.services_auth_context}"
-    "WorkerLambdaFunctionName" = "${aws_lambda_function.job-processor-service-worker.function_name}"
-    "DeploymentHash"           = "${filesha256("./services/job-processor-service.tf")}"
+    "TableName"           = "${var.global_prefix}-job-processor-service"
+    "PublicUrl"           = "${local.job_processor_service_url}"
+    "ServicesUrl"         = "${local.services_url}"
+    "ServicesAuthType"    = "${local.services_auth_type}"
+    "ServicesAuthContext" = "${local.services_auth_context}"
+    "WorkerFunctionName"  = "${aws_lambda_function.job-processor-service-worker.function_name}"
+    "DeploymentHash"      = "${filesha256("./services/job-processor-service.tf")}"
   }
 }
 

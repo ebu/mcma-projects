@@ -1,3 +1,4 @@
+const util = require("util");
 const uuidv4 = require("uuid/v4");
 
 const AWS = require("aws-sdk");
@@ -10,7 +11,7 @@ const TranslateText = util.promisify(Translate.translateText.bind(Translate));
 
 const { Logger, Locator } = require("mcma-core");
 
-function translateText(workerJobHelper) {
+async function translateText(workerJobHelper) {
     const jobInput = workerJobHelper.getJobInput();
     const inputFile = jobInput.inputFile;
     const outputLocation = jobInput.outputLocation;

@@ -8,33 +8,14 @@ const AWS = require("aws-sdk");
 const S3 = new AWS.S3()
 const S3CopyObject = util.promisify(S3.copyObject.bind(S3));
 
-const MCMA_CORE = require("mcma-core");
+const { EnvironmentVariableProvider, Locator } = require("mcma-core");
+const { getAwsV4ResourceManager } = require("mcma-aws");
+
+const environmentVariableProvider = new EnvironmentVariableProvider();
+const resourceManager = getAwsV4ResourceManager(environmentVariableProvider);
 
 // Environment Variable(AWS Lambda)
-const REPOSITORY_BUCKET = process.env.REPOSITORY_BUCKET;
-
-const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator({
-    accessKey: AWS.config.credentials.accessKeyId,
-    secretKey: AWS.config.credentials.secretAccessKey,
-    sessionToken: AWS.config.credentials.sessionToken,
-    region: AWS.config.region
-});
-
-const authProvider = new MCMA_CORE.AuthenticatorProvider(
-    async (authType, authContext) => {
-        switch (authType) {
-            case "AWS4":
-                return authenticatorAWS4;
-        }
-    }
-);
-
-const resourceManager = new MCMA_CORE.ResourceManager({
-    servicesUrl: process.env.SERVICES_URL,
-    servicesAuthType: process.env.SERVICES_AUTH_TYPE,
-    servicesAuthContext: process.env.SERVICES_AUTH_CONTEXT,
-    authProvider
-});
+const RepositoryBucket = process.env.RepositoryBucket;
 
 const yyyymmdd = () => {
     let now = new Date();
@@ -58,14 +39,14 @@ exports.handler = async (event, context) => {
         event.progress = 9;
         await resourceManager.sendNotification(event);
     } catch (error) {
-        console.warn("Failed to send notification");
+        console.warn("Failed to send notification", error);
     }
 
     let inputFile = event.input.inputFile;
 
     let copySource = encodeURI(inputFile.awsS3Bucket + "/" + inputFile.awsS3Key);
 
-    let s3Bucket = REPOSITORY_BUCKET;
+    let s3Bucket = RepositoryBucket;
     let s3Key = yyyymmdd() + "/" + uuidv4();
 
     // adding file extension
@@ -84,7 +65,7 @@ exports.handler = async (event, context) => {
         throw new Error("Unable to read input file in bucket '" + s3Bucket + "' with key '" + s3Key + "' due to error: " + error.message);
     }
 
-    return new MCMA_CORE.Locator({
+    return new Locator({
         "awsS3Bucket": s3Bucket,
         "awsS3Key": s3Key
     });

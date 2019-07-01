@@ -15,7 +15,7 @@ export class ContentService {
         return this.mcmaClientService.resourceManager$.pipe(
             switchMap(resourceManager => {
                 console.log('using auth http to get content at ' + contentUrl);
-                return from<BMContent>(resourceManager.resolve(contentUrl)).pipe(
+                return from(resourceManager.resolve<BMContent>(contentUrl)).pipe(
                     tap(data => {
                         console.log('got content (tap 1)', data);
                     })
@@ -44,7 +44,7 @@ export class ContentService {
         const sub1 =
             timer(0, 3000).pipe(
                 switchMap(() => this.mcmaClientService.resourceManager$),
-                switchMap(resourceManager => from<BMContent>(resourceManager.resolve(bmContentId))),
+                switchMap(resourceManager => from(resourceManager.resolve<BMContent>(bmContentId))),
                 takeWhile(() => !stop)
             ).subscribe(
                 content => {

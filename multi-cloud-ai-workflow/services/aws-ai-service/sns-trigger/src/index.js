@@ -55,7 +55,7 @@ exports.handler = async (event, context) => {
 
             // invoking worker lambda function that will process the results of transcription job
             const params = {
-                FunctionName: environmentVariableProvider.getRequiredContextVariable("WorkerLambdaFunctionName"),
+                FunctionName: environmentVariableProvider.getRequiredContextVariable("WorkerFunctionName"),
                 InvocationType: "Event",
                 LogType: "None",
                 Payload: JSON.stringify({

@@ -5,12 +5,9 @@ const AWS = require("aws-sdk");
 const { JobProcess, JobStatus } = require("mcma-core");
 const { getAwsV4ResourceManager, DynamoDbTable } = require("mcma-aws");
 
-const createResourceManager = getAwsV4ResourceManager.getResourceManager;
-
-
 const processNotification = async (event) => {
-    let jobProcessId = event.jobProcessId;
-    let notification = event.notification;
+    let jobProcessId = event.input.jobProcessId;
+    let notification = event.input.notification;
 
     let table = new DynamoDbTable(JobProcess, event.tableName());
 
@@ -30,7 +27,7 @@ const processNotification = async (event) => {
 
     await table.put(jobProcessId, jobProcess);
 
-    let resourceManager = createResourceManager(event);
+    let resourceManager = getAwsV4ResourceManager(event);
 
     await resourceManager.sendNotification(jobProcess);
 }

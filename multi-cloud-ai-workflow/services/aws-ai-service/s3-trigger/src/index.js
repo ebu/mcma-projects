@@ -7,6 +7,7 @@ const Lambda = new AWS.Lambda({ apiVersion: "2015-03-31" });
 const LambdaInvoke = util.promisify(Lambda.invoke.bind(Lambda));
 
 const { Logger, Locator, EnvironmentVariableProvider } = require("mcma-core");
+require("mcma-api");
 
 const environmentVariableProvider = new EnvironmentVariableProvider();
 

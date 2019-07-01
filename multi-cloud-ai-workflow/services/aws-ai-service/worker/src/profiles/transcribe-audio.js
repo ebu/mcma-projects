@@ -1,3 +1,4 @@
+const util = require("util");
 const AWS = require("aws-sdk");
 
 const S3 = new AWS.S3();
@@ -8,11 +9,11 @@ const S3DeleteObject = util.promisify(S3.deleteObject.bind(S3));
 const TranscribeService = new AWS.TranscribeService();
 const TranscribeServiceStartTranscriptionJob = util.promisify(TranscribeService.startTranscriptionJob.bind(TranscribeService));
 
-const { Logger, JobAssignment, Locator } = require("mcma-core");
+const { Logger, JobAssignment, Locator, AIJob } = require("mcma-core");
 const { WorkerJobHelper } = require("mcma-worker");
-const { dynamoDbTableProvider, getAwsV4ResourceManager } = require("mcma-aws");
+const { DynamoDbTableProvider, getAwsV4ResourceManager } = require("mcma-aws");
 
-function transcribeAudio(workerJobHelper) {
+async function transcribeAudio(workerJobHelper) {
     const inputFile = workerJobHelper.getJobInput().inputFile;
     const jobAssignmentId = workerJobHelper.getJobAssignmentId();
 
@@ -56,10 +57,13 @@ function transcribeAudio(workerJobHelper) {
     console.log(JSON.stringify(data, null, 2));
 }
 
+const dynamoDbTableProvider = new DynamoDbTableProvider(JobAssignment);
+
 const processTranscribeJobResult = async (request) => {
     const workerJobHelper = new WorkerJobHelper(
-        dynamoDbTableProvider(JobAssignment).table(request.tableName()),
-        getAwsV4ResourceManager(AWS).getResourceManager(request),
+        AIJob,
+        dynamoDbTableProvider.table(request.tableName()),
+        getAwsV4ResourceManager(request),
         request,
         request.input.jobAssignmentId
     );

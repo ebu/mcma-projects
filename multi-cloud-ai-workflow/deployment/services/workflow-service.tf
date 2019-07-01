@@ -103,15 +103,15 @@ resource "aws_api_gateway_deployment" "workflow_service_deployment" {
   stage_name  = "${var.environment_type}"
 
   variables = {
-    "TableName"                = "${var.global_prefix}-workflow-service"
-    "PublicUrl"                = "${local.workflow_service_url}"
-    "ServicesUrl"              = "${local.services_url}"
-    "ServicesAuthType"         = "${local.services_auth_type}"
-    "ServicesAuthContext"      = "${local.services_auth_context}"
-    "WorkerLambdaFunctionName" = "${aws_lambda_function.workflow-service-worker.function_name}"
-    "ConformWorkflowId"        = "${var.conform_workflow_id}"
-    "AiWorkflowId"             = "${var.ai_workflow_id}"
-    "DeploymentHash"           = "${filesha256("./services/workflow-service.tf")}"
+    "TableName"           = "${var.global_prefix}-workflow-service"
+    "PublicUrl"           = "${local.workflow_service_url}"
+    "ServicesUrl"         = "${local.services_url}"
+    "ServicesAuthType"    = "${local.services_auth_type}"
+    "ServicesAuthContext" = "${local.services_auth_context}"
+    "WorkerFunctionName"  = "${aws_lambda_function.workflow-service-worker.function_name}"
+    "ConformWorkflowId"   = "${var.conform_workflow_id}"
+    "AiWorkflowId"        = "${var.ai_workflow_id}"
+    "DeploymentHash"      = "${filesha256("./services/workflow-service.tf")}"
   }
 }
 

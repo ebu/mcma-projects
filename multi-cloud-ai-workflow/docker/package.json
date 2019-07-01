@@ -14,7 +14,7 @@
     "axios": "~0.18.0",
     "body-parser": "~1.18.2",
     "express": "~4.16.3",
-    "mcma-aws": "0.3.5",
-    "mcma-core": "0.3.5"
+    "mcma-aws": "0.3.9",
+    "mcma-core": "0.3.9"
   }
 }

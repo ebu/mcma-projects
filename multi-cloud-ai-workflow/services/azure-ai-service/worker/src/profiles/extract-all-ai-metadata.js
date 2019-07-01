@@ -1,3 +1,4 @@
+const util = require("util");
 const URL = require("url").URL;
 const querystring = require("querystring");
 const uuidv4 = require("uuid/v4");
@@ -7,22 +8,22 @@ const S3 = new AWS.S3();
 const S3GetBucketLocation = util.promisify(S3.getBucketLocation.bind(S3));
 const S3PutObject = util.promisify(S3.putObject.bind(S3));
 
-const { Logger, HttpClient, JobAssignment, Locator } = require("mcma-core");
+const { Logger, HttpClient, JobAssignment, Locator, AIJob } = require("mcma-core");
 const { WorkerJobHelper } = require("mcma-worker");
-const { getAwsV4ResourceManager, dynamoDbTableProvider } = require("mcma-aws");
+const { getAwsV4ResourceManager, DynamoDbTableProvider } = require("mcma-aws");
 
 const httpClient = new HttpClient();
 
 function getAzureConfig(workerJobHelper) {
-    const apiUrl = workerJobHelper.getRequest().getContextVariables("azure.apiUrl"); // "https://api.videoindexer.ai"   
-    const location = workerJobHelper.getRequest().getContextVariables("azure.location");
-    const accountId = workerJobHelper.getRequest().getContextVariables("azure.accountId");
-    const subscriptionKey = workerJobHelper.getRequest().getContextVariables("azure.subscriptionKey");
+    const apiUrl = workerJobHelper.getRequest().getRequiredContextVariable("AzureApiUrl"); // "https://api.videoindexer.ai"   
+    const location = workerJobHelper.getRequest().getRequiredContextVariable("AzureLocation");
+    const accountId = workerJobHelper.getRequest().getRequiredContextVariable("AzureAccountId");
+    const subscriptionKey = workerJobHelper.getRequest().getRequiredContextVariable("AzureSubscriptionKey");
 
     return { apiUrl, location, accountId, subscriptionKey };
 }
 
-function extractAllAiMetadata(workerJobHelper) {
+async function extractAllAiMetadata(workerJobHelper) {
     const jobAssignmentId = workerJobHelper.getJobAssignmentId();
     const inputFile = workerJobHelper.getJobInput().inputFile;
     const azure = getAzureConfig(workerJobHelper);
@@ -35,7 +36,7 @@ function extractAllAiMetadata(workerJobHelper) {
         const data = await S3GetBucketLocation({ Bucket: inputFile.awsS3Bucket });
         Logger.debug(JSON.stringify(data, null, 2));
         const s3SubDomain = data.LocationConstraint && data.LocationConstraint.length > 0 ? `s3-${data.LocationConstraint}` : "s3";
-        mediaFileUrl = "https://" + s3SubDomain + ".amazonaws.com/" + inputFile.awsS3Bucket + "/" + inputFile.awsS3Key;
+        mediaFileUri = "https://" + s3SubDomain + ".amazonaws.com/" + inputFile.awsS3Bucket + "/" + inputFile.awsS3Key;
     }
 
     // Get a token for API call - token are onlu good for one hour
@@ -77,7 +78,7 @@ function extractAllAiMetadata(workerJobHelper) {
     // Generate the call back URL leveraging the non secure api gateway endpoint
 
     const secureHost = new URL(jobAssignmentId).host;
-    const nonSecureHost = new URL(workerJobHelper.request.getRequiredContextVariable("PublicUrlNonSecure")).host;
+    const nonSecureHost = new URL(workerJobHelper.getRequest().getRequiredContextVariable("PublicUrlNonSecure")).host;
 
     var callbackUrl = jobAssignmentId.replace(secureHost, nonSecureHost);
     callbackUrl = callbackUrl + "/notifications";
@@ -116,10 +117,13 @@ function extractAllAiMetadata(workerJobHelper) {
 
 extractAllAiMetadata.profileName = "AzureExtractAllAIMetadata";
 
+const dynamoDbTableProvider = new DynamoDbTableProvider(JobAssignment);
+
 const processNotification = async (request) => {
     const workerJobHelper = new WorkerJobHelper(
-        dynamoDbTableProvider(JobAssignment).table(request.tableName()),
-        getAwsV4ResourceManager.getResourceManager(request),
+        AIJob,
+        dynamoDbTableProvider.table(request.tableName()),
+        getAwsV4ResourceManager(request),
         request,
         request.input.jobAssignmentId
     );
@@ -156,7 +160,7 @@ const processNotification = async (request) => {
         await workerJobHelper.initialize();
 
         // Get the AI metadata form Azure for the video
-        Logger.log("The POST is coming from Azure. Next steps, get the metadata for the video  ");
+        Logger.debug("The POST is coming from Azure. Next steps, get the metadata for the video  ");
 
         const authTokenUrl = azure.apiUrl + "/auth/" + azure.location + "/Accounts/" + azure.accountId + "/AccessToken?allowEdit=true";
         const customHeaders = { "Ocp-Apim-Subscription-Key": azure.subscriptionKey };
@@ -166,7 +170,6 @@ const processNotification = async (request) => {
         const response = await httpClient.get(authTokenUrl, {
             headers: customHeaders
         });
-
 
         Logger.debug("Azure API Token response : ", response);
 

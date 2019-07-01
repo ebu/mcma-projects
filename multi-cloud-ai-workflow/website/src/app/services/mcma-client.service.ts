@@ -2,7 +2,8 @@ import { Injectable } from '@angular/core';
 import { zip, BehaviorSubject } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 
-import { ResourceManager, AwsV4Authenticator, AuthenticatorProvider } from 'mcma-core';
+import { ResourceManager, AuthenticatorProvider } from 'mcma-core';
+import { AwsV4Authenticator } from 'mcma-aws';
 
 import { ConfigService } from './config.service';
 import { CognitoAuthService } from './cognito-auth.service';
@@ -31,12 +32,14 @@ export class McmaClientService {
 
                 const authenticatorAWS4 = new AwsV4Authenticator(authOptions)
 
-                const authProvider = new AuthenticatorProvider(async (authType, authContext) => {
-                    switch (authType) {
-                        case "AWS4":
-                            return authenticatorAWS4;
+                const authProvider: AuthenticatorProvider = {
+                    getAuthenticator: async (authType, authContext) => {
+                        switch (authType) {
+                            case "AWS4":
+                                return authenticatorAWS4;
+                        }
                     }
-                });
+                };
 
                 console.log('creating resource manager', authOptions);
                 return { servicesUrl, servicesAuthType, servicesAuthContext, authProvider };

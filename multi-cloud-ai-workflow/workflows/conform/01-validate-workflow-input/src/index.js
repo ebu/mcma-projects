@@ -7,30 +7,11 @@ const AWS = require("aws-sdk");
 const S3 = new AWS.S3()
 const S3HeadObject = util.promisify(S3.headObject.bind(S3));
 
-const MCMA_CORE = require("mcma-core");
+const { EnvironmentVariableProvider } = require("mcma-core");
+const { getAwsV4ResourceManager } = require("mcma-aws");
 
-const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator({
-    accessKey: AWS.config.credentials.accessKeyId,
-    secretKey: AWS.config.credentials.secretAccessKey,
-    sessionToken: AWS.config.credentials.sessionToken,
-    region: AWS.config.region
-});
-
-const authProvider = new MCMA_CORE.AuthenticatorProvider(
-    async (authType, authContext) => {
-        switch (authType) {
-            case "AWS4":
-                return authenticatorAWS4;
-        }
-    }
-);
-
-const resourceManager = new MCMA_CORE.ResourceManager({
-    servicesUrl: process.env.SERVICES_URL,
-    servicesAuthType: process.env.SERVICES_AUTH_TYPE,
-    servicesAuthContext: process.env.SERVICES_AUTH_CONTEXT,
-    authProvider
-});
+const environmentVariableProvider = new EnvironmentVariableProvider();
+const resourceManager = getAwsV4ResourceManager(environmentVariableProvider);
 
 
 /* Expecting input like the following:
@@ -72,7 +53,7 @@ exports.handler = async (event, context) => {
         event.progress = 0;
         await resourceManager.sendNotification(event);
     } catch (error) {
-        console.warn("Failed to send notification");
+        console.warn("Failed to send notification", error);
     }
 
     if (!event || !event.input) {

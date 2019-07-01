@@ -29,13 +29,13 @@ resource "aws_lambda_function" "aws-ai-service-s3-trigger" {
 
   environment {
     variables = {
-      "TableName"                = "${aws_dynamodb_table.aws_ai_service_table.name}"
-      "PublicUrl"                = "${local.aws_ai_service_url}"
-      "ServicesUrl"              = "${local.services_url}"
-      "ServicesAuthType"         = "${local.services_auth_type}"
-      "ServicesAuthContext"      = "${local.services_auth_context}"
-      "WorkerLambdaFunctionName" = "${aws_lambda_function.aws-ai-service-worker.function_name}"
-      "ServiceOutputBucket"      = "${aws_s3_bucket.aws-ai-service-output.id}"
+      "TableName"           = "${aws_dynamodb_table.aws_ai_service_table.name}"
+      "PublicUrl"           = "${local.aws_ai_service_url}"
+      "ServicesUrl"         = "${local.services_url}"
+      "ServicesAuthType"    = "${local.services_auth_type}"
+      "ServicesAuthContext" = "${local.services_auth_context}"
+      "WorkerFunctionName"  = "${aws_lambda_function.aws-ai-service-worker.function_name}"
+      "ServiceOutputBucket" = "${aws_s3_bucket.aws-ai-service-output.id}"
     }
   }
 }
@@ -80,13 +80,13 @@ resource "aws_lambda_function" "aws-ai-service-sns-trigger" {
 
   environment {
     variables = {
-      "TableName"                = "${aws_dynamodb_table.aws_ai_service_table.name}"
-      "PublicUrl"                = "${local.aws_ai_service_url}"
-      "ServicesUrl"              = "${local.services_url}"
-      "ServicesAuthType"         = "${local.services_auth_type}"
-      "ServicesAuthContext"      = "${local.services_auth_context}"
-      "WorkerLambdaFunctionName" = "${aws_lambda_function.aws-ai-service-worker.function_name}"
-      "ServiceOutputBucket"      = "${aws_s3_bucket.aws-ai-service-output.id}"
+      "TableName"           = "${aws_dynamodb_table.aws_ai_service_table.name}"
+      "PublicUrl"           = "${local.aws_ai_service_url}"
+      "ServicesUrl"         = "${local.services_url}"
+      "ServicesAuthType"    = "${local.services_auth_type}"
+      "ServicesAuthContext" = "${local.services_auth_context}"
+      "WorkerFunctionName"  = "${aws_lambda_function.aws-ai-service-worker.function_name}"
+      "ServiceOutputBucket" = "${aws_s3_bucket.aws-ai-service-output.id}"
     }
   }
 }
@@ -107,8 +107,8 @@ resource "aws_lambda_function" "aws-ai-service-worker" {
 
   environment {
     variables = {
-      REKO_SNS_ROLE_ARN = "${aws_iam_role.iam_role_Reko_to_SNS.arn}"
-      SNS_TOPIC_ARN     = "${aws_sns_topic.sns_topic_reko_output.arn}"
+      RekoSnsRoleArn = "${aws_iam_role.iam_role_Reko_to_SNS.arn}"
+      SnsTopicArn    = "${aws_sns_topic.sns_topic_reko_output.arn}"
     }
   }
 }
@@ -139,7 +139,7 @@ EOF
 }
 
 resource "aws_iam_policy" "aws_iam_policy_Reko_to_SNS" {
-  name        = "${format("%.64s", "${var.global_prefix}.${var.aws_region}.reko_to_sns_policy")}"
+  name = "${format("%.64s", "${var.global_prefix}.${var.aws_region}.reko_to_sns_policy")}"
   description = "Policy for Reko to access SNS"
 
   policy = <<EOF
@@ -193,27 +193,27 @@ EOF
 }
 
 resource "aws_iam_role_policy_attachment" "role-policy-rekognition" {
-  role       = "${aws_iam_role.iam_for_exec_lambda.name}"
+  role = "${aws_iam_role.iam_for_exec_lambda.name}"
   policy_arn = "${aws_iam_policy.rekognition_policy.arn}"
 }
 
 resource "aws_iam_role_policy_attachment" "role-policy-reko-to-SNS" {
-  role       = "${aws_iam_role.iam_role_Reko_to_SNS.name}"
+  role = "${aws_iam_role.iam_role_Reko_to_SNS.name}"
   policy_arn = "${aws_iam_policy.aws_iam_policy_Reko_to_SNS.arn}"
 }
 
 resource "aws_iam_role_policy_attachment" "role-policy-log-reko-to-SNS" {
-  role       = "${aws_iam_role.iam_role_Reko_to_SNS.name}"
+  role = "${aws_iam_role.iam_role_Reko_to_SNS.name}"
   policy_arn = "${aws_iam_policy.log_policy.arn}"
 }
 
 resource "aws_iam_role_policy_attachment" "role-policy-rekognition-reko-to-SNS" {
-  role       = "${aws_iam_role.iam_role_Reko_to_SNS.name}"
+  role = "${aws_iam_role.iam_role_Reko_to_SNS.name}"
   policy_arn = "${aws_iam_policy.rekognition_policy.arn}"
 }
 
 resource "aws_iam_role_policy_attachment" "role-policy-lambda-full-access-reko-to-SNS" {
-  role       = "${aws_iam_role.iam_role_Reko_to_SNS.name}"
+  role = "${aws_iam_role.iam_role_Reko_to_SNS.name}"
   policy_arn = "arn:aws:iam::aws:policy/AWSLambdaFullAccess"
 }
 
@@ -222,11 +222,11 @@ resource "aws_iam_role_policy_attachment" "role-policy-lambda-full-access-reko-t
 ##################################
 
 resource "aws_lambda_permission" "aws_lambda_permission_with_sns" {
-  statement_id  = "AllowExecutionFromSNS"
-  action        = "lambda:InvokeFunction"
+  statement_id = "AllowExecutionFromSNS"
+  action = "lambda:InvokeFunction"
   function_name = "${aws_lambda_function.aws-ai-service-sns-trigger.function_name}"
-  principal     = "sns.amazonaws.com"
-  source_arn    = "${aws_sns_topic.sns_topic_reko_output.arn}"
+  principal = "sns.amazonaws.com"
+  source_arn = "${aws_sns_topic.sns_topic_reko_output.arn}"
 }
 
 resource "aws_sns_topic" "sns_topic_reko_output" {
@@ -237,8 +237,8 @@ resource "aws_sns_topic" "sns_topic_reko_output" {
 
 resource "aws_sns_topic_subscription" "aws_sns_topic_sub_lambda" {
   topic_arn = "${aws_sns_topic.sns_topic_reko_output.arn}"
-  protocol  = "lambda"
-  endpoint  = "${aws_lambda_function.aws-ai-service-sns-trigger.arn}"
+  protocol = "lambda"
+  endpoint = "${aws_lambda_function.aws-ai-service-sns-trigger.arn}"
 }
 
 resource "aws_iam_role" "aws_iam_role_sns_to_lambda" {
@@ -361,14 +361,14 @@ resource "aws_api_gateway_deployment" "aws_ai_service_deployment" {
   stage_name  = "${var.environment_type}"
 
   variables = {
-    "TableName"                = "${aws_dynamodb_table.aws_ai_service_table.name}"
-    "PublicUrl"                = "${local.aws_ai_service_url}"
-    "ServicesUrl"              = "${local.services_url}"
-    "ServicesAuthType"         = "${local.services_auth_type}"
-    "ServicesAuthContext"      = "${local.services_auth_context}"
-    "WorkerLambdaFunctionName" = "${aws_lambda_function.aws-ai-service-worker.function_name}"
-    "ServiceOutputBucket"      = "${aws_s3_bucket.aws-ai-service-output.id}"
-    "DeploymentHash"           = "${filesha256("./services/aws-ai-service.tf")}"
+    "TableName"           = "${aws_dynamodb_table.aws_ai_service_table.name}"
+    "PublicUrl"           = "${local.aws_ai_service_url}"
+    "ServicesUrl"         = "${local.services_url}"
+    "ServicesAuthType"    = "${local.services_auth_type}"
+    "ServicesAuthContext" = "${local.services_auth_context}"
+    "WorkerFunctionName"  = "${aws_lambda_function.aws-ai-service-worker.function_name}"
+    "ServiceOutputBucket" = "${aws_s3_bucket.aws-ai-service-output.id}"
+    "DeploymentHash"      = "${filesha256("./services/aws-ai-service.tf")}"
   }
 }
 

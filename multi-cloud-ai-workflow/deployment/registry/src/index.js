@@ -2,6 +2,7 @@
 
 const util = require("util");
 const uuidv4 = require("uuid/v4");
+const fs = require("fs");
 
 const AWS = require("aws-sdk");
 AWS.config.loadFromPath("./aws-credentials.json");
@@ -15,115 +16,115 @@ const CognitoAdminDeleteUser = util.promisify(Cognito.adminDeleteUser.bind(Cogni
 global.fetch = require("node-fetch");
 const AmazonCognitoIdentity = require("amazon-cognito-identity-js");
 
-const MCMA_CORE = require("mcma-core");
-
+const { JobProfile, JobParameter, Service, ResourceEndpoint, ResourceManager } = require("mcma-core");
+const { AwsV4Authenticator } = require("mcma-aws");
 
 const JOB_PROFILES = {
-    ConformWorkflow: new MCMA_CORE.JobProfile({
+    ConformWorkflow: new JobProfile({
         name: "ConformWorkflow",
         inputParameters: [
-            new MCMA_CORE.JobParameter({ parameterName: "metadata", parameterType: "DescriptiveMetadata" }),
-            new MCMA_CORE.JobParameter({ parameterName: "inputFile", parameterType: "Locator" })
+            new JobParameter({ parameterName: "metadata", parameterType: "DescriptiveMetadata" }),
+            new JobParameter({ parameterName: "inputFile", parameterType: "Locator" })
         ],
         outputParameters: [
-            new MCMA_CORE.JobParameter({ parameterName: "websiteMediaFile", parameterType: "Locator" }),
-            new MCMA_CORE.JobParameter({ parameterName: "aiWorkflow", parameterType: "WorkflowJob" }),
-            new MCMA_CORE.JobParameter({ parameterName: "bmContent", parameterType: "BMContent" })
+            new JobParameter({ parameterName: "websiteMediaFile", parameterType: "Locator" }),
+            new JobParameter({ parameterName: "aiWorkflow", parameterType: "WorkflowJob" }),
+            new JobParameter({ parameterName: "bmContent", parameterType: "BMContent" })
         ]
     }),
-    AiWorkflow: new MCMA_CORE.JobProfile({
+    AiWorkflow: new JobProfile({
         name: "AiWorkflow",
         inputParameters: [
-            new MCMA_CORE.JobParameter({ parameterName: "bmContent", parameterType: "BMContent" }),
-            new MCMA_CORE.JobParameter({ parameterName: "bmEssence", parameterType: "BMEssence" })
+            new JobParameter({ parameterName: "bmContent", parameterType: "BMContent" }),
+            new JobParameter({ parameterName: "bmEssence", parameterType: "BMEssence" })
         ]
     }),
-    ExtractTechnicalMetadata: new MCMA_CORE.JobProfile({
+    ExtractTechnicalMetadata: new JobProfile({
         name: "ExtractTechnicalMetadata",
         inputParameters: [
-            new MCMA_CORE.JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
-            new MCMA_CORE.JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
+            new JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
+            new JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
         ],
         outputParameters: [
-            new MCMA_CORE.JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
+            new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
         ]
     }),
-    CreateProxyLambda: new MCMA_CORE.JobProfile({
+    CreateProxyLambda: new JobProfile({
         name: "CreateProxyLambda",
         inputParameters: [
-            new MCMA_CORE.JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
-            new MCMA_CORE.JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
+            new JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
+            new JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
         ],
         outputParameters: [
-            new MCMA_CORE.JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
+            new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
         ]
     }),
-    CreateProxyEC2: new MCMA_CORE.JobProfile({
+    CreateProxyEC2: new JobProfile({
         name: "CreateProxyEC2",
         inputParameters: [
-            new MCMA_CORE.JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
-            new MCMA_CORE.JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
+            new JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
+            new JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
         ],
         outputParameters: [
-            new MCMA_CORE.JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
+            new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
         ]
     }),
-    ExtractThumbnail: new MCMA_CORE.JobProfile({
+    ExtractThumbnail: new JobProfile({
         name: "ExtractThumbnail",
         inputParameters: [
-            new MCMA_CORE.JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
-            new MCMA_CORE.JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
+            new JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
+            new JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
         ],
         outputParameters: [
-            new MCMA_CORE.JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
+            new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
         ],
         optionalInputParameters: [
-            new MCMA_CORE.JobParameter({ parameterName: "ebucore:width" }),
-            new MCMA_CORE.JobParameter({ parameterName: "ebucore:height" })
+            new JobParameter({ parameterName: "ebucore:width" }),
+            new JobParameter({ parameterName: "ebucore:height" })
         ]
     }),
-    AWSTranscribeAudio: new MCMA_CORE.JobProfile({
+    AWSTranscribeAudio: new JobProfile({
         name: "AWSTranscribeAudio",
         inputParameters: [
-            new MCMA_CORE.JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
-            new MCMA_CORE.JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
+            new JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
+            new JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
         ],
         outputParameters: [
-            new MCMA_CORE.JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
+            new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
         ]
     }),
-    AWSTranslateText: new MCMA_CORE.JobProfile({
+    AWSTranslateText: new JobProfile({
         name: "AWSTranslateText",
         inputParameters: [
-            new MCMA_CORE.JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
-            new MCMA_CORE.JobParameter({ parameterName: "targetLanguageCode", parameterType: "awsLanguageCode" }),
-            new MCMA_CORE.JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
+            new JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
+            new JobParameter({ parameterName: "targetLanguageCode", parameterType: "awsLanguageCode" }),
+            new JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
         ],
         outputParameters: [
-            new MCMA_CORE.JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
+            new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
         ],
         optionalInputParameters: [
-            new MCMA_CORE.JobParameter({ parameterName: "sourceLanguageCode", parameterType: "awsLanguageCode" })
+            new JobParameter({ parameterName: "sourceLanguageCode", parameterType: "awsLanguageCode" })
         ]
     }),
-    AWSDetectCelebrities: new MCMA_CORE.JobProfile({
+    AWSDetectCelebrities: new JobProfile({
         name: "AWSDetectCelebrities",
         inputParameters: [
-            new MCMA_CORE.JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
-            new MCMA_CORE.JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
+            new JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
+            new JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
         ],
         outputParameters: [
-            new MCMA_CORE.JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
+            new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
         ]
     }),
-    AzureExtractAllAIMetadata: new MCMA_CORE.JobProfile({
+    AzureExtractAllAIMetadata: new JobProfile({
         name: "AzureExtractAllAIMetadata",
         inputParameters: [
-            new MCMA_CORE.JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
-            new MCMA_CORE.JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
+            new JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
+            new JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
         ],
         outputParameters: [
-            new MCMA_CORE.JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
+            new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
         ]
     }),
 }
@@ -135,10 +136,10 @@ const createServices = (serviceUrls) => {
         switch (prop) {
             case "ame_service_url":
                 serviceList.push(
-                    new MCMA_CORE.Service({
+                    new Service({
                         name: "MediaInfo AME Service",
                         resources: [
-                            new MCMA_CORE.ResourceEndpoint({ resourceType: "JobAssignment", httpEndpoint: serviceUrls[prop] + "/job-assignments" })
+                            new ResourceEndpoint({ resourceType: "JobAssignment", httpEndpoint: serviceUrls[prop] + "/job-assignments" })
                         ],
                         authType: "AWS4",
                         jobType: "AmeJob",
@@ -150,10 +151,10 @@ const createServices = (serviceUrls) => {
                 break;
             case "aws_ai_service_url":
                 serviceList.push(
-                    new MCMA_CORE.Service({
+                    new Service({
                         name: "AWS AI Service",
                         resources: [
-                            new MCMA_CORE.ResourceEndpoint({ resourceType: "JobAssignment", httpEndpoint: serviceUrls[prop] + "/job-assignments" })
+                            new ResourceEndpoint({ resourceType: "JobAssignment", httpEndpoint: serviceUrls[prop] + "/job-assignments" })
                         ],
                         authType: "AWS4",
                         jobType: "AIJob",
@@ -167,10 +168,10 @@ const createServices = (serviceUrls) => {
                 break;
             case "azure_ai_service_url":
                 serviceList.push(
-                    new MCMA_CORE.Service({
+                    new Service({
                         name: "AZURE AI Service",
                         resources: [
-                            new MCMA_CORE.ResourceEndpoint({ resourceType: "JobAssignment", httpEndpoint: serviceUrls[prop] + "/job-assignments" })
+                            new ResourceEndpoint({ resourceType: "JobAssignment", httpEndpoint: serviceUrls[prop] + "/job-assignments" })
                         ],
                         authType: "AWS4",
                         jobType: "AIJob",
@@ -181,45 +182,45 @@ const createServices = (serviceUrls) => {
                 );
                 break;
             case "job_processor_service_url":
-                serviceList.push(new MCMA_CORE.Service({
+                serviceList.push(new Service({
                     name: "Job Processor Service",
                     resources: [
-                        new MCMA_CORE.ResourceEndpoint({ resourceType: "JobProcess", httpEndpoint: serviceUrls[prop] + "/job-processes" })
+                        new ResourceEndpoint({ resourceType: "JobProcess", httpEndpoint: serviceUrls[prop] + "/job-processes" })
                     ],
                     authType: "AWS4"
                 }));
                 break;
             case "job_repository_url":
-                serviceList.push(new MCMA_CORE.Service({
+                serviceList.push(new Service({
                     name: "Job Repository",
                     resources: [
-                        new MCMA_CORE.ResourceEndpoint({ resourceType: "AmeJob", httpEndpoint: serviceUrls[prop] + "/jobs" }),
-                        new MCMA_CORE.ResourceEndpoint({ resourceType: "AIJob", httpEndpoint: serviceUrls[prop] + "/jobs" }),
-                        new MCMA_CORE.ResourceEndpoint({ resourceType: "CaptureJob", httpEndpoint: serviceUrls[prop] + "/jobs" }),
-                        new MCMA_CORE.ResourceEndpoint({ resourceType: "QAJob", httpEndpoint: serviceUrls[prop] + "/jobs" }),
-                        new MCMA_CORE.ResourceEndpoint({ resourceType: "TransferJob", httpEndpoint: serviceUrls[prop] + "/jobs" }),
-                        new MCMA_CORE.ResourceEndpoint({ resourceType: "TransformJob", httpEndpoint: serviceUrls[prop] + "/jobs" }),
-                        new MCMA_CORE.ResourceEndpoint({ resourceType: "WorkflowJob", httpEndpoint: serviceUrls[prop] + "/jobs" })
+                        new ResourceEndpoint({ resourceType: "AmeJob", httpEndpoint: serviceUrls[prop] + "/jobs" }),
+                        new ResourceEndpoint({ resourceType: "AIJob", httpEndpoint: serviceUrls[prop] + "/jobs" }),
+                        new ResourceEndpoint({ resourceType: "CaptureJob", httpEndpoint: serviceUrls[prop] + "/jobs" }),
+                        new ResourceEndpoint({ resourceType: "QAJob", httpEndpoint: serviceUrls[prop] + "/jobs" }),
+                        new ResourceEndpoint({ resourceType: "TransferJob", httpEndpoint: serviceUrls[prop] + "/jobs" }),
+                        new ResourceEndpoint({ resourceType: "TransformJob", httpEndpoint: serviceUrls[prop] + "/jobs" }),
+                        new ResourceEndpoint({ resourceType: "WorkflowJob", httpEndpoint: serviceUrls[prop] + "/jobs" })
                     ],
                     authType: "AWS4"
                 }));
                 break;
             case "media_repository_url":
-                serviceList.push(new MCMA_CORE.Service({
+                serviceList.push(new Service({
                     name: "Media Repository",
                     resources: [
-                        new MCMA_CORE.ResourceEndpoint({ resourceType: "BMContent", httpEndpoint: serviceUrls[prop] + "/bm-contents" }),
-                        new MCMA_CORE.ResourceEndpoint({ resourceType: "BMEssence", httpEndpoint: serviceUrls[prop] + "/bm-essences" })
+                        new ResourceEndpoint({ resourceType: "BMContent", httpEndpoint: serviceUrls[prop] + "/bm-contents" }),
+                        new ResourceEndpoint({ resourceType: "BMEssence", httpEndpoint: serviceUrls[prop] + "/bm-essences" })
                     ],
                     authType: "AWS4"
                 }));
                 break;
             case "transform_service_url":
                 serviceList.push(
-                    new MCMA_CORE.Service({
+                    new Service({
                         name: "FFmpeg TransformService",
                         resources: [
-                            new MCMA_CORE.ResourceEndpoint({ resourceType: "JobAssignment", httpEndpoint: serviceUrls[prop] + "/job-assignments" })
+                            new ResourceEndpoint({ resourceType: "JobAssignment", httpEndpoint: serviceUrls[prop] + "/job-assignments" })
                         ],
                         authType: "AWS4",
                         jobType: "TransformJob",
@@ -232,11 +233,11 @@ const createServices = (serviceUrls) => {
                 break;
             case "workflow_service_url":
                 serviceList.push(
-                    new MCMA_CORE.Service({
+                    new Service({
                         name: "Workflow Service",
                         resources: [
-                            new MCMA_CORE.ResourceEndpoint({ resourceType: "JobAssignment", httpEndpoint: serviceUrls[prop] + "/job-assignments" }),
-                            new MCMA_CORE.ResourceEndpoint({ resourceType: "Notification", httpEndpoint: serviceUrls["workflow_service_notification_url"] })
+                            new ResourceEndpoint({ resourceType: "JobAssignment", httpEndpoint: serviceUrls[prop] + "/job-assignments" }),
+                            new ResourceEndpoint({ resourceType: "Notification", httpEndpoint: serviceUrls["workflow_service_notification_url"] })
                         ],
                         authType: "AWS4",
                         jobType: "WorkflowJob",
@@ -288,7 +289,7 @@ const parseContent = (content) => {
 }
 
 const main = async () => {
-    let content = await readStdin();
+    let content = fs.readFileSync("./terraform.output").toString('utf-8');
     let terraformOutput = parseContent(content);
 
     let servicesUrl = terraformOutput.services_url;
@@ -410,39 +411,39 @@ const main = async () => {
     }
 
     // 3. Inserting / updating service registry
-    let serviceRegistry = new MCMA_CORE.Service({
+    let serviceRegistry = new Service({
         name: "Service Registry",
         resources: [
-            new MCMA_CORE.ResourceEndpoint({ resourceType: "Service", httpEndpoint: servicesUrl }),
-            new MCMA_CORE.ResourceEndpoint({ resourceType: "JobProfile", httpEndpoint: jobProfilesUrl })
+            new ResourceEndpoint({ resourceType: "Service", httpEndpoint: servicesUrl }),
+            new ResourceEndpoint({ resourceType: "JobProfile", httpEndpoint: jobProfilesUrl })
         ],
         authType: "AWS4"
     });
 
-    const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator({
+    const authenticatorAWS4 = new AwsV4Authenticator({
         accessKey: AWS.config.credentials.accessKeyId,
         secretKey: AWS.config.credentials.secretAccessKey,
         sessionToken: AWS.config.credentials.sessionToken,
         region: AWS.config.region
     });
 
-    const authProvider = new MCMA_CORE.AuthenticatorProvider(
-        async (authType, authContext) => {
+    const authProvider = {
+        getAuthenticator: async (authType, authContext) => {
             switch (authType) {
                 case "AWS4":
                     return authenticatorAWS4;
             }
         }
-    );
+    };
 
     try {
-        let resourceManager = new MCMA_CORE.ResourceManager({
+        let resourceManager = new ResourceManager({
             servicesUrl,
             servicesAuthType,
             servicesAuthContext,
             authProvider
         });
-        let retrievedServices = await resourceManager.get("Service");
+        let retrievedServices = await resourceManager.get(Service);
 
         for (const retrievedService of retrievedServices) {
             if (retrievedService.name === "Service Registry") {
@@ -467,7 +468,7 @@ const main = async () => {
         await resourceManager.init();
 
         // 5. Inserting / updating job profiles
-        let retrievedJobProfiles = await resourceManager.get("JobProfile");
+        let retrievedJobProfiles = await resourceManager.get(JobProfile);
 
         for (const retrievedJobProfile of retrievedJobProfiles) {
             let jobProfile = JOB_PROFILES[retrievedJobProfile.name];
@@ -495,7 +496,7 @@ const main = async () => {
         // 6. Inserting / updating services
         const SERVICES = createServices(terraformOutput);
 
-        retrievedServices = await resourceManager.get("Service");
+        retrievedServices = await resourceManager.get(Service);
 
         for (const retrievedService of retrievedServices) {
             if (retrievedService.name === serviceRegistry.name) {

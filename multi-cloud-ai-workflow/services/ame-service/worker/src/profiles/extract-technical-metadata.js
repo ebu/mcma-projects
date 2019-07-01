@@ -8,7 +8,7 @@ const fsWriteFile = util.promisify(fs.writeFile);
 const fsUnlink = util.promisify(fs.unlink);
 
 // adding bin folder to process path
-process.env["PATH"] = process.env["PATH"] + ":" + process.env["LAMBDA_TASK_ROOT"] + "/bin";
+process.env["PATH"] = process.env["PATH"] + ":" + process.env["LambdaTaskRoot"] + "/bin";
 
 const AWS = require("aws-sdk");
 const S3 = new AWS.S3();

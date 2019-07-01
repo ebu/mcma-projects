@@ -38,7 +38,7 @@ export class MonitorComponent implements OnInit {
         }));
   }
 
-  onJobSelected(workflowJob: Observable<WorkflowJob>): void {
+  onJobSelected(workflowJob: Observable<WorkflowJobViewModel>): void {
     this.selectedWorkflowJobVm$ = workflowJob;
   }
 }

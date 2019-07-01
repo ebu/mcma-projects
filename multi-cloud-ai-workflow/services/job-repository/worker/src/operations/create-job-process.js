@@ -1,19 +1,15 @@
 //"use strict";
 
-const AWS = require("aws-sdk");
-
 const { Job, JobProcess, NotificationEndpoint, JobStatus } = require("mcma-core");
 const { getAwsV4ResourceManager, DynamoDbTable } = require("mcma-aws");
 
-const createResourceManager = getAwsV4ResourceManager.getResourceManager;
+const createJobProcess = async (workerRequest) => {
+    let jobId = workerRequest.input.jobId;
 
-const createJobProcess = async (event) => {
-    let jobId = event.input.jobId;
-
-    let table = new DynamoDbTable(Job, event.tableName());
+    let table = new DynamoDbTable(Job, workerRequest.tableName());
     let job = await table.get(jobId);
 
-    let resourceManager = createResourceManager(event);
+    let resourceManager = getAwsV4ResourceManager(workerRequest);
 
     try {
         let jobProcess = new JobProcess({

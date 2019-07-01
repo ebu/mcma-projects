@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable, Subject, BehaviorSubject, from, timer, of } from 'rxjs';
 import { map, zip, switchMap, concatMap, tap, takeWhile } from 'rxjs/operators';
 
-import { ResourceManager, WorkflowJob, JobParameterBag, DescriptiveMetadata, Locator, AuthenticatedHttp } from 'mcma-core';
+import { ResourceManager, WorkflowJob, JobParameterBag, DescriptiveMetadata, Locator, JobProfile } from 'mcma-core';
 
 import { ConfigService } from './config.service';
 import { McmaClientService } from './mcma-client.service';
@@ -46,7 +46,7 @@ export class WorkflowService {
     }
 
     private getWorkflowJob(jobId: string): Observable<any> {
-        return this.mcmaClientService.resourceManager$.pipe(switchMap(resourceManager => from<WorkflowJob>(resourceManager.resolve(jobId))));
+        return this.mcmaClientService.resourceManager$.pipe(switchMap(resourceManager => from(resourceManager.resolve<WorkflowJob>(jobId))));
     }
 
     getWorkflowJobVm(jobId: string): Observable<WorkflowJobViewModel> {
@@ -61,7 +61,7 @@ export class WorkflowService {
         const sub1 =
             timer(0, 3000).pipe(
                 switchMap(() => this.mcmaClientService.resourceManager$),
-                switchMap(resourceManager => from<WorkflowJob>(resourceManager.resolve(workflowJobId))),
+                switchMap(resourceManager => from(resourceManager.resolve<WorkflowJob>(workflowJobId))),
                 takeWhile(j => !JobStatus.isFinished(j))
             ).subscribe(
                 job => subject.next(new WorkflowJobViewModel(job, fakeRunning)),
@@ -82,7 +82,7 @@ export class WorkflowService {
 
     private async getJobProfileIdAsync(resourceManager: ResourceManager, profileName: string) {
         // get job profiles filtered by name
-        const jobProfiles = await resourceManager.get('JobProfile', { name: profileName });
+        const jobProfiles = await resourceManager.get<JobProfile>('JobProfile', { name: profileName });
 
         const jobProfileId = jobProfiles.length ? jobProfiles[0].id : null;
 
@@ -124,7 +124,7 @@ export class WorkflowService {
     private async getWorkflowJobsAsync(resourceManager: ResourceManager): Promise<WorkflowJob[]> {
         const jobProfileId = await this.getJobProfileIdAsync(resourceManager, this.WORKFLOW_NAME);
 
-        const jobs: WorkflowJob[] = await resourceManager.get(this.WORKFLOW_JOB_TYPE);
+        const jobs = await resourceManager.get(WorkflowJob);
         console.log('All jobs', jobs);
 
         const filteredJobs = jobs.filter(j => j['@type'] === this.WORKFLOW_JOB_TYPE && j.jobProfile && j.jobProfile === jobProfileId);

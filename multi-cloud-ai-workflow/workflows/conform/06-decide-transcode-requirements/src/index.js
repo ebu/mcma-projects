@@ -1,8 +1,10 @@
 //"use strict";
 
-// require
-const AWS = require("aws-sdk");
-const MCMA_CORE = require("mcma-core");
+const { EnvironmentVariableProvider } = require("mcma-core");
+const { getAwsV4ResourceManager } = require("mcma-aws");
+
+const environmentVariableProvider = new EnvironmentVariableProvider();
+const resourceManager = getAwsV4ResourceManager(environmentVariableProvider);
 
 // Local Define
 const VIDEO_FORMAT = "AVC";
@@ -11,31 +13,7 @@ const VIDEO_CODEC_ISOM = "isom";
 const VIDEO_BITRATE_MB = 2;
 
 // Environment Variable(AWS Lambda)
-const SERVICE_REGISTRY_URL = process.env.SERVICE_REGISTRY_URL;
-const THESHOLD_SECONDS = parseInt(process.env.THESHOLD_SECONDS);
-
-const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator({
-    accessKey: AWS.config.credentials.accessKeyId,
-    secretKey: AWS.config.credentials.secretAccessKey,
-    sessionToken: AWS.config.credentials.sessionToken,
-    region: AWS.config.region
-});
-
-const authProvider = new MCMA_CORE.AuthenticatorProvider(
-    async (authType, authContext) => {
-        switch (authType) {
-            case "AWS4":
-                return authenticatorAWS4;
-        }
-    }
-);
-
-const resourceManager = new MCMA_CORE.ResourceManager({
-    servicesUrl: process.env.SERVICES_URL,
-    servicesAuthType: process.env.SERVICES_AUTH_TYPE,
-    servicesAuthContext: process.env.SERVICES_AUTH_CONTEXT,
-    authProvider
-});
+const ThresholdSeconds = parseInt(process.env.ThresholdSeconds);
 
 /**
  * calcutate seconds
@@ -62,7 +40,7 @@ exports.handler = async (event, context) => {
         event.progress = 45;
         await resourceManager.sendNotification(event);
     } catch (error) {
-        console.warn("Failed to send notification");
+        console.warn("Failed to send notification", error);
     }
 
     // acquire the registered BMEssence
@@ -108,7 +86,7 @@ exports.handler = async (event, context) => {
     var totalSeconds = calcSeconds((hour != null)? parseInt(hour[1]) : 0, (min != null)? parseInt(min[1]) : 0, parseFloat(sec[1]));
     console.log("[Total Seconds]:", totalSeconds);
 
-    if ( totalSeconds <= THESHOLD_SECONDS ) {
+    if ( totalSeconds <= ThresholdSeconds ) {
         return "short";
     } else {
         return "long";

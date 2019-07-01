@@ -6,8 +6,6 @@ const { Logger, JobAssignment } = require("mcma-core");
 const { McmaApiRouteCollection, HttpStatusCode } = require("mcma-api");
 const { DynamoDbTable, invokeLambdaWorker } = require("mcma-aws");
 
-const invokeLambdaWorker = new invokeLambdaWorker();
-
 const processNotification = async (requestContext) => {
     const request = requestContext.request;
     const response = requestContext.response;
@@ -36,7 +34,7 @@ const processNotification = async (requestContext) => {
     }
 
     // invoking worker lambda function that will process the notification
-    await invokeLambdaWorker.invoke(
+    await invokeLambdaWorker(
         requestContext.workerFunctionName(),
         {
             operationName: "ProcessNotification",

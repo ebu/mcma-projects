@@ -1,6 +1,6 @@
 //"use strict";
 
-const { WorkerBuilder } = require("mcma-worker");
+const { WorkerBuilder, WorkerRequest } = require("mcma-worker");
 
 const createJobAssignment = require("./operations/create-job-assignment");
 const deleteJobAssignment = require("./operations/delete-job-assignment");
@@ -17,7 +17,7 @@ exports.handler = async (event, context) => {
     try {
         console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
 
-        await worker.doWork(event);
+        await worker.doWork(new WorkerRequest(event));
     } catch (error) {
         console.log("Error occurred when handling action '" + event.operationName + "'")
         console.log(error.toString());

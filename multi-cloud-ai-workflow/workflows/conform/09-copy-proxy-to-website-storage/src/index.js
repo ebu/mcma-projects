@@ -8,33 +8,15 @@ const AWS = require("aws-sdk");
 const S3 = new AWS.S3()
 const S3GetBucketLocation = util.promisify(S3.getBucketLocation.bind(S3));
 const S3CopyObject = util.promisify(S3.copyObject.bind(S3));
-const MCMA_CORE = require("mcma-core");
+
+const { EnvironmentVariableProvider, Locator } = require("mcma-core");
+const { getAwsV4ResourceManager } = require("mcma-aws");
+
+const environmentVariableProvider = new EnvironmentVariableProvider();
+const resourceManager = getAwsV4ResourceManager(environmentVariableProvider);
 
 // Environment Variable(AWS Lambda)
-const WEBSITE_BUCKET = process.env.WEBSITE_BUCKET;
-
-const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator({
-    accessKey: AWS.config.credentials.accessKeyId,
-    secretKey: AWS.config.credentials.secretAccessKey,
-    sessionToken: AWS.config.credentials.sessionToken,
-    region: AWS.config.region
-});
-
-const authProvider = new MCMA_CORE.AuthenticatorProvider(
-    async (authType, authContext) => {
-        switch (authType) {
-            case "AWS4":
-                return authenticatorAWS4;
-        }
-    }
-);
-
-const resourceManager = new MCMA_CORE.ResourceManager({
-    servicesUrl: process.env.SERVICES_URL,
-    servicesAuthType: process.env.SERVICES_AUTH_TYPE,
-    servicesAuthContext: process.env.SERVICES_AUTH_CONTEXT,
-    authProvider
-});
+const WebsiteBucket = process.env.WebsiteBucket;
 
 /**
  * get amejob id
@@ -69,7 +51,7 @@ exports.handler = async (event, context) => {
         event.progress = 72;
         await resourceManager.sendNotification(event);
     } catch (error) {
-        console.warn("Failed to send notification");
+        console.warn("Failed to send notification", error);
     }
 
     // get transform job id
@@ -91,7 +73,7 @@ exports.handler = async (event, context) => {
         copySource = encodeURI(outputFile.awsS3Bucket + "/" + outputFile.awsS3Key);
     }
 
-    let s3Bucket = WEBSITE_BUCKET;
+    let s3Bucket = WebsiteBucket;
     let s3Key = "media/" + uuidv4();
 
     // addin file extension
@@ -119,9 +101,9 @@ exports.handler = async (event, context) => {
     let httpEndpoint = "https://" + s3SubDomain + ".amazonaws.com/" + s3Bucket + "/" + s3Key;
 
     // addin ResultPath of StepFunctions
-    return new MCMA_CORE.Locator({
-        "awsS3Bucket": s3Bucket,
-        "awsS3Key": s3Key,
-        "httpEndpoint": httpEndpoint
+    return new Locator({
+        awsS3Bucket: s3Bucket,
+        awsS3Key: s3Key,
+        httpEndpoint: httpEndpoint
     });
 }

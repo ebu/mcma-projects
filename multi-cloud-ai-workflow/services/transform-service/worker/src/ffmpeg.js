@@ -4,7 +4,7 @@ const childProcess = require("child_process");
 const execFile = util.promisify(childProcess.execFile);
 
 // adding bin folder to process path
-process.env["PATH"] = process.env["PATH"] + ":" + process.env["LAMBDA_TASK_ROOT"] + "/bin";
+process.env["PATH"] = process.env["PATH"] + ":" + process.env["LambdaTaskRoot"] + "/bin";
 
 const ffmpeg = async (params) => {
     try {

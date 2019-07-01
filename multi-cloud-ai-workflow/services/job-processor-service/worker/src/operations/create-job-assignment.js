@@ -5,10 +5,8 @@ const AWS = require("aws-sdk");
 const { Logger, JobProcess, Service, JobAssignment, NotificationEndpoint, JobStatus } = require("mcma-core");
 const { getAwsV4ResourceManager, DynamoDbTable, getAwsV4DefaultAuthProvider } = require("mcma-aws");
 
-const createResourceManager = getAwsV4ResourceManager.getResourceManager;
-
 const createJobAssignment = async (event) => {
-    let resourceManager = createResourceManager(event);
+    let resourceManager = getAwsV4ResourceManager(event);
 
     let table = new DynamoDbTable(JobProcess, event.tableName());
 
@@ -25,7 +23,7 @@ const createJobAssignment = async (event) => {
         // validating job.jobInput with required input parameters of jobProfile
         let jobInput = job.jobInput;
         if (!jobInput) {
-            throw new Exception("Job is missing jobInput");
+            throw new Error("Job is missing jobInput");
         }
 
         if (jobProfile.inputParameters) {
@@ -33,7 +31,7 @@ const createJobAssignment = async (event) => {
                 throw new Error("JobProfile.inputParameters is not an array");
             }
 
-            for (parameter of jobProfile.inputParameters) {
+            for (let parameter of jobProfile.inputParameters) {
                 if (jobInput[parameter.parameterName] === undefined) {
                     throw new Error("jobInput misses required input parameter '" + parameter.parameterName + "'");
                 }

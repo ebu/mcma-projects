@@ -10,8 +10,7 @@ const controller =
         .toApiGatewayApiController();
 
 exports.handler = async (event, context) => {
-    Logger.debug(request);
-    Logger.debug(event);
+    Logger.debug(JSON.stringify(event, null, 2),JSON.stringify(event, null, 2));
 
     const resp = await controller.handleRequest(event, context);
     Logger.debug(resp);

@@ -7,43 +7,19 @@ const AWS = require("aws-sdk");
 const StepFunctions = new AWS.StepFunctions();
 const StepFunctionsGetActivityTask = util.promisify(StepFunctions.getActivityTask.bind(StepFunctions));
 
-const MCMA_CORE = require("mcma-core");
+const { EnvironmentVariableProvider, TransformJob, Locator, NotificationEndpoint, JobProfile } = require("mcma-core");
+const { getAwsV4ResourceManager } = require("mcma-aws");
+
+const environmentVariableProvider = new EnvironmentVariableProvider();
+const resourceManager = getAwsV4ResourceManager(environmentVariableProvider);
 
 // Environment Variable(AWS Lambda)
-const ACTIVITY_ARN = process.env.ACTIVITY_ARN;
-const ACTIVITY_CALLBACK_URL = process.env.ACTIVITY_CALLBACK_URL;
-const TEMP_BUCKET = process.env.TEMP_BUCKET;
-const REPOSITORY_BUCKET = process.env.REPOSITORY_BUCKET;
-const WEBSITE_BUCKET = process.env.WEBSITE_BUCKET;
+const ActivityArn = process.env.ActivityArn;
+const ActivityCallbackUrl = process.env.ActivityCallbackUrl;
+const RepositoryBucket = process.env.RepositoryBucket;
 
 // Local Define
-const RESOURCE_TYPE_JOB_PROFILE = "JobProfile";
 const JOB_PROFILE_NAME = "CreateProxyLambda";
-
-const creds = {
-    accessKey: AWS.config.credentials.accessKeyId,
-    secretKey: AWS.config.credentials.secretAccessKey,
-    sessionToken: AWS.config.credentials.sessionToken,
-    region: AWS.config.region
-};
-
-const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator(creds);
-
-const authProvider = new MCMA_CORE.AuthenticatorProvider(
-    async (authType, authContext) => {
-        switch (authType) {
-            case "AWS4":
-                return authenticatorAWS4;
-        }
-    }
-);
-
-const resourceManager = new MCMA_CORE.ResourceManager({
-    servicesUrl: process.env.SERVICES_URL,
-    servicesAuthType: process.env.SERVICES_AUTH_TYPE,
-    servicesAuthContext: process.env.SERVICES_AUTH_CONTEXT,
-    authProvider
-});
 
 
 /**
@@ -60,11 +36,11 @@ exports.handler = async (event, context) => {
         event.progress = 54;
         await resourceManager.sendNotification(event);
     } catch (error) {
-        console.warn("Failed to send notification");
+        console.warn("Failed to send notification", error);
     }
 
     // get activity task
-    let data = await StepFunctionsGetActivityTask({ activityArn: ACTIVITY_ARN });
+    let data = await StepFunctionsGetActivityTask({ activityArn: ActivityArn });
 
     let taskToken = data.taskToken;
     if (!taskToken) {
@@ -75,7 +51,7 @@ exports.handler = async (event, context) => {
     event = JSON.parse(data.input);
 
     // get job profiles filtered by name
-    let jobProfiles = await resourceManager.get(RESOURCE_TYPE_JOB_PROFILE, { name: JOB_PROFILE_NAME });
+    let jobProfiles = await resourceManager.get(JobProfile, { name: JOB_PROFILE_NAME });
 
     let jobProfileId = jobProfiles.length ? jobProfiles[0].id : null;
 
@@ -84,20 +60,20 @@ exports.handler = async (event, context) => {
         throw new Error("JobProfile '" + JOB_PROFILE_NAME + "' not found");
     }
 
-    let notificationUrl = ACTIVITY_CALLBACK_URL + "?taskToken=" + encodeURIComponent(taskToken);
+    let notificationUrl = ActivityCallbackUrl + "?taskToken=" + encodeURIComponent(taskToken);
     console.log("NotificationUrl:", notificationUrl);
 
     // creating the tranformjob(lambda)
-    let createProxyJob = new MCMA_CORE.TransformJob({
+    let createProxyJob = new TransformJob({
         jobProfile: jobProfileId,
-        jobInput: new MCMA_CORE.JobParameterBag({
+        jobInput: new JobParameterBag({
             inputFile: event.data.repositoryFile,
-            outputLocation: new MCMA_CORE.Locator({
-                awsS3Bucket: REPOSITORY_BUCKET,
+            outputLocation: new Locator({
+                awsS3Bucket: RepositoryBucket,
                 awsS3KeyPrefix: "TransformJobResults/"
             })
         }),
-        notificationEndpoint: new MCMA_CORE.NotificationEndpoint({
+        notificationEndpoint: new NotificationEndpoint({
             httpEndpoint: notificationUrl
         })
     });

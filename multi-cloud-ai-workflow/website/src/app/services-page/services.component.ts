@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Service, JobProfile } from 'mcma-core';
 
 import { ConfigService } from '../services/config.service';
 import { McmaClientService } from '../services/mcma-client.service';
@@ -51,11 +52,11 @@ export class ServicesComponent implements OnInit, OnDestroy {
     }
 
     private initialize = async () => {
-        let services = await this.resourceManager.get("Service");
+        let services = await this.resourceManager.get(Service);
 
         this.services = services.sort((a, b) => a.name.localeCompare(b.name));
 
-        let jobProfiles = await this.resourceManager.get("JobProfile");
+        let jobProfiles = await this.resourceManager.get(JobProfile);
 
         this.jobProfiles = {};
 
