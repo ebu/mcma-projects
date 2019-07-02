@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { Service, JobProfile } from 'mcma-core';
+import { Service, JobProfile, ResourceManager } from 'mcma-core';
 
 import { ConfigService } from '../services/config.service';
 import { McmaClientService } from '../services/mcma-client.service';
@@ -29,7 +29,7 @@ export class ServicesComponent implements OnInit, OnDestroy {
     jobProfilesDisplayedColumns = ['name', 'input', 'output']
     serviceResourcesDisplayedColumns = ['type', 'url']
     resourcesDisplayedColumns = ['type', 'name', 'created', 'modified'];
-    resourceManager: any;
+    resourceManager: ResourceManager;
 
     resourceManagerSubscription: Subscription;
 
@@ -52,11 +52,16 @@ export class ServicesComponent implements OnInit, OnDestroy {
     }
 
     private initialize = async () => {
-        let services = await this.resourceManager.get(Service);
+        console.log('[ServicesComponent] getting services', this.resourceManager, Service.name);
+        let services = await this.resourceManager.get<Service>("Service");
+        console.log('[ServicesComponent] retrieved services', services);
 
         this.services = services.sort((a, b) => a.name.localeCompare(b.name));
+        console.log('[ServicesComponent] sorted services', this.services);
 
-        let jobProfiles = await this.resourceManager.get(JobProfile);
+        console.log('[ServicesComponent] getting job profiles', this.resourceManager, JobProfile.name);
+        let jobProfiles = await this.resourceManager.get<JobProfile>("JobProfile");
+        console.log('[ServicesComponent] retrieved job profiles', jobProfiles);
 
         this.jobProfiles = {};
 
@@ -71,7 +76,7 @@ export class ServicesComponent implements OnInit, OnDestroy {
                     input += param.parameterName;
                 }
             }
-            jobProfile.input = input;
+            (<any>jobProfile).input = input;
 
             let output = "";
             if (jobProfile.outputParameters) {
@@ -82,10 +87,11 @@ export class ServicesComponent implements OnInit, OnDestroy {
                     output += param.parameterName;
                 }
             }
-            jobProfile.output = output;
+            (<any>jobProfile).output = output;
 
             this.jobProfiles[jobProfile.id] = jobProfile;
         }
+        console.log('[ServicesComponent] processed job profiles', this.jobProfiles);
 
         this.selectService(this.services[0]);
     }
