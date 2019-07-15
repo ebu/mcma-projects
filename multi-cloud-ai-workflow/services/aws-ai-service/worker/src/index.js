@@ -6,6 +6,7 @@ require("mcma-aws");
 const { detectCelebrities, processRekognitionResult } = require('./profiles/detect-celebrities');
 const { transcribeAudio, processTranscribeJobResult } = require('./profiles/transcribe-audio');
 const { translateText } = require('./profiles/translate-text');
+const { textToSpeech, processTextToSpeechJobResult } = require('./profiles/text-to-speech');
 
 const worker =
     new WorkerBuilder().useAwsJobDefaults()
@@ -13,9 +14,11 @@ const worker =
             x.addProfile(detectCelebrities.profileName, detectCelebrities)
              .addProfile(transcribeAudio.profileName, transcribeAudio)
              .addProfile(translateText.profileName, translateText)
+             .addProfile(textToSpeech.profileName, textToSpeech)
         )
         .handleOperation(processRekognitionResult)
         .handleOperation(processTranscribeJobResult)
+        .handleOperation(processTextToSpeechJobResult)
         .build();
 
 exports.handler = async (event, context) => {

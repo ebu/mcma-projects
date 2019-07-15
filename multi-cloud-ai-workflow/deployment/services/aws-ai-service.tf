@@ -60,7 +60,7 @@ resource "aws_s3_bucket_notification" "aws-ai-service-output-bucket-notification
   lambda_function {
     lambda_function_arn = "${aws_lambda_function.aws-ai-service-s3-trigger.arn}"
     events              = ["s3:ObjectCreated:*"]
-    filter_suffix       = "json"
+    #filter_suffix       = "json"
   }
 }
 

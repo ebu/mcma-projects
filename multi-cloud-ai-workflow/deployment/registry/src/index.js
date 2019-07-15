@@ -83,6 +83,16 @@ const JOB_PROFILES = {
             new JobParameter({ parameterName: "ebucore:height" })
         ]
     }),
+    AWSTextToSpeech: new JobProfile({
+        name: "AWSTextToSpeech",
+        inputParameters: [
+            new JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
+            new JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
+        ],
+        outputParameters: [
+            new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
+        ]
+    }),
     AWSTranscribeAudio: new JobProfile({
         name: "AWSTranscribeAudio",
         inputParameters: [
@@ -159,6 +169,7 @@ const createServices = (serviceUrls) => {
                         authType: "AWS4",
                         jobType: "AIJob",
                         jobProfiles: [
+                            JOB_PROFILES.AWSTextToSpeech.id ? JOB_PROFILES.AWSTextToSpeech.id : JOB_PROFILES.AWSTextToSpeech,
                             JOB_PROFILES.AWSTranscribeAudio.id ? JOB_PROFILES.AWSTranscribeAudio.id : JOB_PROFILES.AWSTranscribeAudio,
                             JOB_PROFILES.AWSTranslateText.id ? JOB_PROFILES.AWSTranslateText.id : JOB_PROFILES.AWSTranslateText,
                             JOB_PROFILES.AWSDetectCelebrities.id ? JOB_PROFILES.AWSDetectCelebrities.id : JOB_PROFILES.AWSDetectCelebrities

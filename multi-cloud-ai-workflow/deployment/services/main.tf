@@ -72,3 +72,8 @@ resource "aws_iam_role_policy_attachment" "role-policy-amazon-translate-read-onl
   role       = "${aws_iam_role.iam_for_exec_lambda.name}"
   policy_arn = "arn:aws:iam::aws:policy/TranslateReadOnly"
 }
+
+resource "aws_iam_role_policy_attachment" "role-policy-amazon-polly-full-access" {
+  role       = "${aws_iam_role.iam_for_exec_lambda.name}"
+  policy_arn = "arn:aws:iam::aws:policy/AmazonPollyFullAccess"
+}
