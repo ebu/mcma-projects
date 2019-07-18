@@ -8,6 +8,7 @@ const S3PutObject = util.promisify(S3.putObject.bind(S3));
 
 const Rekognition = new AWS.Rekognition();
 const RekognitionGetCelebrityRecognition = util.promisify(Rekognition.getCelebrityRecognition.bind(Rekognition));
+const RekognitionGetFaceDetection = util.promisify(Rekognition.getFaceDetection.bind(Rekognition));
 
 const { Logger, Locator, JobAssignment, AIJob } = require("mcma-core");
 const { WorkerJobHelper } = require("mcma-worker");
@@ -41,25 +42,21 @@ const processRekognitionResult = async (request) => {
         }
 
         // 3. Get the result from the Rekognition service 
-
         let data;
 
         switch (rekoJobType) {
             case "StartCelebrityRecognition":
-                const params = {
-                    JobId: rekoJobId, /* required */
-                    MaxResults: 1000000,
+                // TODO implement iteration over next results in case we have more than 1000 results
+                data = await RekognitionGetCelebrityRecognition({
+                    JobId: rekoJobId,
                     SortBy: "TIMESTAMP"
-                };
-                data = await RekognitionGetCelebrityRecognition(params);
+                });
                 break;
             case "StartFaceDetection":
-                const params = {
-                    JobId: rekoJobId, /* required */
-                    MaxResults: 1000000,
-                    SortBy: "TIMESTAMP"
-                };
-                data = await RekognitionGetFaceDetection(params);
+                // TODO implement iteration over next results in case we have more than 1000 results
+                data = await RekognitionGetFaceDetection({
+                    JobId: rekoJobId
+                });
                 break;
             case "StartLabelDetection":
             case "StartContentModeration":

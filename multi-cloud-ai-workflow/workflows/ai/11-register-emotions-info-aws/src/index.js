@@ -54,21 +54,10 @@ exports.handler = async (event, context) => {
 
     let emotionsResult = JSON.parse(s3Object.Body.toString());
 
-    let emotionsMap = { };
-
-    for (let i = 0; i < emotionsResult.Emotions.length;) {
-        let emotion = emotionsResult.Emotions[i];
-
-        let prevEmotion = emotionsMap[emotion.Emotion.Name];
-        if ((!prevEmotion || emotion.Timestamp - prevEmotion.Timestamp > 3000) && emotion.Emotion.Confidence > 50) {
-            emotionsMap[emotion.Emotion.Name] = emotion;
-            i++;
-        } else {
-            emotionsResult.Emotions.splice(i, 1);
-        }
-    }
-
     console.log("AWS Emotions result", JSON.stringify(emotionsResult, null, 2));
+
+    // returning here as we probably should not attach the whole metadata file to the bmContent.
+    return;
 
     let bmContent = await resourceManager.resolve(event.input.bmContent);
 

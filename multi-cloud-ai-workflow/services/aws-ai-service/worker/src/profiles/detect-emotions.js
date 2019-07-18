@@ -23,6 +23,7 @@ async function detectEmotions(workerJobHelper) {
             }
         },
         ClientRequestToken: clientToken,
+        FaceAttributes: "ALL",
         JobTag: base64JobId,
         NotificationChannel: {
             RoleArn: environmentVariableProvider.getRequiredContextVariable("RekoSnsRoleArn"),
