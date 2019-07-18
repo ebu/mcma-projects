@@ -3,11 +3,13 @@ const { Logger, AIJob } = require("mcma-core");
 const { WorkerBuilder, WorkerRequest } = require("mcma-worker");
 require("mcma-aws");
 
-const { detectCelebrities, processRekognitionResult } = require('./profiles/detect-celebrities');
 const { transcribeAudio, processTranscribeJobResult } = require('./profiles/transcribe-audio');
 const { translateText } = require('./profiles/translate-text');
 const { textToSpeech, processTextToSpeechJobResult } = require('./profiles/text-to-speech');
-const { detectEmotions, processRekognitionResult2 } = require('./profiles/detect-emotions');
+
+const { detectCelebrities } = require('./profiles/detect-celebrities');
+const { detectEmotions } = require('./profiles/detect-emotions');
+const { processRekognitionResult } = require('./profiles/process-reko-results');
 
 const worker =
     new WorkerBuilder().useAwsJobDefaults()
@@ -21,7 +23,6 @@ const worker =
         .handleOperation(processRekognitionResult)
         .handleOperation(processTranscribeJobResult)
         .handleOperation(processTextToSpeechJobResult)
-        .handleOperation(processRekognitionResult2)
         .build();
 
 exports.handler = async (event, context) => {
