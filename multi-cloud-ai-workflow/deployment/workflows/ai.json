@@ -270,6 +270,72 @@
                             "End": true
                         }
                     }
+                },
+                {
+                    "StartAt": "10-detect-emotions-aws-parent",
+                    "States": {
+                        "10-detect-emotions-aws-parent": {
+                            "Type": "Parallel",
+                            "Branches": [
+                                {
+                                    "StartAt": "10-detect-emotions-aws",
+                                    "States": {
+                                        "10-detect-emotions-aws": {
+                                            "Type": "Task",
+                                            "Resource": "${lambda-10-detect-emotions-aws}",
+                                            "End": true
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt": "10-wait-for-job-completion",
+                                    "States": {
+                                        "10-wait-for-job-completion": {
+                                            "Type": "Task",
+                                            "Resource": "${activity-10-detect-emotions-aws}",
+                                            "TimeoutSeconds": 3600,
+                                            "HeartbeatSeconds": 1800,
+                                            "End": true
+                                        }
+                                    }
+                                }
+                            ],
+                            "ResultPath": "$.data.awsEmotionsJobId",
+                            "Next": "11-register-emotions-info-aws",
+                            "Catch": [
+                                {
+                                    "ErrorEquals": [
+                                        "States.ALL"
+                                    ],
+                                    "ResultPath": "$.error",
+                                    "Next": "process-failure-branch-2"
+                                }
+                            ]
+                        },
+                        "11-register-emotions-info-aws": {
+                            "Type": "Task",
+                            "Resource": "${lambda-11-register-emotions-info-aws}",
+                            "ResultPath": null,
+                            "Next": "process-completion-branch-2",
+                            "Catch": [
+                                {
+                                    "ErrorEquals": [
+                                        "States.ALL"
+                                    ],
+                                    "ResultPath": "$.error",
+                                    "Next": "process-failure-branch-2"
+                                }
+                            ]
+                        },
+                        "process-failure-branch-2": {
+                            "Type": "Pass",
+                            "End": true
+                        },
+                        "process-completion-branch-2": {
+                            "Type": "Pass",
+                            "End": true
+                        }
+                    }
                 }
             ],
             "ResultPath": null,

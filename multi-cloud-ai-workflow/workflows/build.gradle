@@ -8,6 +8,8 @@ task build {
     dependsOn "ai:07-register-celebrities-info-aws:build"
     dependsOn "ai:08-detect-celebrities-azure:build"
     dependsOn "ai:09-register-celebrities-info-azure:build"
+    dependsOn "ai:10-detect-emotions-aws:build"
+    dependsOn "ai:11-register-emotions-info-aws:build"
     dependsOn "conform:01-validate-workflow-input:build"
     dependsOn "conform:02-move-content-to-file-repository:build"
     dependsOn "conform:03-create-media-asset:build"
