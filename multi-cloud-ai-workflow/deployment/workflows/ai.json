@@ -308,7 +308,7 @@
                                         "States.ALL"
                                     ],
                                     "ResultPath": "$.error",
-                                    "Next": "process-failure-branch-2"
+                                    "Next": "process-failure-branch-4"
                                 }
                             ]
                         },
@@ -316,22 +316,22 @@
                             "Type": "Task",
                             "Resource": "${lambda-11-register-emotions-info-aws}",
                             "ResultPath": null,
-                            "Next": "process-completion-branch-2",
+                            "Next": "process-completion-branch-4",
                             "Catch": [
                                 {
                                     "ErrorEquals": [
                                         "States.ALL"
                                     ],
                                     "ResultPath": "$.error",
-                                    "Next": "process-failure-branch-2"
+                                    "Next": "process-failure-branch-4"
                                 }
                             ]
                         },
-                        "process-failure-branch-2": {
+                        "process-failure-branch-4": {
                             "Type": "Pass",
                             "End": true
                         },
-                        "process-completion-branch-2": {
+                        "process-completion-branch-4": {
                             "Type": "Pass",
                             "End": true
                         }

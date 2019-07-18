@@ -14,7 +14,7 @@ resource "aws_lambda_function" "ai-01-validate-workflow-input" {
 
   environment {
     variables = {
-      ServicesUrl          = "${var.services_url}"
+      ServicesUrl         = "${var.services_url}"
       ServicesAuthType    = "${var.services_auth_type}"
       ServicesAuthContext = "${var.services_auth_context}"
       RepositoryBucket    = "${var.repository_bucket}"
@@ -36,14 +36,14 @@ resource "aws_lambda_function" "ai-02-extract-speech-to-text" {
 
   environment {
     variables = {
-      ServicesUrl          = "${var.services_url}"
+      ServicesUrl         = "${var.services_url}"
       ServicesAuthType    = "${var.services_auth_type}"
       ServicesAuthContext = "${var.services_auth_context}"
-      RepositoryBucket     = "${var.repository_bucket}"
-      TempBucket           = "${var.temp_bucket}"
-      WebsiteBucket        = "${var.website_bucket}"
+      RepositoryBucket    = "${var.repository_bucket}"
+      TempBucket          = "${var.temp_bucket}"
+      WebsiteBucket       = "${var.website_bucket}"
       ActivityCallbackUrl = "${local.workflow_activity_callback_handler_url}"
-      ActivityArn          = "${aws_sfn_activity.ai-02-extract-speech-to-text.id}"
+      ActivityArn         = "${aws_sfn_activity.ai-02-extract-speech-to-text.id}"
     }
   }
 }
@@ -64,7 +64,7 @@ resource "aws_lambda_function" "ai-03-register-speech-to-text-output" {
 
   environment {
     variables = {
-      ServicesUrl          = "${var.services_url}"
+      ServicesUrl         = "${var.services_url}"
       ServicesAuthType    = "${var.services_auth_type}"
       ServicesAuthContext = "${var.services_auth_context}"
       RepositoryBucket    = "${var.repository_bucket}"
@@ -86,14 +86,14 @@ resource "aws_lambda_function" "ai-04-translate-speech-transcription" {
 
   environment {
     variables = {
-      ServicesUrl          = "${var.services_url}"
+      ServicesUrl         = "${var.services_url}"
       ServicesAuthType    = "${var.services_auth_type}"
       ServicesAuthContext = "${var.services_auth_context}"
-      RepositoryBucket     = "${var.repository_bucket}"
-      TempBucket           = "${var.temp_bucket}"
-      WebsiteBucket        = "${var.website_bucket}"
+      RepositoryBucket    = "${var.repository_bucket}"
+      TempBucket          = "${var.temp_bucket}"
+      WebsiteBucket       = "${var.website_bucket}"
       ActivityCallbackUrl = "${local.workflow_activity_callback_handler_url}"
-      ActivityArn          = "${aws_sfn_activity.ai-04-translate-speech-transcription.id}"
+      ActivityArn         = "${aws_sfn_activity.ai-04-translate-speech-transcription.id}"
     }
   }
 }
@@ -114,7 +114,7 @@ resource "aws_lambda_function" "ai-05-register-speech-translation" {
 
   environment {
     variables = {
-      ServicesUrl          = "${var.services_url}"
+      ServicesUrl         = "${var.services_url}"
       ServicesAuthType    = "${var.services_auth_type}"
       ServicesAuthContext = "${var.services_auth_context}"
       RepositoryBucket    = "${var.repository_bucket}"
@@ -136,14 +136,14 @@ resource "aws_lambda_function" "ai-06-detect-celebrities-aws" {
 
   environment {
     variables = {
-      ServicesUrl          = "${var.services_url}"
+      ServicesUrl         = "${var.services_url}"
       ServicesAuthType    = "${var.services_auth_type}"
       ServicesAuthContext = "${var.services_auth_context}"
-      RepositoryBucket     = "${var.repository_bucket}"
-      TempBucket           = "${var.temp_bucket}"
-      WebsiteBucket        = "${var.website_bucket}"
+      RepositoryBucket    = "${var.repository_bucket}"
+      TempBucket          = "${var.temp_bucket}"
+      WebsiteBucket       = "${var.website_bucket}"
       ActivityCallbackUrl = "${local.workflow_activity_callback_handler_url}"
-      ActivityArn          = "${aws_sfn_activity.ai-06-detect-celebrities-aws.id}"
+      ActivityArn         = "${aws_sfn_activity.ai-06-detect-celebrities-aws.id}"
     }
   }
 }
@@ -164,14 +164,14 @@ resource "aws_lambda_function" "ai-10-detect-emotions-aws" {
 
   environment {
     variables = {
-      ServicesUrl          = "${var.services_url}"
+      ServicesUrl         = "${var.services_url}"
       ServicesAuthType    = "${var.services_auth_type}"
       ServicesAuthContext = "${var.services_auth_context}"
-      RepositoryBucket     = "${var.repository_bucket}"
-      TempBucket           = "${var.temp_bucket}"
-      WebsiteBucket        = "${var.website_bucket}"
+      RepositoryBucket    = "${var.repository_bucket}"
+      TempBucket          = "${var.temp_bucket}"
+      WebsiteBucket       = "${var.website_bucket}"
       ActivityCallbackUrl = "${local.workflow_activity_callback_handler_url}"
-      ActivityArn          = "${aws_sfn_activity.ai-10-detect-emotions-aws.id}"
+      ActivityArn         = "${aws_sfn_activity.ai-10-detect-emotions-aws.id}"
     }
   }
 }
@@ -192,14 +192,14 @@ resource "aws_lambda_function" "ai-08-detect-celebrities-azure" {
 
   environment {
     variables = {
-      ServicesUrl          = "${var.services_url}"
+      ServicesUrl         = "${var.services_url}"
       ServicesAuthType    = "${var.services_auth_type}"
       ServicesAuthContext = "${var.services_auth_context}"
-      RepositoryBucket     = "${var.repository_bucket}"
-      TempBucket           = "${var.temp_bucket}"
-      WebsiteBucket        = "${var.website_bucket}"
+      RepositoryBucket    = "${var.repository_bucket}"
+      TempBucket          = "${var.temp_bucket}"
+      WebsiteBucket       = "${var.website_bucket}"
       ActivityCallbackUrl = "${local.workflow_activity_callback_handler_url}"
-      ActivityArn          = "${aws_sfn_activity.ai-08-detect-celebrities-azure.id}"
+      ActivityArn         = "${aws_sfn_activity.ai-08-detect-celebrities-azure.id}"
     }
   }
 }
@@ -220,7 +220,7 @@ resource "aws_lambda_function" "ai-07-register-celebrities-info-aws" {
 
   environment {
     variables = {
-      ServicesUrl          = "${var.services_url}"
+      ServicesUrl         = "${var.services_url}"
       ServicesAuthType    = "${var.services_auth_type}"
       ServicesAuthContext = "${var.services_auth_context}"
       RepositoryBucket    = "${var.repository_bucket}"
@@ -242,7 +242,7 @@ resource "aws_lambda_function" "ai-11-register-emotions-info-aws" {
 
   environment {
     variables = {
-      ServicesUrl          = "${var.services_url}"
+      ServicesUrl         = "${var.services_url}"
       ServicesAuthType    = "${var.services_auth_type}"
       ServicesAuthContext = "${var.services_auth_context}"
       RepositoryBucket    = "${var.repository_bucket}"
@@ -264,7 +264,7 @@ resource "aws_lambda_function" "ai-09-register-celebrities-info-azure" {
 
   environment {
     variables = {
-      ServicesUrl          = "${var.services_url}"
+      ServicesUrl         = "${var.services_url}"
       ServicesAuthType    = "${var.services_auth_type}"
       ServicesAuthContext = "${var.services_auth_context}"
       RepositoryBucket    = "${var.repository_bucket}"
@@ -296,6 +296,7 @@ data "template_file" "ai-workflow" {
     lambda-07-register-celebrities-info-aws    = "${aws_lambda_function.ai-07-register-celebrities-info-aws.arn}"
     lambda-09-register-celebrities-info-azure  = "${aws_lambda_function.ai-09-register-celebrities-info-azure.arn}"
     lambda-10-detect-emotions-aws              = "${aws_lambda_function.ai-10-detect-emotions-aws.arn}"
+    activity-10-detect-emotions-aws            = "${aws_sfn_activity.ai-10-detect-emotions-aws.id}"
     lambda-11-register-emotions-info-aws       = "${aws_lambda_function.ai-11-register-emotions-info-aws.arn}"
     lambda-process-workflow-completion         = "${aws_lambda_function.process-workflow-completion.arn}"
     lambda-process-workflow-failure            = "${aws_lambda_function.process-workflow-failure.arn}"
