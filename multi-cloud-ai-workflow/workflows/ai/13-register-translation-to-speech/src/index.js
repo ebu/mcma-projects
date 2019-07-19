@@ -14,6 +14,20 @@ const environmentVariableProvider = new EnvironmentVariableProvider();
 const resourceManager = getAwsV4ResourceManager(environmentVariableProvider);
 
 /**
+ * Create New BMEssence Object
+ * @param {*} bmContent the URL to the BMContent
+ * @param {*} location point to copies of the media file
+ */
+function createBMEssence(bmContent, location) {
+    // init bmcontent
+    let bmEssence = new BMEssence({
+        "bmContent": bmContent.id,
+        "locations": [location],
+    });
+    return bmEssence;
+}
+
+/**
  * Lambda function handler
  * @param {*} event event
  * @param {*} context context
@@ -25,7 +39,6 @@ exports.handler = async (event, context) => {
     try {
         event.status = "RUNNING";
         event.parallelProgress = { "text-to-speech": 80 };
-//        event.parallelProgress = { "translation-to-speech": 80 };
         await resourceManager.sendNotification(event);
     } catch (error) {
         console.warn("Failed to send notification", error);
@@ -38,11 +51,26 @@ exports.handler = async (event, context) => {
     }
     console.log("[TextToSpeechJobId]:", jobId);
 
-    let job = await resourceManager.resolve(jobId);
+
+    // get transform job id
+    let textToSpeechJobId = gettextToSpeechJobId(event);
+
+    // in case we did note do a transcode
+    if (!textToSpeecjJobId) {
+        return event.data.bmEssence;
+    }
+
+    // get result of transform job
+    let textToSpeechJob = await resourceManager.resolve(textToSpeechJobId);
 
     // get media info
-    let s3Bucket = job.jobOutput.outputFile.awsS3Bucket;
-    let s3Key = job.jobOutput.outputFile.awsS3Key;
+    let s3Bucket = textToSpeechJob.jobOutput.outputFile.awsS3Bucket;
+    let s3Key = textToSpeechJob.jobOutput.outputFile.awsS3Key;
+
+
+    // get media info
+    let s3Bucket = textToSpeechJob.jobOutput.outputFile.awsS3Bucket;
+    let s3Key = textToSpeechJob.jobOutput.outputFile.awsS3Key;
     let s3Object;
     try {
         s3Object = await S3GetObject({
@@ -53,24 +81,31 @@ exports.handler = async (event, context) => {
         throw new Error("Unable to media info file in bucket '" + s3Bucket + "' with key '" + s3Key + "' due to error: " + error.message);
     }
 
-//    let translationResult = s3Object.Body.toString();
-//    console.log("Translation result", translationResult);
+    // create BMEssence
+    let locator = new Locator({
+        "awsS3Bucket": s3Bucket,
+        "awsS3Key": s3Key
+    });
 
-    let bmEssence = await resourceManager.resolve(event.input.bmEssence);
+    let bme = createBMEssence(bmc, locator);
 
-//    if (!bmContent.awsAiMetadata) {
-//        bmContent.awsAiMetadata = {};
-//    }
-//    if (!bmContent.awsAiMetadata.transcription) {
-//        bmContent.awsAiMetadata.transcription = {}
-//    }
-//    bmContent.awsAiMetadata.transcription.translation = translationResult;
+    // register BMEssence
+    bme = await resourceManager.create(bme);
+    if (!bme.id) {
+        throw new Error("Failed to register BMEssence.");
+    }
 
-    await resourceManager.update(bmEssence);
+    // addin BMEssence ID
+    bmc.bmEssences.push(bme.id);
+
+    // update BMContents
+    bmc = await resourceManager.update(bmc);
+
+    // the URL to the BMEssence with conformed media
+    return bme.id;
 
     try {
         event.status = "RUNNING";
-  //      event.parallelProgress = { "translation-to-speech": 100 };
         event.parallelProgress = { "text-to-speech": 100 };
         await resourceManager.sendNotification(event);
     } catch (error) {

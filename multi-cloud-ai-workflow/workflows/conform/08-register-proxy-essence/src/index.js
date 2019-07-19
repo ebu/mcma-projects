@@ -25,6 +25,7 @@ function getTransformJobId(event) {
     return id;
 }
 
+
 /**
  * Create New BMEssence Object
  * @param {*} bmContent the URL to the BMContent
