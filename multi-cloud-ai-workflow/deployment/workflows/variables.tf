@@ -9,4 +9,3 @@ variable "aws_region" {}
 variable "environment_type" {}
 variable "services_url" {}
 variable "services_auth_type" {}
-variable "services_auth_context" {}

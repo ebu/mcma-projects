@@ -1,9 +1,9 @@
-const { NotificationEndpoint, HttpClient } = require("mcma-core");
+const { NotificationEndpoint, HttpClient } = require("@mcma/core");
 
 const httpClient = new HttpClient();
 
 function createProxyEC2(workerJobHelper) {
-    const ec2hostname = workerJobHelper.request.getRequiredContextVariable("HostnameInstanceEC2");
+    const ec2hostname = workerJobHelper.getRequest().getRequiredContextVariable("HostnameInstanceEC2");
 
     const ec2Url = "http://" + ec2hostname + "/new-transform-job";
 

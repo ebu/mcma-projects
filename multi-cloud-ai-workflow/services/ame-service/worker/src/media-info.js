@@ -3,7 +3,7 @@ const path = require("path");
 const childProcess = require("child_process");
 const execFile = util.promisify(childProcess.execFile);
 
-const { Logger } = require("mcma-core");
+const { Logger } = require("@mcma/core");
 
 const mediaInfo = async (params) => {
     try {
@@ -12,7 +12,7 @@ const mediaInfo = async (params) => {
     } catch (error) {
         Logger.error("ERROR MEDIAINFO", error);
     }
-}
+};
 
 module.exports = {
     mediaInfo

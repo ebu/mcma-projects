@@ -87,7 +87,6 @@ module "workflows" {
   environment_type      = "${var.environment_type}"
   services_url          = "${module.services.services_url}"
   services_auth_type    = "${module.services.services_auth_type}"
-  services_auth_context = "${module.services.services_auth_context}"
   repository_bucket     = "${module.storage.repository_bucket}"
   temp_bucket           = "${module.storage.temp_bucket}"
   website_bucket        = "${module.storage.website_bucket}"
@@ -108,7 +107,6 @@ module "workflows" {
 
 #   services_url          = "${module.services.services_url}"
 #   services_auth_type    = "${module.services.services_auth_type}"
-#   services_auth_context = "${module.services.services_auth_context}"
 # }
 
 output "aws_region" {
@@ -149,10 +147,6 @@ output "services_url" {
 
 output "services_auth_type" {
   value = "${module.services.services_auth_type}"
-}
-
-output "services_auth_context" {
-  value = "${module.services.services_auth_context}"
 }
 
 output "media_repository_url" {

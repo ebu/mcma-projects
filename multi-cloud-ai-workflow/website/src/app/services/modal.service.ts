@@ -1,5 +1,5 @@
-import { Injectable, Type } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { Injectable, Type } from "@angular/core";
+import { BehaviorSubject } from "rxjs";
 
 @Injectable()
 export class ModalService {

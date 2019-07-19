@@ -1,16 +1,17 @@
 //"use strict";
+const { Logger } = require("@mcma/core");
 
-const { getAwsV4ResourceManager } = require("mcma-aws");
+function deleteJobProcess(resourceManagerProvider) {
+    return async function deleteJobProcess(event) {
+        let jobProcessId = event.input.jobProcessId;
 
-const deleteJobProcess = async (event) => {
-    let jobProcessId = event.input.jobProcessId;
-
-    try {
-        let resourceManager = getAwsV4ResourceManager(event);
-        await resourceManager.delete(jobProcessId);
-    } catch (error) {
-        console.log(error);
-    }
+        try {
+            let resourceManager = resourceManagerProvider.get(event);
+            await resourceManager.delete(jobProcessId);
+        } catch (error) {
+            Logger.exception(error);
+        }
+    };
 }
 
 module.exports = deleteJobProcess;

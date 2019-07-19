@@ -8,9 +8,9 @@ const S3 = new AWS.S3();
 const S3GetBucketLocation = util.promisify(S3.getBucketLocation.bind(S3));
 const S3PutObject = util.promisify(S3.putObject.bind(S3));
 
-const { Logger, HttpClient, JobAssignment, Locator, AIJob } = require("mcma-core");
-const { WorkerJobHelper } = require("mcma-worker");
-const { getAwsV4ResourceManager, DynamoDbTableProvider } = require("mcma-aws");
+const { Logger, Locator, AIJob } = require("@mcma/core");
+const { HttpClient } = require("@mcma/client");
+const { WorkerJobHelper } = require("@mcma/worker");
 
 const httpClient = new HttpClient();
 
@@ -117,105 +117,105 @@ async function extractAllAiMetadata(workerJobHelper) {
 
 extractAllAiMetadata.profileName = "AzureExtractAllAIMetadata";
 
-const dynamoDbTableProvider = new DynamoDbTableProvider(JobAssignment);
+function processNotification(resourceManagerProvider, dynamoDbTableProvider) {
+    return async function processNotification(request) {
+        const workerJobHelper = new WorkerJobHelper(
+            AIJob,
+            dynamoDbTableProvider.table(request.tableName()),
+            resourceManagerProvider.get(request),
+            request,
+            request.input.jobAssignmentId
+        );
 
-const processNotification = async (request) => {
-    const workerJobHelper = new WorkerJobHelper(
-        AIJob,
-        dynamoDbTableProvider.table(request.tableName()),
-        getAwsV4ResourceManager(request),
-        request,
-        request.input.jobAssignmentId
-    );
+        Logger.debug("ProcessNotification", JSON.stringify(request, null, 2));
+        const notification = request.input.notification;
+        const azure = getAzureConfig(workerJobHelper);
 
-    Logger.debug("ProcessNotification", JSON.stringify(request, null, 2));
-    const notification = request.input.notification;
-    const azure = getAzureConfig(workerJobHelper);
+        let flagCounter = 0;
+        let azureVideoId;
+        let azureState;
+        if (notification) {
 
-    let flagCounter = 0;
-    let azureVideoId;
-    let azureState;
-    if (notification) {
+            if (notification.id) {
+                flagCounter++;
+                azureVideoId = notification.id;
+            }
 
-        if (notification.id) {
-            flagCounter++;
-            azureVideoId = notification.id;
+            if (notification.state) {
+                flagCounter++;
+                azureState = notification.state
+            }
         }
 
-        if (notification.state) {
-            flagCounter++;
-            azureState = notification.state
-        }
-    }
+        Logger.debug("azureVideoId = ", azureVideoId);
+        Logger.debug("azureState = ", azureState);
 
-    Logger.debug("azureVideoId = ", azureVideoId);
-    Logger.debug("azureState = ", azureState);
-
-    if (flagCounter != 2) {
-        Logger.error("looks like the POST is not coming from Azure Video Indexer: expecting two parameters id and state");
-        return;
-    }
-
-    try {
-        await workerJobHelper.initialize();
-
-        // Get the AI metadata form Azure for the video
-        Logger.debug("The POST is coming from Azure. Next steps, get the metadata for the video  ");
-
-        const authTokenUrl = azure.apiUrl + "/auth/" + azure.location + "/Accounts/" + azure.accountId + "/AccessToken?allowEdit=true";
-        const customHeaders = { "Ocp-Apim-Subscription-Key": azure.subscriptionKey };
-
-        Logger.debug("Generate Azure Video Indexer Token : Doing a GET on  : ", authTokenUrl);
-
-        const response = await httpClient.get(authTokenUrl, {
-            headers: customHeaders
-        });
-
-        Logger.debug("Azure API Token response : ", response);
-
-        const apiToken = response.data;
-        Logger.debug("Azure API Token : ", apiToken);
-
-
-        // https://api.videoindexer.ai/{location}/Accounts/{accountId}/Videos/{videoId}/Index[?accessToken][&language]   
-
-        const metadataFromAzureVideoIndexwer = azure.apiUrl + "/" + azure.location + "/Accounts/" + azure.accountId + "/Videos/" + azureVideoId + "/Index?accessToken=" + apiToken + "&language=English";
-
-        Logger.debug("Get the azure video metadata : Doing a GET on  : ", metadataFromAzureVideoIndexwer);
-        const indexedVideoMetadataResponse = await httpClient.get(metadataFromAzureVideoIndexwer);
-
-        const videoMetadata = indexedVideoMetadataResponse.data;
-        Logger.debug("Azure AI video metadata : ", JSON.stringify(videoMetadata, null, 2));
-
-        const outputLocation = workerJobHelper.getJobInput().outputLocation;
-        const jobOutputBucket = outputLocation.awsS3Bucket;
-        const jobOutputKeyPrefix = outputLocation.awsS3KeyPrefix ? outputLocation.awsS3KeyPrefix : "";
-
-        // get the info about the destination bucket to store the result of the job
-        const s3Params = {
-            Bucket: jobOutputBucket,
-            Key: jobOutputKeyPrefix + azureVideoId + "-" + uuidv4() + ".json",
-            Body: JSON.stringify(videoMetadata, null, 2)
+        if (flagCounter != 2) {
+            Logger.error("looks like the POST is not coming from Azure Video Indexer: expecting two parameters id and state");
+            return;
         }
 
-        await S3PutObject(s3Params);
-
-        //updating JobAssignment with jobOutput
-        workerJobHelper.getJobOutput().outputFile = new Locator({
-            awsS3Bucket: s3Params.Bucket,
-            awsS3Key: s3Params.Key
-        });
-
-        await workerJobHelper.complete();
-
-    } catch (error) {
-        Logger.exception(error);
         try {
-            await workerJobHelper.fail(error.message);
+            await workerJobHelper.initialize();
+
+            // Get the AI metadata form Azure for the video
+            Logger.debug("The POST is coming from Azure. Next steps, get the metadata for the video  ");
+
+            const authTokenUrl = azure.apiUrl + "/auth/" + azure.location + "/Accounts/" + azure.accountId + "/AccessToken?allowEdit=true";
+            const customHeaders = { "Ocp-Apim-Subscription-Key": azure.subscriptionKey };
+
+            Logger.debug("Generate Azure Video Indexer Token : Doing a GET on  : ", authTokenUrl);
+
+            const response = await httpClient.get(authTokenUrl, {
+                headers: customHeaders
+            });
+
+            Logger.debug("Azure API Token response : ", response);
+
+            const apiToken = response.data;
+            Logger.debug("Azure API Token : ", apiToken);
+
+
+            // https://api.videoindexer.ai/{location}/Accounts/{accountId}/Videos/{videoId}/Index[?accessToken][&language]   
+
+            const metadataFromAzureVideoIndexwer = azure.apiUrl + "/" + azure.location + "/Accounts/" + azure.accountId + "/Videos/" + azureVideoId + "/Index?accessToken=" + apiToken + "&language=English";
+
+            Logger.debug("Get the azure video metadata : Doing a GET on  : ", metadataFromAzureVideoIndexwer);
+            const indexedVideoMetadataResponse = await httpClient.get(metadataFromAzureVideoIndexwer);
+
+            const videoMetadata = indexedVideoMetadataResponse.data;
+            Logger.debug("Azure AI video metadata : ", JSON.stringify(videoMetadata, null, 2));
+
+            const outputLocation = workerJobHelper.getJobInput().outputLocation;
+            const jobOutputBucket = outputLocation.awsS3Bucket;
+            const jobOutputKeyPrefix = outputLocation.awsS3KeyPrefix ? outputLocation.awsS3KeyPrefix : "";
+
+            // get the info about the destination bucket to store the result of the job
+            const s3Params = {
+                Bucket: jobOutputBucket,
+                Key: jobOutputKeyPrefix + azureVideoId + "-" + uuidv4() + ".json",
+                Body: JSON.stringify(videoMetadata, null, 2)
+            }
+
+            await S3PutObject(s3Params);
+
+            //updating JobAssignment with jobOutput
+            workerJobHelper.getJobOutput().outputFile = new Locator({
+                awsS3Bucket: s3Params.Bucket,
+                awsS3Key: s3Params.Key
+            });
+
+            await workerJobHelper.complete();
+
         } catch (error) {
             Logger.exception(error);
+            try {
+                await workerJobHelper.fail(error.message);
+            } catch (error) {
+                Logger.exception(error);
+            }
         }
-    }
+    };
 }
 
 module.exports = {

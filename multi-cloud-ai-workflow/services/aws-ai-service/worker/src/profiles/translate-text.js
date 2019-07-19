@@ -9,7 +9,7 @@ const S3PutObject = util.promisify(S3.putObject.bind(S3));
 const Translate = new AWS.Translate({ apiVersion: "2017-07-01" });
 const TranslateText = util.promisify(Translate.translateText.bind(Translate));
 
-const { Logger, Locator } = require("mcma-core");
+const { Logger, Locator } = require("@mcma/core");
 
 async function translateText(workerJobHelper) {
     const jobInput = workerJobHelper.getJobInput();

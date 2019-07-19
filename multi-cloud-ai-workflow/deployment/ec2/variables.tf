@@ -41,7 +41,6 @@ variable "global_prefix" {}
 
 variable "services_url" {}
 variable "services_auth_type" {}
-variable "services_auth_context" {}
 
 /* Ubuntu 16.04 amis by region */
 variable "amis" {

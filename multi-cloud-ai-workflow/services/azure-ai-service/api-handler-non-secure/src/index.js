@@ -1,10 +1,11 @@
 //"use strict";
+const { Logger, JobAssignment } = require("@mcma/core");
+const { McmaApiRouteCollection, HttpStatusCode } = require("@mcma/api");
+const { DynamoDbTable } = require("@mcma/aws-dynamodb");
+const { LambdaWorkerInvoker } = require("@mcma/aws-lambda-worker-invoker");
+require("@mcma/aws-api-gateway");
 
-const AWS = require("aws-sdk");
-
-const { Logger, JobAssignment } = require("mcma-core");
-const { McmaApiRouteCollection, HttpStatusCode } = require("mcma-api");
-const { DynamoDbTable, invokeLambdaWorker } = require("mcma-aws");
+const workerInvoker = new LambdaWorkerInvoker();
 
 const processNotification = async (requestContext) => {
     const request = requestContext.request;
@@ -34,15 +35,13 @@ const processNotification = async (requestContext) => {
     }
 
     // invoking worker lambda function that will process the notification
-    await invokeLambdaWorker(
-        requestContext.workerFunctionName(),
+    await workerInvoker.invoke(
+        requestContext.workerFunctionId(),
+        "ProcessNotification",
+        requestContext.getAllContextVariables(),
         {
-            operationName: "ProcessNotification",
-            contextVariables: requestContext.getAllContextVariables(),
-            input: {
-                jobAssignmentId,
-                notification
-            }
+            jobAssignmentId,
+            notification
         }
     );
 }

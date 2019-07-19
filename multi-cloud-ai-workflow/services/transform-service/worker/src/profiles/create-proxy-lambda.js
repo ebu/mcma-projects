@@ -11,7 +11,7 @@ const S3 = new AWS.S3();
 const S3GetObject = util.promisify(S3.getObject.bind(S3));
 const S3PutObject = util.promisify(S3.putObject.bind(S3));
 
-const { Logger, Locator } = require("mcma-core");
+const { Logger, Locator } = require("@mcma/core");
 const { ffmpeg } = require("../ffmpeg");
 
 function createProxyLambda(workerJobHelper) {

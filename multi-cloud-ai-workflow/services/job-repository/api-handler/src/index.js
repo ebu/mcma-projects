@@ -1,31 +1,34 @@
 //"use strict";
-const { Job } = require("mcma-core");
-const { McmaApiRouteCollection, HttpStatusCode } = require("mcma-api");
-const { awsDefaultRoutes, invokeLambdaWorker, DynamoDbTable } = require("mcma-aws");
+const { Job } = require("@mcma/core");
+const { McmaApiRouteCollection, HttpStatusCode, DefaultRouteCollectionBuilder } = require("@mcma/api");
+const { DynamoDbTableProvider } = require("@mcma/aws-dynamodb");
+const { LambdaWorkerInvoker } = require("@mcma/aws-lambda-worker-invoker");
+require("@mcma/aws-api-gateway");
+
+const dynamoDbTableProvider = new DynamoDbTableProvider(Job);
+const lambdaWorkerInvoker = new LambdaWorkerInvoker();
 
 const invokeCreateJobProcess = async (ctx, job) => {
-    await invokeLambdaWorker(
-        ctx.workerFunctionName(),
+    await lambdaWorkerInvoker.invoke(
+        ctx.workerFunctionId(),
+        "createJobProcess",
+        ctx.getAllContextVariables(),
         {
-            operationName: "createJobProcess",
-            contextVariables: ctx.getAllContextVariables(),
-            input: {
-                jobId: job.id
-            }
-        });
+            jobId: job.id
+        }
+    );
 };
 
 const invokeDeleteJobProcess = async (ctx, job) => {
     if (job.jobProcess) {
-        await invokeLambdaWorker(
-            ctx.workerFunctionName(),
+        await lambdaWorkerInvoker.invoke(
+            ctx.workerFunctionId(),
+            "deleteJobProcess",
+            ctx.getAllContextVariables(),
             {
-                operationName: "deleteJobProcess",
-                contextVariables: ctx.getAllContextVariables(),
-                input: {
-                    jobProcessId: job.jobProcess
-                }
-            });
+                jobProcessId: job.jobProcess
+            }
+        );
     }
 };
 
@@ -40,7 +43,7 @@ const cancelJob = async (_request, response) => {
 };
 
 const processNotification = async (requestContext) => {
-    let table = new DynamoDbTable(Job, requestContext.tableName());
+    let table = dynamoDbTableProvider.table(requestContext.tableName());
 
     let job = await table.get(requestContext.publicUrl() + "/jobs/" + requestContext.request.pathVariables.id);
     if (!requestContext.resourceIfFound(job, false)) {
@@ -58,21 +61,20 @@ const processNotification = async (requestContext) => {
         return;
     }
 
-    await invokeLambdaWorker(
-        requestContext.workerFunctionName(),
+    await lambdaWorkerInvoker.invoke(
+        requestContext.workerFunctionId(),
+        "ProcessNotification",
+        requestContext.getAllContextVariables(),
         {
-            operationName: "ProcessNotification",
-            contextVariables: requestContext.getAllContextVariables(),
-            input: {
-                jobId: job.id,
-                notification
-            }
-        });
+            jobId: job.id,
+            notification
+        }
+    );
 }
 
 const routeCollection = new McmaApiRouteCollection();
 
-const jobRoutesBuilder = awsDefaultRoutes(Job).withDynamoDb().addAll();
+const jobRoutesBuilder = new DefaultRouteCollectionBuilder(dynamoDbTableProvider, Job).addAll();
 jobRoutesBuilder.route(r => r.create).configure(r => r.onCompleted(invokeCreateJobProcess));
 jobRoutesBuilder.route(r => r.delete).configure(r => r.onCompleted(invokeDeleteJobProcess));
 const jobRoutes = jobRoutesBuilder.build();

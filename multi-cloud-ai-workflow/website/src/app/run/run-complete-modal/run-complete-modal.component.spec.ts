@@ -1,8 +1,8 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { async, ComponentFixture, TestBed } from "@angular/core/testing";
 
-import { RunCompleteModalComponent } from './run-complete-modal.component';
+import { RunCompleteModalComponent } from "./run-complete-modal.component";
 
-describe('RunCompleteModalComponent', () => {
+describe("RunCompleteModalComponent", () => {
   let component: RunCompleteModalComponent;
   let fixture: ComponentFixture<RunCompleteModalComponent>;
 
@@ -19,7 +19,7 @@ describe('RunCompleteModalComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it("should create", () => {
     expect(component).toBeTruthy();
   });
 });

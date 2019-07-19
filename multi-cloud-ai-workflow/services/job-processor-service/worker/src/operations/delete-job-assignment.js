@@ -1,16 +1,16 @@
 //"use strict";
 
-const { getAwsV4ResourceManager } = require("mcma-aws");
+function deleteJobAssignment(resourceManagerProvider) {
+    return async function deleteJobAssignment(event) {
+        let jobAssignmentId = event.input.jobAssignmentId;
 
-const deleteJobAssignment = async (event) => {
-    let jobAssignmentId = event.input.jobAssignmentId;
-
-    try {
-        let resourceManager = getAwsV4ResourceManager(event);
-        await resourceManager.delete(jobAssignmentId);
-    } catch (error) {
-        console.log(error);
-    }
+        try {
+            let resourceManager = resourceManagerProvider.get(event);
+            await resourceManager.delete(jobAssignmentId);
+        } catch (error) {
+            console.log(error);
+        }
+    };
 }
 
 module.exports = deleteJobAssignment;

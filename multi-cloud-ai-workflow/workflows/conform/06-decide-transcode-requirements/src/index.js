@@ -1,10 +1,11 @@
 //"use strict";
-
-const { EnvironmentVariableProvider } = require("mcma-core");
-const { getAwsV4ResourceManager } = require("mcma-aws");
+const AWS = require("aws-sdk");
+const { EnvironmentVariableProvider } = require("@mcma/core");
+const { ResourceManager, AuthProvider } = require("@mcma/client");
+require("@mcma/aws-client");
 
 const environmentVariableProvider = new EnvironmentVariableProvider();
-const resourceManager = getAwsV4ResourceManager(environmentVariableProvider);
+const resourceManager = new ResourceManager(environmentVariableProvider.getResourceManagerConfig(), new AuthProvider().addAwsV4Auth(AWS));
 
 // Local Define
 const VIDEO_FORMAT = "AVC";

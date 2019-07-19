@@ -1,8 +1,8 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { async, ComponentFixture, TestBed } from "@angular/core/testing";
 
-import { MonitorDetailComponent } from './monitor-detail.component';
+import { MonitorDetailComponent } from "./monitor-detail.component";
 
-describe('MonitorDetailComponent', () => {
+describe("MonitorDetailComponent", () => {
   let component: MonitorDetailComponent;
   let fixture: ComponentFixture<MonitorDetailComponent>;
 
@@ -19,7 +19,7 @@ describe('MonitorDetailComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it("should create", () => {
     expect(component).toBeTruthy();
   });
 });

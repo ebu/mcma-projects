@@ -1,12 +1,16 @@
 //"use strict";
-const { Service, JobProfile, Logger } = require("mcma-core");
-const { McmaApiRouteCollection } = require("mcma-api");
-const { awsDefaultRoutes } = require("mcma-aws");
+const { Service, JobProfile, Logger } = require("@mcma/core");
+const { McmaApiRouteCollection, DefaultRouteCollectionBuilder } = require("@mcma/api");
+const { DynamoDbTableProvider } = require("@mcma/aws-dynamodb");
+require("@mcma/aws-api-gateway");
+
+const serviceDbTableProvider = new DynamoDbTableProvider(Service);
+const profileDbTableProvider = new DynamoDbTableProvider(JobProfile);
 
 const controller =
     new McmaApiRouteCollection()
-        .addRoutes(awsDefaultRoutes(Service).withDynamoDb().addAll().build())
-        .addRoutes(awsDefaultRoutes(JobProfile).withDynamoDb().addAll().build())
+        .addRoutes(new DefaultRouteCollectionBuilder(serviceDbTableProvider, Service).addAll().build())
+        .addRoutes(new DefaultRouteCollectionBuilder(profileDbTableProvider, JobProfile).addAll().build())
         .toApiGatewayApiController();
 
 exports.handler = async (event, context) => {

@@ -1,17 +1,27 @@
 //"use strict";
-const { Logger, WorkflowJob } = require("mcma-core");
-const { WorkerBuilder, WorkerRequest } = require("mcma-worker");
-require("mcma-aws");
+const AWS = require("aws-sdk");
+const { Logger, WorkflowJob, JobAssignment } = require("@mcma/core");
+const { ResourceManagerProvider, AuthProvider } = require("@mcma/client");
+const { WorkerBuilder, WorkerRequest } = require("@mcma/worker");
+const { DynamoDbTableProvider } = require("@mcma/aws-dynamodb");
+require("@mcma/aws-client");
 
 const { runWorkflow, processNotification } = require("./profiles/run-workflow");
 
+const resourceManagerProvider = new ResourceManagerProvider(new AuthProvider().addAwsV4Auth(AWS));
+const dbTableProvider = new DynamoDbTableProvider(JobAssignment);
+
 const worker =
-    new WorkerBuilder().useAwsJobDefaults()
-        .handleJobsOfType(WorkflowJob, x =>
-            x.addProfile("ConformWorkflow", runWorkflow)
-             .addProfile("AIWorkflow", runWorkflow)
+    new WorkerBuilder()
+        .handleJobsOfType(
+            WorkflowJob,
+            dbTableProvider,
+            resourceManagerProvider,
+            x =>
+                x.addProfile("ConformWorkflow", runWorkflow)
+                .addProfile("AIWorkflow", runWorkflow)
         )
-        .handleOperation(processNotification)
+        .handleOperation(processNotification(resourceManagerProvider, dbTableProvider))
         .build();
 
 exports.handler = async (event, context) => {

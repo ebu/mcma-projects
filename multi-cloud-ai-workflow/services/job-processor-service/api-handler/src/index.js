@@ -1,18 +1,21 @@
 //"use strict";
-const { Job, JobProcess } = require("mcma-core");
-const { McmaApiRouteCollection, HttpStatusCode } = require("mcma-api");
-const { invokeLambdaWorker, DynamoDbTable, awsDefaultRoutes } = require("mcma-aws");
+const { JobProcess } = require("@mcma/core");
+const { McmaApiRouteCollection, HttpStatusCode, DefaultRouteCollectionBuilder } = require("@mcma/api");
+const { DynamoDbTableProvider, DynamoDbTable } = require("@mcma/aws-dynamodb");
+const { LambdaWorkerInvoker } = require("@mcma/aws-lambda-worker-invoker");
+require("@mcma/aws-api-gateway");
+
+const workerInvoker = new LambdaWorkerInvoker();
 
 const invokeCreateJobAssignment = async (ctx, jobProcess) => {
-    await invokeLambdaWorker(
-        ctx.workerFunctionName(),
+    await workerInvoker.invoke(
+        ctx.workerFunctionId(),
+        "createJobAssignment",
+        ctx.getAllContextVariables(),
         {
-            operationName: "createJobAssignment",
-            contextVariables: ctx.getAllContextVariables(),
-            input: {
-                jobProcessId: jobProcess.id
-            }
-        });
+            jobProcessId: jobProcess.id
+        }
+    );
 }
 
 const processNotification = async (requestContext) => {
@@ -37,21 +40,19 @@ const processNotification = async (requestContext) => {
     }
 
     // invoking worker lambda function that will process the notification
-    await invokeLambdaWorker(
-        requestContext.workerFunctionName(),
+    await workerInvoker.invoke(
+        requestContext.workerFunctionId(),
+        "ProcessNotification",
+        requestContext.getAllContextVariables(),
         {
-            operationName: "ProcessNotification",
-            contextVariables: requestContext.getAllContextVariables(),
-            input: {
-                jobProcessId,
-                notification
-            }
+            jobProcessId,
+            notification
         });
 }
 
 const routeCollection = new McmaApiRouteCollection();
 
-const jobProcessRouteBuilder = awsDefaultRoutes(JobProcess).withDynamoDb().addAll();
+const jobProcessRouteBuilder = new DefaultRouteCollectionBuilder(new DynamoDbTableProvider(JobProcess), JobProcess).addAll();
 jobProcessRouteBuilder.route(r => r.create).configure(r => r.onCompleted(invokeCreateJobAssignment));
 jobProcessRouteBuilder.route(r => r.update).remove();
 const jobProcessRoutes = jobProcessRouteBuilder.build();

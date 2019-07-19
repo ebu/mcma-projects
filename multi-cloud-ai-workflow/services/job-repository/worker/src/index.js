@@ -1,16 +1,24 @@
 //"use strict";
+const AWS = require("aws-sdk");
 
-const { WorkerBuilder, WorkerRequest } = require("mcma-worker");
+const { Job } = require("@mcma/core");
+const { ResourceManagerProvider, AuthProvider } = require("@mcma/client");
+const { WorkerBuilder, WorkerRequest } = require("@mcma/worker");
+const { DynamoDbTableProvider } = require("@mcma/aws-dynamodb");
+require("@mcma/aws-client");
 
 const createJobProcess = require("./operations/create-job-process");
 const deleteJobProcess = require("./operations/delete-job-process");
 const processNotification = require("./operations/process-notification");
 
+const resourceManagerProvider = new ResourceManagerProvider(new AuthProvider().addAwsV4Auth(AWS.config));
+const dbTableProvider = new DynamoDbTableProvider(Job);
+
 const worker =
     new WorkerBuilder()
-        .handleOperation(createJobProcess)
-        .handleOperation(deleteJobProcess)
-        .handleOperation(processNotification)
+        .handleOperation(createJobProcess(resourceManagerProvider, dbTableProvider))
+        .handleOperation(deleteJobProcess(resourceManagerProvider))
+        .handleOperation(processNotification(resourceManagerProvider, dbTableProvider))
         .build();
 
 exports.handler = async (event, context) => {

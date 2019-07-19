@@ -1,14 +1,14 @@
-import { Component, Input } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, Input } from "@angular/core";
+import { Router } from "@angular/router";
 
-import { WorkflowJob } from 'mcma-core';
+import { WorkflowJob } from "@mcma/core";
 
-import { ModalService } from '../../services/modal.service';
+import { ModalService } from "../../services/modal.service";
 
 @Component({
-  selector: 'mcma-run-complete-modal',
-  templateUrl: './run-complete-modal.component.html',
-  styleUrls: ['./run-complete-modal.component.scss']
+  selector: "mcma-run-complete-modal",
+  templateUrl: "./run-complete-modal.component.html",
+  styleUrls: ["./run-complete-modal.component.scss"]
 })
 export class RunCompleteModalComponent {
   @Input() job: WorkflowJob;
@@ -21,6 +21,6 @@ export class RunCompleteModalComponent {
 
   navigateToWorkflow(): void {
     this.modalService.clearModal();
-    this.router.navigate(['monitor']);
+    this.router.navigate(["monitor"]);
   }
 }

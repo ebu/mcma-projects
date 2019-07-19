@@ -1,16 +1,16 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { PageEvent } from '@angular/material';
-import { Observable } from 'rxjs';
+import { Component, Input, Output, EventEmitter } from "@angular/core";
+import { PageEvent } from "@angular/material";
+import { Observable } from "rxjs";
 
-import { WorkflowJobViewModel } from '../../view-models/workflow-job-vm';
+import { WorkflowJobViewModel } from "../../view-models/workflow-job-vm";
 
 @Component({
-    selector: 'mcma-monitor-queue',
-    styleUrls: ['./monitor-queue.component.scss'],
-    templateUrl: './monitor-queue.component.html',
+    selector: "mcma-monitor-queue",
+    styleUrls: ["./monitor-queue.component.scss"],
+    templateUrl: "./monitor-queue.component.html",
 })
 export class MonitorQueueComponent {
-  readonly displayedColumns = ['title', 'filename', 'status'];
+  readonly displayedColumns = ["title", "filename", "status"];
   readonly pageSize = 15;
 
   private curPageNumber = 0;

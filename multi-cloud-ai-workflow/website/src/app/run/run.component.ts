@@ -1,22 +1,22 @@
-import { Component, OnInit } from '@angular/core';
-import { MatSelectionListChange } from '@angular/material';
-import { Observable, BehaviorSubject, zip } from 'rxjs';
-import { tap, share, filter, debounceTime, map, startWith, withLatestFrom } from 'rxjs/operators';
+import { Component, OnInit } from "@angular/core";
+import { MatSelectionListChange } from "@angular/material";
+import { Observable, BehaviorSubject, zip } from "rxjs";
+import { tap, share, filter, debounceTime, map, startWith, withLatestFrom } from "rxjs/operators";
 
-import { S3Bucket } from '../models/s3-bucket';
-import { S3Upload } from '../models/s3-upload';
-import { S3BucketService } from '../services/s3bucket.service';
-import { WorkflowService } from '../services/workflow.service';
-import { ModalService } from '../services/modal.service';
-import { RunCompleteModalComponent } from './run-complete-modal/run-complete-modal.component';
-import { FormControl } from '@angular/forms';
-import { S3Object } from '../models/s3-object';
-import { RunMetadataModalComponent } from './run-metadata-modal/run-metadata-modal.component';
+import { S3Bucket } from "../models/s3-bucket";
+import { S3Upload } from "../models/s3-upload";
+import { S3BucketService } from "../services/s3bucket.service";
+import { WorkflowService } from "../services/workflow.service";
+import { ModalService } from "../services/modal.service";
+import { RunCompleteModalComponent } from "./run-complete-modal/run-complete-modal.component";
+import { FormControl } from "@angular/forms";
+import { S3Object } from "../models/s3-object";
+import { RunMetadataModalComponent } from "./run-metadata-modal/run-metadata-modal.component";
 
 @Component({
-  selector: 'mcma-run',
-  templateUrl: './run.component.html',
-  styleUrls: ['./run.component.scss']
+  selector: "mcma-run",
+  templateUrl: "./run.component.html",
+  styleUrls: ["./run.component.scss"]
 })
 export class RunComponent implements OnInit {
   isLoading = true;
@@ -25,7 +25,7 @@ export class RunComponent implements OnInit {
   currentUpload$: Observable<S3Upload>;
   selectedKey: string;
 
-  filter = new FormControl('');
+  filter = new FormControl("");
 
   private runningWorkflowSubject = new BehaviorSubject(false);
   runningWorkflow$ = this.runningWorkflowSubject.asObservable().pipe(tap(val => console.log(val)), share());
@@ -36,9 +36,9 @@ export class RunComponent implements OnInit {
     this.objects$ =
       this.filter.valueChanges.pipe(
         debounceTime(300),
-        startWith(''),
+        startWith(""),
         withLatestFrom(this.bucket$),
-        map(([val, bucket]) => !!bucket ? bucket.objects.filter(o => !val || val === '' || o.key.indexOf(val) >= 0) : []));
+        map(([val, bucket]) => !!bucket ? bucket.objects.filter(o => !val || val === "" || o.key.indexOf(val) >= 0) : []));
   }
 
   ngOnInit() {

@@ -1,12 +1,12 @@
-import { Component, ViewChild, ComponentFactoryResolver, AfterViewInit, HostListener } from '@angular/core';
+import { Component, ViewChild, ComponentFactoryResolver, AfterViewInit, HostListener } from "@angular/core";
 
-import { ModalContentDirective } from '../directives/modal-content.directive';
-import { ModalService } from '../services/modal.service';
+import { ModalContentDirective } from "../directives/modal-content.directive";
+import { ModalService } from "../services/modal.service";
 
 @Component({
-  selector: 'mcma-modal',
-  templateUrl: './modal.component.html',
-  styleUrls: ['./modal.component.scss']
+  selector: "mcma-modal",
+  templateUrl: "./modal.component.html",
+  styleUrls: ["./modal.component.scss"]
 })
 export class ModalComponent implements AfterViewInit {
 
@@ -42,7 +42,7 @@ export class ModalComponent implements AfterViewInit {
     });
   }
   
-  @HostListener('document:keyup', ['$event'])
+  @HostListener("document:keyup", ["$event"])
   handleKeyUp(event: KeyboardEvent) {
     if (event.keyCode === ModalComponent.escapeKeyCode) {
       this.modalService.clearModal();

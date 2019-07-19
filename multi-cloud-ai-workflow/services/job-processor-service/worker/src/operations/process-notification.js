@@ -1,35 +1,33 @@
 //"use strict";
+const { JobStatus } = require("@mcma/core");
 
-const AWS = require("aws-sdk");
+function processNotification(resourceManagerProvider, dbTableProvider) {
+    return async function processNotification(event) {
+        let jobProcessId = event.input.jobProcessId;
+        let notification = event.input.notification;
 
-const { JobProcess, JobStatus } = require("mcma-core");
-const { getAwsV4ResourceManager, DynamoDbTable } = require("mcma-aws");
+        let table = dbTableProvider.table(event.tableName());
 
-const processNotification = async (event) => {
-    let jobProcessId = event.input.jobProcessId;
-    let notification = event.input.notification;
+        let jobProcess = await table.get(jobProcessId);
 
-    let table = new DynamoDbTable(JobProcess, event.tableName());
+        // not updating jobProcess if it already was marked as completed or failed.
+        if (JobStatus.completed.equals(jobProcess.status) || JobStatus.failed.equals(jobProcess.status)) {
+            console.log("Ignoring update of job process that tried to change state from " + jobProcess.status + " to " + notification.content.status)
+            return;
+        }
 
-    let jobProcess = await table.get(jobProcessId);
+        jobProcess.status = notification.content.status;
+        jobProcess.statusMessage = notification.content.statusMessage;
+        jobProcess.progress = notification.content.progress;
+        jobProcess.jobOutput = notification.content.jobOutput;
+        jobProcess.dateModified = new Date().toISOString();
 
-    // not updating jobProcess if it already was marked as completed or failed.
-    if (JobStatus.completed.equals(jobProcess.status) || JobStatus.failed.equals(jobProcess.status)) {
-        console.log("Ignoring update of job process that tried to change state from " + jobProcess.status + " to " + notification.content.status)
-        return;
-    }
+        await table.put(jobProcessId, jobProcess);
 
-    jobProcess.status = notification.content.status;
-    jobProcess.statusMessage = notification.content.statusMessage;
-    jobProcess.progress = notification.content.progress;
-    jobProcess.jobOutput = notification.content.jobOutput;
-    jobProcess.dateModified = new Date().toISOString();
+        let resourceManager = resourceManagerProvider.get(event);
 
-    await table.put(jobProcessId, jobProcess);
-
-    let resourceManager = getAwsV4ResourceManager(event);
-
-    await resourceManager.sendNotification(jobProcess);
+        await resourceManager.sendNotification(jobProcess);
+    };
 }
 
 module.exports = processNotification;

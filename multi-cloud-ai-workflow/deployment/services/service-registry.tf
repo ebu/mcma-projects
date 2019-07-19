@@ -158,13 +158,8 @@ output "services_auth_type" {
   value = "${local.services_auth_type}"
 }
 
-output "services_auth_context" {
-  value = "${local.services_auth_context}"
-}
-
 locals {
   service_registry_url  = "https://${aws_api_gateway_rest_api.service_registry_api.id}.execute-api.${var.aws_region}.amazonaws.com/${var.environment_type}"
   services_url          = "${local.service_registry_url}/services"
   services_auth_type    = "AWS4"
-  services_auth_context = "x"
 }

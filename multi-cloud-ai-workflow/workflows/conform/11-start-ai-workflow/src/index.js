@@ -1,10 +1,11 @@
 //"use strict";
-
-const { EnvironmentVariableProvider, WorkflowJob, JobParameterBag, JobProfile } = require("mcma-core");
-const { getAwsV4ResourceManager } = require("mcma-aws");
+const AWS = require("aws-sdk");
+const { EnvironmentVariableProvider, WorkflowJob, JobParameterBag, JobProfile } = require("@mcma/core");
+const { ResourceManager, AuthProvider } = require("@mcma/client");
+require("@mcma/aws-client");
 
 const environmentVariableProvider = new EnvironmentVariableProvider();
-const resourceManager = getAwsV4ResourceManager(environmentVariableProvider);
+const resourceManager = new ResourceManager(environmentVariableProvider.getResourceManagerConfig(), new AuthProvider().addAwsV4Auth(AWS));
 
 /**
  * Lambda function handler

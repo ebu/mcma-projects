@@ -14,12 +14,11 @@ resource "aws_lambda_function" "conform-01-validate-workflow-input" {
 
   environment {
     variables = {
-      ServicesUrl          = "${var.services_url}"
+      ServicesUrl         = "${var.services_url}"
       ServicesAuthType    = "${var.services_auth_type}"
-      ServicesAuthContext = "${var.services_auth_context}"
-      RepositoryBucket     = "${var.repository_bucket}"
-      TempBucket           = "${var.temp_bucket}"
-      WebsiteBucket        = "${var.website_bucket}"
+      RepositoryBucket    = "${var.repository_bucket}"
+      TempBucket          = "${var.temp_bucket}"
+      WebsiteBucket       = "${var.website_bucket}"
     }
   }
 }
@@ -36,12 +35,11 @@ resource "aws_lambda_function" "conform-02-move-content-to-file-repository" {
 
   environment {
     variables = {
-      ServicesUrl          = "${var.services_url}"
+      ServicesUrl         = "${var.services_url}"
       ServicesAuthType    = "${var.services_auth_type}"
-      ServicesAuthContext = "${var.services_auth_context}"
-      RepositoryBucket     = "${var.repository_bucket}"
-      TempBucket           = "${var.temp_bucket}"
-      WebsiteBucket        = "${var.website_bucket}"
+      RepositoryBucket    = "${var.repository_bucket}"
+      TempBucket          = "${var.temp_bucket}"
+      WebsiteBucket       = "${var.website_bucket}"
     }
   }
 }
@@ -58,12 +56,11 @@ resource "aws_lambda_function" "conform-03-create-media-asset" {
 
   environment {
     variables = {
-      ServicesUrl          = "${var.services_url}"
+      ServicesUrl         = "${var.services_url}"
       ServicesAuthType    = "${var.services_auth_type}"
-      ServicesAuthContext = "${var.services_auth_context}"
-      RepositoryBucket     = "${var.repository_bucket}"
-      TempBucket           = "${var.temp_bucket}"
-      WebsiteBucket        = "${var.website_bucket}"
+      RepositoryBucket    = "${var.repository_bucket}"
+      TempBucket          = "${var.temp_bucket}"
+      WebsiteBucket       = "${var.website_bucket}"
     }
   }
 }
@@ -80,14 +77,13 @@ resource "aws_lambda_function" "conform-04-extract-technical-metadata" {
 
   environment {
     variables = {
-      ServicesUrl          = "${var.services_url}"
+      ServicesUrl         = "${var.services_url}"
       ServicesAuthType    = "${var.services_auth_type}"
-      ServicesAuthContext = "${var.services_auth_context}"
-      RepositoryBucket     = "${var.repository_bucket}"
-      TempBucket           = "${var.temp_bucket}"
-      WebsiteBucket        = "${var.website_bucket}"
+      RepositoryBucket    = "${var.repository_bucket}"
+      TempBucket          = "${var.temp_bucket}"
+      WebsiteBucket       = "${var.website_bucket}"
       ActivityCallbackUrl = "${local.workflow_activity_callback_handler_url}"
-      ActivityArn          = "${aws_sfn_activity.conform-04-extract-technical-metadata.id}"
+      ActivityArn         = "${aws_sfn_activity.conform-04-extract-technical-metadata.id}"
     }
   }
 }
@@ -108,12 +104,11 @@ resource "aws_lambda_function" "conform-05-register-technical-metadata" {
 
   environment {
     variables = {
-      ServicesUrl          = "${var.services_url}"
+      ServicesUrl         = "${var.services_url}"
       ServicesAuthType    = "${var.services_auth_type}"
-      ServicesAuthContext = "${var.services_auth_context}"
-      RepositoryBucket     = "${var.repository_bucket}"
-      TempBucket           = "${var.temp_bucket}"
-      WebsiteBucket        = "${var.website_bucket}"
+      RepositoryBucket    = "${var.repository_bucket}"
+      TempBucket          = "${var.temp_bucket}"
+      WebsiteBucket       = "${var.website_bucket}"
     }
   }
 }
@@ -130,13 +125,12 @@ resource "aws_lambda_function" "conform-06-decide-transcode-requirements" {
 
   environment {
     variables = {
-      ServicesUrl          = "${var.services_url}"
+      ServicesUrl         = "${var.services_url}"
       ServicesAuthType    = "${var.services_auth_type}"
-      ServicesAuthContext = "${var.services_auth_context}"
-      RepositoryBucket     = "${var.repository_bucket}"
-      TempBucket           = "${var.temp_bucket}"
-      WebsiteBucket        = "${var.website_bucket}"
-      ThresholdSeconds      = "30"
+      RepositoryBucket    = "${var.repository_bucket}"
+      TempBucket          = "${var.temp_bucket}"
+      WebsiteBucket       = "${var.website_bucket}"
+      ThresholdSeconds    = "30"
     }
   }
 }
@@ -153,12 +147,11 @@ resource "aws_lambda_function" "conform-07a-short-transcode" {
 
   environment {
     variables = {
-      ServicesUrl          = "${var.services_url}"
+      ServicesUrl         = "${var.services_url}"
       ServicesAuthType    = "${var.services_auth_type}"
-      ServicesAuthContext = "${var.services_auth_context}"
-      WebsiteBucket        = "${var.website_bucket}"
+      WebsiteBucket       = "${var.website_bucket}"
       ActivityCallbackUrl = "${local.workflow_activity_callback_handler_url}"
-      ActivityArn          = "${aws_sfn_activity.conform-07a-short-transcode.id}"
+      ActivityArn         = "${aws_sfn_activity.conform-07a-short-transcode.id}"
     }
   }
 }
@@ -179,14 +172,13 @@ resource "aws_lambda_function" "conform-07b-long-transcode" {
 
   environment {
     variables = {
-      ServicesUrl          = "${var.services_url}"
+      ServicesUrl         = "${var.services_url}"
       ServicesAuthType    = "${var.services_auth_type}"
-      ServicesAuthContext = "${var.services_auth_context}"
-      RepositoryBucket     = "${var.repository_bucket}"
-      TempBucket           = "${var.temp_bucket}"
-      WebsiteBucket        = "${var.website_bucket}"
+      RepositoryBucket    = "${var.repository_bucket}"
+      TempBucket          = "${var.temp_bucket}"
+      WebsiteBucket       = "${var.website_bucket}"
       ActivityCallbackUrl = "${local.workflow_activity_callback_handler_url}"
-      ActivityArn          = "${aws_sfn_activity.conform-07b-long-transcode.id}"
+      ActivityArn         = "${aws_sfn_activity.conform-07b-long-transcode.id}"
     }
   }
 }
@@ -207,12 +199,11 @@ resource "aws_lambda_function" "conform-08-register-proxy-essence" {
 
   environment {
     variables = {
-      ServicesUrl          = "${var.services_url}"
+      ServicesUrl         = "${var.services_url}"
       ServicesAuthType    = "${var.services_auth_type}"
-      ServicesAuthContext = "${var.services_auth_context}"
-      RepositoryBucket     = "${var.repository_bucket}"
-      TempBucket           = "${var.temp_bucket}"
-      WebsiteBucket        = "${var.website_bucket}"
+      RepositoryBucket    = "${var.repository_bucket}"
+      TempBucket          = "${var.temp_bucket}"
+      WebsiteBucket       = "${var.website_bucket}"
     }
   }
 }
@@ -229,12 +220,11 @@ resource "aws_lambda_function" "conform-09-copy-proxy-to-website-storage" {
 
   environment {
     variables = {
-      ServicesUrl          = "${var.services_url}"
+      ServicesUrl         = "${var.services_url}"
       ServicesAuthType    = "${var.services_auth_type}"
-      ServicesAuthContext = "${var.services_auth_context}"
-      RepositoryBucket     = "${var.repository_bucket}"
-      TempBucket           = "${var.temp_bucket}"
-      WebsiteBucket        = "${var.website_bucket}"
+      RepositoryBucket    = "${var.repository_bucket}"
+      TempBucket          = "${var.temp_bucket}"
+      WebsiteBucket       = "${var.website_bucket}"
     }
   }
 }
@@ -251,12 +241,11 @@ resource "aws_lambda_function" "conform-10-register-proxy-website-locator" {
 
   environment {
     variables = {
-      ServicesUrl          = "${var.services_url}"
+      ServicesUrl         = "${var.services_url}"
       ServicesAuthType    = "${var.services_auth_type}"
-      ServicesAuthContext = "${var.services_auth_context}"
-      RepositoryBucket     = "${var.repository_bucket}"
-      TempBucket           = "${var.temp_bucket}"
-      WebsiteBucket        = "${var.website_bucket}"
+      RepositoryBucket    = "${var.repository_bucket}"
+      TempBucket          = "${var.temp_bucket}"
+      WebsiteBucket       = "${var.website_bucket}"
     }
   }
 }
@@ -273,12 +262,11 @@ resource "aws_lambda_function" "conform-11-start-ai-workflow" {
 
   environment {
     variables = {
-      ServicesUrl          = "${var.services_url}"
+      ServicesUrl         = "${var.services_url}"
       ServicesAuthType    = "${var.services_auth_type}"
-      ServicesAuthContext = "${var.services_auth_context}"
-      RepositoryBucket     = "${var.repository_bucket}"
-      TempBucket           = "${var.temp_bucket}"
-      WebsiteBucket        = "${var.website_bucket}"
+      RepositoryBucket    = "${var.repository_bucket}"
+      TempBucket          = "${var.temp_bucket}"
+      WebsiteBucket       = "${var.website_bucket}"
     }
   }
 }

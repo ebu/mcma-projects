@@ -11,6 +11,8 @@
     "dependencies": {
         "aws-sdk": "^2.473.0",
         "fast-deep-equal": "^2.0.1",
-        "mcma-aws": "0.3.13"
+        "@mcma/worker": "0.4.6",
+        "@mcma/aws-client": "0.4.6",
+        "@mcma/aws-dynamodb": "0.4.6"
     }
 }

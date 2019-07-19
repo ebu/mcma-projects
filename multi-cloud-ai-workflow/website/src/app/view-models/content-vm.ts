@@ -1,4 +1,4 @@
-import { BMContent } from 'mcma-core';
+import { BMContent } from "@mcma/core";
 
 export class ContentViewModel {
     awsTranscription: string;
@@ -14,7 +14,7 @@ export class ContentViewModel {
     }
 
     constructor(public content: BMContent) {
-        console.log('creating content vm', content);
+        console.log("creating content vm", content);
         this.populateAwsData();
         this.populateAzureData();
     }
@@ -66,7 +66,7 @@ export class ContentViewModel {
 
         const hours = (remaining / 3600000);
 
-        return `${hours < 10 ? '0' : ''}${hours}:${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}.${milliseconds}`; 
+        return `${hours < 10 ? "0" : ""}${hours}:${minutes < 10 ? "0" : ""}${minutes}:${seconds < 10 ? "0" : ""}${seconds}.${milliseconds}`; 
     }
 
     private populateAzureData(): void {
@@ -74,10 +74,10 @@ export class ContentViewModel {
             for (const video of this.content.azureAiMetadata.videos) {
                 if (video.insights) {
                     if (video.insights.transcript) {
-                        this.azureTranscription = '';
+                        this.azureTranscription = "";
                         for (const transcript of video.insights.transcript) {
                             if (transcript.text) {
-                                this.azureTranscription += transcript.text + ' ';
+                                this.azureTranscription += transcript.text + " ";
                             }
                         }
                         this.azureTranscription.trim();

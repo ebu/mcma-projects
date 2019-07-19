@@ -10,6 +10,8 @@
     "license": "Apache-2.0",
     "dependencies": {
         "aws-sdk": "^2.473.0",
-        "mcma-aws": "0.3.13"
+        "@mcma/aws-client": "0.4.6",
+        "@mcma/aws-dynamodb": "0.4.6",
+        "@mcma/aws-api-gateway": "0.4.6"
     }
 }

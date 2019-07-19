@@ -1,5 +1,5 @@
-import { Observable, Subject } from 'rxjs';
-import { AWSError } from 'aws-sdk';
+import { Observable, Subject } from "rxjs";
+import { AWSError } from "aws-sdk";
 
 export function asObservable<T>(caller: any, func: (callback: (err: AWSError, result: T) => void) => void): Observable<T> {
     const outputSubject = new Subject<T>();

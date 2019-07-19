@@ -6,7 +6,7 @@
  * Only required if AnimationBuilder is used within the application and using IE/Edge or Safari.
  * Standard animation support in Angular DOES NOT require any polyfills (as of Angular 6.0).
  **/
-// import 'web-animations-js';  // Run `npm install --save web-animations-js`.
+// import "web-animations-js";  // Run `npm install --save web-animations-js`.
 
 /**
  * By default, zone.js will patch all possible macroTask and DomEvents
@@ -15,7 +15,7 @@
 
  // (window as any).__Zone_disable_requestAnimationFrame = true; // disable patch requestAnimationFrame
  // (window as any).__Zone_disable_on_property = true; // disable patch onProperty such as onclick
- // (window as any).__zone_symbol__BLACK_LISTED_EVENTS = ['scroll', 'mousemove']; // disable patch specified eventNames
+ // (window as any).__zone_symbol__BLACK_LISTED_EVENTS = ["scroll", "mousemove"]; // disable patch specified eventNames
 
  /*
  * in IE/Edge developer tools, the addEventListener will also be wrapped by zone.js
@@ -26,7 +26,7 @@
 /***************************************************************************************************
  * Zone JS is required by default for Angular itself.
  */
-import 'zone.js/dist/zone';  // Included with Angular CLI.
+import "zone.js/dist/zone";  // Included with Angular CLI.
 
 
 

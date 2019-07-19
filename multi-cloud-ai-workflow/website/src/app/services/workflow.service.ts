@@ -1,19 +1,20 @@
-import { Injectable } from '@angular/core';
-import { Observable, Subject, BehaviorSubject, from, timer, of } from 'rxjs';
-import { map, zip, switchMap, concatMap, tap, takeWhile } from 'rxjs/operators';
+import { Injectable } from "@angular/core";
+import { Observable, Subject, BehaviorSubject, from, timer, of } from "rxjs";
+import { map, zip, switchMap, takeWhile } from "rxjs/operators";
 
-import { ResourceManager, WorkflowJob, JobParameterBag, DescriptiveMetadata, Locator, JobProfile } from 'mcma-core';
+import { WorkflowJob, JobParameterBag, DescriptiveMetadata, Locator, JobProfile } from "@mcma/core";
+import { ResourceManager } from "@mcma/client";
 
-import { ConfigService } from './config.service';
-import { McmaClientService } from './mcma-client.service';
-import { JobStatus } from '../models/job-statuses';
-import { WorkflowJobViewModel } from '../view-models/workflow-job-vm';
+import { ConfigService } from "./config.service";
+import { McmaClientService } from "./mcma-client.service";
+import { isFinished } from "../models/job-statuses";
+import { WorkflowJobViewModel } from "../view-models/workflow-job-vm";
 
 @Injectable()
 export class WorkflowService {
 
-    readonly WORKFLOW_NAME = 'ConformWorkflow';
-    readonly WORKFLOW_JOB_TYPE = 'WorkflowJob';
+    readonly WORKFLOW_NAME = "ConformWorkflow";
+    readonly WORKFLOW_JOB_TYPE = "WorkflowJob";
 
     constructor(private configService: ConfigService, private mcmaClientService: McmaClientService) {
     }
@@ -22,7 +23,7 @@ export class WorkflowService {
         const workflowJobSubject = new BehaviorSubject<WorkflowJob>(null);
 
         const sub = this.mcmaClientService.resourceManager$.pipe(
-            zip(this.configService.get<string>('aws.s3.uploadBucket')),
+            zip(this.configService.get<string>("aws.s3.uploadBucket")),
             switchMap(([resourceManager, uploadBucket]) => from(this.runWorkflowAsync(resourceManager, profileName, uploadBucket, objectKey, metadata)))
         ).subscribe(job => {
             sub.unsubscribe();
@@ -62,7 +63,7 @@ export class WorkflowService {
             timer(0, 3000).pipe(
                 switchMap(() => this.mcmaClientService.resourceManager$),
                 switchMap(resourceManager => from(resourceManager.resolve<WorkflowJob>(workflowJobId))),
-                takeWhile(j => !JobStatus.isFinished(j))
+                takeWhile(j => !isFinished(j))
             ).subscribe(
                 job => subject.next(new WorkflowJobViewModel(job, fakeRunning)),
                 err => subject.error(err),
@@ -82,13 +83,13 @@ export class WorkflowService {
 
     private async getJobProfileIdAsync(resourceManager: ResourceManager, profileName: string) {
         // get job profiles filtered by name
-        const jobProfiles = await resourceManager.get<JobProfile>('JobProfile', { name: profileName });
+        const jobProfiles = await resourceManager.get<JobProfile>("JobProfile", { name: profileName });
 
         const jobProfileId = jobProfiles.length ? jobProfiles[0].id : null;
 
         // if not found bail out
         if (!jobProfileId) {
-            throw new Error(`JobProfile '${profileName}' not found`);
+            throw new Error(`JobProfile "${profileName}" not found`);
         }
 
         return jobProfileId;
@@ -125,14 +126,14 @@ export class WorkflowService {
         const jobProfileId = await this.getJobProfileIdAsync(resourceManager, this.WORKFLOW_NAME);
 
         const jobs = await resourceManager.get(WorkflowJob);
-        console.log('All jobs', jobs);
+        console.log("All jobs", jobs);
 
-        const filteredJobs = jobs.filter(j => j['@type'] === this.WORKFLOW_JOB_TYPE && j.jobProfile && j.jobProfile === jobProfileId);
-        console.log('Filtered jobs', filteredJobs);
+        const filteredJobs = jobs.filter(j => j["@type"] === this.WORKFLOW_JOB_TYPE && j.jobProfile && j.jobProfile === jobProfileId);
+        console.log("Filtered jobs", filteredJobs);
 
         filteredJobs.sort((a, b) => new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime());
 
-        console.log("Sorted jobs'", filteredJobs);
+        console.log("Sorted jobs", filteredJobs);
 
         return filteredJobs;
     }

@@ -1,12 +1,19 @@
 //"use strict";
-const { Logger, JobAssignment } = require("mcma-core");
-const { awsDefaultRoutes, invokeLambdaWorker } = require("mcma-aws");
+const { Logger, JobAssignment } = require("@mcma/core");
+const { DefaultRouteCollectionBuilder } = require("@mcma/api");
+const { DynamoDbTableProvider } = require("@mcma/aws-dynamodb");
+const { LambdaWorkerInvoker, invokeLambdaWorker } = require("@mcma/aws-lambda-worker-invoker");
+require("@mcma/aws-api-gateway");
 
 const { processNotification } = require("./routes/process-notification");
 
+const dbTableProvider = new DynamoDbTableProvider(JobAssignment);
+const workerInvoker = new LambdaWorkerInvoker();
+
 const restController =
-    awsDefaultRoutes(JobAssignment).withDynamoDb().forJobAssignments(invokeLambdaWorker)
-        .addRoute("POST", "/job-assignments/{id}/notifications", processNotification)
+    new DefaultRouteCollectionBuilder(dbTableProvider, JobAssignment)
+        .forJobAssignments(invokeLambdaWorker)
+        .addRoute("POST", "/job-assignments/{id}/notifications", processNotification(dbTableProvider, workerInvoker))
         .toApiGatewayApiController();
 
 exports.handler = async (event, context) => {

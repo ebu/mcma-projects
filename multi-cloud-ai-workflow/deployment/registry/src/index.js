@@ -16,8 +16,9 @@ const CognitoAdminDeleteUser = util.promisify(Cognito.adminDeleteUser.bind(Cogni
 global.fetch = require("node-fetch");
 const AmazonCognitoIdentity = require("amazon-cognito-identity-js");
 
-const { JobProfile, JobParameter, Service, ResourceEndpoint, ResourceManager } = require("mcma-core");
-const { AwsV4Authenticator } = require("mcma-aws");
+const { JobProfile, JobParameter, Service, ResourceEndpoint } = require("@mcma/core");
+const { ResourceManager, AuthProvider } = require("@mcma/client");
+require("@mcma/aws-client");
 
 const JOB_PROFILES = {
     ConformWorkflow: new JobProfile({
@@ -420,29 +421,15 @@ const main = async () => {
         authType: "AWS4"
     });
 
-    const authenticatorAWS4 = new AwsV4Authenticator({
-        accessKey: AWS.config.credentials.accessKeyId,
-        secretKey: AWS.config.credentials.secretAccessKey,
-        sessionToken: AWS.config.credentials.sessionToken,
-        region: AWS.config.region
-    });
-
-    const authProvider = {
-        getAuthenticator: async (authType, authContext) => {
-            switch (authType) {
-                case "AWS4":
-                    return authenticatorAWS4;
-            }
-        }
-    };
-
     try {
-        let resourceManager = new ResourceManager({
+        const resourceManagerConfig = {
             servicesUrl,
             servicesAuthType,
-            servicesAuthContext,
-            authProvider
-        });
+            servicesAuthContext
+        };
+
+        let resourceManager = new ResourceManager(resourceManagerConfig, new AuthProvider().addAwsV4Auth(AWS));
+
         let retrievedServices = await resourceManager.get(Service);
 
         for (const retrievedService of retrievedServices) {

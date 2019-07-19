@@ -1,5 +1,5 @@
-import { BehaviorSubject, Observable, from } from 'rxjs';
-import { ManagedUpload } from 'aws-sdk/clients/s3';
+import { BehaviorSubject, Observable, from } from "rxjs";
+import { ManagedUpload } from "aws-sdk/clients/s3";
 
 export class S3Upload {
 
@@ -11,7 +11,7 @@ export class S3Upload {
     constructor(public key: string, private managedUpload: ManagedUpload) {
         this.completed$ = from(this.managedUpload.promise());
 
-        this.managedUpload.on('httpUploadProgress', progress => {
+        this.managedUpload.on("httpUploadProgress", progress => {
             this.percentCompleteSubject.next(Math.round((progress.loaded / progress.total) * 10000) / 100);
         });
     }

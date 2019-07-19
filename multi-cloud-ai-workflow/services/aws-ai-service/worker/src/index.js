@@ -1,21 +1,31 @@
 //"use strict";
-const { Logger, AIJob } = require("mcma-core");
-const { WorkerBuilder, WorkerRequest } = require("mcma-worker");
-require("mcma-aws");
+const AWS = require("aws-sdk");
+const { Logger, AIJob, JobAssignment } = require("@mcma/core");
+const { ResourceManagerProvider, AuthProvider } = require("@mcma/client");
+const { WorkerBuilder, WorkerRequest } = require("@mcma/worker");
+const { DynamoDbTableProvider } = require("@mcma/aws-dynamodb");
+require("@mcma/aws-client");
 
 const { detectCelebrities, processRekognitionResult } = require('./profiles/detect-celebrities');
 const { transcribeAudio, processTranscribeJobResult } = require('./profiles/transcribe-audio');
 const { translateText } = require('./profiles/translate-text');
 
+const resourceManagerProvider = new ResourceManagerProvider(new AuthProvider().addAwsV4Auth(AWS));
+const dynamoDbTableProvider = new DynamoDbTableProvider(JobAssignment);
+
 const worker =
-    new WorkerBuilder().useAwsJobDefaults()
-        .handleJobsOfType(AIJob, x =>
-            x.addProfile(detectCelebrities.profileName, detectCelebrities)
-             .addProfile(transcribeAudio.profileName, transcribeAudio)
-             .addProfile(translateText.profileName, translateText)
+    new WorkerBuilder()
+        .handleJobsOfType(
+            AIJob,
+            dynamoDbTableProvider,
+            resourceManagerProvider,
+            x =>
+                x.addProfile(detectCelebrities.profileName, detectCelebrities)
+                 .addProfile(transcribeAudio.profileName, transcribeAudio)
+                 .addProfile(translateText.profileName, translateText)
         )
-        .handleOperation(processRekognitionResult)
-        .handleOperation(processTranscribeJobResult)
+        .handleOperation(processRekognitionResult(resourceManagerProvider, dynamoDbTableProvider))
+        .handleOperation(processTranscribeJobResult(resourceManagerProvider, dynamoDbTableProvider))
         .build();
 
 exports.handler = async (event, context) => {

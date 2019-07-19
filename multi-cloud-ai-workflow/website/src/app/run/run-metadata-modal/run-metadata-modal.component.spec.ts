@@ -1,8 +1,8 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { async, ComponentFixture, TestBed } from "@angular/core/testing";
 
-import { RunMetadataModalComponent } from './run-metadata-modal.component';
+import { RunMetadataModalComponent } from "./run-metadata-modal.component";
 
-describe('RunMetadataModalComponent', () => {
+describe("RunMetadataModalComponent", () => {
   let component: RunMetadataModalComponent;
   let fixture: ComponentFixture<RunMetadataModalComponent>;
 
@@ -19,7 +19,7 @@ describe('RunMetadataModalComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it("should create", () => {
     expect(component).toBeTruthy();
   });
 });

@@ -1,16 +1,16 @@
-import { Component, Input } from '@angular/core';
-import { Observable, of, BehaviorSubject } from 'rxjs';
-import { switchMap, tap, map } from 'rxjs/operators';
+import { Component, Input } from "@angular/core";
+import { Observable, of, BehaviorSubject } from "rxjs";
+import { switchMap, tap, map } from "rxjs/operators";
 
-import { WorkflowService } from '../../services/workflow.service';
-import { ContentService } from '../../services/content.service';
-import { WorkflowJobViewModel } from '../../view-models/workflow-job-vm';
-import { ContentViewModel } from '../../view-models/content-vm';
+import { WorkflowService } from "../../services/workflow.service";
+import { ContentService } from "../../services/content.service";
+import { WorkflowJobViewModel } from "../../view-models/workflow-job-vm";
+import { ContentViewModel } from "../../view-models/content-vm";
 
 @Component({
-    selector: 'mcma-monitor-detail',
-    templateUrl: './monitor-detail.component.html',
-    styleUrls: ['./monitor-detail.component.scss']
+    selector: "mcma-monitor-detail",
+    templateUrl: "./monitor-detail.component.html",
+    styleUrls: ["./monitor-detail.component.scss"]
 })
 export class MonitorDetailComponent {
     private _conformJobVm$: Observable<WorkflowJobViewModel>;
@@ -41,7 +41,7 @@ export class MonitorDetailComponent {
                         ? this.contentService.pollUntil(conformJobVm.contentUrl, this.aiJobVm$.pipe(map(aiJobVm => aiJobVm && aiJobVm.isFinished)))
                         : of (null)
                 ),
-                tap(contentVm => console.log('got content vm', contentVm))
+                tap(contentVm => console.log("got content vm", contentVm))
             );
         }
     }
