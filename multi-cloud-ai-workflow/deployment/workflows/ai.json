@@ -118,6 +118,59 @@
                             "Type": "Task",
                             "Resource": "${lambda-05-register-speech-translation}",
                             "ResultPath": null,
+                            "Next": "12-translation-to-speech-parent",
+                            "Catch": [
+                                {
+                                    "ErrorEquals": [
+                                        "States.ALL"
+                                    ],
+                                    "ResultPath": "$.error",
+                                    "Next": "process-failure-branch-1"
+                                }
+                            ]
+                        },
+                        "12-translation-to-speech-parent": {
+                            "Type": "Parallel",
+                            "Branches": [
+                                {
+                                    "StartAt": "12-translation-to-speech",
+                                    "States": {
+                                        "12-translation-to-speech": {
+                                            "Type": "Task",
+                                            "Resource": "${lambda-12-translation-to-speech}",
+                                            "End": true
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt": "12-wait-for-job-completion",
+                                    "States": {
+                                        "12-wait-for-job-completion": {
+                                            "Type": "Task",
+                                            "Resource": "${activity-12-translation-to-speech}",
+                                            "TimeoutSeconds": 3600,
+                                            "HeartbeatSeconds": 1800,
+                                            "End": true
+                                        }
+                                    }
+                                }
+                            ],
+                            "ResultPath": "$.data.translateJobId",
+                            "Next": "13-register-translation-to-speech",
+                            "Catch": [
+                                {
+                                    "ErrorEquals": [
+                                        "States.ALL"
+                                    ],
+                                    "ResultPath": "$.error",
+                                    "Next": "process-failure-branch-1"
+                                }
+                            ]
+                        },
+                        "13-register-translation-to-speech": {
+                            "Type": "Task",
+                            "Resource": "${lambda-13-register-translation-to-speech}",
+                            "ResultPath": null,
                             "Next": "process-completion-branch-1",
                             "Catch": [
                                 {
@@ -129,6 +182,7 @@
                                 }
                             ]
                         },
+                        
                         "process-failure-branch-1": {
                             "Type": "Pass",
                             "End": true

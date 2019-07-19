@@ -19,11 +19,27 @@ async function textToSpeech(workerJobHelper) {
     const inputFile = jobInput.inputFile;
     const jobAssignmentId = workerJobHelper.getJobAssignmentId();
 
+    // get input text file from translation service
+    const s3Bucket = inputFile.awsS3Bucket;
+    const s3Key = inputFile.awsS3Key;
+    let s3Object;
+    try {
+        s3Object = await S3GetObject({
+            Bucket: s3Bucket,
+            Key: s3Key,
+        });
+    } catch (error) {
+        throw new Error("Unable to read file in bucket '" + s3Bucket + "' with key '" + s3Key + "' due to error: " + error.message);
+    }
+
+    const inputText = s3Object.Body.toString();
+
     const params = {
         OutputFormat: 'mp3',
         OutputS3BucketName: workerJobHelper.getRequest().getRequiredContextVariable("ServiceOutputBucket"),
         OutputS3KeyPrefix: 'TextToSpeechJob-' + jobAssignmentId.substring(jobAssignmentId.lastIndexOf("/") + 1),
-        Text: 'This is a MCMA test',
+//        Text: 'This is a MCMA test',
+        Text: inputText,
         VoiceId: 'Joanna',
         LanguageCode: 'en-US',
         SampleRate: '22050',

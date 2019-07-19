@@ -124,6 +124,57 @@ resource "aws_lambda_function" "ai-05-register-speech-translation" {
   }
 }
 
+resource "aws_lambda_function" "ai-12-translation-to-speech" {
+  filename         = "./../workflows/ai/12-translation-to-speech/dist/lambda.zip"
+  function_name    = "${format("%.64s", "${var.global_prefix}-ai-12-translation-to-speech")}"
+  role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
+  handler          = "index.handler"
+  source_code_hash = "${filebase64sha256("./../workflows/ai/12-translation-to-speech/dist/lambda.zip")}"
+  runtime          = "nodejs8.10"
+  timeout          = "60"
+  memory_size      = "256"
+
+  environment {
+    variables = {
+      ServicesUrl          = "${var.services_url}"
+      ServicesAuthType    = "${var.services_auth_type}"
+      ServicesAuthContext = "${var.services_auth_context}"
+      RepositoryBucket     = "${var.repository_bucket}"
+      TempBucket           = "${var.temp_bucket}"
+      WebsiteBucket        = "${var.website_bucket}"
+      ActivityCallbackUrl = "${local.workflow_activity_callback_handler_url}"
+      ActivityArn          = "${aws_sfn_activity.ai-12-translation-to-speech.id}"
+    }
+  }
+}
+
+resource "aws_sfn_activity" "ai-12-translation-to-speech" {
+  name = "${var.global_prefix}-ai-12-translation-to-speech"
+}
+
+resource "aws_lambda_function" "ai-13-register-translation-to-speech" {
+  filename         = "./../workflows/ai/13-register-translation-to-speech/dist/lambda.zip"
+  function_name    = "${format("%.64s", "${var.global_prefix}-ai-13-register-translation-to-speech")}"
+  role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
+  handler          = "index.handler"
+  source_code_hash = "${filebase64sha256("./../workflows/ai/13-register-translation-to-speech/dist/lambda.zip")}"
+  runtime          = "nodejs8.10"
+  timeout          = "60"
+  memory_size      = "256"
+
+  environment {
+    variables = {
+      ServicesUrl          = "${var.services_url}"
+      ServicesAuthType    = "${var.services_auth_type}"
+      ServicesAuthContext = "${var.services_auth_context}"
+      RepositoryBucket    = "${var.repository_bucket}"
+      TempBucket          = "${var.temp_bucket}"
+      WebsiteBucket       = "${var.website_bucket}"
+    }
+  }
+}
+
+
 resource "aws_lambda_function" "ai-06-detect-celebrities-aws" {
   filename         = "./../workflows/ai/06-detect-celebrities-aws/dist/lambda.zip"
   function_name    = "${format("%.64s", "${var.global_prefix}-ai-06-detect-celebrities-aws")}"
@@ -298,6 +349,9 @@ data "template_file" "ai-workflow" {
     lambda-10-detect-emotions-aws              = "${aws_lambda_function.ai-10-detect-emotions-aws.arn}"
     activity-10-detect-emotions-aws            = "${aws_sfn_activity.ai-10-detect-emotions-aws.id}"
     lambda-11-register-emotions-info-aws       = "${aws_lambda_function.ai-11-register-emotions-info-aws.arn}"
+    lambda-12-translation-to-speech            = "${aws_lambda_function.ai-12-translation-to-speech.arn}"
+    activity-12-translation-to-speech          = "${aws_sfn_activity.ai-12-translation-to-speech.id}"
+    lambda-13-register-translation-to-speech   = "${aws_lambda_function.ai-13-register-translation-to-speech.arn}"
     lambda-process-workflow-completion         = "${aws_lambda_function.process-workflow-completion.arn}"
     lambda-process-workflow-failure            = "${aws_lambda_function.process-workflow-failure.arn}"
   }
