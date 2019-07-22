@@ -2,7 +2,7 @@ const util = require("util");
 const AWS = require("aws-sdk");
 
 const S3 = new AWS.S3();
-const S3GetBucketLocation = util.promisify(S3.getBucketLocation.bind(S3));
+const S3GetObject = util.promisify(S3.getObject.bind(S3));
 const S3CopyObject = util.promisify(S3.copyObject.bind(S3));
 const S3DeleteObject = util.promisify(S3.deleteObject.bind(S3));
 
@@ -17,18 +17,35 @@ const { DynamoDbTableProvider, getAwsV4ResourceManager } = require("mcma-aws");
 async function textToSpeech(workerJobHelper) {
     const jobInput = workerJobHelper.getJobInput();
     const inputFile = jobInput.inputFile;
+    const voiceId = jobInput.voiceId;
     const jobAssignmentId = workerJobHelper.getJobAssignmentId();
+
+    // get input text file from translation service
+    const s3Bucket = inputFile.awsS3Bucket;
+    const s3Key = inputFile.awsS3Key;
+    let s3Object;
+    try {
+        s3Object = await S3GetObject({
+            Bucket: s3Bucket,
+            Key: s3Key,
+        });
+    } catch (error) {
+        throw new Error("Unable to read file in bucket '" + s3Bucket + "' with key '" + s3Key + "' due to error: " + error.message);
+    }
+
+    const inputText = s3Object.Body.toString();
 
     const params = {
         OutputFormat: 'mp3',
         OutputS3BucketName: workerJobHelper.getRequest().getRequiredContextVariable("ServiceOutputBucket"),
         OutputS3KeyPrefix: 'TextToSpeechJob-' + jobAssignmentId.substring(jobAssignmentId.lastIndexOf("/") + 1),
-        Text: 'This is a MCMA test',
-        VoiceId: 'Joanna',
-        LanguageCode: 'en-US',
+        Text: inputText,
+        VoiceId: voiceId,
         SampleRate: '22050',
         TextType: 'text'
     }
+
+//    Logger.debug("Invoking textToSpeech service with parameters", JSON.stringify(params, null, 2));
 
     const data = await PollyStartSpeechSynthesisTask(params);
 
