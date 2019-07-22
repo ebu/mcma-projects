@@ -43,8 +43,11 @@ async function textToSpeech(workerJobHelper) {
         VoiceId: 'Joanna',
         LanguageCode: 'en-US',
         SampleRate: '22050',
+        OutputFormat: 'mp3',
         TextType: 'text'
     }
+
+//    Logger.debug("Invoking textToSpeech service with parameters", JSON.stringify(params, null, 2));
 
     const data = await PollyStartSpeechSynthesisTask(params);
 

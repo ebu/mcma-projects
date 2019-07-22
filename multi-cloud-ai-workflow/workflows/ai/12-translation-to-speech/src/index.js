@@ -22,7 +22,7 @@ const TempBucket = process.env.TempBucket;
 const ActivityCallbackUrl = process.env.ActivityCallbackUrl;
 const ActivityArn = process.env.ActivityArn;
 
-const JOB_PROFILE_NAME = "AWSTranslationToSpeech";
+const JOB_PROFILE_NAME = "AWSTextToSpeech";
 const JOB_RESULTS_PREFIX = "AIResults/";
 
 /**
@@ -37,7 +37,6 @@ exports.handler = async (event, context) => {
     // send update notification
     try {
         event.status = "RUNNING";
-//        event.parallelProgress = { "translation-to-speech": 60 };
         event.parallelProgress = { "text-to-speech": 60 };
         await resourceManager.sendNotification(event);
     } catch (error) {
