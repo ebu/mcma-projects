@@ -64,17 +64,19 @@ exports.handler = async (event, context) => {
         throw new Error("JobProfile '" + JOB_PROFILE_NAME + "' not found");
     }
 
-    // writing speech to an mp3 file in temp bucket
-    let bmEssence = await resourceManager.resolve(event.input.bmEssence);
+    // writing speech transcription to a textfile in temp bucket
+    let bmContent = await resourceManager.resolve(event.input.bmContent);
 
-    if (!bmContent) {
-        throw new Error("Missing mp3 file")
+    if (!bmContent.awsAiMetadata ||
+        !bmContent.awsAiMetadata.transcription ||
+        !bmContent.awsAiMetadata.transcription.translation) {
+        throw new Error("Missing transcription on BMContent")
     }
 
     let s3Params = {
         Bucket: TempBucket,
-        Key: "AiInput/" + uuidv4() + ".mp3",
-        Body: bmEssence
+        Key: "AiInput/" + uuidv4() + ".txt",
+        Body: bmContent.awsAiMetadata.transcription.translation
     }
 
     await S3PutObject(s3Params);
@@ -90,7 +92,7 @@ exports.handler = async (event, context) => {
                 awsS3Bucket: s3Params.Bucket,
                 awsS3Key: s3Params.Key
             }),
-            targetLanguageCode: "ja",
+            voiceId: "Mizuki",
             outputLocation: new Locator({
                 awsS3Bucket: TempBucket,
                 awsS3KeyPrefix: JOB_RESULTS_PREFIX

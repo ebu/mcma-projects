@@ -2,16 +2,20 @@
 
 // require
 const util = require("util");
+const uuidv4 = require("uuid/v4");
 
 const AWS = require("aws-sdk");
 const S3 = new AWS.S3();
-const S3GetObject = util.promisify(S3.getObject.bind(S3));
+const S3CopyObject = util.promisify(S3.copyObject.bind(S3));
 
-const { EnvironmentVariableProvider } = require("mcma-core");
+const { EnvironmentVariableProvider, Locator, BMEssence } = require("mcma-core");
 const { getAwsV4ResourceManager } = require("mcma-aws");
 
 const environmentVariableProvider = new EnvironmentVariableProvider();
 const resourceManager = getAwsV4ResourceManager(environmentVariableProvider);
+
+// Environment Variable(AWS Lambda)
+const WebsiteBucket = process.env.WebsiteBucket;
 
 /**
  * Create New BMEssence Object
@@ -51,35 +55,37 @@ exports.handler = async (event, context) => {
     }
     console.log("[TextToSpeechJobId]:", jobId);
 
+    // get result of ai job
+    let job = await resourceManager.resolve(jobId);
+    console.log(JSON.stringify(job, null, 2));
 
-    // get transform job id
-    let textToSpeechJobId = gettextToSpeechJobId(event);
+    // Copy textToSpeech output file to output location
+    let outputFile = job.jobOutput.outputFile;
 
-    // in case we did note do a transcode
-    if (!textToSpeecjJobId) {
-        return event.data.bmEssence;
+    let copySource = encodeURI(outputFile.awsS3Bucket + "/" + outputFile.awsS3Key);
+   
+    let s3Bucket = WebsiteBucket;
+    let s3Key = "media/" + uuidv4();
+
+    // add file extension
+    let idxLastDot = outputFile.awsS3Key.lastIndexOf(".");
+    if (idxLastDot > 0) {
+        s3Key += outputFile.awsS3Key.substring(idxLastDot);
     }
 
-    // get result of transform job
-    let textToSpeechJob = await resourceManager.resolve(textToSpeechJobId);
-
-    // get media info
-    let s3Bucket = textToSpeechJob.jobOutput.outputFile.awsS3Bucket;
-    let s3Key = textToSpeechJob.jobOutput.outputFile.awsS3Key;
-
-
-    // get media info
-    let s3Bucket = textToSpeechJob.jobOutput.outputFile.awsS3Bucket;
-    let s3Key = textToSpeechJob.jobOutput.outputFile.awsS3Key;
-    let s3Object;
+    // execute copy text to speech media file
     try {
-        s3Object = await S3GetObject({
+        let params = {
+            CopySource: copySource,
             Bucket: s3Bucket,
             Key: s3Key,
-        });
+        };
+        await S3CopyObject(params);
     } catch (error) {
-        throw new Error("Unable to media info file in bucket '" + s3Bucket + "' with key '" + s3Key + "' due to error: " + error.message);
+        throw new Error("Unable to read input file in bucket '" + s3Bucket + "' with key '" + s3Key + "' due to error: " + error.message);
     }
+
+    let bmContent = await resourceManager.resolve(event.input.bmContent);
 
     // create BMEssence
     let locator = new Locator({
@@ -87,28 +93,25 @@ exports.handler = async (event, context) => {
         "awsS3Key": s3Key
     });
 
-    let bme = createBMEssence(bmc, locator);
-
+    let bmEssence = createBMEssence(bmContent, locator);
+    
     // register BMEssence
-    bme = await resourceManager.create(bme);
-    if (!bme.id) {
+    bmEssence = await resourceManager.create(bmEssence);
+    if (!bmEssence.id) {
         throw new Error("Failed to register BMEssence.");
     }
 
     // addin BMEssence ID
-    bmc.bmEssences.push(bme.id);
+    bmContent.bmEssences.push(bmEssence.id);
 
     // update BMContents
-    bmc = await resourceManager.update(bmc);
+    bmContent = await resourceManager.update(bmContent);
 
-    // the URL to the BMEssence with conformed media
-    return bme.id;
-
-    try {
-        event.status = "RUNNING";
-        event.parallelProgress = { "text-to-speech": 100 };
-        await resourceManager.sendNotification(event);
-    } catch (error) {
-        console.warn("Failed to send notification", error);
-    }
+    // try {
+    //     event.status = "RUNNING";
+    //     event.parallelProgress = { "text-to-speech": 100 };
+    //     await resourceManager.sendNotification(event);
+    // } catch (error) {
+    //     console.warn("Failed to send notification", error);
+    // }
 }

@@ -155,7 +155,7 @@
                                     }
                                 }
                             ],
-                            "ResultPath": "$.data.translateJobId",
+                            "ResultPath": "$.data.textToSpeechJobId",
                             "Next": "13-register-translation-to-speech",
                             "Catch": [
                                 {

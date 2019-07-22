@@ -87,7 +87,8 @@ const JOB_PROFILES = {
         name: "AWSTextToSpeech",
         inputParameters: [
             new JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
-            new JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
+            new JobParameter({ parameterName: "voiceId", parameterType: "AWSVoiceId" }),
+            new JobParameter({ parameterName: "outputLocation", parameterType: "Locator" }),
         ],
         outputParameters: [
             new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })

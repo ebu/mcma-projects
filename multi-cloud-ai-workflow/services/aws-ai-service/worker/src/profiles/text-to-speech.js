@@ -2,7 +2,7 @@ const util = require("util");
 const AWS = require("aws-sdk");
 
 const S3 = new AWS.S3();
-const S3GetBucketLocation = util.promisify(S3.getBucketLocation.bind(S3));
+const S3GetObject = util.promisify(S3.getObject.bind(S3));
 const S3CopyObject = util.promisify(S3.copyObject.bind(S3));
 const S3DeleteObject = util.promisify(S3.deleteObject.bind(S3));
 
@@ -17,6 +17,7 @@ const { DynamoDbTableProvider, getAwsV4ResourceManager } = require("mcma-aws");
 async function textToSpeech(workerJobHelper) {
     const jobInput = workerJobHelper.getJobInput();
     const inputFile = jobInput.inputFile;
+    const voiceId = jobInput.voiceId;
     const jobAssignmentId = workerJobHelper.getJobAssignmentId();
 
     // get input text file from translation service
@@ -38,12 +39,9 @@ async function textToSpeech(workerJobHelper) {
         OutputFormat: 'mp3',
         OutputS3BucketName: workerJobHelper.getRequest().getRequiredContextVariable("ServiceOutputBucket"),
         OutputS3KeyPrefix: 'TextToSpeechJob-' + jobAssignmentId.substring(jobAssignmentId.lastIndexOf("/") + 1),
-//        Text: 'This is a MCMA test',
         Text: inputText,
-        VoiceId: 'Joanna',
-        LanguageCode: 'en-US',
+        VoiceId: voiceId,
         SampleRate: '22050',
-        OutputFormat: 'mp3',
         TextType: 'text'
     }
 
