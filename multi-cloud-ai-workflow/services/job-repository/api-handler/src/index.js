@@ -46,12 +46,14 @@ const processNotification = async (requestContext) => {
     let table = dynamoDbTableProvider.table(requestContext.tableName());
 
     let job = await table.get(requestContext.publicUrl() + "/jobs/" + requestContext.request.pathVariables.id);
-    if (!requestContext.resourceIfFound(job, false)) {
+    if (!job) {
+        requestContext.setResponseResourceNotFound();
         return;
     }
 
-    let notification = requestContext.isBadRequestDueToMissingBody();
+    let notification = requestContext.getRequestBody();
     if (!notification) {
+        requestContext.setResponseBadRequestDueToMissingBody();
         return;
     }
 

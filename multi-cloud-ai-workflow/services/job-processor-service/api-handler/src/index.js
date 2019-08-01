@@ -24,12 +24,14 @@ const processNotification = async (requestContext) => {
     let jobProcessId = requestContext.publicUrl() + "/job-processes/" + requestContext.request.pathVariables.id;
 
     let jobProcess = await table.get(jobProcessId);
-    if (!requestContext.resourceIfFound(jobProcess, false)) {
+    if (!jobProcess) {
+        requestContext.setResponseResourceNotFound();
         return;
     }
 
-    let notification = requestContext.isBadRequestDueToMissingBody();
+    let notification = requestContext.getRequestBody();
     if (!notification) {
+        requestContext.setResponseBadRequestDueToMissingBody();
         return;
     }
 

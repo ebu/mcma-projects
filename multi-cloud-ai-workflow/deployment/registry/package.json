@@ -9,7 +9,9 @@
     "main": "src/index.js",
     "license": "Apache-2.0",
     "dependencies": {
-        "@mcma/aws-client": "0.4.6",
+        "@mcma/core": "0.5.3",
+        "@mcma/client": "0.5.3",
+        "@mcma/aws-client": "0.5.3",
         "amazon-cognito-identity-js": "^2.0.30",
         "aws-sdk": "^2.473.0",
         "node-fetch": "^2.6.0"

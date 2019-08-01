@@ -21,8 +21,9 @@ const processNotification = async (requestContext) => {
 
     Logger.debug("jobAssignment = ", jobAssignment);
 
-    if (!requestContext.resourceIfFound(jobAssignment)) {
+    if (!jobAssignment) {
         Logger.debug("jobAssignment not found", jobAssignment);
+        requestContext.setResponseResourceNotFound();
         return;
     }
 

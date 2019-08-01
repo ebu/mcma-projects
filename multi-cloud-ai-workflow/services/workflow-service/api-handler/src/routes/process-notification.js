@@ -11,12 +11,14 @@ function processNotification(dbTableProvider, workerInvoker) {
         const jobAssignmentId = requestContext.publicUrl() + "/job-assignments/" + request.pathVariables.id;
 
         const jobAssignment = await table.get(jobAssignmentId);
-        if (!requestContext.resourceIfFound(jobAssignment, false)) {
+        if (!jobAssignment) {
+            requestContext.setResponseResourceNotFound();
             return;
         }
 
-        const notification = requestContext.isBadRequestDueToMissingBody();
+        const notification = requestContext.getRequestBody();
         if (!notification) {
+            requestContext.setResponseBadRequestDueToMissingBody();
             return;
         }
 

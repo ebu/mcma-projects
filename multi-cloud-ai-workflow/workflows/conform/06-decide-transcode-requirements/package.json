@@ -10,7 +10,9 @@
     "license": "Apache-2.0",
     "dependencies": {
         "aws-sdk": "^2.473.0",
-        "@mcma/aws-client": "0.4.6",
+        "@mcma/core": "0.5.3",
+        "@mcma/client": "0.5.3",
+        "@mcma/aws-client": "0.5.3",
         "node-timecodes": "^2.5.0"
     }
 }

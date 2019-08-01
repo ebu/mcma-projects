@@ -9,7 +9,11 @@
     "main": "src/index.js",
     "license": "Apache-2.0",
     "dependencies": {
-        "@mcma/aws-api-gateway": "0.4.6",
+        "@mcma/client": "0.5.3",
+        "@mcma/core": "0.5.3",
+        "@mcma/data": "0.5.3",
+        "@mcma/api": "0.5.3",
+        "@mcma/aws-api-gateway": "0.5.3",
         "aws-sdk": "^2.473.0"
     }
 }
