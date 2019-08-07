@@ -41,22 +41,44 @@ const processRekognitionResult = async (request) => {
             throw new Error("AI Rekognition failed job info: rekognition status:" + status);
         }
 
-        // 3. Get the result from the Rekognition service 
-        let data;
-
+        // 3. Get the result from the Rekognition service
+        let data = [];
+        let dataCel = [];
+        let dataFace = [];
+        let dataNextToken
         switch (rekoJobType) {
             case "StartCelebrityRecognition":
-                // TODO implement iteration over next results in case we have more than 1000 results
-                data = await RekognitionGetCelebrityRecognition({
+                // implement iteration over next results in case we have more than 1000 results
+                dataCel = await RekognitionGetCelebrityRecognition({
                     JobId: rekoJobId,
                     SortBy: "TIMESTAMP"
                 });
+                data.push(dataCel);
+                while ( dataCel['Celebrities'].length == 1000 ) {
+                    dataNextToken = dataCel['NextToken']
+                    dataCel = await RekognitionGetCelebrityRecognition({
+                        JobId: rekoJobId,
+                        SortBy: "TIMESTAMP",
+                        NextToken: dataNextToken
+                    });
+                    data.push(dataCel);
+                };
                 break;
             case "StartFaceDetection":
-                // TODO implement iteration over next results in case we have more than 1000 results
-                data = await RekognitionGetFaceDetection({
-                    JobId: rekoJobId
+                // implement iteration over next results in case we have more than 1000 results
+
+                dataFace = await RekognitionGetFaceDetection({
+                    JobId: rekoJobId,
                 });
+                data.push(dataFace);
+                while ( dataFace['Faces'].length == 1000  ) {
+                    dataNextToken = dataFace['NextToken']
+                    dataFace = await RekognitionGetFaceDetection({
+                        JobId: rekoJobId,
+                        NextToken: dataNextToken
+                    });
+                    data.push(dataFace);
+                };
                 break;
             case "StartLabelDetection":
             case "StartContentModeration":
@@ -78,7 +100,7 @@ const processRekognitionResult = async (request) => {
         walkclean(data);
 
         // 3. write Reko output file to output location
-        const newS3Key = "reko_" + uuidv4() + ".json";
+        const newS3Key = "reko_" + rekoJobType + "_" + uuidv4() + ".json";
         const s3Params = {
             Bucket: s3Bucket,
             Key: newS3Key,
