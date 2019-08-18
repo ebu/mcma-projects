@@ -67,20 +67,43 @@ exports.handler = async (event, context) => {
     // writing speech transcription to a textfile in temp bucket
     let bmContent = await resourceManager.resolve(event.input.bmContent);
 
+
+
+//    if (!bmContent.awsAiMetadata ||
+//        !bmContent.awsAiMetadata.transcription ||
+//        !bmContent.awsAiMetadata.transcription.original) {
+//        throw new Error("Missing transcription on BMContent")
+//    }
+
+//    let s3Params = {
+//        Bucket: TempBucket,
+//        Key: "AiInput/" + uuidv4() + ".txt",
+//        Body: bmContent.awsAiMetadata.transcription.original
+//    }
+
+//    await S3PutObject(s3Params);
+
+
+    // writing CLEAN speech transcription to a textfile in temp bucket and provide via bmContent
+    // Other option, SEE ALSO Bucket: TempBucket, Key: "stt/stt_output_clean" + ".txt", from step 3
+
+
     if (!bmContent.awsAiMetadata ||
-        !bmContent.awsAiMetadata.transcription ||
-        !bmContent.awsAiMetadata.transcription.original) {
+        !bmContent.awsAiMetadata.cleanTranscription ||
+        !bmContent.awsAiMetadata.cleanTranscription.original) {
         throw new Error("Missing transcription on BMContent")
     }
 
     let s3Params = {
         Bucket: TempBucket,
-        Key: "AiInput/" + uuidv4() + ".txt",
-        Body: bmContent.awsAiMetadata.transcription.original
+        Key: "AiInput/stt_output_clean.txt",
+        Body: bmContent.awsAiMetadata.cleanTranscription.original
     }
 
     await S3PutObject(s3Params);
 
+
+    // manage notification
     let notificationUrl = ActivityCallbackUrl + "?taskToken=" + encodeURIComponent(taskToken);
     console.log("NotificationUrl:", notificationUrl);
 
@@ -92,7 +115,8 @@ exports.handler = async (event, context) => {
                 awsS3Bucket: s3Params.Bucket,
                 awsS3Key: s3Params.Key
             }),
-            targetLanguageCode: "ja",
+            targetLanguageCode: "fr",
+//            targetLanguageCode: "ja",
             outputLocation: new Locator({
                 awsS3Bucket: TempBucket,
                 awsS3KeyPrefix: JOB_RESULTS_PREFIX

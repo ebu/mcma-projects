@@ -47,7 +47,7 @@ exports.handler = async (event, context) => {
         throw new Error("Failed to obtain activity task")
     }
 
-    // using input from activity task to ensure we don't have race conditions if two workflows execute simultanously.
+    // using input from activity task to ensure we don't have race conditions if two workflows executing simultanously.
     event = JSON.parse(data.input);
 
     // get job profiles filtered by name

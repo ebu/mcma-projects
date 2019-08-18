@@ -94,6 +94,28 @@ const JOB_PROFILES = {
             new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
         ]
     }),
+    AWSTokenizedTextToSpeech: new JobProfile({
+        name: "AWSTokenizedTextToSpeech",
+        inputParameters: [
+            new JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
+            new JobParameter({ parameterName: "voiceId", parameterType: "AWSVoiceId" }),
+            new JobParameter({ parameterName: "outputLocation", parameterType: "Locator" }),
+        ],
+        outputParameters: [
+            new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
+        ]
+    }),
+    AWSSsmlTextToSpeech: new JobProfile({
+        name: "AWSSsmlTextToSpeech",
+        inputParameters: [
+            new JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
+            new JobParameter({ parameterName: "voiceId", parameterType: "AWSVoiceId" }),
+            new JobParameter({ parameterName: "outputLocation", parameterType: "Locator" }),
+        ],
+        outputParameters: [
+            new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
+        ]
+    }),
     AWSTranscribeAudio: new JobProfile({
         name: "AWSTranscribeAudio",
         inputParameters: [
@@ -116,6 +138,16 @@ const JOB_PROFILES = {
         ],
         optionalInputParameters: [
             new JobParameter({ parameterName: "sourceLanguageCode", parameterType: "awsLanguageCode" })
+        ]
+    }),
+    CreateDubbingSrt: new JobProfile({
+        name: "CreateDubbingSrt",
+        inputParameters: [
+            new JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
+            new JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
+        ],
+        outputParameters: [
+            new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
         ]
     }),
     AWSDetectCelebrities: new JobProfile({
@@ -181,10 +213,13 @@ const createServices = (serviceUrls) => {
                         jobType: "AIJob",
                         jobProfiles: [
                             JOB_PROFILES.AWSTextToSpeech.id ? JOB_PROFILES.AWSTextToSpeech.id : JOB_PROFILES.AWSTextToSpeech,
+                            JOB_PROFILES.AWSSsmlTextToSpeech.id ? JOB_PROFILES.AWSSsmlTextToSpeech.id : JOB_PROFILES.AWSSsmlTextToSpeech,
+                            JOB_PROFILES.AWSTokenizedTextToSpeech.id ? JOB_PROFILES.AWSTokenizedTextToSpeech.id : JOB_PROFILES.AWSTokenizedTextToSpeech,
                             JOB_PROFILES.AWSTranscribeAudio.id ? JOB_PROFILES.AWSTranscribeAudio.id : JOB_PROFILES.AWSTranscribeAudio,
                             JOB_PROFILES.AWSTranslateText.id ? JOB_PROFILES.AWSTranslateText.id : JOB_PROFILES.AWSTranslateText,
                             JOB_PROFILES.AWSDetectCelebrities.id ? JOB_PROFILES.AWSDetectCelebrities.id : JOB_PROFILES.AWSDetectCelebrities,
-                            JOB_PROFILES.AWSDetectEmotions.id ? JOB_PROFILES.AWSDetectEmotions.id : JOB_PROFILES.AWSDetectEmotions
+                            JOB_PROFILES.AWSDetectEmotions.id ? JOB_PROFILES.AWSDetectEmotions.id : JOB_PROFILES.AWSDetectEmotions,
+                           JOB_PROFILES.CreateDubbingSrt.id ? JOB_PROFILES.CreateDubbingSrt.id : JOB_PROFILES.CreateDubbingSrt
                         ]
                     })
                 );

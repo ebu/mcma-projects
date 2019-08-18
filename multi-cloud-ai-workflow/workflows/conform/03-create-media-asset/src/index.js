@@ -18,7 +18,9 @@ function createBMContent(title, description) {
         description: description,
         bmEssences: [],
         awsAiMetadata: null,
+        awsSrt: null,
         azureAiMetadata: null,
+        azureSrt: null,
     });
     return bmContent;
 }

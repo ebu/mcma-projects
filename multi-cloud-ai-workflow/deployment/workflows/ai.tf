@@ -324,6 +324,158 @@ resource "aws_lambda_function" "ai-13-register-translation-to-speech" {
   }
 }
 
+resource "aws_lambda_function" "ai-14-tokenized-translation-to-speech" {
+  filename         = "./../workflows/ai/14-tokenized-translation-to-speech/dist/lambda.zip"
+  function_name    = "${format("%.64s", "${var.global_prefix}-ai-14-tokenized-translation-to-speech")}"
+  role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
+  handler          = "index.handler"
+  source_code_hash = "${filebase64sha256("./../workflows/ai/14-tokenized-translation-to-speech/dist/lambda.zip")}"
+  runtime          = "nodejs8.10"
+  timeout          = "60"
+  memory_size      = "256"
+
+  environment {
+    variables = {
+      ServicesUrl         = "${var.services_url}"
+      ServicesAuthType    = "${var.services_auth_type}"
+      ServicesAuthContext = "${var.services_auth_context}"
+      RepositoryBucket    = "${var.repository_bucket}"
+      TempBucket          = "${var.temp_bucket}"
+      WebsiteBucket       = "${var.website_bucket}"
+      ActivityCallbackUrl = "${local.workflow_activity_callback_handler_url}"
+      ActivityArn         = "${aws_sfn_activity.ai-14-tokenized-translation-to-speech.id}"
+    }
+  }
+}
+
+resource "aws_sfn_activity" "ai-14-tokenized-translation-to-speech" {
+  name = "${var.global_prefix}-ai-14-tokenized-translation-to-speech"
+}
+
+resource "aws_lambda_function" "ai-15-register-tokenized-translation-to-speech" {
+  filename         = "./../workflows/ai/15-register-tokenized-translation-to-speech/dist/lambda.zip"
+  function_name    = "${format("%.64s", "${var.global_prefix}-ai-15-register-tokenized-translation-to-speech")}"
+  role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
+  handler          = "index.handler"
+  source_code_hash = "${filebase64sha256("./../workflows/ai/15-register-tokenized-translation-to-speech/dist/lambda.zip")}"
+  runtime          = "nodejs8.10"
+  timeout          = "60"
+  memory_size      = "256"
+
+  environment {
+    variables = {
+      ServicesUrl         = "${var.services_url}"
+      ServicesAuthType    = "${var.services_auth_type}"
+      ServicesAuthContext = "${var.services_auth_context}"
+      RepositoryBucket    = "${var.repository_bucket}"
+      TempBucket          = "${var.temp_bucket}"
+      WebsiteBucket       = "${var.website_bucket}"
+    }
+  }
+}
+
+resource "aws_lambda_function" "ai-16-ssml-translation-to-speech" {
+  filename         = "./../workflows/ai/16-ssml-translation-to-speech/dist/lambda.zip"
+  function_name    = "${format("%.64s", "${var.global_prefix}-ai-16-ssml-translation-to-speech")}"
+  role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
+  handler          = "index.handler"
+  source_code_hash = "${filebase64sha256("./../workflows/ai/16-ssml-translation-to-speech/dist/lambda.zip")}"
+  runtime          = "nodejs8.10"
+  timeout          = "60"
+  memory_size      = "256"
+
+  environment {
+    variables = {
+      ServicesUrl         = "${var.services_url}"
+      ServicesAuthType    = "${var.services_auth_type}"
+      ServicesAuthContext = "${var.services_auth_context}"
+      RepositoryBucket    = "${var.repository_bucket}"
+      TempBucket          = "${var.temp_bucket}"
+      WebsiteBucket       = "${var.website_bucket}"
+      ActivityCallbackUrl = "${local.workflow_activity_callback_handler_url}"
+      ActivityArn         = "${aws_sfn_activity.ai-16-ssml-translation-to-speech.id}"
+    }
+  }
+}
+
+resource "aws_sfn_activity" "ai-16-ssml-translation-to-speech" {
+  name = "${var.global_prefix}-ai-16-ssml-translation-to-speech"
+}
+
+resource "aws_lambda_function" "ai-17-register-ssml-translation-to-speech" {
+  filename         = "./../workflows/ai/17-register-ssml-translation-to-speech/dist/lambda.zip"
+  function_name    = "${format("%.64s", "${var.global_prefix}-ai-17-register-ssml-translation-to-speech")}"
+  role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
+  handler          = "index.handler"
+  source_code_hash = "${filebase64sha256("./../workflows/ai/17-register-ssml-translation-to-speech/dist/lambda.zip")}"
+  runtime          = "nodejs8.10"
+  timeout          = "60"
+  memory_size      = "256"
+
+  environment {
+    variables = {
+      ServicesUrl         = "${var.services_url}"
+      ServicesAuthType    = "${var.services_auth_type}"
+      ServicesAuthContext = "${var.services_auth_context}"
+      RepositoryBucket    = "${var.repository_bucket}"
+      TempBucket          = "${var.temp_bucket}"
+      WebsiteBucket       = "${var.website_bucket}"
+    }
+  }
+}
+
+resource "aws_lambda_function" "ai-18-dubbing-srt" {
+  filename         = "./../workflows/ai/18-dubbing-srt/dist/lambda.zip"
+  function_name    = "${format("%.64s", "${var.global_prefix}-ai-18-dubbing-srt")}"
+  role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
+  handler          = "index.handler"
+  source_code_hash = "${filebase64sha256("./../workflows/ai/18-dubbing-srt/dist/lambda.zip")}"
+  runtime          = "nodejs8.10"
+  timeout          = "60"
+  memory_size      = "256"
+
+  environment {
+    variables = {
+      ServicesUrl         = "${var.services_url}"
+      ServicesAuthType    = "${var.services_auth_type}"
+      ServicesAuthContext = "${var.services_auth_context}"
+      RepositoryBucket    = "${var.repository_bucket}"
+      TempBucket          = "${var.temp_bucket}"
+      WebsiteBucket       = "${var.website_bucket}"
+      ActivityCallbackUrl = "${local.workflow_activity_callback_handler_url}"
+      ActivityArn         = "${aws_sfn_activity.ai-18-dubbing-srt.id}"
+    }
+  }
+}
+
+resource "aws_sfn_activity" "ai-18-dubbing-srt" {
+  name = "${var.global_prefix}-ai-18-dubbing-srt"
+}
+
+resource "aws_lambda_function" "ai-19-register-dubbing-srt" {
+  filename         = "./../workflows/ai/19-register-dubbing-srt/dist/lambda.zip"
+  function_name    = "${format("%.64s", "${var.global_prefix}-ai-19-register-dubbing-srt")}"
+  role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
+  handler          = "index.handler"
+  source_code_hash = "${filebase64sha256("./../workflows/ai/19-register-dubbing-srt/dist/lambda.zip")}"
+  runtime          = "nodejs8.10"
+  timeout          = "60"
+  memory_size      = "256"
+
+  environment {
+    variables = {
+      ServicesUrl         = "${var.services_url}"
+      ServicesAuthType    = "${var.services_auth_type}"
+      ServicesAuthContext = "${var.services_auth_context}"
+      RepositoryBucket    = "${var.repository_bucket}"
+      TempBucket          = "${var.temp_bucket}"
+      WebsiteBucket       = "${var.website_bucket}"
+    }
+  }
+}
+
+
+
 # #################################
 # #  Step Functions : AI Workflow
 # #################################
@@ -351,6 +503,18 @@ data "template_file" "ai-workflow" {
     lambda-12-translation-to-speech            = "${aws_lambda_function.ai-12-translation-to-speech.arn}"
     activity-12-translation-to-speech          = "${aws_sfn_activity.ai-12-translation-to-speech.id}"
     lambda-13-register-translation-to-speech   = "${aws_lambda_function.ai-13-register-translation-to-speech.arn}"
+    lambda-14-tokenized-translation-to-speech            = "${aws_lambda_function.ai-14-tokenized-translation-to-speech.arn}"
+    activity-14-tokenized-translation-to-speech          = "${aws_sfn_activity.ai-14-tokenized-translation-to-speech.id}"
+    lambda-15-register-tokenized-translation-to-speech   = "${aws_lambda_function.ai-15-register-tokenized-translation-to-speech.arn}"
+    lambda-16-ssml-translation-to-speech            = "${aws_lambda_function.ai-16-ssml-translation-to-speech.arn}"
+    activity-16-ssml-translation-to-speech          = "${aws_sfn_activity.ai-16-ssml-translation-to-speech.id}"
+    lambda-17-register-ssml-translation-to-speech   = "${aws_lambda_function.ai-17-register-ssml-translation-to-speech.arn}"
+
+    lambda-18-dubbing-srt   = "${aws_lambda_function.ai-18-dubbing-srt.arn}"
+    activity-18-dubbing-srt       = "${aws_sfn_activity.ai-18-dubbing-srt.id}"
+    lambda-19-register-dubbing-srt   = "${aws_lambda_function.ai-19-register-dubbing-srt.arn}"
+
+
     lambda-process-workflow-completion         = "${aws_lambda_function.process-workflow-completion.arn}"
     lambda-process-workflow-failure            = "${aws_lambda_function.process-workflow-failure.arn}"
   }

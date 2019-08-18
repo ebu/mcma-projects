@@ -13,6 +13,8 @@ const { getAwsV4ResourceManager } = require("mcma-aws");
 const environmentVariableProvider = new EnvironmentVariableProvider();
 const resourceManager = getAwsV4ResourceManager(environmentVariableProvider);
 
+// const Tokenizer = require("sentence-tokenizer");
+
 /**
  * Lambda function handler
  * @param {*} event event
@@ -39,7 +41,8 @@ exports.handler = async (event, context) => {
 
     let job = await resourceManager.resolve(jobId);
 
-    // get media info
+
+    // get service resulst/outputfile from location bucket+key(prefix+filename)
     let s3Bucket = job.jobOutput.outputFile.awsS3Bucket;
     let s3Key = job.jobOutput.outputFile.awsS3Key;
     let s3Object;
@@ -52,11 +55,17 @@ exports.handler = async (event, context) => {
         throw new Error("Unable to media info file in bucket '" + s3Bucket + "' with key '" + s3Key + "' due to error: " + error.message);
     }
 
+    // get translation result
     let translationResult = s3Object.Body.toString();
-    console.log("Translation result", translationResult);
+    let tokenizedTranslationResult = translationResult.split('。');
 
+    console.log(tokenizedTranslationResult);
+
+    // identify associated bmContent
     let bmContent = await resourceManager.resolve(event.input.bmContent);
 
+
+    // attach translation text to bmContent property translation 
     if (!bmContent.awsAiMetadata) {
         bmContent.awsAiMetadata = {};
     }
@@ -65,8 +74,12 @@ exports.handler = async (event, context) => {
     }
     bmContent.awsAiMetadata.transcription.translation = translationResult;
 
+    bmContent.awsAiMetadata.transcription.tokenizedTranslation = tokenizedTranslationResult;
+
+    // update bmContent
     await resourceManager.update(bmContent);
 
+    
     try {
         event.status = "RUNNING";
         event.parallelProgress = { "speech-text-translate": 100 };

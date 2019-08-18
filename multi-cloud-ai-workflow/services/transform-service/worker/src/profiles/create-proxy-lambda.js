@@ -9,6 +9,8 @@ const fsUnlink = util.promisify(fs.unlink);
 const AWS = require("aws-sdk");
 const S3 = new AWS.S3();
 const S3GetObject = util.promisify(S3.getObject.bind(S3));
+const S3CopyObject = util.promisify(S3.copyObject.bind(S3));
+const S3DeleteObject = util.promisify(S3.deleteObject.bind(S3));
 const S3PutObject = util.promisify(S3.putObject.bind(S3));
 
 const { Logger, Locator } = require("mcma-core");

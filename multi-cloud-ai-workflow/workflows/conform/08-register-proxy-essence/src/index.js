@@ -30,12 +30,16 @@ function getTransformJobId(event) {
  * Create New BMEssence Object
  * @param {*} bmContent the URL to the BMContent
  * @param {*} location point to copies of the media file
+ * @param {*} title of the media file
+ * @param {*} description of the media file
  */
-function createBMEssence(bmContent, location) {
+function createBMEssence(bmContent, location, title, description) {
     // init bmcontent
     let bmEssence = new BMEssence({
         "bmContent": bmContent.id,
         "locations": [location],
+        "title": title,
+        "description": description,
     });
     return bmEssence;
 }
@@ -81,7 +85,8 @@ exports.handler = async (event, context) => {
         "awsS3Key": s3Key
     });
 
-    let bme = createBMEssence(bmc, locator);
+    let bme = createBMEssence(bmc, locator, "proxy-source", "proxy-source");
+//    let bme = createBMEssence(bmc, locator);
 
     // register BMEssence
     bme = await resourceManager.create(bme);

@@ -49,6 +49,9 @@ async function transcribeAudio(workerJobHelper) {
             MediaFileUri: mediaFileUrl
         },
         MediaFormat: mediaFormat,
+//        Settings: {
+//            ChannelIdentification:true
+//        },
         OutputBucketName: workerJobHelper.getRequest().getRequiredContextVariable("ServiceOutputBucket")
     }
 
@@ -99,6 +102,7 @@ const processTranscribeJobResult = async (request) => {
         });
         
         await workerJobHelper.complete();
+
     } catch (error) {
         Logger.exception(error);
         try {

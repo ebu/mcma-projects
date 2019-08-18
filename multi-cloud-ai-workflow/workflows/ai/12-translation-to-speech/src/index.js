@@ -23,7 +23,7 @@ const ActivityCallbackUrl = process.env.ActivityCallbackUrl;
 const ActivityArn = process.env.ActivityArn;
 
 const JOB_PROFILE_NAME = "AWSTextToSpeech";
-const JOB_RESULTS_PREFIX = "AIResults/";
+const JOB_RESULTS_PREFIX = "AIResults/translationToSpeech/";
 
 /**
  * Lambda function handler
@@ -64,20 +64,23 @@ exports.handler = async (event, context) => {
         throw new Error("JobProfile '" + JOB_PROFILE_NAME + "' not found");
     }
 
-    // writing speech transcription to a textfile in temp bucket
+    // writing speech transcription to a textfile in temp bucket from translation associated to bmContent
     let bmContent = await resourceManager.resolve(event.input.bmContent);
 
     if (!bmContent.awsAiMetadata ||
         !bmContent.awsAiMetadata.transcription ||
-        !bmContent.awsAiMetadata.transcription.translation) {
-        throw new Error("Missing transcription on BMContent")
+        !bmContent.awsAiMetadata.transcription.translation ) {
+        throw new Error("Missing translation on BMContent")
     }
 
+    // extract translation from bmContent and load in a file in tempBucket
     let s3Params = {
         Bucket: TempBucket,
-        Key: "AiInput/" + uuidv4() + ".txt",
+        Key: "AiInput/translation.txt",
+//        Key: "AiInput/translation" + uuidv4() + ".txt",
         Body: bmContent.awsAiMetadata.transcription.translation
     }
+//   console.log(bmContent.awsAiMetadata.transcription.translation);
 
     await S3PutObject(s3Params);
 
@@ -92,7 +95,8 @@ exports.handler = async (event, context) => {
                 awsS3Bucket: s3Params.Bucket,
                 awsS3Key: s3Params.Key
             }),
-            voiceId: "Mizuki",
+//            voiceId: "Mizuki",
+            voiceId: "Lea",
             outputLocation: new Locator({
                 awsS3Bucket: TempBucket,
                 awsS3KeyPrefix: JOB_RESULTS_PREFIX

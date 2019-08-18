@@ -19,6 +19,7 @@ async function translateText(workerJobHelper) {
     // get input text file
     const s3Bucket = inputFile.awsS3Bucket;
     const s3Key = inputFile.awsS3Key;
+
     let s3Object;
     try {
         s3Object = await S3GetObject({
@@ -29,24 +30,41 @@ async function translateText(workerJobHelper) {
         throw new Error("Unable to read file in bucket '" + s3Bucket + "' with key '" + s3Key + "' due to error: " + error.message);
     }
 
-    const inputText = s3Object.Body.toString();
+    const inputText = s3Object.Body.toString().split('.');
+    console.log(inputText);
 
     // start translation job
-    const params = {
-        SourceLanguageCode: jobInput.sourceLanguageCode || "auto",
-        TargetLanguageCode: jobInput.targetLanguageCode,
-        Text: inputText
-    };
 
-    Logger.debug("Invoking translation service with parameters", JSON.stringify(params, null, 2));
 
-    const data = await TranslateText(params)
+    let SourceLanguage = jobInput.sourceLanguageCode;
+    let TargetLanguage = jobInput.targetLanguageCode;
+
+    let translatedText = "";
+    for (var i=0; i<inputText.length; i++){
+        if (inputText[i]!=""){
+            const params = {
+                SourceLanguageCode: SourceLanguage || "auto",
+                TargetLanguageCode: TargetLanguage,
+                Text: inputText[i] + "."
+                };
+            Logger.debug("Invoking translation service with parameters", JSON.stringify(params, null, 2));
+            const data = await TranslateText(params);
+            if (translatedText==="") {
+                translatedText = data.TranslatedText;
+            } else {
+                translatedText = translatedText + data.TranslatedText;
+            }
+//            console.log(translatedText);
+        }
+    }
+    console.log(translatedText);
 
     // write result to file
     let s3Params = {
         Bucket: outputLocation.awsS3Bucket,
         Key: (outputLocation.awsS3KeyPrefix ? outputLocation.awsS3KeyPrefix : "") + uuidv4() + ".txt",
-        Body: data.TranslatedText
+//        Body: data.TranslatedText
+        Body: translatedText
     }
 
     await S3PutObject(s3Params);

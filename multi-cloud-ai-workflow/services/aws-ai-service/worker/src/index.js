@@ -5,7 +5,10 @@ require("mcma-aws");
 
 const { transcribeAudio, processTranscribeJobResult } = require('./profiles/transcribe-audio');
 const { translateText } = require('./profiles/translate-text');
+const { ssmlTextToSpeech, processSsmlTextToSpeechJobResult } = require('./profiles/ssml-text-to-speech');
 const { textToSpeech, processTextToSpeechJobResult } = require('./profiles/text-to-speech');
+const { tokenizedTextToSpeech, processTokenizedTextToSpeechJobResult } = require('./profiles/tokenized-text-to-speech');
+const { createDubbingSrt } = require('./profiles/create-dubbing-srt');
 
 const { detectCelebrities } = require('./profiles/detect-celebrities');
 const { detectEmotions } = require('./profiles/detect-emotions');
@@ -17,13 +20,21 @@ const worker =
             x.addProfile(detectCelebrities.profileName, detectCelebrities)
                 .addProfile(transcribeAudio.profileName, transcribeAudio)
                 .addProfile(translateText.profileName, translateText)
+                .addProfile(ssmlTextToSpeech.profileName, ssmlTextToSpeech)
                 .addProfile(textToSpeech.profileName, textToSpeech)
+                .addProfile(tokenizedTextToSpeech.profileName, tokenizedTextToSpeech)
+                .addProfile(detectEmotions.profileName, detectEmotions)
+                .addProfile(createDubbingSrt.profileName, createDubbingSrt)
                 .addProfile(detectEmotions.profileName, detectEmotions)
         )
         .handleOperation(processRekognitionResult)
         .handleOperation(processTranscribeJobResult)
         .handleOperation(processTextToSpeechJobResult)
+        .handleOperation(processSsmlTextToSpeechJobResult)
+        .handleOperation(processTokenizedTextToSpeechJobResult)
         .build();
+
+
 
 exports.handler = async (event, context) => {
     try {

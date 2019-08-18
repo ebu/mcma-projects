@@ -35,6 +35,8 @@ async function textToSpeech(workerJobHelper) {
 
     const inputText = s3Object.Body.toString();
 
+    console.log(inputText);
+
     const params = {
         OutputFormat: 'mp3',
         OutputS3BucketName: workerJobHelper.getRequest().getRequiredContextVariable("ServiceOutputBucket"),
@@ -48,7 +50,6 @@ async function textToSpeech(workerJobHelper) {
 //    Logger.debug("Invoking textToSpeech service with parameters", JSON.stringify(params, null, 2));
 
     const data = await PollyStartSpeechSynthesisTask(params);
-
     console.log(JSON.stringify(data, null, 2));
 }
 
@@ -75,7 +76,8 @@ const processTextToSpeechJobResult = async (request) => {
         let copySource = encodeURI(request.input.outputFile.awsS3Bucket + "/" + request.input.outputFile.awsS3Key);
 
         let s3Bucket = jobInput.outputLocation.awsS3Bucket;
-        let s3Key = (jobInput.outputLocation.awsS3KeyPrefix ? jobInput.outputLocation.awsS3KeyPrefix : "") + request.input.outputFile.awsS3Key;
+//        let s3Key = (jobInput.outputLocation.awsS3KeyPrefix ? jobInput.outputLocation.awsS3KeyPrefix : "") + request.input.outputFile.awsS3Key;
+        let s3Key = (jobInput.outputLocation.awsS3KeyPrefix ? jobInput.outputLocation.awsS3KeyPrefix : "") + "translation.mp3";
 
         try {
             await S3CopyObject({

@@ -11,6 +11,8 @@ const S3CopyObject = util.promisify(S3.copyObject.bind(S3));
 const { EnvironmentVariableProvider, Locator, BMEssence } = require("mcma-core");
 const { getAwsV4ResourceManager } = require("mcma-aws");
 
+const S3GetBucketLocation = util.promisify(S3.getBucketLocation.bind(S3));
+
 const environmentVariableProvider = new EnvironmentVariableProvider();
 const resourceManager = getAwsV4ResourceManager(environmentVariableProvider);
 
@@ -21,12 +23,17 @@ const WebsiteBucket = process.env.WebsiteBucket;
  * Create New BMEssence Object
  * @param {*} bmContent the URL to the BMContent
  * @param {*} location point to copies of the media file
+ * @param {*} title of the media file
+ * @param {*} description of the media file
+ * @param {*} link to media file
  */
-function createBMEssence(bmContent, location) {
+function createBMEssence(bmContent, location, title, description) {
     // init bmcontent
     let bmEssence = new BMEssence({
         "bmContent": bmContent.id,
         "locations": [location],
+        "title": title,
+        "description": description,
     });
     return bmEssence;
 }
@@ -59,59 +66,104 @@ exports.handler = async (event, context) => {
     let job = await resourceManager.resolve(jobId);
     console.log(JSON.stringify(job, null, 2));
 
+
     // Copy textToSpeech output file to output location
     let outputFile = job.jobOutput.outputFile;
 
-    let copySource = encodeURI(outputFile.awsS3Bucket + "/" + outputFile.awsS3Key);
-   
-    let s3Bucket = WebsiteBucket;
-    let s3Key = "media/" + uuidv4();
+    // destination bucket: AIJob outputlocation
+    let s3Bucket = job.jobInput.outputLocation.awsS3Bucket;
+    let s3Key = job.jobInput.outputLocation.awsS3KeyPrefix;
 
-    // add file extension
-    let idxLastDot = outputFile.awsS3Key.lastIndexOf(".");
-    if (idxLastDot > 0) {
-        s3Key += outputFile.awsS3Key.substring(idxLastDot);
+    // identify associated bmContent
+    let bmContent = await resourceManager.resolve(event.input.bmContent);
+
+    // construct public https endpoint
+    let data = await S3GetBucketLocation({ Bucket: s3Bucket });
+//    console.log(JSON.stringify(data, null, 2));
+    const s3SubDomain = data.LocationConstraint && data.LocationConstraint.length > 0 ? `s3-${data.LocationConstraint}` : "s3";
+
+/*
+    let httpEndpoint_temp = "https://" + s3SubDomain + ".amazonaws.com/" + s3Bucket + "/" + s3Key;
+
+    // create BMEssence corresponding to speechToText source media file (output from service) in websiteBucket
+    // bmEssence is a locator to the essence and the associated bmContent
+    let locator_temp = new Locator({
+        "awsS3Bucket": s3Bucket,
+        "awsS3Key": s3Key,
+        "httpEndpoint": httpEndpoint_temp
+    });
+
+    let bmEssence_temp = createBMEssence(bmContent, locator_temp, "text-to-speech", "text-to-speech");
+   
+    // register BMEssence to obtain bmEssence Id to provide link in bmContent
+    bmEssence_temp = await resourceManager.create(bmEssence_temp);
+    if (!bmEssence_temp.id) {
+        throw new Error("Failed to register BMEssence_temp.");
     }
 
-    // execute copy text to speech media file
+    // add BMEssence ID reference in bmContent array of bmEssences
+    bmContent.bmEssences.push(bmEssence_temp.id);
+
+    // update BMContents with reference to text-to-speech output source file
+    bmContent = await resourceManager.update(bmContent);
+*/
+
+    // source URI 
+    let copySource = encodeURI(outputFile.awsS3Bucket + "/" + outputFile.awsS3Key);
+   
+    // destination bucket
+    let s3Bucket_web = WebsiteBucket;
+
+    // destination filename. Add texttospeech_ to s3Key/filename to identify textToSpeech essence
+    let s3Key_web = "media/translation/translation.mp3";
+
+    // execute copy textToSpeech media file to websiteBucket
     try {
         let params = {
             CopySource: copySource,
-            Bucket: s3Bucket,
-            Key: s3Key,
+            Bucket: s3Bucket_web,
+            Key: s3Key_web,
         };
         await S3CopyObject(params);
     } catch (error) {
         throw new Error("Unable to read input file in bucket '" + s3Bucket + "' with key '" + s3Key + "' due to error: " + error.message);
     }
 
-    let bmContent = await resourceManager.resolve(event.input.bmContent);
+    // construct public https endpoint
+//    let data = await S3GetBucketLocation({ Bucket: s3Bucket });
+//    console.log(JSON.stringify(data, null, 2));
+//    const s3SubDomain = data.LocationConstraint && data.LocationConstraint.length > 0 ? `s3-${data.LocationConstraint}` : "s3";
+    let httpEndpoint_web = "https://" + s3SubDomain + ".amazonaws.com/" + s3Bucket_web + "/" + s3Key_web;
 
-    // create BMEssence
-    let locator = new Locator({
-        "awsS3Bucket": s3Bucket,
-        "awsS3Key": s3Key
+
+    // create BMEssence corresponding to speechToText media file in websiteBucket
+    // bmEssence is a locator to the essence and the associated bmContent
+    let locator_web = new Locator({
+        "awsS3Bucket": s3Bucket_web,
+        "awsS3Key": s3Key_web,
+        "httpEndpoint": httpEndpoint_web
     });
 
-    let bmEssence = createBMEssence(bmContent, locator);
-    
-    // register BMEssence
-    bmEssence = await resourceManager.create(bmEssence);
-    if (!bmEssence.id) {
-        throw new Error("Failed to register BMEssence.");
+    let bmEssence_web = createBMEssence(bmContent, locator_web, "text-to-speech-web", "text-to-speech-web");
+   
+    // register BMEssence to obtain bmEssence Id to provide link in bmContent
+    bmEssence_web = await resourceManager.create(bmEssence_web);
+    if (!bmEssence_web.id) {
+        throw new Error("Failed to register BMEssence_web.");
     }
 
-    // addin BMEssence ID
-    bmContent.bmEssences.push(bmEssence.id);
+    // add BMEssence ID reference in bmContent array of bmEssences
+    bmContent.bmEssences.push(bmEssence_web.id);
 
-    // update BMContents
+    // update BMContents with reference to text-to-speech website bucket copy file
     bmContent = await resourceManager.update(bmContent);
 
-    // try {
-    //     event.status = "RUNNING";
-    //     event.parallelProgress = { "text-to-speech": 100 };
-    //     await resourceManager.sendNotification(event);
-    // } catch (error) {
-    //     console.warn("Failed to send notification", error);
-    // }
+    // adding ResultPath of StepFunctions -> CHECK USAGE!!!!!!!!!!!! WITH WEBSITE??
+    return new Locator({
+        awsS3Bucket: s3Bucket_web,
+        awsS3Key: s3Key_web,
+    });
+
+
+
 }
