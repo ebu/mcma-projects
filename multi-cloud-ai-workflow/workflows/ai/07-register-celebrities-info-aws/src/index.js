@@ -54,17 +54,15 @@ exports.handler = async (event, context) => {
 
     let celebritiesResult = JSON.parse(s3Object.Body.toString());
 
-    let celebritiesMap = { };
+    let celebritiesMap = {};
 
-    for (let i = 0; i < celebritiesResult.Celebrities.length;) {
-        let celebrity = celebritiesResult.Celebrities[i];
 
-        let prevCelebrity = celebritiesMap[celebrity.Celebrity.Name];
-        if ((!prevCelebrity || celebrity.Timestamp - prevCelebrity.Timestamp > 3000) && celebrity.Celebrity.Confidence > 50) {
-            celebritiesMap[celebrity.Celebrity.Name] = celebrity;
-            i++;
+    for (const [celebrityIndex, celebrityValue] of celebritiesResult.entries()) {
+        let prevCelebrity = celebritiesMap[celebrityValue.Celebrity.Name];
+        if ((!prevCelebrity || celebrityValue.Timestamp - prevCelebrity.Timestamp > 3000) && celebrityValue.Celebrity.Confidence > 50) {
+            celebritiesMap[celebrityValue.Celebrity.Name] = celebrityValue;
         } else {
-            celebritiesResult.Celebrities.splice(i, 1);
+            celebritiesResult.splice(celebrityIndex, 1);
         }
     }
 

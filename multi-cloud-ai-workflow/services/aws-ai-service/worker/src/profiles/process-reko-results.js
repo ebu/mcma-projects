@@ -1,4 +1,3 @@
-
 const util = require("util");
 const uuidv4 = require("uuid/v4");
 
@@ -45,40 +44,37 @@ const processRekognitionResult = async (request) => {
         let data = [];
         let dataCel = [];
         let dataFace = [];
-        let dataNextToken
+        let dataNextToken;
         switch (rekoJobType) {
             case "StartCelebrityRecognition":
-                // implement iteration over next results in case we have more than 1000 results
                 dataCel = await RekognitionGetCelebrityRecognition({
                     JobId: rekoJobId,
                     SortBy: "TIMESTAMP"
                 });
-                data.push(dataCel);
-                while ( dataCel['Celebrities'].length == 1000 ) {
-                    dataNextToken = dataCel['NextToken']
+                data = data.concat(dataCel.Celebrities);
+                while (dataCel['Celebrities'].length === 1000) {
+                    dataNextToken = dataCel['NextToken'];
                     dataCel = await RekognitionGetCelebrityRecognition({
                         JobId: rekoJobId,
                         SortBy: "TIMESTAMP",
                         NextToken: dataNextToken
                     });
-                    data.push(dataCel);
-                };
+                    data = data.concat(dataCel.Celebrities);
+                }
                 break;
             case "StartFaceDetection":
-                // implement iteration over next results in case we have more than 1000 results
-
                 dataFace = await RekognitionGetFaceDetection({
                     JobId: rekoJobId,
                 });
-                data.push(dataFace);
-                while ( dataFace['Faces'].length == 1000  ) {
-                    dataNextToken = dataFace['NextToken']
+                data = data.concat(dataCel['Faces']);
+                while (dataFace['Faces'].length === 1000) {
+                    dataNextToken = dataFace['NextToken'];
                     dataFace = await RekognitionGetFaceDetection({
                         JobId: rekoJobId,
                         NextToken: dataNextToken
                     });
-                    data.push(dataFace);
-                };
+                    data = data.concat(dataCel['Faces']);
+                }
                 break;
             case "StartLabelDetection":
             case "StartContentModeration":
@@ -136,10 +132,10 @@ function walkclean(x) {
     if (x instanceof Array) {
         type = "array";
     }
-    if ((type == "array") || (type == "object")) {
+    if ((type === "array") || (type === "object")) {
         for (let k in x) {
             var v = x[k];
-            if ((v === "") && (type == "object")) {
+            if ((v === "") && (type === "object")) {
                 delete x[k];
             } else {
                 walkclean(v);
