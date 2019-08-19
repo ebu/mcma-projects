@@ -90,6 +90,7 @@ const processTokenizedTextToSpeechJobResult = async (request) => {
         let speechmarks_json_a = "{ \"results\": { \"items\": [" + speechmarks.Body.toString().replace(/}/g, '},') + "]}}";
         let speechmarks_json_b = speechmarks_json_a.replace(/[\n]/g, "");
         let speechmarks_json = speechmarks_json_b.replace(',]' , ']');
+        //console.log(speechmarks_json);
 
         // copy speechmarks in in speechmark json file
         let s3Bucket_sm = jobInput.outputLocation.awsS3Bucket;
@@ -129,30 +130,57 @@ const processTokenizedTextToSpeechJobResult = async (request) => {
         // generate SSML file with breaks
         let ssldata ="<speak>"; 
         let k=0;
+        // time reference in ms
+        let t=0;
 
         for (var j = 0; j < sttJsonData.results.items.length; j++) {
 //            console.log(sttJsonData.results.items.length);
             var item = sttJsonData.results.items[j];
+            var punctuation = item.alternatives[0];
 //            console.log(item.start_time);
 
             if (j < 1 & item.start_time > 0 ) {
-                ssldata = ssldata + "<break time=\"" + item.start_time*1.1 + "s\"/>";
-//                console.log(ssldata);
+                ssldata = ssldata + "<break time=\"" + item.start_time * 1.2 + "s\"/>";
+                // time in ms
+                t = t + ((item.start_time * 1000) * 1.2);
 
-            } else if ((j > 0) & (item.type.includes("punctuation")) & (k < speechmarksJsonData.results.items.length)) {
-                if (j+1 < sttJsonData.results.items.length){
-                    var previousitem = sttJsonData.results.items[j-1];
-                    var nextitem = sttJsonData.results.items[j+1];
-                    if ((nextitem.start_time*1000) - (previousitem.end_time*1000) < 800 ){
+                // define case when start-time = 0
+
+            } else if ((j > 0) & item.type.includes("punctuation") & punctuation.content.includes(".")) {
+                if (j+1 < sttJsonData.results.items.length ){
+
+                    if ((k+1 < speechmarksJsonData.results.items.length)) {
+
+    //                    var previousitem = sttJsonData.results.items[j - 1];
+                        var nextitem = sttJsonData.results.items[j + 1];
                         var speechmarksJsonDataItem = speechmarksJsonData.results.items[k];
-                        ssldata = ssldata  + speechmarksJsonDataItem.value.replace('.','<break time="1.5s"/>');
-                        k = k + 1;
-//                        console.log(ssldata);
-                    } else if ((nextitem.start_time*1000) - (previousitem.end_time*1000) > 800 ){
-                        ssldata = ssldata + "<break time=\"" + (((nextitem.start_time*1000) - (previousitem.end_time*1000))/1000)*1.1 + "s\"/>";
-//                        console.log(ssldata);
+                        var nextSpeechmarksJsonDataItem = speechmarksJsonData.results.items[k + 1];
+                        var translatedSentenceDuration = (nextSpeechmarksJsonDataItem.time - speechmarksJsonDataItem.time) * 0.5;
+                        console.log(translatedSentenceDuration);
+
+                        ssldata = ssldata  + speechmarksJsonDataItem.value.replace('.','<break time="0.5s"/>');
+//                        console.log(speechmarksJsonDataItem.value);
+//                        console.log("start-time next item:" + nextitem.start_time * 1000);
+//                        console.log("end current sentence:" + t + translatedSentenceDuration);
+//                        console.log("break time:" + ((nextitem.start_time * 1000) - (t + translatedSentenceDuration)));
+    //                    ssldata = ssldata  + speechmarksJsonDataItem.value.replace('.','<break time="0.3s"/>').replace(',','<break time="0.2s"/>');
+                        if ( (((nextitem.start_time * 1000) - (t + translatedSentenceDuration)) / 1000) > 0 ){
+                           ssldata = ssldata + "<break time=\"" + ((((nextitem.start_time * 1000) - (t + translatedSentenceDuration)) / 1000) * 1.2) + "s\"/>";
+                           t = t + (((nextitem.start_time * 1000) - (t + translatedSentenceDuration)) * 1.2) ;
+                        }
+                    } else {
+
+                        var speechmarksJsonDataItem = speechmarksJsonData.results.items[k];
+                        ssldata = ssldata  + speechmarksJsonDataItem.value.replace('.','');
+
                     }
+
+                    k = k + 1;
+                    t = t + translatedSentenceDuration + 500;
+                    console.log(t);
+
                 }
+                console.log(ssldata);
             }
         }
         ssldata=ssldata + "</speak>";

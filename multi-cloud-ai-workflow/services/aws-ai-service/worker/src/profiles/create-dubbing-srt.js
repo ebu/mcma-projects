@@ -50,7 +50,9 @@ async function createDubbingSrt(workerJobHelper) {
 
         //DUB MUST COME FIRST BEFORE SRT
         //ffmpeg -i input.mp4 -i input.mp3 -c copy -map 0:v:0 -map 1:a:0 output.mp4
-        const params_dub = ["-i", input, "-i", dub, "-c", "copy", "-map", "0:v:0", "-map", "1:a:0", dubbed];
+        //ffmpeg -i main.mp4 -i newaudio -filter_complex "[0:a][1:a]amix=duration=shortest[a]" -map 0:v -map "[a]" -c:v copy out.mp4
+        //const params_dub = ["-i", input, "-i", dub, "-c", "copy", "-map", "0:v:0", "-map", "1:a:0", dubbed];
+        const params_dub = ["-i", input, "-i", dub, "-filter_complex", "[0:a][1:a]amix=duration=shortest[a]", "-map", "0:v", "-map", "[a]", "-c:v", "copy", dubbed ];
         console.log(params_dub);
         await ffmpeg(params_dub);
 
