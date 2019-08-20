@@ -130,6 +130,8 @@ exports.handler = async (event, context) => {
             throw new Error("Unable to create stt file: error: " + error.message);
         }
 
+    
+
 ////////////////////////////////////////////////////////////////////////////
 // ORIGINAL SPEECH TO TEXT TRANSCRIPTION TO SRT SUBTITLES
 ////////////////////////////////////////////////////////////////////////////
@@ -197,6 +199,17 @@ exports.handler = async (event, context) => {
             let s3Params_stt_clean_tmp = {
                 Bucket: TempBucket,
                 Key: "temp/stt_output_clean" + ".txt",
+                Body: s3Object_stt_clean.Body.toString()
+            };
+            await S3PutObject(s3Params_stt_clean_tmp);
+        } catch (error) {
+            throw new Error("Unable to create stt file: error: " + error.message);
+        }
+
+    try {
+            let s3Params_stt_clean_tmp = {
+                Bucket: TempBucket,
+                Key: "stt/stt_output_clean" + ".txt",
                 Body: s3Object_stt_clean.Body.toString()
             };
             await S3PutObject(s3Params_stt_clean_tmp);

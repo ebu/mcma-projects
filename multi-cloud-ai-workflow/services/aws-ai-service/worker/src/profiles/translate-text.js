@@ -47,8 +47,11 @@ async function translateText(workerJobHelper) {
                 TargetLanguageCode: TargetLanguage,
                 Text: inputText[i] + "."
                 };
+
             Logger.debug("Invoking translation service with parameters", JSON.stringify(params, null, 2));
+
             const data = await TranslateText(params);
+
             if (translatedText==="") {
                 translatedText = data.TranslatedText;
             } else {
