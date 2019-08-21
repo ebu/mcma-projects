@@ -5,6 +5,8 @@ const fs = require('fs');
 const util = require("util");
 
 const fsWriteFile = util.promisify(fs.writeFile);
+const CreateReadStream = util.promisify(fs.createReadStream);
+const CreateWriteStream = util.promisify(fs.createWriteStream);
 
 const uuidv4 = require("uuid/v4");
 
@@ -14,6 +16,7 @@ const S3GetObject = util.promisify(S3.getObject.bind(S3));
 const S3PutObject = util.promisify(S3.putObject.bind(S3));
 
 const srtConvert = require("aws-transcription-to-srt");
+const Subtitle = require("subtitle-utils");
 
 const { EnvironmentVariableProvider, Locator, BMEssence } = require("mcma-core");
 const { getAwsV4ResourceManager } = require("mcma-aws");
@@ -163,6 +166,8 @@ exports.handler = async (event, context) => {
             throw new Error("Unable to create srt file: error: " + error.message);
         }
 
+
+
 /////////////////////////////////////////////////////////////////////////////////
 // EXTERNALLY EDITED AND CORRECTED SPEECH TO TEXT TRANSCRIPTION TO SRT SUBTITLES
 /////////////////////////////////////////////////////////////////////////////////
@@ -248,6 +253,22 @@ exports.handler = async (event, context) => {
         }
 
 
+    // VTT Transcription pushed in final video website bucket
+    let srtToVtt = Subtitle.fromSRT(cleanTranscriptionToSrt).toVTT();
+    console.log(srtToVtt);
+
+    try {
+            let s3Params_vtt = {
+                Bucket: WebsiteBucket,
+                Key: "DubbingSrtJobResults/final" + ".vtt",
+                Body: srtToVtt
+            };
+            await S3PutObject(s3Params_vtt);
+        } catch (error) {
+            throw new Error("Unable to create stt file: error: " + error.message);
+        }
+
+
 ////////////////////////////////////////////////////////////////////////////
 // ASSOCIATION OF STT AND SRT FILES (BMESSENCES) WITH BMCONTENT
 ////////////////////////////////////////////////////////////////////////////
@@ -315,25 +336,25 @@ exports.handler = async (event, context) => {
     bmContent.bmEssences.push(bmEssence_srt.id);
 */
 
-////////////////////////////SRT CLEAN/CORRECTED//////////////////////////////
+////////////////////////////VTT CLEAN/CORRECTED//////////////////////////////
     // create new locator for file srt_output_clean.srt
-/*    let locator_srt_clean = new Locator({
+    let locator_vtt_clean = new Locator({
         awsS3Bucket: WebsiteBucket,
-        awsS3Key: "srt/srt_output_clean" + ".srt",
+        awsS3Key: "DubbingSrtJobResults/final" + ".vtt",
     });
 
     // declare new bmEssence for srt file
-    let bmEssence_srt_clean = createBMEssence(bmContent, locator_srt_clean, "clean_srt_output_file", "clean_srt_output_file");
+    let bmEssence_vtt_clean = createBMEssence(bmContent, locator_vtt_clean, "clean_vtt_output_file", "clean_vtt_output_file");
 
     // register BMEssence for srt file
-    bmEssence_srt_clean = await resourceManager.create(bmEssence_srt_clean);
-    if (!bmEssence_srt_clean.id) {
-        throw new Error("Failed to register BMEssence.");
+    bmEssence_vtt_clean = await resourceManager.create(bmEssence_vtt_clean);
+    if (!bmEssence_vtt_clean.id) {
+        throw new Error("Failed to register BMEssence for VTT.");
     }
 
     // adding BMEssence ID for srt file as reference in bmContent
-    bmContent.bmEssences.push(bmEssence_srt_clean.id);
-*/
+    bmContent.bmEssences.push(bmEssence_vtt_clean.id);
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // ASSOCIATION CONTENT OF STT AND SRT FILES DIRECTLY WITH BMCONTENT PROPERTIES

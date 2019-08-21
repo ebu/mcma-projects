@@ -141,15 +141,14 @@ const processTokenizedTextToSpeechJobResult = async (request) => {
             var item = sttJsonData.results.items[j];
             var punctuation = item.alternatives[0];
 //            console.log(item.start_time);
-            var speechSpeedFactor = 0.5;
-            var breakTimeFactor = 1.1;
+            var speechSpeedFactor = 1;
+            var breakTimeFactor = 1.2;
             var dotTime = 0.3;
 
-            if (j == 0 & item.start_time > 0 ) {
+            if (j === 0 & item.start_time > 0 ) {
                 ssldata = ssldata + "<break time=\"" + item.start_time * breakTimeFactor + "s\"/>";
                 // time in ms
                 t = t + ((item.start_time * 1000) * breakTimeFactor);
-
 
             } else if ( item.type.includes("punctuation") & punctuation.content.includes(".") ) {
                 if (j+1 < sttJsonData.results.items.length ){
@@ -157,32 +156,35 @@ const processTokenizedTextToSpeechJobResult = async (request) => {
                     if ((k+1 < speechmarksJsonData.results.items.length)) {
 
     //                    var previousitem = sttJsonData.results.items[j - 1];
+                        var lastitem = sttJsonData.results.items[j - 1];
                         var nextitem = sttJsonData.results.items[j + 1];
                         var speechmarksJsonDataItem = speechmarksJsonData.results.items[k];
                         var nextSpeechmarksJsonDataItem = speechmarksJsonData.results.items[k + 1];
                         var translatedSentenceDuration = (nextSpeechmarksJsonDataItem.time - speechmarksJsonDataItem.time) * speechSpeedFactor;
-                        console.log(translatedSentenceDuration);
+                        var endCurrentSentence = t + translatedSentenceDuration;
+                        var breakTime = ((nextitem.start_time * 1000) - (lastitem.end_time*1000));
 
                         ssldata = ssldata  + speechmarksJsonDataItem.value.replace('.','<break time="0.5s"/>');
-//                        console.log(speechmarksJsonDataItem.value);
+
+//                        console.log(translatedSentenceDuration);
+//                        console.log("end current sentence:" + endCurrentSentence);
 //                        console.log("start-time next item:" + nextitem.start_time * 1000);
-//                        console.log("end current sentence:" + t + translatedSentenceDuration);
-//                        console.log("break time:" + ((nextitem.start_time * 1000) - (t + translatedSentenceDuration)));
-    //                    ssldata = ssldata  + speechmarksJsonDataItem.value.replace('.','<break time="0.3s"/>').replace(',','<break time="0.2s"/>');
-                        if ( (((nextitem.start_time * 1000) - (t + translatedSentenceDuration)) / 1000) > 0 ){
+//                        console.log("break time:" + breakTime);
+                        ssldata = ssldata + "<break time=\"" + ((((nextitem.start_time * 1000) - (lastitem.end_time * 1000)) / 1000) * breakTimeFactor) + "s\"/>";
+/*                        if ( ((nextitem.start_time * 1000) - (t + translatedSentenceDuration)) > 0 ){
                            ssldata = ssldata + "<break time=\"" + ((((nextitem.start_time * 1000) - (t + translatedSentenceDuration)) / 1000) * breakTimeFactor) + "s\"/>";
                            t = t + (((nextitem.start_time * 1000) - (t + translatedSentenceDuration)) * breakTimeFactor) ;
-                        }
-                    } else {
-
+                        } else if ( ((nextitem.start_time * 1000) - (t + translatedSentenceDuration)) <= 0 ){
+                           t = (nextitem.start_time * 1000) ;
+                        } 
+*/                     } else if ((k+1 === speechmarksJsonData.results.items.length)) {
                         var speechmarksJsonDataItem = speechmarksJsonData.results.items[k];
-                        ssldata = ssldata  + speechmarksJsonDataItem.value.replace('.','');
-
-                    }
+                        ssldata = ssldata  + speechmarksJsonDataItem.value.replace('.','<break time="0.3s"/>');
+                     }
 
                     k = k + 1;
-                    t = t + translatedSentenceDuration + 500;
-                    console.log(t);
+//                    t = t + translatedSentenceDuration + 500;
+//                    console.log(t);
 
                 }
                 console.log(ssldata);

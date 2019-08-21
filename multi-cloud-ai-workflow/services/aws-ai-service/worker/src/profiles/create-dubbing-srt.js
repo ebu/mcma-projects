@@ -52,7 +52,7 @@ async function createDubbingSrt(workerJobHelper) {
         //ffmpeg -i input.mp4 -i input.mp3 -c copy -map 0:v:0 -map 1:a:0 output.mp4
         //ffmpeg -i main.mp4 -i newaudio -filter_complex "[0:a][1:a]amix=duration=shortest[a]" -map 0:v -map "[a]" -c:v copy out.mp4
         //const params_dub = ["-i", input, "-i", dub, "-c", "copy", "-map", "0:v:0", "-map", "1:a:0", dubbed];
-        const params_dub = ["-i", input, "-i", dub, "-filter_complex", "[0:a][1:a]amix=duration=shortest[a]", "-map", "0:v", "-map", "[a]", "-c:v", "copy", dubbed ];
+        const params_dub = ["-i", input, "-i", dub, "-filter_complex", "[0:a][1:a]amix=duration=longest[a]", "-map", "0:v", "-map", "[a]", "-c:v", "copy", dubbed ];
         console.log(params_dub);
         await ffmpeg(params_dub);
 
@@ -62,6 +62,13 @@ async function createDubbingSrt(workerJobHelper) {
         const params_srt = ["-i", dubbed, "-i", srt, "-c", "copy", "-c:s", "mov_text", output];
         console.log(params_srt);
         await ffmpeg(params_srt);
+
+        // ffmpeg -i proxy.mp4 -i ssmlTranslation.mp3 -filter_complex "[0:a][1:a]amix=duration=shortest[a]" -map 0:v -map "[a]" -c:v copy out.mp4 && ffmpeg -i out.mp4 -i srt.srt -c copy -c:s mov_text outputVideo.mp4
+        // ffmpeg -i proxy.mp4 -i ssmlTranslation.mp3 -filter_complex "[0:a][1:a]amix=duration=shortest[a]" -map 0:v -map "[a]" -c:v ; -i srt.srt -c copy -c:s mov_text outputVideo.mp4
+        // burn subtitles in video. ffmpeg -i proxy.mp4 -i ssmlTranslation.mp3 -filter_complex "[0:a][1:a]amix=duration=shortest[a],subtitles=srt.srt" -map 0:v -map "[a]" -c:s mov_text outputVideo.mp4
+//        const params_dub_srt = ["-i", input, "-i", dub, "-filter_complex", "[0:a][1:a]amix=duration=shortest[a]", "-map", "0:v", "-map", "[a]", "-c:v", "copy", dubbed, "&&", "ffmpeg", "-i", dubbed, "-i", srt, "-c", "copy", "-c:s", "mov_text", output];
+//        console.log(params_dub_srt);
+//        await ffmpeg(params_dub_srt);
 
         Logger.debug("6.6. removing local file");
         await fsUnlink(input);

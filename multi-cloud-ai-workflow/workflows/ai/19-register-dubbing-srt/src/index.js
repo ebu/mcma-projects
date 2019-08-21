@@ -20,25 +20,6 @@ const resourceManager = getAwsV4ResourceManager(environmentVariableProvider);
 const WebsiteBucket = process.env.WebsiteBucket;
 
 
-/**
- * get amejob id
- * @param {*} event 
- */
-function getTransformJobId(event) {
-    let id;
-
-    if (event.data.transformJob) {
-        event.data.transformJob.forEach(element => {
-            if (element) {
-                id = element;
-                return true;
-            }
-        });
-    }
-
-    return id;
-}
-
 
 /**
  * Create New BMEssence Object
