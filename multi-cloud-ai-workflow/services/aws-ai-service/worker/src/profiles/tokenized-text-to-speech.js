@@ -164,13 +164,17 @@ const processTokenizedTextToSpeechJobResult = async (request) => {
                         var endCurrentSentence = t + translatedSentenceDuration;
                         var breakTime = ((nextitem.start_time * 1000) - (lastitem.end_time*1000));
 
-                        ssldata = ssldata  + speechmarksJsonDataItem.value.replace('.','<break time="0.5s"/>');
+                        ssldata = ssldata  + speechmarksJsonDataItem.value.replace('.','<break time="0.3s"/>');
 
 //                        console.log(translatedSentenceDuration);
 //                        console.log("end current sentence:" + endCurrentSentence);
 //                        console.log("start-time next item:" + nextitem.start_time * 1000);
 //                        console.log("break time:" + breakTime);
-                        ssldata = ssldata + "<break time=\"" + ((((nextitem.start_time * 1000) - (lastitem.end_time * 1000)) / 1000) * breakTimeFactor) + "s\"/>";
+                        if (((nextitem.start_time * 1000) - (lastitem.end_time * 1000))<2500) {
+                            ssldata = ssldata + "<break time=\"" + ((((nextitem.start_time * 1000) - (lastitem.end_time * 1000)) / 1000)) + "s\"/>";
+                        } else if (((nextitem.start_time * 1000) - (lastitem.end_time * 1000))>=2500) {
+                            ssldata = ssldata + "<break time=\"" + ((((nextitem.start_time * 1000) - (lastitem.end_time * 1000)) / 1000) * breakTimeFactor) + "s\"/>";
+                        }
 /*                        if ( ((nextitem.start_time * 1000) - (t + translatedSentenceDuration)) > 0 ){
                            ssldata = ssldata + "<break time=\"" + ((((nextitem.start_time * 1000) - (t + translatedSentenceDuration)) / 1000) * breakTimeFactor) + "s\"/>";
                            t = t + (((nextitem.start_time * 1000) - (t + translatedSentenceDuration)) * breakTimeFactor) ;

@@ -45,6 +45,7 @@ async function createDubbingSrt(workerJobHelper) {
         await fsWriteFile(srt, data_srt.Body);
 
         Logger.debug("6.5. declare ffmpeg outputs");
+        // the tmp directory is local to the ffmpeg running instance
         output = "/tmp/" + "srtproxy.mp4";
         dubbed = "/tmp/" + "dubbedproxy.mp4";
 
