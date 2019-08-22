@@ -46,6 +46,7 @@ include "deployment",
         "workflows:ai:09-register-celebrities-info-azure",
         "workflows:ai:10-detect-emotions-aws",
         "workflows:ai:11-register-emotions-info-aws",
+        "workflows:ai:20-rekognition-aws",
         "workflows:process-workflow-completion",
         "workflows:process-workflow-failure",
         "workflows:workflow-activity-callback-handler"
