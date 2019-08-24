@@ -153,13 +153,11 @@ const JOB_PROFILES = {
     ValidateSpeechTotext: new JobProfile({
         name: "ValidateSpeechTotext",
         inputParameters: [
-            new JobParameter({ parameterName: "inputFile1", parameterType: "Locator" }),
-            new JobParameter({ parameterName: "inputFile2", parameterType: "Locator" }),
+            new JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
             new JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
         ],
         outputParameters: [
-            new JobParameter({ parameterName: "wordDiffs", parameterType: "Locator" })
-            new JobParameter({ parameterName: "wordErrorRate", parameterType: "Locator" })
+            new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
         ]
     }),
     AWSDetectCelebrities: new JobProfile({

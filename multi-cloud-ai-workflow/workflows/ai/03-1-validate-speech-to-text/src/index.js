@@ -98,8 +98,7 @@ exports.handler = async (event, context) => {
     let job = new AIJob({
         jobProfile: jobProfileId,
         jobInput: new JobParameterBag({
-            inputFile1: s3Object_stt_output_clean,
-            inputFile2: s3Object_stt_output,
+            inputFile: s3Object_stt_output,
             outputLocation: new Locator({
                 awsS3Bucket: TempBucket,
                 awsS3KeyPrefix: JOB_RESULTS_PREFIX

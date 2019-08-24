@@ -31,6 +31,7 @@ async function createDubbingSrt(workerJobHelper) {
         const data = await S3GetObject({ Bucket: inputFile.awsS3Bucket, Key: inputFile.awsS3Key });
 
         Logger.debug("6.2. write proxy to local ffmpeg tmp storage");
+        // the tmp directory is local to the ffmpeg running instance
         const input = "/tmp/" + "proxy.mp4";
         await fsWriteFile(input, data.Body);
 
