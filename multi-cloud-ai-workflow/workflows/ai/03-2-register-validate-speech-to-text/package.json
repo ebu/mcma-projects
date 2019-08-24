@@ -1,7 +1,7 @@
 {
-    "name": "aws-ai-service-worker",
+    "name": "03-register-speech-to-text-output",
     "version": "0.0.0",
-    "description": "AWS Lambda based service leveraging AWS AI services to do AI operations",
+    "description": "",
     "private": true,
     "engines": {
         "node": "~8.10.0"
@@ -11,6 +11,7 @@
     "dependencies": {
         "aws-sdk": "^2.473.0",
         "mcma-aws": "0.3.13",
-        "node-json-rpc2": "1.1.0"
+        "aws-transcription-to-srt": "1.0.5",
+        "subtitle-utils": "1.2.3"
     }
 }

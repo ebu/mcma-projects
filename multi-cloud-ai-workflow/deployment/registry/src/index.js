@@ -150,6 +150,18 @@ const JOB_PROFILES = {
             new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
         ]
     }),
+    ValidateSpeechTotext: new JobProfile({
+        name: "ValidateSpeechTotext",
+        inputParameters: [
+            new JobParameter({ parameterName: "inputFile1", parameterType: "Locator" }),
+            new JobParameter({ parameterName: "inputFile2", parameterType: "Locator" }),
+            new JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
+        ],
+        outputParameters: [
+            new JobParameter({ parameterName: "wordDiffs", parameterType: "Locator" })
+            new JobParameter({ parameterName: "wordErrorRate", parameterType: "Locator" })
+        ]
+    }),
     AWSDetectCelebrities: new JobProfile({
         name: "AWSDetectCelebrities",
         inputParameters: [
@@ -219,7 +231,8 @@ const createServices = (serviceUrls) => {
                             JOB_PROFILES.AWSTranslateText.id ? JOB_PROFILES.AWSTranslateText.id : JOB_PROFILES.AWSTranslateText,
                             JOB_PROFILES.AWSDetectCelebrities.id ? JOB_PROFILES.AWSDetectCelebrities.id : JOB_PROFILES.AWSDetectCelebrities,
                             JOB_PROFILES.AWSDetectEmotions.id ? JOB_PROFILES.AWSDetectEmotions.id : JOB_PROFILES.AWSDetectEmotions,
-                           JOB_PROFILES.CreateDubbingSrt.id ? JOB_PROFILES.CreateDubbingSrt.id : JOB_PROFILES.CreateDubbingSrt
+                            JOB_PROFILES.ValidateSpeechTotext.id ? JOB_PROFILES.ValidateSpeechTotext.id : JOB_PROFILES.ValidateSpeechTotext,
+                            JOB_PROFILES.CreateDubbingSrt.id ? JOB_PROFILES.CreateDubbingSrt.id : JOB_PROFILES.CreateDubbingSrt
                         ]
                     })
                 );

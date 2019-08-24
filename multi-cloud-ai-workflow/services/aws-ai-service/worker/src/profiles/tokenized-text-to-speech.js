@@ -142,13 +142,14 @@ const processTokenizedTextToSpeechJobResult = async (request) => {
             var punctuation = item.alternatives[0];
 //            console.log(item.start_time);
             var speechSpeedFactor = 1;
-            var breakTimeFactor = 1.2;
+            var mediumBreakTimeFactor = 1.1;
+            var longBreakTimeFactor = 1.3;
             var dotTime = 0.3;
 
             if (j === 0 & item.start_time > 0 ) {
-                ssldata = ssldata + "<break time=\"" + item.start_time * breakTimeFactor + "s\"/>";
+                ssldata = ssldata + "<break time=\"" + item.start_time * mediumBreakTimeFactor + "s\"/>";
                 // time in ms
-                t = t + ((item.start_time * 1000) * breakTimeFactor);
+                t = t + ((item.start_time * 1000) * mediumBreakTimeFactor);
 
             } else if ( item.type.includes("punctuation") & punctuation.content.includes(".") ) {
                 if (j+1 < sttJsonData.results.items.length ){
@@ -173,7 +174,9 @@ const processTokenizedTextToSpeechJobResult = async (request) => {
                         if (((nextitem.start_time * 1000) - (lastitem.end_time * 1000))<2500) {
                             ssldata = ssldata + "<break time=\"" + ((((nextitem.start_time * 1000) - (lastitem.end_time * 1000)) / 1000)) + "s\"/>";
                         } else if (((nextitem.start_time * 1000) - (lastitem.end_time * 1000))>=2500) {
-                            ssldata = ssldata + "<break time=\"" + ((((nextitem.start_time * 1000) - (lastitem.end_time * 1000)) / 1000) * breakTimeFactor) + "s\"/>";
+                            ssldata = ssldata + "<break time=\"" + ((((nextitem.start_time * 1000) - (lastitem.end_time * 1000)) / 1000) * mediumBreakTimeFactor) + "s\"/>";
+                        } else if (((nextitem.start_time * 1000) - (lastitem.end_time * 1000))>=5000) {
+                            ssldata = ssldata + "<break time=\"" + ((((nextitem.start_time * 1000) - (lastitem.end_time * 1000)) / 1000) * longBreakTimeFactor) + "s\"/>";
                         }
 /*                        if ( ((nextitem.start_time * 1000) - (t + translatedSentenceDuration)) > 0 ){
                            ssldata = ssldata + "<break time=\"" + ((((nextitem.start_time * 1000) - (t + translatedSentenceDuration)) / 1000) * breakTimeFactor) + "s\"/>";
