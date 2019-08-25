@@ -48,7 +48,7 @@ async function translateText(workerJobHelper) {
 
     // start stt benchmarking job
     // worddiffs and word error rate
-    const config = {
+/*    const config = {
         protocol:'http',//Optional. Will be http by default
         host:'52.30.8.180',
         path:'/api',
@@ -67,7 +67,7 @@ async function translateText(workerJobHelper) {
             }
         console.log('wordiffs:',res);//Json parsed.
         });
-
+*/
 
 /*    // write worddiffs result to file
     let s3Params_worddiffs = {

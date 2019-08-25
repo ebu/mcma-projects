@@ -3,7 +3,12 @@
 // require
 const util = require("util");
 
+
 const AWS = require("aws-sdk");
+const S3 = new AWS.S3();
+const S3GetObject = util.promisify(S3.getObject.bind(S3));
+const S3PutObject = util.promisify(S3.putObject.bind(S3));
+
 const StepFunctions = new AWS.StepFunctions();
 const StepFunctionsGetActivityTask = util.promisify(StepFunctions.getActivityTask.bind(StepFunctions));
 
@@ -95,7 +100,7 @@ exports.handler = async (event, context) => {
     console.log("NotificationUrl:", notificationUrl);
 
     // creating job
-    let job = new AIJob({
+ /*   let job = new AIJob({
         jobProfile: jobProfileId,
         jobInput: new JobParameterBag({
             inputFile: s3Object_stt_output,
@@ -111,4 +116,5 @@ exports.handler = async (event, context) => {
 
     // posting the job to the job repository
     job = await resourceManager.create(job);
+*/
 }
