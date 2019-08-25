@@ -12,13 +12,12 @@ const { Logger, Locator } = require("mcma-core");
 
 async function translateText(workerJobHelper) {
     const jobInput = workerJobHelper.getJobInput();
-    const reference = jobInput.inputFile1;
-    const hypothesis = jobInput.inputFile2;
+    const hypothesis = jobInput.inputFile;
     const outputLocation = jobInput.outputLocation;
 
     // get reference file
-    const s3Bucket_reference = reference.awsS3Bucket;
-    const s3Key_reference = reference.awsS3Key;
+    const s3Bucket_reference = hypothesis.awsS3Bucket;
+    const s3Key_reference = "temp/stt_output_clean.stt";
     let s3Object_reference;
     try {
         s3Object_reference = await S3GetObject({
