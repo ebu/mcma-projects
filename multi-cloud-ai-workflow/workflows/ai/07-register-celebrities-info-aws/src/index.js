@@ -61,26 +61,21 @@ exports.handler = async (event, context) => {
     let celebritiesResult = JSON.parse(s3Object.Body.toString());
 
     let celebritiesMap = {};
-
-    for (let i = 0; i < celebritiesResult.length;) {
-        let celebrity = celebritiesResult[i];
+    for (const [celebrityIndex, celebrity] of celebritiesResult.entries()) {
         let prevCelebrity = celebritiesMap[celebrity.Celebrity.Name];
         if ((!prevCelebrity || celebrity.Timestamp - prevCelebrity.Timestamp > 3000) && celebrity.Celebrity.Confidence > 50) {
             celebritiesMap[celebrity.Celebrity.Name] = celebrity;
-            i++;
         } else {
-            celebritiesResult.splice(i, 1);
+            celebritiesResult.splice(celebrityIndex, 1);
         }
     }
-
-    console.log("AWS Celebrities result", JSON.stringify(celebritiesResult, null, 2));
 
     let bmContent = await resourceManager.resolve(event.input.bmContent);
 
     if (!bmContent.awsAiMetadata) {
         bmContent.awsAiMetadata = {};
     }
-    bmContent.awsAiMetadata.celebrities = celebritiesMap;
+    bmContent.awsAiMetadata.celebrities = celebritiesResult;
 
     await resourceManager.update(bmContent);
 
@@ -91,4 +86,4 @@ exports.handler = async (event, context) => {
     } catch (error) {
         console.warn("Failed to send notification", error);
     }
-}
+};
