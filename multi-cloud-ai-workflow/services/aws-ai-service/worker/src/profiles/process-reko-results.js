@@ -36,44 +36,44 @@ const processRekognitionResult = async (request) => {
         let rekoJobType = request.input.jobInfo.rekoJobType;
         let status = request.input.jobInfo.status;
 
-        if (status != "SUCCEEDED") {
+        if (status !== "SUCCEEDED") {
             throw new Error("AI Rekognition failed job info: rekognition status:" + status);
         }
 
         // 3. Get the result from the Rekognition service
         let data = [];
-        let dataCel = [];
+        let dataCelebrity = [];
         let dataFace = [];
         let dataNextToken;
         switch (rekoJobType) {
             case "StartCelebrityRecognition":
-                dataCel = await RekognitionGetCelebrityRecognition({
+                dataCelebrity = await RekognitionGetCelebrityRecognition({
                     JobId: rekoJobId,
                     SortBy: "TIMESTAMP"
                 });
-                data = data.concat(dataCel.Celebrities);
-                while (dataCel['Celebrities'].length === 1000) {
-                    dataNextToken = dataCel['NextToken'];
-                    dataCel = await RekognitionGetCelebrityRecognition({
+                data = data.concat(dataCelebrity.Celebrities);
+                while (dataCelebrity['Celebrities'].length === 1000) {
+                    dataNextToken = dataCelebrity['NextToken'];
+                    dataCelebrity = await RekognitionGetCelebrityRecognition({
                         JobId: rekoJobId,
                         SortBy: "TIMESTAMP",
                         NextToken: dataNextToken
                     });
-                    data = data.concat(dataCel.Celebrities);
+                    data = data.concat(dataCelebrity.Celebrities);
                 }
                 break;
             case "StartFaceDetection":
                 dataFace = await RekognitionGetFaceDetection({
                     JobId: rekoJobId,
                 });
-                data = data.concat(dataCel['Faces']);
+                data = data.concat(dataFace.Faces);
                 while (dataFace['Faces'].length === 1000) {
                     dataNextToken = dataFace['NextToken'];
                     dataFace = await RekognitionGetFaceDetection({
                         JobId: rekoJobId,
                         NextToken: dataNextToken
                     });
-                    data = data.concat(dataCel['Faces']);
+                    data = data.concat(dataFace.Faces);
                 }
                 break;
             case "StartLabelDetection":
@@ -84,7 +84,6 @@ const processRekognitionResult = async (request) => {
             default:
                 throw new Error("Unknown rekoJobType");
         }
-
 
         if (!data) {
             throw new Error("No data was returned by AWS Rekogntion");
@@ -128,13 +127,13 @@ const processRekognitionResult = async (request) => {
 };
 
 function walkclean(x) {
-    var type = typeof x;
+    let type = typeof x;
     if (x instanceof Array) {
         type = "array";
     }
     if ((type === "array") || (type === "object")) {
         for (let k in x) {
-            var v = x[k];
+            let v = x[k];
             if ((v === "") && (type === "object")) {
                 delete x[k];
             } else {

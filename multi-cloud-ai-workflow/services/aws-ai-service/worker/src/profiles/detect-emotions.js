@@ -6,7 +6,7 @@ const AWS = require('aws-sdk');
 const Rekognition = new AWS.Rekognition();
 const RekognitionStartFaceDetection = util.promisify(Rekognition.startFaceDetection.bind(Rekognition));
 
-const { Logger, EnvironmentVariableProvider, Locator, JobAssignment, AIJob } = require("mcma-core");
+const { Logger, EnvironmentVariableProvider} = require("mcma-core");
 
 const environmentVariableProvider = new EnvironmentVariableProvider();
 
