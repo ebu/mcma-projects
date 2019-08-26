@@ -19,7 +19,11 @@ const resourceManager = getAwsV4ResourceManager(environmentVariableProvider);
  * @param {*} context context
  */
 exports.handler = async (event, context) => {
+
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
+    console.log('context', context);
+    console.log('event', event);
+    console.log('event.data', event.data);
 
     // send update notification
     try {
@@ -35,7 +39,7 @@ exports.handler = async (event, context) => {
     if (!jobId) {
         throw new Error("Failed to obtain awsEmotionsJobId");
     }
-    console.log("[awsEmotionsJobId]:", jobId);
+    console.log("jobId", jobId);
 
     let job = await resourceManager.resolve(jobId);
 
@@ -54,25 +58,25 @@ exports.handler = async (event, context) => {
 
     let emotionsResult = JSON.parse(s3Object.Body.toString());
 
-    console.log("AWS Emotions result", JSON.stringify(emotionsResult, null, 2));
+    // console.log("emotionsResult[0]: ", JSON.stringify(emotionsResult[0], null, 2));
 
     // returning here as we probably should not attach the whole metadata file to the bmContent.
     return;
 
-    let bmContent = await resourceManager.resolve(event.input.bmContent);
-
-    if (!bmContent.awsAiMetadata) {
-        bmContent.awsAiMetadata = {};
-    }
-    bmContent.awsAiMetadata.emotions = emotionsResult;
-
-    await resourceManager.update(bmContent);
-
-    try {
-        event.status = "RUNNING";
-        event.parallelProgress = { "detect-emotions-aws": 100 };
-        await resourceManager.sendNotification(event);
-    } catch (error) {
-        console.warn("Failed to send notification", error);
-    }
-}
+    // let bmContent = await resourceManager.resolve(event.input.bmContent);
+    //
+    // if (!bmContent.awsAiMetadata) {
+    //     bmContent.awsAiMetadata = {};
+    // }
+    // bmContent.awsAiMetadata.emotions = emotionsResult;
+    //
+    // await resourceManager.update(bmContent);
+    //
+    // try {
+    //     event.status = "RUNNING";
+    //     event.parallelProgress = { "detect-emotions-aws": 100 };
+    //     await resourceManager.sendNotification(event);
+    // } catch (error) {
+    //     console.warn("Failed to send notification", error);
+    // }
+};
