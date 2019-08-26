@@ -28,8 +28,8 @@ export class ContentViewModel {
 
             const celebsByName: { [key: string]: any } = {};
 
-            if (this.content.awsAiMetadata.celebrities && this.content.awsAiMetadata.celebrities.Celebrities) {
-                for (const celebrity of this.content.awsAiMetadata.celebrities.Celebrities) {
+            if (this.content.awsAiMetadata.celebrities) {
+                for (const celebrity of this.content.awsAiMetadata.celebrities) {
                     if (celebrity.Celebrity) {
                         if (!celebsByName[celebrity.Celebrity.Id]) {
                             celebsByName[celebrity.Celebrity.Id] = {
