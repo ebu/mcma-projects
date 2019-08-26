@@ -9,6 +9,7 @@ const { ssmlTextToSpeech, processSsmlTextToSpeechJobResult } = require('./profil
 const { textToSpeech, processTextToSpeechJobResult } = require('./profiles/text-to-speech');
 const { tokenizedTextToSpeech, processTokenizedTextToSpeechJobResult } = require('./profiles/tokenized-text-to-speech');
 const { createDubbingSrt } = require('./profiles/create-dubbing-srt');
+const { validateSpeechToText } = require('./profiles/validate-speech-to-text');
 
 const { detectCelebrities } = require('./profiles/detect-celebrities');
 const { detectEmotions } = require('./profiles/detect-emotions');
@@ -25,6 +26,7 @@ const worker =
                 .addProfile(tokenizedTextToSpeech.profileName, tokenizedTextToSpeech)
                 .addProfile(detectEmotions.profileName, detectEmotions)
                 .addProfile(createDubbingSrt.profileName, createDubbingSrt)
+                .addProfile(validateSpeechToText.profileName, validateSpeechToText)
                 .addProfile(detectEmotions.profileName, detectEmotions)
         )
         .handleOperation(processRekognitionResult)

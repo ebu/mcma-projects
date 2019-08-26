@@ -54,6 +54,9 @@ include "deployment",
         "workflows:ai:17-register-ssml-translation-to-speech",
         "workflows:ai:18-dubbing-srt",
         "workflows:ai:19-register-dubbing-srt",
+        "workflows:ai:31-validate-speech-to-text",
+        "workflows:ai:32-register-validate-speech-to-text",
+
         "workflows:process-workflow-completion",
         "workflows:process-workflow-failure",
         "workflows:workflow-activity-callback-handler"

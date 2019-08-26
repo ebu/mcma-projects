@@ -74,6 +74,57 @@ resource "aws_lambda_function" "ai-03-register-speech-to-text-output" {
   }
 }
 
+resource "aws_lambda_function" "ai-31-validate-speech-to-text" {
+  filename         = "./../workflows/ai/31-validate-speech-to-text/dist/lambda.zip"
+  function_name    = "${format("%.64s", "${var.global_prefix}-ai-31-validate-speech-to-text")}"
+  role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
+  handler          = "index.handler"
+  source_code_hash = "${filebase64sha256("./../workflows/ai/31-validate-speech-to-text/dist/lambda.zip")}"
+  runtime          = "nodejs8.10"
+  timeout          = "60"
+  memory_size      = "256"
+
+  environment {
+    variables = {
+      ServicesUrl         = "${var.services_url}"
+      ServicesAuthType    = "${var.services_auth_type}"
+      ServicesAuthContext = "${var.services_auth_context}"
+      RepositoryBucket    = "${var.repository_bucket}"
+      TempBucket          = "${var.temp_bucket}"
+      WebsiteBucket       = "${var.website_bucket}"
+      ActivityCallbackUrl = "${local.workflow_activity_callback_handler_url}"
+      ActivityArn         = "${aws_sfn_activity.ai-31-validate-speech-to-text.id}"
+    }
+  }
+}
+
+resource "aws_sfn_activity" "ai-31-validate-speech-to-text" {
+  name = "${var.global_prefix}-ai-31-validate-speech-to-text"
+}
+
+resource "aws_lambda_function" "ai-32-register-validate-speech-to-text" {
+  filename         = "./../workflows/ai/32-register-validate-speech-to-text/dist/lambda.zip"
+  function_name    = "${format("%.64s", "${var.global_prefix}-ai-32-register-validate-speech-to-text")}"
+  role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
+  handler          = "index.handler"
+  source_code_hash = "${filebase64sha256("./../workflows/ai/32-register-validate-speech-to-text/dist/lambda.zip")}"
+  runtime          = "nodejs8.10"
+  timeout          = "60"
+  memory_size      = "256"
+
+  environment {
+    variables = {
+      ServicesUrl         = "${var.services_url}"
+      ServicesAuthType    = "${var.services_auth_type}"
+      ServicesAuthContext = "${var.services_auth_context}"
+      RepositoryBucket    = "${var.repository_bucket}"
+      TempBucket          = "${var.temp_bucket}"
+      WebsiteBucket       = "${var.website_bucket}"
+    }
+  }
+}
+
+
 resource "aws_lambda_function" "ai-04-translate-speech-transcription" {
   filename         = "./../workflows/ai/04-translate-speech-transcription/dist/lambda.zip"
   function_name    = "${format("%.64s", "${var.global_prefix}-ai-04-translate-speech-transcription")}"
@@ -514,6 +565,10 @@ data "template_file" "ai-workflow" {
     activity-18-dubbing-srt       = "${aws_sfn_activity.ai-18-dubbing-srt.id}"
     lambda-19-register-dubbing-srt   = "${aws_lambda_function.ai-19-register-dubbing-srt.arn}"
 
+    lambda-31-validate-speech-to-text           = "${aws_lambda_function.ai-31-validate-speech-to-text.arn}"
+    activity-31-validate-speech-to-text         = "${aws_sfn_activity.ai-31-validate-speech-to-text.id}"
+    lambda-32-register-validate-speech-to-text   = "${aws_lambda_function.ai-32-register-validate-speech-to-text.arn}"
+    
 
     lambda-process-workflow-completion         = "${aws_lambda_function.process-workflow-completion.arn}"
     lambda-process-workflow-failure            = "${aws_lambda_function.process-workflow-failure.arn}"

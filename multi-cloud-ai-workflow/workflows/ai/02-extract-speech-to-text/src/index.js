@@ -63,6 +63,9 @@ exports.handler = async (event, context) => {
     let notificationUrl = ActivityCallbackUrl + "?taskToken=" + encodeURIComponent(taskToken);
     console.log("NotificationUrl:", notificationUrl);
 
+    console.log("Ihave been here");
+
+
     // creating job
     let job = new AIJob({
         jobProfile: jobProfileId,

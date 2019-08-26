@@ -64,10 +64,12 @@ exports.handler = async (event, context) => {
         throw new Error("JobProfile '" + JOB_PROFILE_NAME + "' not found");
     }
 
+    // manage notification
+    let notificationUrl = ActivityCallbackUrl + "?taskToken=" + encodeURIComponent(taskToken);
+    console.log("NotificationUrl:", notificationUrl);
+
     // writing speech transcription to a textfile in temp bucket
     let bmContent = await resourceManager.resolve(event.input.bmContent);
-
-
 
 //    if (!bmContent.awsAiMetadata ||
 //        !bmContent.awsAiMetadata.transcription ||
@@ -103,9 +105,6 @@ exports.handler = async (event, context) => {
     await S3PutObject(s3Params);
 
 
-    // manage notification
-    let notificationUrl = ActivityCallbackUrl + "?taskToken=" + encodeURIComponent(taskToken);
-    console.log("NotificationUrl:", notificationUrl);
 
     // creating job
     let job = new AIJob({

@@ -33,7 +33,7 @@ exports.handler = async (event, context) => {
     }
 
     // get ai job id (first non null entry in array)
-    let jobId = event.data.translateJobId.find(id => id);
+    let jobId = event.data.validateSpeechToTextJobId.find(id => id);
     if (!jobId) {
         throw new Error("Failed to obtain TranslationJobId");
     }
@@ -42,7 +42,7 @@ exports.handler = async (event, context) => {
     let job = await resourceManager.resolve(jobId);
 
 
-    // get service resulst/outputfile from location bucket+key(prefix+filename)
+    // get service result/outputfile from location bucket+key(prefix+filename)
     let s3Bucket = job.jobOutput.outputFile.awsS3Bucket;
     let s3Key = job.jobOutput.outputFile.awsS3Key;
     let s3Object;
@@ -55,32 +55,23 @@ exports.handler = async (event, context) => {
         throw new Error("Unable to media info file in bucket '" + s3Bucket + "' with key '" + s3Key + "' due to error: " + error.message);
     }
 
-    // get translation result
-    let translationResult = s3Object.Body.toString();
-    let tokenizedTranslationResult = translationResult.split('。');
-    // Japanese
-    //let tokenizedTranslationResult = translationResult.split('。');
-
-    console.log(tokenizedTranslationResult);
+    // get stt benchmarking worddiffs results
+    let worddiffs = s3Object.Body.toString();
+    console.log(worddiffs);
 
     // identify associated bmContent
     let bmContent = await resourceManager.resolve(event.input.bmContent);
-
-
-    // attach translation text to bmContent property translation 
+    // attach worddiffs results to bmContent property translation 
     if (!bmContent.awsAiMetadata) {
         bmContent.awsAiMetadata = {};
     }
     if (!bmContent.awsAiMetadata.transcription) {
         bmContent.awsAiMetadata.transcription = {}
     }
-    bmContent.awsAiMetadata.transcription.translation = translationResult;
-
-    bmContent.awsAiMetadata.transcription.tokenizedTranslation = tokenizedTranslationResult;
+    bmContent.awsAiMetadata.transcription.worddiffs = worddiffs;
 
     // update bmContent
     await resourceManager.update(bmContent);
-
     
     try {
         event.status = "RUNNING";

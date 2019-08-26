@@ -150,8 +150,8 @@ const JOB_PROFILES = {
             new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
         ]
     }),
-    ValidateSpeechTotext: new JobProfile({
-        name: "ValidateSpeechTotext",
+    ValidateSpeechToText: new JobProfile({
+        name: "ValidateSpeechToText",
         inputParameters: [
             new JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
             new JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
@@ -229,7 +229,7 @@ const createServices = (serviceUrls) => {
                             JOB_PROFILES.AWSTranslateText.id ? JOB_PROFILES.AWSTranslateText.id : JOB_PROFILES.AWSTranslateText,
                             JOB_PROFILES.AWSDetectCelebrities.id ? JOB_PROFILES.AWSDetectCelebrities.id : JOB_PROFILES.AWSDetectCelebrities,
                             JOB_PROFILES.AWSDetectEmotions.id ? JOB_PROFILES.AWSDetectEmotions.id : JOB_PROFILES.AWSDetectEmotions,
-                            JOB_PROFILES.ValidateSpeechTotext.id ? JOB_PROFILES.ValidateSpeechTotext.id : JOB_PROFILES.ValidateSpeechTotext,
+                            JOB_PROFILES.ValidateSpeechToText.id ? JOB_PROFILES.ValidateSpeechToText.id : JOB_PROFILES.ValidateSpeechToText,
                             JOB_PROFILES.CreateDubbingSrt.id ? JOB_PROFILES.CreateDubbingSrt.id : JOB_PROFILES.CreateDubbingSrt
                         ]
                     })
