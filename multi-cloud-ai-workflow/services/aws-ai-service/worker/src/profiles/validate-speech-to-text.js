@@ -63,8 +63,8 @@ async function validateSpeechToText(workerJobHelper) {
         method:'POST'//Optional. POST by default
     });    
     let params={};
-    params.ref = referenceText.results.transcripts[0].transcript;
-    params.hyp = hypothesisText;
+    params.ref = "\""+referenceText.results.transcripts[0].transcript+"\"";
+    params.hyp = "\""+hypothesisText+"\"";
     params.dialect = "html";
     // worddiffs
     let request_wd = {};
@@ -77,6 +77,7 @@ async function validateSpeechToText(workerJobHelper) {
     const clientCall = util.promisify(client.call.bind(client));
 
     const result = await clientCall(request_wd);
+    console.log(result);
 
 /*     await client.call(request_wd, 
        (err, res)=>{
@@ -97,7 +98,7 @@ async function validateSpeechToText(workerJobHelper) {
     const s3Params = {
         Bucket: outputLocation.awsS3Bucket,
         Key: (outputLocation.awsS3KeyPrefix ? outputLocation.awsS3KeyPrefix : "") + "benchmark/worddiffs.txt",
-        Body: result
+        Body: JSON.stringify(result) 
     }
     S3PutObject(s3Params);
 
