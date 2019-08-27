@@ -15,6 +15,7 @@ const fsReadFile = util.promisify(fs.readFile);
 const fsUnlink = util.promisify(fs.unlink);
 
 const RpcClient = require('node-json-rpc2').Client;
+const axios = require('axios');
 
 const { Logger, Locator } = require("mcma-core");
 
@@ -22,6 +23,7 @@ async function validateSpeechToText(workerJobHelper) {
     const jobInput = workerJobHelper.getJobInput();
     const hypothesis = jobInput.inputFile;
     const outputLocation = jobInput.outputLocation;
+    const jobAssignmentId = workerJobHelper.getJobAssignmentId();
 
     // get hypothesis file - results from stt sent from step 31 as input parameter in job call
     const s3Bucket_hypothesis = hypothesis.awsS3Bucket;
@@ -72,51 +74,41 @@ async function validateSpeechToText(workerJobHelper) {
     request_wd.method = "metrics.worddiffs";
     console.log(request_wd);
 
-    Bucket_worddiffs = outputLocation.awsS3Bucket;
-    Key_worddiffs = (outputLocation.awsS3KeyPrefix ? outputLocation.awsS3KeyPrefix : "") + "sttbenchmarking/worddiffs.txt";
-    let output = encodeURI(Bucket_worddiffs + "/" + Key_worddiffs);
+    const clientCall = util.promisify(client.call.bind(client));
 
-    await client.call(request_wd,
-        (err, res)=>{
+    const result = await clientCall(request_wd);
+
+/*     await client.call(request_wd, 
+       (err, res)=>{
             if(err){
                 console.log(err);
                 //Do something
             }
-        console.log('wordiffs:',res);//Json parsed.
-        // write worddiffs result to the output location
-        fsAppendFile(output, res, function (err) {
-          if (err) throw err;
-          console.log('File is created successfully.');
-          });
-        });
-
-//    fsUnlink(output);
-
-
-    // Word error rate
-/*    let request_err = {};
-    request_err.jsonrpc = "2.0";
-    request_err.id = "79idqltpu8";
-    request_err.params = params;
-    request_err.method = "metrics.wer";
-    console.log(request_err);
-    client.call(request_err,
-        (err, res)=>{
-            if(err){
-                console.log(err);
-                //Do something
+            console.log('wordiffs:',res);//Json parsed.
+            const s3Params = {
+                Bucket: outputLocation.awsS3Bucket,
+                Key: (outputLocation.awsS3KeyPrefix ? outputLocation.awsS3KeyPrefix : "") + "benchmark/worddiffs.txt",
+                Body: Json.parse(res.toString())
             }
-        console.log('word error rate:',res);//Json parsed.
+            S3PutObject(s3Params).then(()=> console.log("ok")).catch(()=>console.log("chaos"));
         });
 */
 
+    const s3Params = {
+        Bucket: outputLocation.awsS3Bucket,
+        Key: (outputLocation.awsS3KeyPrefix ? outputLocation.awsS3KeyPrefix : "") + "benchmark/worddiffs.txt",
+        Body: result
+    }
+    S3PutObject(s3Params);
+
     // updating JobAssignment with jobOutput
     workerJobHelper.getJobOutput().outputFile = new Locator({
-        awsS3Bucket: Bucket_worddiffs,
-        awsS3Key: Key_worddiffs
+        awsS3Bucket: s3Params.Bucket,
+        awsS3Key: s3Params.Key
     });
+
     await workerJobHelper.complete();
-    
+
 }
 
 validateSpeechToText.profileName = "ValidateSpeechToText";

@@ -19,6 +19,7 @@ const resourceManager = getAwsV4ResourceManager(environmentVariableProvider);
 
 // Environment Variable(AWS Lambda)
 const TempBucket = process.env.TempBucket;
+const WebsiteBucket = process.env.WebsiteBucket;
 const ActivityCallbackUrl = process.env.ActivityCallbackUrl;
 const ActivityArn = process.env.ActivityArn;
 

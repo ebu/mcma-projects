@@ -34,6 +34,7 @@ const worker =
         .handleOperation(processTextToSpeechJobResult)
         .handleOperation(processSsmlTextToSpeechJobResult)
         .handleOperation(processTokenizedTextToSpeechJobResult)
+//        .handleOperation(processValidateSpeechToTextJobResult)
         .build();
 
 
