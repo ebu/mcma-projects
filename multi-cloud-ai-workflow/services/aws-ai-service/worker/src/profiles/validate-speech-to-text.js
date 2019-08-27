@@ -97,7 +97,7 @@ async function validateSpeechToText(workerJobHelper) {
 
     const s3Params = {
         Bucket: outputLocation.awsS3Bucket,
-        Key: (outputLocation.awsS3KeyPrefix ? outputLocation.awsS3KeyPrefix : "") + "benchmark/worddiffs.txt",
+        Key: (outputLocation.awsS3KeyPrefix ? outputLocation.awsS3KeyPrefix : "") + "sttbenchmarking/worddiffs.txt",
         Body: JSON.stringify(result) 
     }
     S3PutObject(s3Params);
