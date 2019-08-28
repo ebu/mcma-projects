@@ -20,33 +20,42 @@ export class MonitorDetailComponent {
     private currentTimeSubject = new BehaviorSubject<number>(0);
     currentTime$ = this.currentTimeSubject.asObservable();
 
-    selectedAzureCelebrity;
+    constructor(
+        private workflowService: WorkflowService,
+        private contentService: ContentService,) {
 
-    get conformJobVm$(): Observable<WorkflowJobViewModel> { return this._conformJobVm$; }
+    }
+
+    get conformJobVm$(): Observable<WorkflowJobViewModel> {
+        return this._conformJobVm$;
+    }
+
     @Input() set conformJobVm$(val: Observable<WorkflowJobViewModel>) {
         this._conformJobVm$ = val;
 
         if (val) {
             this.aiJobVm$ = val.pipe(
-                switchMap(conformJobVm => 
+                switchMap(conformJobVm =>
                     conformJobVm.isCompleted && conformJobVm.aiJobUrl
                         ? this.workflowService.pollForCompletion(conformJobVm.aiJobUrl)
                         : of(null)
                 )
             );
-            
+
             this.content$ = val.pipe(
                 switchMap(conformJobVm =>
                     conformJobVm.isCompleted && conformJobVm.contentUrl
                         ? this.contentService.pollUntil(conformJobVm.contentUrl, this.aiJobVm$.pipe(map(aiJobVm => aiJobVm && aiJobVm.isFinished)))
-                        : of (null)
+                        : of(null)
                 ),
-                tap(contentVm => console.log('got content vm', contentVm))
+                tap(contentVm => {
+                    if (contentVm) {
+                        console.log('contentVm', contentVm)
+                    }
+                })
             );
         }
     }
-
-    constructor(private workflowService: WorkflowService, private contentService: ContentService) {}
 
     seekVideoAws(timestamp: { timecode: string, seconds: number }): void {
         this.currentTimeSubject.next(timestamp.seconds);

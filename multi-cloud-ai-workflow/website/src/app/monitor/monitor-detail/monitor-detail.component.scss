@@ -7,6 +7,10 @@
     display: flex;
 }
 
+::ng-deep .pie-label{
+    fill: #fff !important;
+}
+
 .workflow-job-data {
     display: flex;
     flex: 1;
@@ -78,7 +82,7 @@
         font-size: 20px;
         color: white;
     }
-    
+
     a[mat-button] {
         font-size: 18px;
     }
