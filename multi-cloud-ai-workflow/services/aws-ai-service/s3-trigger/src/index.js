@@ -36,7 +36,7 @@ exports.handler = async (event, context) => {
 
                 const jobAssignmentId = environmentVariableProvider.publicUrl() + "/job-assignments/" + textToSpeechJobUUID;
 
-                // invoking worker lambda function that will process the results of transcription job
+                // invoking worker lambda function that will process the results of text to speech job
                 params = {
                     FunctionName: environmentVariableProvider.getRequiredContextVariable("WorkerFunctionName"),
                     InvocationType: "Event",
@@ -50,7 +50,8 @@ exports.handler = async (event, context) => {
                         }
                     })
                 };
-            } else if (new RegExp(/^[0-9]{3}-TokenizedTextToSpeechJob-[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\..*\.mp3$/i).test(awsS3Key)) {
+            } 
+/*            else if (new RegExp(/^[0-9]{3}-TokenizedTextToSpeechJob-[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\..*\.mp3$/i).test(awsS3Key)) {
                 const tokenizedTextToSpeechJobUUID = awsS3Key.substring(29, 65);
 
                 const jobAssignmentId = environmentVariableProvider.publicUrl() + "/job-assignments/" + tokenizedTextToSpeechJobUUID;
@@ -69,12 +70,13 @@ exports.handler = async (event, context) => {
                         }
                     })
                 };
-            } else if (new RegExp(/^ssmlTextToSpeechJob-[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\..*\.mp3$/i).test(awsS3Key)) {
+            }  
+*/            else if (new RegExp(/^ssmlTextToSpeechJob-[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\..*\.mp3$/i).test(awsS3Key)) {
                 const ssmlTextToSpeechJobUUID = awsS3Key.substring(20, 56);
 
                 const jobAssignmentId = environmentVariableProvider.publicUrl() + "/job-assignments/" + ssmlTextToSpeechJobUUID;
 
-                // invoking worker lambda function that will process the results of transcription job
+                // invoking worker lambda function that will process the results of the polly SSML text to speech job
                 params = {
                     FunctionName: environmentVariableProvider.getRequiredContextVariable("WorkerFunctionName"),
                     InvocationType: "Event",
@@ -93,7 +95,7 @@ exports.handler = async (event, context) => {
 
                 const jobAssignmentId = environmentVariableProvider.publicUrl() + "/job-assignments/" + tokenizedTextToSpeechJobUUID;
 
-                // invoking worker lambda function that will process the results of transcription job
+                // invoking worker lambda function that will process the results of Polly tokenized sentence speechmarks extraction job
                 params = {
                     FunctionName: environmentVariableProvider.getRequiredContextVariable("WorkerFunctionName"),
                     InvocationType: "Event",

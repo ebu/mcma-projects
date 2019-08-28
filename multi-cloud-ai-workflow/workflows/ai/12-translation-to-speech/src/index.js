@@ -58,7 +58,6 @@ exports.handler = async (event, context) => {
     let jobProfiles = await resourceManager.get(JobProfile, { name: JOB_PROFILE_NAME });
 
     let jobProfileId = jobProfiles.length ? jobProfiles[0].id : null;
-
     // if not found bail out
     if (!jobProfileId) {
         throw new Error("JobProfile '" + JOB_PROFILE_NAME + "' not found");
@@ -72,17 +71,15 @@ exports.handler = async (event, context) => {
         !bmContent.awsAiMetadata.transcription.translation ) {
         throw new Error("Missing translation on BMContent")
     }
-
     // extract translation from bmContent and load in a file in tempBucket
     let s3Params = {
         Bucket: TempBucket,
         Key: "AiInput/translation.txt",
-//        Key: "AiInput/translation" + uuidv4() + ".txt",
         Body: bmContent.awsAiMetadata.transcription.translation
     }
-//   console.log(bmContent.awsAiMetadata.transcription.translation);
-
     await S3PutObject(s3Params);
+    // console.log(bmContent.awsAiMetadata.transcription.translation);
+
 
     let notificationUrl = ActivityCallbackUrl + "?taskToken=" + encodeURIComponent(taskToken);
     console.log("NotificationUrl:", notificationUrl);

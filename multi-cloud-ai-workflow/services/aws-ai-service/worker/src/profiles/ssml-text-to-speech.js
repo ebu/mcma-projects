@@ -26,12 +26,17 @@ const { WorkerJobHelper } = require("mcma-worker");
 const { DynamoDbTableProvider, getAwsV4ResourceManager } = require("mcma-aws");
 
 
+// A service to generate text to speech using the SSML language combined with AWS Polly
+
 async function ssmlTextToSpeech(workerJobHelper) {
     const jobInput = workerJobHelper.getJobInput();
     const inputFile = jobInput.inputFile;
     const voiceId = jobInput.voiceId;
     const jobAssignmentId = workerJobHelper.getJobAssignmentId();
+    
+    Logger.debug("16. generate text to speech using SSML and Polly");
 
+    Logger.debug("16.1. get input SSML file from tokenized-text-to-speech");
     // get input text file from tokenized ssml service stored in tempBucket AiInput/ssmlTranslation.txt
     const s3Bucket_ssml = inputFile.awsS3Bucket;
     const s3Key_ssml = inputFile.awsS3Key;
@@ -45,31 +50,33 @@ async function ssmlTextToSpeech(workerJobHelper) {
         throw new Error("Unable to read file in bucket '" + s3Bucket + "' with key '" + s3Key + "' due to error: " + error.message);
     }
 
-    // extract SSML file content
+    Logger.debug("16.2. extract SSML file content");
     const inputText = s3Object_ssml.Body.toString();
     console.log(inputText);
 
+    Logger.debug("16.3. call text to speech service: Polly with SSML");
     const params_ssml = {
-//            Engine: 'neural',
-//            Region: 'eu-west-1',
-//            Endpoint-url: "https://polly.eu-west-1.amazonaws.com/"
             OutputFormat: 'mp3',
             OutputS3BucketName: workerJobHelper.getRequest().getRequiredContextVariable("ServiceOutputBucket"),
             OutputS3KeyPrefix:'ssmlTextToSpeechJob-' + jobAssignmentId.substring(jobAssignmentId.lastIndexOf("/") + 1),
             Text: inputText,
             VoiceId: voiceId,
             TextType: 'ssml'
-//            SampleRate: '22050',
-//            TextType: 'text'
         }
-
     const data = await PollyStartSpeechSynthesisTask(params_ssml);
+    Logger.debug("16.3. job result with output mp3 url provided by the the AWS service")
+    console.log(" -> see request.input.outputFile in processSsmlTextToSpeechJobresult");
     console.log("out:" + JSON.stringify(data, null, 2));
+
+    Logger.debug("16.4. OutputS3KeyPrefix used in s3-trigger");
+    console.log("See regex for ssmltextToSpeechJob in aws-ai-service/se-trigger/src/index.js")
     console.log(params_ssml.OutputS3KeyPrefix);
 }
 
+// Manage jobAssignments via a table in DynamoDb
 const dynamoDbTableProvider = new DynamoDbTableProvider(JobAssignment);
 
+// Process result after s3-trigger
 const processSsmlTextToSpeechJobResult = async (request) => {
     const workerJobHelper = new WorkerJobHelper(
         AIJob,
@@ -84,12 +91,12 @@ const processSsmlTextToSpeechJobResult = async (request) => {
     try {
         await workerJobHelper.initialize();
 
-        // 2. Retrieve job inputParameters
+        Logger.debug("16.5. Retrieve job inputParameters");
         let jobInput = workerJobHelper.getJobInput();
 
-        // 3. Copy textToSpeech output file to output location
+        Logger.debug("16.6. Copy textToSpeech output file to output location defined in Job");
+        // request.input.outputFile -> process temporary output file
         let copySource = encodeURI(request.input.outputFile.awsS3Bucket + "/" + request.input.outputFile.awsS3Key);
-
         console.log(copySource);
 
         let s3Bucket = jobInput.outputLocation.awsS3Bucket;
@@ -105,13 +112,11 @@ const processSsmlTextToSpeechJobResult = async (request) => {
             throw new Error("Unable to copy output file to bucket '" + s3Bucket + "' with key '" + s3Key + "' due to error: " + error.message);
         }
 
-        // 4. updating JobAssignment with jobOutput
+        Logger.debug("16.7. updating jobAssignment with jobOutput");
         workerJobHelper.getJobOutput().outputFile = new Locator({
             awsS3Bucket: s3Bucket,
             awsS3Key: s3Key
         });
-
-        
         await workerJobHelper.complete();
 
 

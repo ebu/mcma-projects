@@ -84,7 +84,7 @@ exports.handler = async (event, context) => {
     // identify associated bmContent
     let bmContent = await resourceManager.resolve(event.input.bmContent);
 
-    // attach translation text to bmContent property translation 
+    // attach ssml of translation text to bmContent property translation 
     if (!bmContent.awsAiMetadata) {
         bmContent.awsAiMetadata = {};
     }

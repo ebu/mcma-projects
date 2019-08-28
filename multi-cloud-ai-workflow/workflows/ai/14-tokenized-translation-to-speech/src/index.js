@@ -75,7 +75,6 @@ exports.handler = async (event, context) => {
         !bmContent.awsAiMetadata.transcription.translation ) {
         throw new Error("Missing translation on BMContent")
     }
-
     // extract translation from bmContent and load in a file in tempBucket
     let s3Params = {
         Bucket: TempBucket,
@@ -83,9 +82,9 @@ exports.handler = async (event, context) => {
 //        Key: "AiInput/tokenizedTranslation.txt",
         Body: bmContent.awsAiMetadata.transcription.translation
     }
+    await S3PutObject(s3Params);
     console.log(bmContent.awsAiMetadata.transcription.translation);
 
-    await S3PutObject(s3Params);
 
     let notificationUrl = ActivityCallbackUrl + "?taskToken=" + encodeURIComponent(taskToken);
     console.log("NotificationUrl:", notificationUrl);

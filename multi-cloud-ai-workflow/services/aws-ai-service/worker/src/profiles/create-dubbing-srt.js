@@ -16,62 +16,57 @@ const S3PutObject = util.promisify(S3.putObject.bind(S3));
 const { Logger, Locator } = require("mcma-core");
 const { ffmpeg } = require("../ffmpeg");
 
+
+// This Service has been setup to add previsouly cretaed subtitle (SRT) track and  dubbed audio track (voice over) to the source video using ffmpeg 
+// see ffmpeg.js under src directory)
+
 async function createDubbingSrt(workerJobHelper) {
     const jobInput = workerJobHelper.getJobInput();
 
-    // 6. Execute ffmepg on input file
-    // Logger.debug("6. Execute ffmepg on input file");
+    Logger.debug("18. Add SRT subtitle and dubbed audio track (voice over) to source mp4 using ffmpeg");
     const inputFile = jobInput.inputFile;
     const outputLocation = jobInput.outputLocation;
 
     let tempFilename;
     if (inputFile.awsS3Bucket && inputFile.awsS3Key) {
 
-        Logger.debug(" 6.1. obtain data from s3 object");
+        Logger.debug("18.1. obtain data from s3 object");
         const data = await S3GetObject({ Bucket: inputFile.awsS3Bucket, Key: inputFile.awsS3Key });
 
-        Logger.debug("6.2. write proxy to local ffmpeg tmp storage");
+        Logger.debug("18.2. write proxy to local ffmpeg tmp storage");
         // the tmp directory is local to the ffmpeg running instance
         const input = "/tmp/" + "proxy.mp4";
         await fsWriteFile(input, data.Body);
 
-        Logger.debug("6.3. write dub to local tmp storage");
+        Logger.debug("18.3. write dub to ffmpeg local tmp storage");
         const data_dub = await S3GetObject({ Bucket: inputFile.awsS3Bucket, Key: "temp/ssmlTranslation.mp3" });
         const dub = "/tmp/" + "ssmlTranslation.mp3";
         await fsWriteFile(dub, data_dub.Body);
 
-        Logger.debug("6.4. write srt to local tmp storage");
+        Logger.debug("18.4. write srt to ffmpeg local tmp storage");
         const data_srt = await S3GetObject({ Bucket: inputFile.awsS3Bucket, Key: "temp/srt_output_clean.srt" });
         const srt = "/tmp/" + "srt_output_clean.srt";
         await fsWriteFile(srt, data_srt.Body);
 
-        Logger.debug("6.5. declare ffmpeg outputs");
+        Logger.debug("18.5. declare ffmpeg outputs");
         output = "/tmp/" + "srtproxy.mp4";
         dubbed = "/tmp/" + "dubbedproxy.mp4";
 
+        Logger.debug("18.6. add new dubbed track");
         //DUB MUST COME FIRST BEFORE SRT
-        //ffmpeg -i input.mp4 -i input.mp3 -c copy -map 0:v:0 -map 1:a:0 output.mp4
         //ffmpeg -i main.mp4 -i newaudio -filter_complex "[0:a][1:a]amix=duration=shortest[a]" -map 0:v -map "[a]" -c:v copy out.mp4
-        //const params_dub = ["-i", input, "-i", dub, "-c", "copy", "-map", "0:v:0", "-map", "1:a:0", dubbed];
         const params_dub = ["-i", input, "-i", dub, "-filter_complex", "[0:a][1:a]amix=duration=longest[a]", "-map", "0:v", "-map", "[a]", "-c:v", "copy", dubbed ];
         console.log(params_dub);
         await ffmpeg(params_dub);
 
+        Logger.debug("18.7. add new SRT track");
         //SRT
-        //ffmpeg -i hifi.avi -i hifi.srt -acodec libfaac -ar 48000 -ab 128k -ac 2 -vcodec libx264 -vpre ipod640 -s 480x240 -b 256k -scodec mov_text hifi.m4v
         //ffmpeg -i inputVideo.mp4 -i inputSubtitle.srt -c copy -c:s mov_text outputVideo.mp4
         const params_srt = ["-i", dubbed, "-i", srt, "-c", "copy", "-c:s", "mov_text", output];
         console.log(params_srt);
         await ffmpeg(params_srt);
 
-        // ffmpeg -i proxy.mp4 -i ssmlTranslation.mp3 -filter_complex "[0:a][1:a]amix=duration=shortest[a]" -map 0:v -map "[a]" -c:v copy out.mp4 && ffmpeg -i out.mp4 -i srt.srt -c copy -c:s mov_text outputVideo.mp4
-        // ffmpeg -i proxy.mp4 -i ssmlTranslation.mp3 -filter_complex "[0:a][1:a]amix=duration=shortest[a]" -map 0:v -map "[a]" -c:v ; -i srt.srt -c copy -c:s mov_text outputVideo.mp4
-        // burn subtitles in video. ffmpeg -i proxy.mp4 -i ssmlTranslation.mp3 -filter_complex "[0:a][1:a]amix=duration=shortest[a],subtitles=srt.srt" -map 0:v -map "[a]" -c:s mov_text outputVideo.mp4
-//        const params_dub_srt = ["-i", input, "-i", dub, "-filter_complex", "[0:a][1:a]amix=duration=shortest[a]", "-map", "0:v", "-map", "[a]", "-c:v", "copy", dubbed, "&&", "ffmpeg", "-i", dubbed, "-i", srt, "-c", "copy", "-c:s", "mov_text", output];
-//        console.log(params_dub_srt);
-//        await ffmpeg(params_dub_srt);
-
-        Logger.debug("6.6. removing local file");
+        Logger.debug("18.8. removing file from ffmpeg local temp repo");
         await fsUnlink(input);
 
     } else {
@@ -79,17 +74,16 @@ async function createDubbingSrt(workerJobHelper) {
     }
 
     // 7. Writing ffmepg output to output location
-    Logger.debug("7. Writing ffmepg output to output location");
-
+    Logger.debug("18.9. Writing ffmepg output to output location");
     const s3Params = {
         Bucket: outputLocation.awsS3Bucket,
         Key: (outputLocation.awsS3KeyPrefix ? outputLocation.awsS3KeyPrefix : "") + "final.mp4",
         Body: await fsReadFile(output)
     }
-
     await S3PutObject(s3Params);
 
     // 9. updating JobAssignment with jobOutput
+    Logger.debug("18.10. Associate output location with job output");
     workerJobHelper.getJobOutput().outputFile = new Locator({
         awsS3Bucket: s3Params.Bucket,
         awsS3Key: s3Params.Key

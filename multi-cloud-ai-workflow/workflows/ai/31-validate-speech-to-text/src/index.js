@@ -80,7 +80,6 @@ exports.handler = async (event, context) => {
         !bmContent.awsAiMetadata.transcription.original) {
         throw new Error("Missing transcription on BMContent")
     }
-
     let s3Params = {
         Bucket: TempBucket,
         Key: "temp/stt_output.txt",
@@ -88,7 +87,7 @@ exports.handler = async (event, context) => {
     }
     await S3PutObject(s3Params);
 
-    // creating job
+    // creating stt benchmarking job
     let job = new AIJob({
         jobProfile: jobProfileId,
         jobInput: new JobParameterBag({

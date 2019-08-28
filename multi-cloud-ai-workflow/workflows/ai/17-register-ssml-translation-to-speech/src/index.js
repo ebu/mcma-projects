@@ -79,7 +79,7 @@ exports.handler = async (event, context) => {
 
     // construct public https endpoint
     let data = await S3GetBucketLocation({ Bucket: s3Bucket });
-//    console.log(JSON.stringify(data, null, 2));
+    // console.log(JSON.stringify(data, null, 2));
     const s3SubDomain = data.LocationConstraint && data.LocationConstraint.length > 0 ? `s3-${data.LocationConstraint}` : "s3";
 
     // update BMContents with reference to text-to-speech output source file
@@ -101,9 +101,8 @@ exports.handler = async (event, context) => {
     } catch (error) {
         throw new Error("Unable to read input file in bucket '" + s3Bucket_temp + "' with key '" + s3Key_temp + "' due to error: " + error.message);
     }
-
-   
-    // destination bucket
+ 
+    // destination bucket - website bucket
     let s3Bucket_web = WebsiteBucket;
     let s3Key_web = "media/ssmlTranslation/ssmlTranslation.mp3";
     try {

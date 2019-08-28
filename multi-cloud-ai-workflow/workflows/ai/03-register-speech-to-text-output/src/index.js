@@ -65,13 +65,12 @@ exports.handler = async (event, context) => {
         console.warn("Failed to send notification", error);
     }
 
-
     // get ai job id (first non null entry in array)
     let jobId = event.data.transcribeJobId.find(id => id);
     if (!jobId) {
         throw new Error("Failed to obtain TranscribeJobId");
     }
-//    console.log("[TranscribeJobId]:", jobId);
+    // console.log("[TranscribeJobId]:", jobId);
 
     // get result of ai job
     let job = await resourceManager.resolve(jobId);
@@ -275,67 +274,6 @@ exports.handler = async (event, context) => {
     // identify current bmContent associated with workflow
     let bmContent = await resourceManager.resolve(event.input.bmContent);
 
-
-////////////////////////////STT/////////////////////////////////////////////
-    // create new locator for file stt_output.txt
-/*    let locator_stt = new Locator({
-        awsS3Bucket: WebsiteBucket,
-        awsS3Key: "stt/stt_output" + ".txt",
-    });
-
-    // declare new bmEssence for stt file
-    let bmEssence_stt = createBMEssence(bmContent, locator_stt, "stt_output_file", "stt_output_file");
-
-    // register BMEssence for srt file
-    bmEssence_stt = await resourceManager.create(bmEssence_stt);
-    if (!bmEssence_stt.id) {
-        throw new Error("Failed to register BMEssence.");
-    }
-
-    // addin BMEssence ID for srt file as reference in bmContent
-    bmContent.bmEssences.push(bmEssence_stt.id);
-*/
-////////////////////////////STT CLEAN //////////////////////////////////////
-    // create new locator for file stt_output.txt
- /*   let locator_stt_clean = new Locator({
-        awsS3Bucket: WebsiteBucket,
-        awsS3Key: "stt/stt_output_clean" + ".txt",
-    });
-
-    // declare new bmEssence for stt file
-    let bmEssence_stt_clean = createBMEssence(bmContent, locator_stt_clean, "stt_output_clean_file", "stt_output_clean_file");
-
-    // register BMEssence for srt file
-    bmEssence_stt_clean = await resourceManager.create(bmEssence_stt_clean);
-    if (!bmEssence_stt_clean.id) {
-        throw new Error("Failed to register BMEssence.");
-    }
-
-    // addin BMEssence ID for srt file as reference in bmContent
-    bmContent.bmEssences.push(bmEssence_stt_clean.id);
-*/
-
-
-////////////////////////////SRT/////////////////////////////////////////////
-    // create new locator for file srt_output.srt
- /*   let locator_srt = new Locator({
-        awsS3Bucket: WebsiteBucket,
-        awsS3Key: "srt/srt_output" + ".srt",
-    });
-
-    // declare new bmEssence for srt file
-    let bmEssence_srt = createBMEssence(bmContent, locator_srt, "srt_output_file", "srt_output_file");
-
-    // register BMEssence for srt file
-    bmEssence_srt = await resourceManager.create(bmEssence_srt);
-    if (!bmEssence_srt.id) {
-        throw new Error("Failed to register BMEssence.");
-    }
-
-    // addin BMEssence ID for srt file as reference in bmContent
-    bmContent.bmEssences.push(bmEssence_srt.id);
-*/
-
 ////////////////////////////VTT CLEAN/CORRECTED//////////////////////////////
     // create new locator for file srt_output_clean.srt
     let locator_vtt_clean = new Locator({
@@ -357,7 +295,7 @@ exports.handler = async (event, context) => {
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// ASSOCIATION CONTENT OF STT AND SRT FILES DIRECTLY WITH BMCONTENT PROPERTIES
+// AllOCATION OF STT AND SRT RESULTS WITH BMCONTENT PROPERTIES
 ///////////////////////////////////////////////////////////////////////////////
     if (!bmContent.awsAiMetadata) {
         bmContent.awsAiMetadata = {};
@@ -369,7 +307,6 @@ exports.handler = async (event, context) => {
     if (!bmContent.awsAiMetadata.cleanTranscription) {
         bmContent.awsAiMetadata.cleanTranscription = {}
     }
-
 
     if (!bmContent.awsSrt) {
         bmContent.awsSrt = {};
@@ -385,7 +322,6 @@ exports.handler = async (event, context) => {
         bmContent.awsSrtClean.transcription = {};
     }
 
-
     // associate srt subtitles with bm Content 
     bmContent.awsSrt.transcription.original = originalTranscriptionToSrt;
     console.log(bmContent.awsSrt.transcription.original);
@@ -393,10 +329,6 @@ exports.handler = async (event, context) => {
     // associate clean srt subtitles with bm Content 
     bmContent.awsSrtClean.transcription.original = cleanTranscriptionToSrt;
     console.log(bmContent.awsSrtClean.transcription.original);
-
-    // associate "timed word + transcript" transcriptionResult with bm Content 
-//    bmContent.awsAiMetadata.transcription.source = JSON.stringify(transcriptionResult, null, 2);
-//    console.log(bmContent.awsAiMetadata.transcription.source);
 
     // associate aggregated transcript with bm Content 
     bmContent.awsAiMetadata.transcription.original = transcript;

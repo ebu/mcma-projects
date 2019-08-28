@@ -42,7 +42,7 @@ exports.handler = async (event, context) => {
     let job = await resourceManager.resolve(jobId);
 
 
-    // get service resulst/outputfile from location bucket+key(prefix+filename)
+    // get translate-text service results/outputfile from location bucket+key(prefix+filename)
     let s3Bucket = job.jobOutput.outputFile.awsS3Bucket;
     let s3Key = job.jobOutput.outputFile.awsS3Key;
     let s3Object;
@@ -55,19 +55,18 @@ exports.handler = async (event, context) => {
         throw new Error("Unable to media info file in bucket '" + s3Bucket + "' with key '" + s3Key + "' due to error: " + error.message);
     }
 
-    // get translation result
+    // get translation result 
     let translationResult = s3Object.Body.toString();
-    let tokenizedTranslationResult = translationResult.split('。');
+    // French
+    let tokenizedTranslationResult = translationResult.split('.');
     // Japanese
     //let tokenizedTranslationResult = translationResult.split('。');
-
     console.log(tokenizedTranslationResult);
 
     // identify associated bmContent
     let bmContent = await resourceManager.resolve(event.input.bmContent);
 
-
-    // attach translation text to bmContent property translation 
+    // attach translation and tokenized translation texts to bmContent property translation 
     if (!bmContent.awsAiMetadata) {
         bmContent.awsAiMetadata = {};
     }
@@ -75,7 +74,6 @@ exports.handler = async (event, context) => {
         bmContent.awsAiMetadata.transcription = {}
     }
     bmContent.awsAiMetadata.transcription.translation = translationResult;
-
     bmContent.awsAiMetadata.transcription.tokenizedTranslation = tokenizedTranslationResult;
 
     // update bmContent

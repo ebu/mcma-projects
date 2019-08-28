@@ -66,10 +66,8 @@ exports.handler = async (event, context) => {
     let job = await resourceManager.resolve(jobId);
     console.log(JSON.stringify(job, null, 2));
 
-
     // Copy textToSpeech output file to output location
     let outputFile = job.jobOutput.outputFile;
-
     // destination bucket: AIJob outputlocation
     let s3Bucket = job.jobInput.outputLocation.awsS3Bucket;
     let s3Key = job.jobInput.outputLocation.awsS3KeyPrefix;
@@ -79,44 +77,15 @@ exports.handler = async (event, context) => {
 
     // construct public https endpoint
     let data = await S3GetBucketLocation({ Bucket: s3Bucket });
-//    console.log(JSON.stringify(data, null, 2));
+    // console.log(JSON.stringify(data, null, 2));
     const s3SubDomain = data.LocationConstraint && data.LocationConstraint.length > 0 ? `s3-${data.LocationConstraint}` : "s3";
-
-/*
-    let httpEndpoint_temp = "https://" + s3SubDomain + ".amazonaws.com/" + s3Bucket + "/" + s3Key;
-
-    // create BMEssence corresponding to speechToText source media file (output from service) in websiteBucket
-    // bmEssence is a locator to the essence and the associated bmContent
-    let locator_temp = new Locator({
-        "awsS3Bucket": s3Bucket,
-        "awsS3Key": s3Key,
-        "httpEndpoint": httpEndpoint_temp
-    });
-
-    let bmEssence_temp = createBMEssence(bmContent, locator_temp, "text-to-speech", "text-to-speech");
-   
-    // register BMEssence to obtain bmEssence Id to provide link in bmContent
-    bmEssence_temp = await resourceManager.create(bmEssence_temp);
-    if (!bmEssence_temp.id) {
-        throw new Error("Failed to register BMEssence_temp.");
-    }
-
-    // add BMEssence ID reference in bmContent array of bmEssences
-    bmContent.bmEssences.push(bmEssence_temp.id);
-
-    // update BMContents with reference to text-to-speech output source file
-    bmContent = await resourceManager.update(bmContent);
-*/
 
     // source URI 
     let copySource = encodeURI(outputFile.awsS3Bucket + "/" + outputFile.awsS3Key);
-   
     // destination bucket
     let s3Bucket_web = WebsiteBucket;
-
     // destination filename. Add texttospeech_ to s3Key/filename to identify textToSpeech essence
     let s3Key_web = "media/translation/translation.mp3";
-
     // execute copy textToSpeech media file to websiteBucket
     try {
         let params = {
@@ -130,28 +99,21 @@ exports.handler = async (event, context) => {
     }
 
     // construct public https endpoint
-//    let data = await S3GetBucketLocation({ Bucket: s3Bucket });
-//    console.log(JSON.stringify(data, null, 2));
-//    const s3SubDomain = data.LocationConstraint && data.LocationConstraint.length > 0 ? `s3-${data.LocationConstraint}` : "s3";
     let httpEndpoint_web = "https://" + s3SubDomain + ".amazonaws.com/" + s3Bucket_web + "/" + s3Key_web;
 
-
-    // create BMEssence corresponding to speechToText media file in websiteBucket
+    // create BMEssence corresponding to textToSpeech media file in websiteBucket
     // bmEssence is a locator to the essence and the associated bmContent
     let locator_web = new Locator({
         "awsS3Bucket": s3Bucket_web,
         "awsS3Key": s3Key_web,
         "httpEndpoint": httpEndpoint_web
     });
-
     let bmEssence_web = createBMEssence(bmContent, locator_web, "text-to-speech-web", "text-to-speech-web");
-   
     // register BMEssence to obtain bmEssence Id to provide link in bmContent
     bmEssence_web = await resourceManager.create(bmEssence_web);
     if (!bmEssence_web.id) {
         throw new Error("Failed to register BMEssence_web.");
     }
-
     // add BMEssence ID reference in bmContent array of bmEssences
     bmContent.bmEssences.push(bmEssence_web.id);
 

@@ -65,35 +65,28 @@ exports.handler = async (event, context) => {
         throw new Error("JobProfile '" + JOB_PROFILE_NAME + "' not found");
     }
 
-    // writing speech transcription to a textfile in temp bucket from translation associated to bmContent
+    // identify event related bmContent
     let bmContent = await resourceManager.resolve(event.input.bmContent);
 
-
-    // see ssml translation to speech step 15
+    // get ssml translation from bmContent
     if (!bmContent.awsAiMetadata ||
         !bmContent.awsAiMetadata.transcription ||
         !bmContent.awsAiMetadata.transcription.ssmlTranslation ) {
         throw new Error("Missing ssml translation on BMContent")
     }
-
     console.log(bmContent.awsAiMetadata.transcription.ssmlTranslation);
-
     let s3Bucket = TempBucket;
     let s3Key = "AiInput/ssmlTranslation.txt";
-
-    // extract translation from bmContent and load in a file in tempBucket
+    // get ssml translation from bmContent and load in a file in tempBucket
     let s3Params = {
         Bucket: s3Bucket,
         Key: s3Key,
-//        Key: "AiInput/translation" + uuidv4() + ".txt",
         Body: bmContent.awsAiMetadata.transcription.ssmlTranslation
     }
-//   console.log(bmContent.awsAiMetadata.transcription.tokenizedTranslation);
-
     await S3PutObject(s3Params);
+    // console.log(bmContent.awsAiMetadata.transcription.tokenizedTranslation);
 
-
-    let s3Object;
+/*    let s3Object;
         try {
             s3Object = await S3GetObject({
                 Bucket: s3Bucket,
@@ -102,14 +95,12 @@ exports.handler = async (event, context) => {
         } catch (error) {
             throw new Error("Unable to copy ssml file in bucket '" + s3Bucket + "' with key '" + s3Key + "' due to error: " + error.message);
         }
-
-
     console.log(s3Object.Body.toString());
-
+*/
     let notificationUrl = ActivityCallbackUrl + "?taskToken=" + encodeURIComponent(taskToken);
     console.log("NotificationUrl:", notificationUrl);
 
-    // creating job
+    // creating Polly job for text to speech in French using ssml translation data
     let job = new AIJob({
         jobProfile: jobProfileId,
         jobInput: new JobParameterBag({
@@ -118,7 +109,6 @@ exports.handler = async (event, context) => {
                 awsS3Key: s3Key
             }),
             voiceId: "Lea",
-//            voiceId: "Mizuki",
             outputLocation: new Locator({
                 awsS3Bucket: TempBucket,
                 awsS3KeyPrefix: JOB_RESULTS_PREFIX

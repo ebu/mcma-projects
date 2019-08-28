@@ -71,25 +71,7 @@ exports.handler = async (event, context) => {
     // writing speech transcription to a textfile in temp bucket
     let bmContent = await resourceManager.resolve(event.input.bmContent);
 
-//    if (!bmContent.awsAiMetadata ||
-//        !bmContent.awsAiMetadata.transcription ||
-//        !bmContent.awsAiMetadata.transcription.original) {
-//        throw new Error("Missing transcription on BMContent")
-//    }
-
-//    let s3Params = {
-//        Bucket: TempBucket,
-//        Key: "AiInput/" + uuidv4() + ".txt",
-//        Body: bmContent.awsAiMetadata.transcription.original
-//    }
-
-//    await S3PutObject(s3Params);
-
-
-    // writing CLEAN speech transcription to a textfile in temp bucket and provide via bmContent
-    // Other option, SEE ALSO Bucket: TempBucket, Key: "stt/stt_output_clean" + ".txt", from step 3
-
-
+    // writing CLEAN speech transcription from bmContent to a textfile in temp bucket for transfer to translation service
     if (!bmContent.awsAiMetadata ||
         !bmContent.awsAiMetadata.cleanTranscription ||
         !bmContent.awsAiMetadata.cleanTranscription.original) {
@@ -101,12 +83,9 @@ exports.handler = async (event, context) => {
         Key: "AiInput/stt_output_clean.txt",
         Body: bmContent.awsAiMetadata.cleanTranscription.original
     }
-
     await S3PutObject(s3Params);
 
-
-
-    // creating job
+    // creating job translation of clean transcription
     let job = new AIJob({
         jobProfile: jobProfileId,
         jobInput: new JobParameterBag({

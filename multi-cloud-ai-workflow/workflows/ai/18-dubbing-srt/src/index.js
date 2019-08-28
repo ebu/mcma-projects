@@ -67,7 +67,7 @@ exports.handler = async (event, context) => {
     let notificationUrl = ActivityCallbackUrl + "?taskToken=" + encodeURIComponent(taskToken);
     console.log("NotificationUrl:", notificationUrl);
 
-    // creating the tranformjob(lambda)
+    // creating the dubbbing srt job giving the original mp4 file as input. To be associated with SRT subtitles and dubbing audio track in service
     let job = new AIJob({
         jobProfile: jobProfileId,
         jobInput: new JobParameterBag({
