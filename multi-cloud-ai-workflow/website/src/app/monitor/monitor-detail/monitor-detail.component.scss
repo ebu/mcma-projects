@@ -78,7 +78,7 @@
         font-size: 20px;
         color: white;
     }
-    
+
     a[mat-button] {
         font-size: 18px;
     }
@@ -102,6 +102,17 @@
 
 .ai-data-group {
     margin: 25px;
+
+    .ai-sttbenchmarking-data {
+
+        .delete {
+            color: green;
+        }
+
+        .insert {
+            color: red;
+        }
+    }
 }
 
 .ai-state {
@@ -154,12 +165,13 @@
 
 tr.mat-row {
     cursor: pointer;
+
     &:hover {
         background: rgba(255, 255, 255, 0.1);
     }
 
     &.highlight {
-        background:  rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.1);
     }
 }
 
