@@ -14,7 +14,10 @@ export class McmaClientService {
     private resourceManagerSubject = new BehaviorSubject<ResourceManager>(null);
     resourceManager$ = this.resourceManagerSubject.asObservable().pipe(filter(x => !!x));
 
-    constructor(private configService: ConfigService, private cognitoAuthService: CognitoAuthService) {
+    constructor(
+        private configService: ConfigService,
+        private cognitoAuthService: CognitoAuthService
+    ) {
         zip(
             this.cognitoAuthService.credentials$.pipe(filter(creds => { console.log(creds); return !!creds && !!creds.accessKeyId; })),
             this.configService.get<string>('resourceManager.servicesUrl'),

@@ -1,10 +1,14 @@
 import { BMContent } from 'mcma-core';
+import { McmaClientService } from "../services/mcma-client.service";
+import { from } from "rxjs";
+import { switchMap, tap } from "rxjs/operators";
 
 export class ContentViewModel {
     awsAiMetadata: { transcription: { original, translation, worddiffs } }
     awsTranscription: string;
     awsTranslation: string;
     awsWorddiffs: string;
+    awsSpeechToSpeech: { mp4?: string, vtt?: string } = {};
     awsCelebrities: { selected: any, data: any[] } = {selected: null, data: []};
 
     azureTranscription: string;
@@ -15,10 +19,45 @@ export class ContentViewModel {
             !this.azureTranscription && this.azureCelebrities.data.length === 0;
     }
 
-    constructor(public content: BMContent) {
+    constructor(
+        public content: BMContent,
+        private mcmaClientService: McmaClientService,
+        // public http: HttpClient,
+    ) {
         console.log('creating content vm', content);
         this.populateAwsData();
         this.populateAzureData();
+        this.callBMEssences();
+    }
+
+    callBMEssences() {
+        if (this.content && this.content.bmEssences) {
+            let bmEssences = this.content.bmEssences;
+            for (let bmEssencesItem of bmEssences) {
+                this.getBMEssence(bmEssencesItem);
+            }
+        }
+    }
+
+    getBMEssence(contentUrl: string) {
+        this.mcmaClientService.resourceManager$.pipe(
+            switchMap(resourceManager => {
+                return from(resourceManager.resolve<any>(contentUrl)).pipe(
+                    tap(data => {
+                        console.log('gotBMEssence: data (tap 1)', data);
+                        if (data.title === "dubbing-srt-output") {
+                            this.awsSpeechToSpeech.mp4 = data.locations[0].httpEndpoint;
+                        }
+                        if (data.title === "clean_vtt_output_file") {
+                            this.awsSpeechToSpeech.vtt = data.locations[0].httpEndpoint;
+                        }
+                    })
+                );
+            }),
+            tap(data => {
+                console.log('gotBMEssence: data (tap 2)', data);
+            })
+        ).subscribe();
     }
 
     private populateAwsData(): void {
