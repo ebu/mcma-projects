@@ -50,28 +50,7 @@ exports.handler = async (event, context) => {
                         }
                     })
                 };
-            } 
-/*            else if (new RegExp(/^[0-9]{3}-TokenizedTextToSpeechJob-[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\..*\.mp3$/i).test(awsS3Key)) {
-                const tokenizedTextToSpeechJobUUID = awsS3Key.substring(29, 65);
-
-                const jobAssignmentId = environmentVariableProvider.publicUrl() + "/job-assignments/" + tokenizedTextToSpeechJobUUID;
-
-                // invoking worker lambda function that will process the results of transcription job
-                params = {
-                    FunctionName: environmentVariableProvider.getRequiredContextVariable("WorkerFunctionName"),
-                    InvocationType: "Event",
-                    LogType: "None",
-                    Payload: JSON.stringify({
-                        operationName: "ProcessTokenizedTextToSpeechJobResult",
-                        contextVariables: environmentVariableProvider.getAllContextVariables(),
-                        input: {
-                            jobAssignmentId,
-                            outputFile: new Locator({ awsS3Bucket: awsS3Bucket, awsS3Key: awsS3Key })
-                        }
-                    })
-                };
-            }  
-*/            else if (new RegExp(/^ssmlTextToSpeechJob-[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\..*\.mp3$/i).test(awsS3Key)) {
+            } else if (new RegExp(/^ssmlTextToSpeechJob-[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\..*\.mp3$/i).test(awsS3Key)) {
                 const ssmlTextToSpeechJobUUID = awsS3Key.substring(20, 56);
 
                 const jobAssignmentId = environmentVariableProvider.publicUrl() + "/job-assignments/" + ssmlTextToSpeechJobUUID;

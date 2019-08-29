@@ -14,13 +14,13 @@ const AWS = require("aws-sdk");
 const S3 = new AWS.S3();
 const S3GetObject = util.promisify(S3.getObject.bind(S3));
 const S3PutObject = util.promisify(S3.putObject.bind(S3));
+const S3GetBucketLocation = util.promisify(S3.getBucketLocation.bind(S3));
 
 const srtConvert = require("aws-transcription-to-srt");
 const Subtitle = require("subtitle-utils");
 
 const { EnvironmentVariableProvider, Locator, BMEssence } = require("mcma-core");
 const { getAwsV4ResourceManager } = require("mcma-aws");
-
 const environmentVariableProvider = new EnvironmentVariableProvider();
 const resourceManager = getAwsV4ResourceManager(environmentVariableProvider);
 
@@ -223,7 +223,7 @@ exports.handler = async (event, context) => {
 
 
 ////////////////////////////////////////////////////////////////////////////
-// CORRECTED / EDITED SPEECH TO TEXT TRANSCRIPTION TO SRT SUBTITLES
+// CORRECTED / EDITED SPEECH TO TEXT TRANSCRIPTION TO SRT/VTT SUBTITLES
 ////////////////////////////////////////////////////////////////////////////
     // Convert corrected transcription timed words into clean srt subtitles using file in website bucket
     let cleanTranscriptionToSrt = srtConvert(cleanTranscriptionResult);
@@ -256,10 +256,13 @@ exports.handler = async (event, context) => {
     let srtToVtt = Subtitle.fromSRT(cleanTranscriptionToSrt).toVTT();
     console.log(srtToVtt);
 
+    s3Bucket_vtt = WebsiteBucket;
+    s3Key_vtt = "DubbingSrtJobResults/final" + ".vtt";
+
     try {
             let s3Params_vtt = {
-                Bucket: WebsiteBucket,
-                Key: "DubbingSrtJobResults/final" + ".vtt",
+                Bucket: s3Bucket_vtt,
+                Key: s3Key_vtt,
                 Body: srtToVtt
             };
             await S3PutObject(s3Params_vtt);
@@ -269,16 +272,22 @@ exports.handler = async (event, context) => {
 
 
 ////////////////////////////////////////////////////////////////////////////
-// ASSOCIATION OF STT AND SRT FILES (BMESSENCES) WITH BMCONTENT
+// ASSOCIATION OF VTT, STT AND SRT FILES (BMESSENCES) WITH BMCONTENT
 ////////////////////////////////////////////////////////////////////////////
     // identify current bmContent associated with workflow
     let bmContent = await resourceManager.resolve(event.input.bmContent);
 
 ////////////////////////////VTT CLEAN/CORRECTED//////////////////////////////
-    // create new locator for file srt_output_clean.srt
+
+    // construct public https endpoint
+    let data = await S3GetBucketLocation({ Bucket: s3Bucket });
+    const s3SubDomain = data.LocationConstraint && data.LocationConstraint.length > 0 ? `s3-${data.LocationConstraint}` : "s3";
+    let httpEndpoint_web = "https://" + s3SubDomain + ".amazonaws.com/" + s3Bucket_vtt + "/" + s3Key_vtt;    // create new locator for file srt_output_clean.srt
+
     let locator_vtt_clean = new Locator({
-        awsS3Bucket: WebsiteBucket,
-        awsS3Key: "DubbingSrtJobResults/final" + ".vtt",
+        awsS3Bucket: s3Bucket_vtt,
+        awsS3Key: s3Key_vtt,
+        httpEndpoint: httpEndpoint_web
     });
 
     // declare new bmEssence for srt file

@@ -80,11 +80,4 @@ exports.handler = async (event, context) => {
     await resourceManager.update(bmContent);
 
     
-    try {
-        event.status = "RUNNING";
-        event.parallelProgress = { "speech-text-translate": 100 };
-        await resourceManager.sendNotification(event);
-    } catch (error) {
-        console.warn("Failed to send notification", error);
-    }
 }
