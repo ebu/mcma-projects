@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, BehaviorSubject, from, timer } from 'rxjs';
-import { map, concatMap, takeWhile, switchMap, tap } from 'rxjs/operators';
+import { takeWhile, switchMap, tap } from 'rxjs/operators';
 
 import { BMContent } from 'mcma-core';
 import { McmaClientService } from './mcma-client.service';

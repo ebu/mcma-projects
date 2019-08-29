@@ -1,12 +1,14 @@
 import { BMContent } from 'mcma-core';
 
 export class ContentViewModel {
+    awsAiMetadata: { transcription: { original, translation, worddiffs } }
     awsTranscription: string;
     awsTranslation: string;
-    awsCelebrities: { selected: any, data: any[] } = { selected: null, data: [] };
+    awsWorddiffs: string;
+    awsCelebrities: { selected: any, data: any[] } = {selected: null, data: []};
 
     azureTranscription: string;
-    azureCelebrities: { selected: any, data: any[] } = { selected: null, data: [] };
+    azureCelebrities: { selected: any, data: any[] } = {selected: null, data: []};
 
     get noData(): boolean {
         return !this.awsTranscription && !this.awsTranslation && this.awsCelebrities.data.length === 0 &&
@@ -24,6 +26,7 @@ export class ContentViewModel {
             if (this.content.awsAiMetadata.transcription) {
                 this.awsTranscription = this.content.awsAiMetadata.transcription.original;
                 this.awsTranslation = this.content.awsAiMetadata.transcription.translation;
+                this.awsWorddiffs = JSON.parse(this.content.awsAiMetadata.transcription.worddiffs).result;
             }
 
             const celebsByName: { [key: string]: any } = {};
@@ -54,7 +57,7 @@ export class ContentViewModel {
 
     private convertToTimeCode(totalMilliseconds: number): string {
         let remaining = totalMilliseconds;
-        
+
         const milliseconds = remaining % 1000;
         remaining -= milliseconds;
 
@@ -66,7 +69,7 @@ export class ContentViewModel {
 
         const hours = (remaining / 3600000);
 
-        return `${hours < 10 ? '0' : ''}${hours}:${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}.${milliseconds}`; 
+        return `${hours < 10 ? '0' : ''}${hours}:${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}.${milliseconds}`;
     }
 
     private populateAzureData(): void {
