@@ -21,9 +21,6 @@ const resourceManager = getAwsV4ResourceManager(environmentVariableProvider);
 exports.handler = async (event, context) => {
 
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
-    console.log('context', context);
-    console.log('event', event);
-    console.log('event.data', event.data);
 
     // send update notification
     try {
@@ -39,13 +36,10 @@ exports.handler = async (event, context) => {
     if (!jobId) {
         throw new Error("Failed to obtain awsCelebritiesJobId");
     }
-    console.log("jobId", jobId);
 
     let job = await resourceManager.resolve(jobId);
 
-    console.log("job", job);
-
-    // get celebrities info 
+    // get celebrities info
     let s3Bucket = job.jobOutput.outputFile.awsS3Bucket;
     let s3Key = job.jobOutput.outputFile.awsS3Key;
     let s3Object;
@@ -55,26 +49,41 @@ exports.handler = async (event, context) => {
             Key: s3Key,
         });
     } catch (error) {
-        throw new Error("Unable to celebrities info file in bucket '" + s3Bucket + "' with key '" + s3Key + "' due to error: " + error.message);
+        throw new Error("Unable to load celebrities info file in bucket '" + s3Bucket + "' with key '" + s3Key + "' due to error: " + error.message);
     }
 
     let celebritiesResult = JSON.parse(s3Object.Body.toString());
 
     let celebritiesMap = {};
-    for (const [celebrityIndex, celebrity] of celebritiesResult.entries()) {
+    const timestampTolerance = 3000;
+    const confidenceTolerance = 75;
+    for (let j = 0; j < celebritiesResult.length;) {
+        let celebrity = celebritiesResult[j];
         let prevCelebrity = celebritiesMap[celebrity.Celebrity.Name];
-        if ((!prevCelebrity || celebrity.Timestamp - prevCelebrity.Timestamp > 3000) && celebrity.Celebrity.Confidence > 50) {
+        if ((!prevCelebrity || celebrity.Timestamp - prevCelebrity.Timestamp > timestampTolerance) && celebrity.Celebrity.Confidence > confidenceTolerance) {
             celebritiesMap[celebrity.Celebrity.Name] = celebrity;
+            j++;
         } else {
-            celebritiesResult.splice(celebrityIndex, 1);
+            celebritiesResult.splice(j, 1);
         }
     }
+
+    // let celebritiesMap = {};
+    // let filteredCelebritiesResult = [];
+    // for (const celebrity of celebritiesResult) {
+    //     let prevCelebrity = celebritiesMap[celebrity.Celebrity.Name];
+    //     if ((!prevCelebrity || celebrity.Timestamp - prevCelebrity.Timestamp > timestampTolerance) && celebrity.Celebrity.Confidence > confidenceTolerance) {
+    //         celebritiesMap[celebrity.Celebrity.Name] = celebrity;
+    //         filteredCelebritiesResult.push(celebrity);
+    //     }
+    // }
 
     let bmContent = await resourceManager.resolve(event.input.bmContent);
 
     if (!bmContent.awsAiMetadata) {
         bmContent.awsAiMetadata = {};
     }
+
     bmContent.awsAiMetadata.celebrities = celebritiesResult;
 
     await resourceManager.update(bmContent);
