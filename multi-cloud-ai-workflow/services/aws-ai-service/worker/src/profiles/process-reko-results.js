@@ -35,6 +35,8 @@ const processRekognitionResult = async (request) => {
         let rekoJobId = request.input.jobInfo.rekoJobId;
         let rekoJobType = request.input.jobInfo.rekoJobType;
         let status = request.input.jobInfo.status;
+        let videoFileName = jobInput.inputFile.awsS3Key;
+        videoFileName = videoFileName.replace(".mp4", "").replace("media/", "");
 
         if (status !== "SUCCEEDED") {
             throw new Error("AI Rekognition failed job info: rekognition status:" + status);
@@ -52,6 +54,7 @@ const processRekognitionResult = async (request) => {
                     SortBy: "TIMESTAMP"
                 });
                 data = data.concat(dataCelebrity.Celebrities);
+                let count = 0;
                 while (dataCelebrity['Celebrities'].length === 1000) {
                     dataNextToken = dataCelebrity['NextToken'];
                     dataCelebrity = await RekognitionGetCelebrityRecognition({
@@ -59,7 +62,10 @@ const processRekognitionResult = async (request) => {
                         SortBy: "TIMESTAMP",
                         NextToken: dataNextToken
                     });
-                    data = data.concat(dataCelebrity.Celebrities);
+                    if (count < 6) {
+                        data = data.concat(dataCelebrity.Celebrities);
+                        count++;
+                    }
                 }
                 break;
             case "StartFaceDetection":
@@ -67,13 +73,17 @@ const processRekognitionResult = async (request) => {
                     JobId: rekoJobId,
                 });
                 data = data.concat(dataFace.Faces);
+                let count2 = 0;
                 while (dataFace['Faces'].length === 1000) {
                     dataNextToken = dataFace['NextToken'];
                     dataFace = await RekognitionGetFaceDetection({
                         JobId: rekoJobId,
                         NextToken: dataNextToken
                     });
-                    data = data.concat(dataFace.Faces);
+                    if (count2 < 6) {
+                        data = data.concat(dataFace.Faces);
+                        count2++;
+                    }
                 }
                 break;
             case "StartLabelDetection":
@@ -89,13 +99,13 @@ const processRekognitionResult = async (request) => {
             throw new Error("No data was returned by AWS Rekogntion");
         }
 
-        Logger.debug("data returned by Rekognition", JSON.stringify(data, null, 2));
+        // Logger.debug("data returned by Rekognition", JSON.stringify(data, null, 2));
 
         // AWS Reko may create empty json element - remove them
         walkclean(data);
 
         // 3. write Reko output file to output location
-        const newS3Key = "reko_" + rekoJobType + "_" + uuidv4() + ".json";
+        const newS3Key = "reko_" + "media_" + videoFileName + "_" + rekoJobType + "_" + uuidv4() + ".json";
         const s3Params = {
             Bucket: s3Bucket,
             Key: newS3Key,
