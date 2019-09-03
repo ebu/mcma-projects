@@ -19,15 +19,7 @@ const resourceManager = getAwsV4ResourceManager(environmentVariableProvider);
  * @param {*} context context
  */
 exports.handler = async (event, context) => {
-
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
-    console.log('context', context);
-    console.log('event', event);
-    console.log('event.data', event.data);
-    console.log('event.data.awsRekognition', event.data.awsRekognition);
-    console.log('event.data.awsRekognition.data', event.data.awsRekognition.data);
-    console.log("event.data.awsRekognition['0'].data.awsCelebritiesJobId", event.data.awsRekognition['0'].data.awsCelebritiesJobId);
-
     // send update notification
     try {
         event.status = "RUNNING";
@@ -36,15 +28,12 @@ exports.handler = async (event, context) => {
     } catch (error) {
         console.warn("Failed to send notification", error);
     }
-
     // awsCelebrities
     let awsCelebritiesJobId = event.data.awsRekognition['0'].data.awsCelebritiesJobId.find(id => id);
     if (!awsCelebritiesJobId) {
         throw new Error("Failed to obtain awsCelebritiesJobId");
     }
-    console.log("awsCelebritiesJobId", awsCelebritiesJobId);
     let awsCelebritiesJob = await resourceManager.resolve(awsCelebritiesJobId);
-    console.log("awsCelebritiesJob", awsCelebritiesJob);
     let s3Bucket = awsCelebritiesJob.jobOutput.outputFile.awsS3Bucket;
     let s3Key = awsCelebritiesJob.jobOutput.outputFile.awsS3Key;
     let awsCelebritiesJobS3Object;
@@ -54,19 +43,15 @@ exports.handler = async (event, context) => {
             Key: s3Key,
         });
     } catch (error) {
-        throw new Error("Unable to celebrities info file in bucket '" + s3Bucket + "' with key '" + s3Key + "' due to error: " + error.message);
+        throw new Error("Unable to load celebrities info file in bucket '" + s3Bucket + "' with key '" + s3Key + "' due to error: " + error.message);
     }
     let celebritiesResult = JSON.parse(awsCelebritiesJobS3Object.Body.toString());
-    console.log("celebritiesResult[0]", JSON.stringify(celebritiesResult[0], null, 2));
-
     // awsEmotions
     let awsEmotionsJobId = event.data.awsRekognition['1'].data.awsEmotionsJobId.find(id => id);
     if (!awsEmotionsJobId) {
         throw new Error("Failed to obtain awsEmotionsJobId");
     }
-    console.log("awsEmotionsJobId", awsEmotionsJobId);
     let awsEmotionsJob = await resourceManager.resolve(awsEmotionsJobId);
-    console.log("awsEmotionsJob", awsEmotionsJob);
     let awsEmotionsS3Bucket = awsEmotionsJob.jobOutput.outputFile.awsS3Bucket;
     let awsEmotionsS3Key = awsEmotionsJob.jobOutput.outputFile.awsS3Key;
     let awsEmotionsJobS3Object;
@@ -76,31 +61,22 @@ exports.handler = async (event, context) => {
             Key: awsEmotionsS3Key,
         });
     } catch (error) {
-        throw new Error("Unable to celebrities info file in bucket '" + awsEmotionsS3Bucket + "' with key '" + awsEmotionsS3Key + "' due to error: " + error.message);
+        throw new Error("Unable to load emotions info file in bucket '" + awsEmotionsS3Bucket + "' with key '" + awsEmotionsS3Key + "' due to error: " + error.message);
     }
     let emotionsResult = JSON.parse(awsEmotionsJobS3Object.Body.toString());
-    console.log("emotionsResult[0]", JSON.stringify(emotionsResult[0], null, 2));
-
     let celebritiesEmotionsScores = createCelebritiesEmotionsScores(celebritiesResult, emotionsResult);
-    console.log("celebritiesEmotionsScores", celebritiesEmotionsScores);
-
     let bmContent = await resourceManager.resolve(event.input.bmContent);
-
     if (!bmContent.awsAiMetadata) {
         bmContent.awsAiMetadata = {};
     }
     bmContent.awsAiMetadata.celebritiesEmotions = celebritiesEmotionsScores;
-
     await resourceManager.update(bmContent);
-
     try {
         event.status = "RUNNING";
-        // event.parallelProgress = { "detect-celebrities-aws": 100 };
         await resourceManager.sendNotification(event);
     } catch (error) {
         console.warn("Failed to send notification", error);
     }
-
 };
 
 
@@ -155,45 +131,51 @@ function genScoreCelebrity(celebrities_faces_list, celebritiesList, emotionsList
 }
 
 function createCelebritiesList(celebritiesAndFacesList) {
-    let celebritiesList = new Set();
+    let celebritiesList = [];
     for (let celebritiesAndFacesItem of celebritiesAndFacesList) {
         let celebrityName = celebritiesAndFacesItem.Celebrity.Name;
-        celebritiesList.add(celebrityName);
+        if (!celebritiesList.includes(celebrityName)) {
+            celebritiesList.push(celebrityName);
+        }
     }
     return celebritiesList;
 }
 
 function createFacesList(celebritiesAndFacesList) {
-    let emotionsList = new Set();
+    let emotionsList = [];
     for (let celebritiesAndFacesItem of celebritiesAndFacesList) {
         let faceReko = celebritiesAndFacesItem.FaceReko;
         if (faceReko.Emotions) {
             let faceRekoEmotions = faceReko.Emotions;
             for (let faceRekoEmotionsItem of faceRekoEmotions) {
-                emotionsList.add(faceRekoEmotionsItem.Type);
+                if (!emotionsList.includes(faceRekoEmotionsItem.Type)) {
+                    emotionsList.push(faceRekoEmotionsItem.Type);
+                }
             }
         }
     }
     return emotionsList;
 }
-
 function flattenFiles(celebrityRecognitionJSON, faceRecognitionJSON) {
     let celebritiesList = [];
     let facesList = [];
-    for (let celebrity of celebrityRecognitionJSON) {
-        // let celebrityTemp = [];
-        // celebrityTemp['Timestamp'] = celebrity.Timestamp;
-        // celebrityTemp['Celebrity'] = celebrity.Celebrity;
-        celebritiesList.push(celebrity);
+    for (let i = 0; i < celebrityRecognitionJSON.length; i++) {
+        console.log(celebrityRecognitionJSON[i]);
+        let celebrity = celebrityRecognitionJSON[i];
+        let celebrityTemp = [];
+        celebrityTemp['Timestamp'] = celebrity.Timestamp;
+        celebrityTemp['Celebrity'] = celebrity.Celebrity;
+        celebritiesList.push(celebrityTemp);
     }
-    for (let face of faceRecognitionJSON) {
-        // let faceTemp = [];
-        // faceTemp['Timestamp'] = face.Timestamp;
+    for (let i = 0; i < faceRecognitionJSON.length; i++) {
+        let face = faceRecognitionJSON[i];
+        let faceTemp = [];
+        faceTemp['Timestamp'] = face.Timestamp;
         let faceTempFace = face.Face;
         delete faceTempFace["Pose"];
         delete faceTempFace["Quality"];
-        // faceTemp['Face'] = faceTempFace;
-        facesList.push(face);
+        faceTemp['Face'] = faceTempFace;
+        facesList.push(faceTemp);
     }
     return mergeFacesAndCelebrities(celebritiesList, facesList);
 }
