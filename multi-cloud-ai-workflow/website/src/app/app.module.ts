@@ -27,6 +27,7 @@ import { MonitorQueueComponent } from './monitor/monitor-queue/monitor-queue.com
 import { RunMetadataModalComponent } from './run/run-metadata-modal/run-metadata-modal.component';
 import { ServicesComponent } from './services-page/services.component';
 import { McmaClientService } from './services/mcma-client.service';
+import { NgxChartsModule } from "@swimlane/ngx-charts";
 
 @NgModule({
   declarations: [
@@ -52,7 +53,8 @@ import { McmaClientService } from './services/mcma-client.service';
     HttpClientModule,
     ReactiveFormsModule,
     MaterialModule,
-    AppRoutingModule
+    AppRoutingModule,
+    NgxChartsModule
   ],
   providers: [
     ConfigService,

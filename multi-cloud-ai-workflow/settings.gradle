@@ -57,6 +57,7 @@ include "deployment",
         "workflows:ai:31-validate-speech-to-text",
         "workflows:ai:32-register-validate-speech-to-text",
 
+        "workflows:ai:20-rekognition-aws",
         "workflows:process-workflow-completion",
         "workflows:process-workflow-failure",
         "workflows:workflow-activity-callback-handler"

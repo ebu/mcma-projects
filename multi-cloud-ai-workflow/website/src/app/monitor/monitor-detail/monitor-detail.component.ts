@@ -11,17 +11,22 @@ import { ContentViewModel } from '../../view-models/content-vm';
     selector: 'mcma-monitor-detail',
     templateUrl: './monitor-detail.component.html',
     styleUrls: ['./monitor-detail.component.scss'],
-    encapsulation: ViewEncapsulation.None,
+    // encapsulation: ViewEncapsulation.None,
 })
 export class MonitorDetailComponent {
     private _conformJobVm$: Observable<WorkflowJobViewModel>;
     aiJobVm$: Observable<WorkflowJobViewModel>;
     content$: Observable<ContentViewModel>;
+    private currentTimeSubject$ = new BehaviorSubject<number>(0);
+    currentTime$ = this.currentTimeSubject$.asObservable();
+    isSpeechToSpeechVisible = true;
 
-    private currentTimeSubject = new BehaviorSubject<number>(0);
-    currentTime$ = this.currentTimeSubject.asObservable();
+    constructor(
+        private workflowService: WorkflowService,
+        private contentService: ContentService,
+    ) {
 
-    selectedAzureCelebrity;
+    }
 
     get conformJobVm$(): Observable<WorkflowJobViewModel> {
         return this._conformJobVm$;
@@ -42,12 +47,17 @@ export class MonitorDetailComponent {
             this.content$ = val.pipe(
                 switchMap(conformJobVm =>
                     conformJobVm.isCompleted && conformJobVm.contentUrl
-                        ? this.contentService.pollUntil(conformJobVm.contentUrl, this.aiJobVm$.pipe(map(aiJobVm => aiJobVm && aiJobVm.isFinished)))
+                        ? this.contentService.pollUntil(
+                        conformJobVm.contentUrl, this.aiJobVm$.pipe(
+                            map(
+                                aiJobVm => aiJobVm && aiJobVm.isFinished)
+                        )
+                        )
                         : of(null)
                 ),
                 tap(contentVm => {
                         if (contentVm) {
-                            console.log('contentVm', contentVm)
+                            console.log('contentVm', contentVm);
                         }
                     }
                 )
@@ -55,27 +65,29 @@ export class MonitorDetailComponent {
         }
     }
 
-    constructor(private workflowService: WorkflowService, private contentService: ContentService) {
-    }
-
-    seekVideoAws(timestamp: { timecode: string, seconds: number }): void {
-        this.currentTimeSubject.next(timestamp.seconds);
+    seekVideoAws(timestamp: {timecode: string, seconds: number}): void {
+        this.currentTimeSubject$.next(timestamp.seconds);
     }
 
     seekVideoAzure(instance: any): void {
         console.log(instance);
 
-        let time = instance.start;
-        let timeParts = time.split(":");
+        const time = instance.start;
+        const timeParts = time.split(':');
 
         let timeSeconds = 0;
 
         for (const timePart of timeParts) {
-            let parsed = Number.parseFloat(timePart);
+            const parsed = Number.parseFloat(timePart);
             timeSeconds *= 60;
             timeSeconds += parsed;
         }
 
-        this.currentTimeSubject.next(timeSeconds);
+        this.currentTimeSubject$.next(timeSeconds);
     }
+
+    toggleTabSpeechToSpeech() {
+        this.isSpeechToSpeechVisible = !this.isSpeechToSpeechVisible;
+    }
+
 }

@@ -525,7 +525,27 @@ resource "aws_lambda_function" "ai-19-register-dubbing-srt" {
   }
 }
 
+resource "aws_lambda_function" "ai-20-rekognition-aws" {
+  filename         = "./../workflows/ai/20-rekognition-aws/dist/lambda.zip"
+  function_name    = "${format("%.64s", "${var.global_prefix}-ai-20-rekognition-aws")}"
+  role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
+  handler          = "index.handler"
+  source_code_hash = "${filebase64sha256("./../workflows/ai/20-rekognition-aws/dist/lambda.zip")}"
+  runtime          = "nodejs8.10"
+  timeout          = "60"
+  memory_size      = "256"
 
+  environment {
+    variables = {
+      ServicesUrl         = "${var.services_url}"
+      ServicesAuthType    = "${var.services_auth_type}"
+      ServicesAuthContext = "${var.services_auth_context}"
+      RepositoryBucket    = "${var.repository_bucket}"
+      TempBucket          = "${var.temp_bucket}"
+      WebsiteBucket       = "${var.website_bucket}"
+    }
+  }
+}
 
 # #################################
 # #  Step Functions : AI Workflow
@@ -568,8 +588,9 @@ data "template_file" "ai-workflow" {
     lambda-31-validate-speech-to-text           = "${aws_lambda_function.ai-31-validate-speech-to-text.arn}"
     activity-31-validate-speech-to-text         = "${aws_sfn_activity.ai-31-validate-speech-to-text.id}"
     lambda-32-register-validate-speech-to-text   = "${aws_lambda_function.ai-32-register-validate-speech-to-text.arn}"
-    
 
+
+    lambda-20-rekognition-aws                  = "${aws_lambda_function.ai-20-rekognition-aws.arn}"
     lambda-process-workflow-completion         = "${aws_lambda_function.process-workflow-completion.arn}"
     lambda-process-workflow-failure            = "${aws_lambda_function.process-workflow-failure.arn}"
   }

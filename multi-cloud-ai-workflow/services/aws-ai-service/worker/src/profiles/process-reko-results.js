@@ -1,4 +1,3 @@
-
 const util = require("util");
 const uuidv4 = require("uuid/v4");
 
@@ -36,27 +35,48 @@ const processRekognitionResult = async (request) => {
         let rekoJobId = request.input.jobInfo.rekoJobId;
         let rekoJobType = request.input.jobInfo.rekoJobType;
         let status = request.input.jobInfo.status;
+        let videoFileName = jobInput.inputFile.awsS3Key;
+        videoFileName = videoFileName.replace(".mp4", "").replace("media/", "");
 
-        if (status != "SUCCEEDED") {
+        if (status !== "SUCCEEDED") {
             throw new Error("AI Rekognition failed job info: rekognition status:" + status);
         }
 
-        // 3. Get the result from the Rekognition service 
-        let data;
-
+        // 3. Get the result from the Rekognition service
+        let data = [];
+        let dataCelebrity = [];
+        let dataFace = [];
+        let dataNextToken;
         switch (rekoJobType) {
             case "StartCelebrityRecognition":
-                // TODO implement iteration over next results in case we have more than 1000 results
-                data = await RekognitionGetCelebrityRecognition({
+                dataCelebrity = await RekognitionGetCelebrityRecognition({
                     JobId: rekoJobId,
                     SortBy: "TIMESTAMP"
                 });
+                data = data.concat(dataCelebrity.Celebrities);
+                while (dataCelebrity['Celebrities'].length === 1000) {
+                    dataNextToken = dataCelebrity['NextToken'];
+                    dataCelebrity = await RekognitionGetCelebrityRecognition({
+                        JobId: rekoJobId,
+                        SortBy: "TIMESTAMP",
+                        NextToken: dataNextToken
+                    });
+                    data = data.concat(dataCelebrity.Celebrities);
+                }
                 break;
             case "StartFaceDetection":
-                // TODO implement iteration over next results in case we have more than 1000 results
-                data = await RekognitionGetFaceDetection({
-                    JobId: rekoJobId
+                dataFace = await RekognitionGetFaceDetection({
+                    JobId: rekoJobId,
                 });
+                data = data.concat(dataFace.Faces);
+                while (dataFace['Faces'].length === 1000) {
+                    dataNextToken = dataFace['NextToken'];
+                    dataFace = await RekognitionGetFaceDetection({
+                        JobId: rekoJobId,
+                        NextToken: dataNextToken
+                    });
+                    data = data.concat(dataFace.Faces);
+                }
                 break;
             case "StartLabelDetection":
             case "StartContentModeration":
@@ -67,18 +87,17 @@ const processRekognitionResult = async (request) => {
                 throw new Error("Unknown rekoJobType");
         }
 
-
         if (!data) {
             throw new Error("No data was returned by AWS Rekogntion");
         }
 
-        Logger.debug("data returned by Rekognition", JSON.stringify(data, null, 2));
+        // Logger.debug("data returned by Rekognition", JSON.stringify(data, null, 2));
 
         // AWS Reko may create empty json element - remove them
         walkclean(data);
 
         // 3. write Reko output file to output location
-        const newS3Key = "reko_" + uuidv4() + ".json";
+        const newS3Key = "reko_" + "media_" + videoFileName + "_" + rekoJobType + "_" + uuidv4() + ".json";
         const s3Params = {
             Bucket: s3Bucket,
             Key: newS3Key,
@@ -110,14 +129,14 @@ const processRekognitionResult = async (request) => {
 };
 
 function walkclean(x) {
-    var type = typeof x;
+    let type = typeof x;
     if (x instanceof Array) {
         type = "array";
     }
-    if ((type == "array") || (type == "object")) {
+    if ((type === "array") || (type === "object")) {
         for (let k in x) {
-            var v = x[k];
-            if ((v === "") && (type == "object")) {
+            let v = x[k];
+            if ((v === "") && (type === "object")) {
                 delete x[k];
             } else {
                 walkclean(v);

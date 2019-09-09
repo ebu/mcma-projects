@@ -20,6 +20,7 @@ task build {
     dependsOn "ai:19-register-dubbing-srt:build"
     dependsOn "ai:31-validate-speech-to-text:build"
     dependsOn "ai:32-register-validate-speech-to-text:build"
+    dependsOn "ai:20-rekognition-aws:build"
     dependsOn "conform:01-validate-workflow-input:build"
     dependsOn "conform:02-move-content-to-file-repository:build"
     dependsOn "conform:03-create-media-asset:build"

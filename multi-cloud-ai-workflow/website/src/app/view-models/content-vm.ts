@@ -1,18 +1,36 @@
 import { BMContent } from 'mcma-core';
-import { McmaClientService } from "../services/mcma-client.service";
-import { from } from "rxjs";
-import { switchMap, tap } from "rxjs/operators";
+import { McmaClientService } from '../services/mcma-client.service';
+import { from } from 'rxjs';
+import { switchMap, tap } from 'rxjs/operators';
 
 export class ContentViewModel {
-    awsAiMetadata: { transcription: { original, translation, worddiffs } }
+    awsAiMetadata: {transcription: {original, translation, worddiffs}};
     awsTranscription: string;
     awsTranslation: string;
     awsWorddiffs: string;
-    awsSpeechToSpeech: { mp4?: string, vtt?: string } = {};
-    awsCelebrities: { selected: any, data: any[] } = {selected: null, data: []};
+    awsSpeechToSpeech: {mp4?: string, vtt?: string} = {};
+    awsCelebrities: {
+        selected: {
+            name,
+            urls,
+            timestamps: any[],
+            emotions: any[],
+            emotionsCleaned: any[]
+        },
+        data: any[]
+    } = {
+        selected: {
+            name: '',
+            urls: '',
+            timestamps: [],
+            emotions: [],
+            emotionsCleaned: []
+        },
+        data: []
+    };
 
     azureTranscription: string;
-    azureCelebrities: { selected: any, data: any[] } = {selected: null, data: []};
+    azureCelebrities: {selected: any, data: any[]} = {selected: null, data: []};
 
     get noData(): boolean {
         return !this.awsTranscription && !this.awsTranslation && this.awsCelebrities.data.length === 0 &&
@@ -20,20 +38,20 @@ export class ContentViewModel {
     }
 
     constructor(
-        public content: BMContent,
+        public bmContent: BMContent,
         private mcmaClientService: McmaClientService,
         // public http: HttpClient,
     ) {
-        console.log('creating content vm', content);
+        console.log('bmContent', bmContent);
         this.populateAwsData();
         this.populateAzureData();
         this.callBMEssences();
     }
 
     callBMEssences() {
-        if (this.content && this.content.bmEssences) {
-            let bmEssences = this.content.bmEssences;
-            for (let bmEssencesItem of bmEssences) {
+        if (this.bmContent && this.bmContent.bmEssences) {
+            const bmEssences = this.bmContent.bmEssences;
+            for (const bmEssencesItem of bmEssences) {
                 this.getBMEssence(bmEssencesItem);
             }
         }
@@ -45,10 +63,10 @@ export class ContentViewModel {
                 return from(resourceManager.resolve<any>(contentUrl)).pipe(
                     tap(data => {
                         console.log('gotBMEssence: data (tap 1)', data);
-                        if (data.title === "dubbing-srt-output") {
+                        if (data.title === 'dubbing-srt-output') {
                             this.awsSpeechToSpeech.mp4 = data.locations[0].httpEndpoint;
                         }
-                        if (data.title === "clean_vtt_output_file") {
+                        if (data.title === 'clean_vtt_output_file') {
                             this.awsSpeechToSpeech.vtt = data.locations[0].httpEndpoint;
                         }
                     })
@@ -61,17 +79,19 @@ export class ContentViewModel {
     }
 
     private populateAwsData(): void {
-        if (this.content && this.content.awsAiMetadata) {
-            if (this.content.awsAiMetadata.transcription) {
-                this.awsTranscription = this.content.awsAiMetadata.transcription.original;
-                this.awsTranslation = this.content.awsAiMetadata.transcription.translation;
-                this.awsWorddiffs = JSON.parse(this.content.awsAiMetadata.transcription.worddiffs).result;
+        if (this.bmContent && this.bmContent.awsAiMetadata) {
+            if (this.bmContent.awsAiMetadata.transcription) {
+                this.awsTranscription = this.bmContent.awsAiMetadata.transcription.original;
+                this.awsTranslation = this.bmContent.awsAiMetadata.transcription.translation;
+                this.awsWorddiffs = JSON.parse(this.bmContent.awsAiMetadata.transcription.worddiffs).result;
             }
 
-            const celebsByName: { [key: string]: any } = {};
+            const celebsByName: {[key: string]: any} = {};
 
-            if (this.content.awsAiMetadata.celebrities && this.content.awsAiMetadata.celebrities.Celebrities) {
-                for (const celebrity of this.content.awsAiMetadata.celebrities.Celebrities) {
+            const celebritiesEmotions = this.bmContent.awsAiMetadata.celebritiesEmotions;
+
+            if (this.bmContent.awsAiMetadata.celebrities) {
+                for (const celebrity of this.bmContent.awsAiMetadata.celebrities) {
                     if (celebrity.Celebrity) {
                         if (!celebsByName[celebrity.Celebrity.Id]) {
                             celebsByName[celebrity.Celebrity.Id] = {
@@ -89,7 +109,39 @@ export class ContentViewModel {
                 }
             }
 
-            this.awsCelebrities.data = Object.keys(celebsByName).map(k => celebsByName[k]);
+            const celebritiesAppearences = Object.keys(celebsByName).map(
+                k => celebsByName[k]
+            );
+
+            if (celebritiesEmotions != undefined) {
+                for (const celebrityAppearences of celebritiesAppearences) {
+                    if (celebritiesEmotions[celebrityAppearences.name]) {
+                        celebrityAppearences.emotions = celebritiesEmotions[celebrityAppearences.name];
+                    }
+                }
+            }
+
+            for (const celebritiesAppearencesItem of celebritiesAppearences) {
+                if (celebritiesAppearencesItem.emotions !== undefined) {
+                    const contentVmAwsCelebritiesItemEmotions = celebritiesAppearencesItem.emotions;
+                    const celebritiesEmotionsKeys = Object.keys(contentVmAwsCelebritiesItemEmotions);
+                    const celebrityEmotions = [];
+                    for (const celebritiesEmotionsObjectItem of celebritiesEmotionsKeys) {
+                        if (celebritiesEmotionsObjectItem !== 'counter') {
+                            celebrityEmotions.push({
+                                'name': celebritiesEmotionsObjectItem,
+                                'value': contentVmAwsCelebritiesItemEmotions[celebritiesEmotionsObjectItem]
+                            });
+                        }
+                    }
+                    if (!celebritiesAppearencesItem.emotionsCleaned) {
+                        celebritiesAppearencesItem.emotionsCleaned = celebrityEmotions;
+                    }
+                }
+
+            }
+
+            this.awsCelebrities.data = celebritiesAppearences;
             this.awsCelebrities.selected = this.awsCelebrities.data[0];
         }
     }
@@ -112,8 +164,8 @@ export class ContentViewModel {
     }
 
     private populateAzureData(): void {
-        if (this.content && this.content.azureAiMetadata && this.content.azureAiMetadata.videos) {
-            for (const video of this.content.azureAiMetadata.videos) {
+        if (this.bmContent && this.bmContent.azureAiMetadata && this.bmContent.azureAiMetadata.videos) {
+            for (const video of this.bmContent.azureAiMetadata.videos) {
                 if (video.insights) {
                     if (video.insights.transcript) {
                         this.azureTranscription = '';

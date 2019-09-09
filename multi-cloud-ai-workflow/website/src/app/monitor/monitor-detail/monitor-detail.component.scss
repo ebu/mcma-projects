@@ -7,6 +7,10 @@
     display: flex;
 }
 
+::ng-deep .pie-label {
+    fill: #fff !important;
+}
+
 .workflow-job-data {
     display: flex;
     flex: 1;
@@ -17,16 +21,19 @@
     display: flex;
     margin-bottom: 1vw;
 
-    mat-icon {
-        width: 30px;
-        height: 30px;
-        font-size: 30px;
+    .job-field {
+
+        mat-icon {
+            width: 30px;
+            height: 30px;
+            font-size: 30px;
+        }
+
+        span {
+            font-size: 20px;
+        }
     }
 
-    span {
-        font-size: 20px;
-        margin-left: 10px;
-    }
 }
 
 .job-preview-player {
@@ -62,7 +69,7 @@
 
 .job-field {
     display: flex;
-    align-items: center;
+    align-items: normal;
     margin-bottom: 1vw;
 
     label {

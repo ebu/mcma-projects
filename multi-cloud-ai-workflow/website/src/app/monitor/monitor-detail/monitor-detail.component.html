@@ -26,6 +26,15 @@
                 <label>File Name:</label>
                 <span>{{ conformJobVm.fileName }}</span>
             </div>
+            <div class="job-field">
+                <label>Speech to Speech:</label>
+                <button *ngIf="isSpeechToSpeechVisible" (click)="toggleTabSpeechToSpeech()" mat-raised-button color="accent">
+                    <mat-icon>visibility</mat-icon>
+                </button>
+                <button *ngIf="!isSpeechToSpeechVisible" (click)="toggleTabSpeechToSpeech()" mat-raised-button color="accent">
+                    <mat-icon>visibility_off</mat-icon>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -64,7 +73,7 @@
                                         </ng-template>
                                     </div>
                                 </mat-tab>
-                                <mat-tab label="Translation">
+                                <mat-tab *ngIf="isSpeechToSpeechVisible" label="Translation">
                                     <div class="ai-data-item ai-translation-data">
                                         <span *ngIf="content?.awsTranslation; else awsTranslationNoData">{{ content?.awsTranslation }}</span>
                                         <ng-template #awsTranslationNoData>
@@ -73,7 +82,7 @@
                                         </ng-template>
                                     </div>
                                 </mat-tab>
-                                <mat-tab label="Speech to Speech">
+                                <mat-tab *ngIf="isSpeechToSpeechVisible" (show)="isSpeechToSpeechVisible" label="Speech to Speech">
                                     <div class="ai-data-item ai-speechtospeech-data">
                                         <span *ngIf="content?.awsSpeechToSpeech; else awsSpeechToSpeechNoData">
                                             <video style="width: 100%" id="video" controls preload="metadata">
@@ -108,7 +117,18 @@
                                                     </div>
                                                     <div class="job-field">
                                                         <label>Url:</label>
-                                                        <a mat-button *ngIf="content.awsCelebrities.selected.urls[0]" target="_blank" [href]="'https://' + content.awsCelebrities.selected.urls[0]">{{ content.awsCelebrities.selected.urls[0] }}</a>
+                                                        <a mat-button *ngIf="content.awsCelebrities.selected.urls[0]" target="_blank" [href]="'https://' + content.awsCelebrities.selected.urls[0]">{{ content.awsCelebrities.selected.urls[0] }}</a></div>
+                                                    <div *ngIf="content.awsCelebrities.selected.emotionsCleaned" class="job-field">
+                                                        <label>Emotions:</label>
+                                                        <ngx-charts-pie-chart
+                                                                [view]="[700, 400]"
+                                                                [scheme]="{domain: ['#00a8ff', '#9c88ff', '#fbc531', '#4cd137', '#487eb0', '#e84118', '#f5f6fa', '#7f8fa6']}"
+                                                                [results]=content.awsCelebrities.selected.emotionsCleaned
+                                                                [legend]="true"
+                                                                [explodeSlices]="false"
+                                                                [labels]="true"
+                                                                [doughnut]="false">
+                                                        </ngx-charts-pie-chart>
                                                     </div>
                                                     <div class="job-field">
                                                         <label>Appearances:</label>
