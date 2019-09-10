@@ -64,7 +64,7 @@
                                         </ng-template>
                                     </div>
                                 </mat-tab>
-                                <mat-tab label="STT Benchmarking">
+                                <mat-tab *ngIf="isSpeechToSpeechVisible" label="STT Benchmarking">
                                     <div class="ai-data-item ai-sttbenchmarking-data">
                                         <span *ngIf="content?.awsWorddiffs; else awsSTTBenchmarkingData" [innerHTML]="content.awsWorddiffs"></span>
                                         <ng-template #awsSTTBenchmarkingData>
@@ -85,9 +85,8 @@
                                 <mat-tab *ngIf="isSpeechToSpeechVisible" (show)="isSpeechToSpeechVisible" label="Speech to Speech">
                                     <div class="ai-data-item ai-speechtospeech-data">
                                         <span *ngIf="content?.awsSpeechToSpeech; else awsSpeechToSpeechNoData">
-                                            <video style="width: 100%" id="video" controls preload="metadata">
-                                               <source src="{{ content?.awsSpeechToSpeech.mp4 }}" type="video/mp4">
-                                               <track *ngIf="content?.awsSpeechToSpeech.vtt" label="English" kind="subtitles" srclang="en" src="{{ content?.awsSpeechToSpeech.vtt }}" default>
+                                            <video style="width: 100%" id="video" [src]="content?.awsSpeechToSpeech.mp4" style="width: 100%"  controls preload="metadata">
+                                               <track *ngIf="content?.awsSpeechToSpeech.vtt" label="English" kind="subtitles" srclang="en" [src]="content?.awsSpeechToSpeech.vtt " default>
                                             </video>
                                         </span>
                                         <ng-template #awsSpeechToSpeechNoData>

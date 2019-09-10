@@ -110,7 +110,7 @@
 .ai-data-group {
     margin: 25px;
 
-    .ai-sttbenchmarking-data {
+    ::ng-deep .ai-sttbenchmarking-data {
 
         .delete {
             color: green;
