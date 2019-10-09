@@ -178,10 +178,10 @@ exports.handler = async (event, context) => {
     try {
         s3Object_stt_clean = await S3GetObject({
             Bucket: WebsiteBucket,
-            Key: "stt/stt_output_clean" + ".txt",
+            Key: "assets/stt/stt_output_clean" + ".txt",
         });
     } catch (error) {
-        throw new Error("Unable to access file in bucket '" + WebsiteBucket + "' with key '" + "stt/stt_output_clean" + ".txt" + "' due to error: " + error.message);
+        throw new Error("Unable to access file in bucket '" + WebsiteBucket + "' with key '" + "assets/stt/stt_output_clean" + ".txt" + "' due to error: " + error.message);
     }
 
 
@@ -213,7 +213,7 @@ exports.handler = async (event, context) => {
     try {
             let s3Params_stt_clean_tmp = {
                 Bucket: TempBucket,
-                Key: "stt/stt_output_clean" + ".txt",
+                Key: "assets/stt/stt_output_clean" + ".txt",
                 Body: s3Object_stt_clean.Body.toString()
             };
             await S3PutObject(s3Params_stt_clean_tmp);
