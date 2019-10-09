@@ -351,7 +351,7 @@
                         }
                     }
                 },
-                                {
+                {
                     "StartAt": "08-detect-celebrities-azure-parent",
                     "States": {
                         "08-detect-celebrities-azure-parent": {
@@ -395,6 +395,59 @@
                         "09-register-celebrities-info-azure": {
                             "Type": "Task",
                             "Resource": "${lambda-09-register-celebrities-info-azure}",
+                            "ResultPath": null,
+                            "Next": "41-validate-speech-to-text-parent-azure",
+                            "Catch": [
+                                {
+                                    "ErrorEquals": [
+                                        "States.ALL"
+                                    ],
+                                    "ResultPath": "$.error",
+                                    "Next": "process-failure-branch-3"
+                                }
+                            ]
+                        },
+                        "41-validate-speech-to-text-parent-azure": {
+                            "Type": "Parallel",
+                            "Branches": [
+                                {
+                                    "StartAt": "41-validate-speech-to-text-azure",
+                                    "States": {
+                                        "41-validate-speech-to-text-azure": {
+                                            "Type": "Task",
+                                            "Resource": "${lambda-41-validate-speech-to-text-azure}",
+                                            "End": true
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt": "41-wait-for-job-completion",
+                                    "States": {
+                                        "41-wait-for-job-completion": {
+                                            "Type": "Task",
+                                            "Resource": "${activity-41-validate-speech-to-text-azure}",
+                                            "TimeoutSeconds": 3600,
+                                            "HeartbeatSeconds": 1800,
+                                            "End": true
+                                        }
+                                    }
+                                }
+                            ],
+                            "ResultPath": "$.data.validateSpeechToTextAzureJobId",
+                            "Next": "42-register-validate-speech-to-text-azure",
+                            "Catch": [
+                                {
+                                    "ErrorEquals": [
+                                        "States.ALL"
+                                    ],
+                                    "ResultPath": "$.error",
+                                    "Next": "process-failure-branch-3"
+                                }
+                            ]
+                        },
+                        "42-register-validate-speech-to-text-azure": {
+                            "Type": "Task",
+                            "Resource": "${lambda-42-register-validate-speech-to-text-azure}",
                             "ResultPath": null,
                             "Next": "process-completion-branch-3",
                             "Catch": [

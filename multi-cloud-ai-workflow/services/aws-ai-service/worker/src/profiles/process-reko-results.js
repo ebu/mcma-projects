@@ -54,6 +54,7 @@ const processRekognitionResult = async (request) => {
                     SortBy: "TIMESTAMP"
                 });
                 data = data.concat(dataCelebrity.Celebrities);
+                let count = 0;
                 while (dataCelebrity['Celebrities'].length === 1000) {
                     dataNextToken = dataCelebrity['NextToken'];
                     dataCelebrity = await RekognitionGetCelebrityRecognition({
@@ -61,7 +62,10 @@ const processRekognitionResult = async (request) => {
                         SortBy: "TIMESTAMP",
                         NextToken: dataNextToken
                     });
-                    data = data.concat(dataCelebrity.Celebrities);
+                    if (count < 1) {
+                        data = data.concat(dataCelebrity.Celebrities);
+                        count++;
+                    }
                 }
                 break;
             case "StartFaceDetection":
@@ -69,13 +73,17 @@ const processRekognitionResult = async (request) => {
                     JobId: rekoJobId,
                 });
                 data = data.concat(dataFace.Faces);
+                let count2 = 0;
                 while (dataFace['Faces'].length === 1000) {
                     dataNextToken = dataFace['NextToken'];
                     dataFace = await RekognitionGetFaceDetection({
                         JobId: rekoJobId,
                         NextToken: dataNextToken
                     });
-                    data = data.concat(dataFace.Faces);
+                    if (count2 < 1) {
+                        data = data.concat(dataFace.Faces);
+                        count2++;
+                    }
                 }
                 break;
             case "StartLabelDetection":

@@ -6,11 +6,14 @@ require("mcma-aws");
 const { extractAllAiMetadata, processNotification } = require("./profiles/extract-all-ai-metadata");
 const { transcribeAudio } = require("./profiles/transcribe-audio");
 const { translateText } = require("./profiles/translate-text");
+const { validateSpeechToTextAzure } = require('./profiles/validate-speech-to-text-azure');
+
 
 const worker =
     new WorkerBuilder().useAwsJobDefaults()
         .handleJobsOfType(AIJob, x =>
             x.addProfile(extractAllAiMetadata.profileName, extractAllAiMetadata)
+                .addProfile(validateSpeechToTextAzure.profileName, validateSpeechToTextAzure)
         )
         .handleOperation(processNotification)
         .build();

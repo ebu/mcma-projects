@@ -166,6 +166,15 @@
                                         </ng-template>
                                     </div>
                                 </mat-tab>
+                                <mat-tab label="STT Benchmarking">
+                                    <div class="ai-data-item ai-sttbenchmarking-data">
+                                        <span *ngIf="content?.azureWorddiffs; else azureTranscriptNoData" [innerHTML]="content.azureWorddiffs"></span>
+                                        <ng-template #azureTranscriptNoData>
+                                            <span *ngIf="!aiJobVm.isFinished">Still processing...</span>
+                                            <span *ngIf="aiJobVm.isFinished">Data not available</span>
+                                        </ng-template>
+                                    </div>
+                                </mat-tab>
                                 <mat-tab label="Celebrities">
                                     <div class="ai-data-item celebrity-info" *ngIf="content?.azureCelebrities?.data?.length > 0; else azureCelebritiesNoData">
 

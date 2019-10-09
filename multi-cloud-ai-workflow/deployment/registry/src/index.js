@@ -160,6 +160,16 @@ const JOB_PROFILES = {
             new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
         ]
     }),
+    ValidateSpeechToTextAzure: new JobProfile({
+        name: "ValidateSpeechToTextAzure",
+        inputParameters: [
+            new JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
+            new JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
+        ],
+        outputParameters: [
+            new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
+        ]
+    }),
     AWSDetectCelebrities: new JobProfile({
         name: "AWSDetectCelebrities",
         inputParameters: [
@@ -245,7 +255,8 @@ const createServices = (serviceUrls) => {
                         authType: "AWS4",
                         jobType: "AIJob",
                         jobProfiles: [
-                            JOB_PROFILES.AzureExtractAllAIMetadata.id ? JOB_PROFILES.AzureExtractAllAIMetadata.id : JOB_PROFILES.AzureExtractAllAIMetadata
+                            JOB_PROFILES.AzureExtractAllAIMetadata.id ? JOB_PROFILES.AzureExtractAllAIMetadata.id : JOB_PROFILES.AzureExtractAllAIMetadata,
+                            JOB_PROFILES.ValidateSpeechToTextAzure.id ? JOB_PROFILES.ValidateSpeechToTextAzure.id : JOB_PROFILES.ValidateSpeechToTextAzure,
                         ]
                     })
                 );

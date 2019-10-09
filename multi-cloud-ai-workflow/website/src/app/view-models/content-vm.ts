@@ -8,6 +8,7 @@ export class ContentViewModel {
     awsTranscription: string;
     awsTranslation: string;
     awsWorddiffs: string;
+    azureWorddiffs: string;
     awsSpeechToSpeech: {mp4?: string, vtt?: string} = {};
     awsCelebrities: {
         selected: {
@@ -190,5 +191,10 @@ export class ContentViewModel {
                 }
             }
         }
+
+        if (this.bmContent && this.bmContent.azureAiMetadata.azureTranscription.transcription) {
+            this.azureWorddiffs = JSON.parse(this.bmContent.azureAiMetadata.azureTranscription.worddiffs).result;
+        }
+
     }
 }

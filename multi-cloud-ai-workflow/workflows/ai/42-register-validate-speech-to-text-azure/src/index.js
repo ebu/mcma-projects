@@ -13,6 +13,8 @@ const { getAwsV4ResourceManager } = require("mcma-aws");
 const environmentVariableProvider = new EnvironmentVariableProvider();
 const resourceManager = getAwsV4ResourceManager(environmentVariableProvider);
 
+// const Tokenizer = require("sentence-tokenizer");
+
 /**
  * Lambda function handler
  * @param {*} event event
@@ -24,73 +26,56 @@ exports.handler = async (event, context) => {
     // send update notification
     try {
         event.status = "RUNNING";
-        event.parallelProgress = { "detect-celebrities-azure": 80 };
+        /*event.parallelProgress = { "speech-text-translate": 80 };*/
         await resourceManager.sendNotification(event);
     } catch (error) {
         console.warn("Failed to send notification", error);
     }
 
     // get ai job id (first non null entry in array)
-    let jobId = event.data.azureCelebritiesJobId.find(id => id);
+    let jobId = event.data.validateSpeechToTextAzureJobId.find(id => id);
     if (!jobId) {
-        throw new Error("Failed to obtain azureCelebritiesJobId");
+        throw new Error("Failed to obtain TranslationJobId");
     }
-    console.log("[azureCelebritiesJobId]:", jobId);
+    console.log("[TranslationJobId]:", jobId);
 
-    // get result of ai job
     let job = await resourceManager.resolve(jobId);
 
-    // get media info
+
+    // get service result/outputfile from location bucket+key(prefix+filename)
     let s3Bucket = job.jobOutput.outputFile.awsS3Bucket;
     let s3Key = job.jobOutput.outputFile.awsS3Key;
     let s3Object;
     try {
         s3Object = await S3GetObject({
             Bucket: s3Bucket,
-            Key: s3Key
+            Key: s3Key,
         });
     } catch (error) {
-        throw new Error("Unable to find data file in bucket '" + s3Bucket + "' with key '" + s3Key + "' due to error: " + error.message);
+        throw new Error("Unable to media info file in bucket '" + s3Bucket + "' with key '" + s3Key + "' due to error: " + error.message);
     }
 
-    let azureResult = JSON.parse(s3Object.Body.toString());
-    console.log("AzureResult: " + JSON.stringify(azureResult, null, 2));
+    // get stt benchmarking worddiffs results
+    let worddiffs = s3Object.Body.toString();
+    console.log(worddiffs);
 
+    // identify associated bmContent
     let bmContent = await resourceManager.resolve(event.input.bmContent);
-
-    let azureAiMetadata = bmContent.azureAiMetadata || {};
-    azureAiMetadata = azureResult;
-    bmContent.azureAiMetadata = azureAiMetadata;
-
-    let azureTranscription = '';
-    if (azureAiMetadata.videos) {
-        for (const video of azureAiMetadata.videos) {
-            if (video.insights) {
-                if (video.insights.transcript) {
-
-                    for (const transcript of video.insights.transcript) {
-                        if (transcript.text) {
-                            azureTranscription += transcript.text + ' ';
-                        }
-                    }
-                    azureTranscription.trim();
-                }
-
-            }
-        }
+    // attach worddiffs results to bmContent property translation 
+    if (!bmContent.azureAiMetadata) {
+        bmContent.azureAiMetadata = {};
     }
-
     if (!bmContent.azureAiMetadata.azureTranscription) {
         bmContent.azureAiMetadata.azureTranscription = {}
     }
+    bmContent.azureAiMetadata.azureTranscription.worddiffs = worddiffs;
 
-    bmContent.azureAiMetadata.azureTranscription.transcription = azureTranscription;
-
+    // update bmContent
     await resourceManager.update(bmContent);
-
+    
     try {
         event.status = "RUNNING";
-        event.parallelProgress = { "detect-celebrities-azure": 100 };
+        // event.parallelProgress = { "speech-text-translate": 100 };
         await resourceManager.sendNotification(event);
     } catch (error) {
         console.warn("Failed to send notification", error);

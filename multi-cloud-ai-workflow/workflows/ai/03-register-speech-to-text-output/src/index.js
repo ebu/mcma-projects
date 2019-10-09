@@ -253,7 +253,8 @@ exports.handler = async (event, context) => {
 
 
     // VTT Transcription pushed in final video website bucket
-    let srtToVtt = Subtitle.fromSRT(cleanTranscriptionToSrt).toVTT();
+    // let srtToVtt = Subtitle.fromSRT(cleanTranscriptionToSrt).toVTT();
+    let srtToVtt = "WEBVTT" + "\r\n" + "\r\n" + cleanTranscriptionToSrt;
     console.log(srtToVtt);
 
     s3Bucket_vtt = WebsiteBucket;
