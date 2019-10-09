@@ -10,8 +10,10 @@
     "license": "Apache-2.0",
     "dependencies": {
         "aws-sdk": "^2.473.0",
+        "axios": "0.19.0",
         "mcma-aws": "0.3.13",
         "node-json-rpc2": "1.1.0",
-        "axios": "0.19.0"
+        "parse-srt": "^1.0.0-alpha",
+        "subtitles-parser": "0.0.2"
     }
 }

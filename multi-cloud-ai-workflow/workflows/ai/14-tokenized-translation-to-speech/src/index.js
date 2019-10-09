@@ -26,6 +26,8 @@ const ActivityArn = process.env.ActivityArn;
 const JOB_PROFILE_NAME = "AWSTokenizedTextToSpeech";
 const JOB_RESULTS_PREFIX = "AIResults/ssml/";
 
+
+// Calling text-to-speech Polly service to analyse translation text per sentence and generate SSML file for speech to text
 /**
  * Lambda function handler
  * @param {*} event event
@@ -89,7 +91,7 @@ exports.handler = async (event, context) => {
     let notificationUrl = ActivityCallbackUrl + "?taskToken=" + encodeURIComponent(taskToken);
     console.log("NotificationUrl:", notificationUrl);
 
-    // creating job using file with tokenized text stored in temp bucket
+    // creating job using file with (tokenized) translation text stored in temp bucket
     let job = new AIJob({
         jobProfile: jobProfileId,
         jobInput: new JobParameterBag({

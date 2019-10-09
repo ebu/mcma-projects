@@ -24,6 +24,61 @@ const { WorkerJobHelper } = require("mcma-worker");
 const { DynamoDbTableProvider, getAwsV4ResourceManager } = require("mcma-aws");
 
 
+function msToTime(duration) {
+  var milliseconds = parseInt((duration % 1000) / 100),
+    seconds = Math.floor((duration / 1000) % 60),
+    minutes = Math.floor((duration / (1000 * 60)) % 60),
+    hours = Math.floor((duration / (1000 * 60 * 60)) % 24);
+
+  hours = (hours < 10) ? "0" + hours : hours;
+  minutes = (minutes < 10) ? "0" + minutes : minutes;
+  seconds = (seconds < 10) ? "0" + seconds : seconds;
+
+  return hours + ":" + minutes + ":" + seconds + "." + milliseconds;
+}
+
+ function fromSrt(data) {
+
+        data = data.replace(/\r/g, '');
+
+        var regex = /(\d+)\n(\d{2}:\d{2}:\d{2},\d{3}) --> (\d{2}:\d{2}:\d{2},\d{3})/g;
+        data = data.split(regex);
+//        console.log(data);
+        data.shift();
+//        console.log(data);
+
+        var items = "";
+
+        for (var i = 0; i < data.length; i += 4) {
+
+            if (i < (data.length-4)){
+                items = items + 
+                    "{" + 
+                    "\"id\": \"" + data[i].trim() +"\"," +
+                    "\"startTime\": \"" + data[i + 1].trim() +"\"," +
+                    "\"endTime\": \"" +  data[i + 2].trim() +"\"," +
+                    "\"text\": \"" + data[i + 3].trim() + "\"" +
+                    "},";
+            } else if (i === (data.length-4)){
+                items = items + 
+                    "{" + 
+                        "\"id\": \"" + data[i].trim() +"\"," +
+                        "\"startTime\": \"" + data[i + 1].trim() +"\"," +
+                        "\"endTime\": \"" +  data[i + 2].trim() +"\"," +
+                        "\"text\": \"" + data[i + 3].trim() + "\"" +
+                    "}";
+            };
+        };  
+//      console.log(items);
+
+        return items;
+};
+
+console.log(msToTime(300000))
+
+
+
+
 async function tokenizedTextToSpeech(workerJobHelper) {
     const jobInput = workerJobHelper.getJobInput();
     const inputFile = jobInput.inputFile;
@@ -95,6 +150,7 @@ const processTokenizedTextToSpeechJobResult = async (request) => {
         let s3Bucket = request.input.outputFile.awsS3Bucket;
         let s3Key = request.input.outputFile.awsS3Key;
         const speechmarks = await S3GetObject({ Bucket: s3Bucket, Key: s3Key });
+        console.log(speechmarks.Body.toString());
         let speechmarks_json_a = "{ \"results\": { \"items\": [" + speechmarks.Body.toString().replace(/}/g, '},') + "]}}";
         let speechmarks_json_b = speechmarks_json_a.replace(/[\n]/g, "");
         let speechmarks_json = speechmarks_json_b.replace(',]' , ']');
@@ -110,89 +166,142 @@ const processTokenizedTextToSpeechJobResult = async (request) => {
         }
         await S3PutObject(s3Params_sm);
 
-        Logger.debug("14.9. retrieve stt_output_clean from TempBucket");
-        const s3Bucket_stt = jobInput.inputFile.awsS3Bucket;
-        const s3Key_stt = "stt/stt_output_clean.txt";
-        let s3Object_stt;
-        try {
-            s3Object_stt = await S3GetObject({
-                Bucket: s3Bucket_stt,
-                Key: s3Key_stt,
-            });
-        } catch (error) {
-            throw new Error("Unable to read file in bucket '" + s3Bucket_stt + "' with key '" + s3Key_stt + "' due to error: " + error.message);
-        }
-
-        Logger.debug("14.10. retrieve text from stt_output_clean.txt");
-        const stt = s3Object_stt.Body.toString();
-        console.log(stt);
-
-        Logger.debug("14.11. parse stt output clean json data");
-        let sttJsonData = JSON.parse(stt);
-        console.log(sttJsonData);
-
-        Logger.debug("14.12. parse speechmarks json data");
+        Logger.debug("14.9. transform speechmarks into srt for subtitle offline editing and synchronisation");
         let speechmarksJsonData = JSON.parse(speechmarks_json);
         console.log(speechmarksJsonData);
 
-        Logger.debug("14.13. generate SSML file with breaks and translation sentences from speech marks and timings from stt");
-        let ssldata ="<speak>"; 
-        let k=0;
-        // time reference expressed in milliseconds
-        let t=0;
+        let speechmarksrt =""; 
+        let ksrt = 0;
+        for (var j = 0; j < speechmarksJsonData.results.items.length; j++) {
+            let ksrt = j+1;
+            if ( j+1 < speechmarksJsonData.results.items.length){ 
+                let speechmarksJsonDataItem = speechmarksJsonData.results.items[j];
+                let speechmarksJsonNextDataItem = speechmarksJsonData.results.items[j+1];
+                let start =  msToTime(speechmarksJsonDataItem.time);
+                let end =  msToTime(speechmarksJsonNextDataItem.time - 10);
 
-        for (var j = 0; j < sttJsonData.results.items.length; j++) {
-            var item = sttJsonData.results.items[j];
-            var punctuation = item.alternatives[0];
-            var speechSpeedFactor = 1;
-            var mediumBreakTimeFactor = 1.1;
-            var longBreakTimeFactor = 1.3;
-            var dotTime = 0.3;
+                speechmarksrt = speechmarksrt +
+                "\r\n" + ksrt + "\r\n" +
+                start + " --> " + end + "\r\n" +
+                speechmarksJsonDataItem.value;
 
-            if (j === 0 & item.start_time > 0 ) {
-                ssldata = ssldata + "<break time=\"" + item.start_time * mediumBreakTimeFactor + "s\"/>";
-                // time in ms
-                t = t + ((item.start_time * 1000) * mediumBreakTimeFactor);
+            } else if (j+1 === speechmarksJsonData.results.items.length){ 
+                let speechmarksJsonDataItem = speechmarksJsonData.results.items[j];
+                let start =  msToTime(speechmarksJsonDataItem.time);
+                let end = start + 1000;
 
-            } else if ( item.type.includes("punctuation") & punctuation.content.includes(".") ) {
-                if (j+1 < sttJsonData.results.items.length ){
-
-                    if ((k+1 < speechmarksJsonData.results.items.length)) {
-
-                        // var previousitem = sttJsonData.results.items[j - 1];
-                        var lastitem = sttJsonData.results.items[j - 1];
-                        var nextitem = sttJsonData.results.items[j + 1];
-                        var speechmarksJsonDataItem = speechmarksJsonData.results.items[k];
-                        var nextSpeechmarksJsonDataItem = speechmarksJsonData.results.items[k + 1];
-                        var translatedSentenceDuration = (nextSpeechmarksJsonDataItem.time - speechmarksJsonDataItem.time) * speechSpeedFactor;
-                        var endCurrentSentence = t + translatedSentenceDuration;
-                        var breakTime = ((nextitem.start_time * 1000) - (lastitem.end_time*1000));
-
-                        ssldata = ssldata  + speechmarksJsonDataItem.value.replace('.','<break time="0.3s"/>');
-
-                        if (((nextitem.start_time * 1000) - (lastitem.end_time * 1000))<2500) {
-                            ssldata = ssldata + "<break time=\"" + ((((nextitem.start_time * 1000) - (lastitem.end_time * 1000)) / 1000)) + "s\"/>";
-                        } else if (((nextitem.start_time * 1000) - (lastitem.end_time * 1000))>=2500) {
-                            ssldata = ssldata + "<break time=\"" + ((((nextitem.start_time * 1000) - (lastitem.end_time * 1000)) / 1000) * mediumBreakTimeFactor) + "s\"/>";
-                        } else if (((nextitem.start_time * 1000) - (lastitem.end_time * 1000))>=5000) {
-                            ssldata = ssldata + "<break time=\"" + ((((nextitem.start_time * 1000) - (lastitem.end_time * 1000)) / 1000) * longBreakTimeFactor) + "s\"/>";
-                        }
-                     } else if ((k+1 === speechmarksJsonData.results.items.length)) {
-                        var speechmarksJsonDataItem = speechmarksJsonData.results.items[k];
-                        ssldata = ssldata  + speechmarksJsonDataItem.value.replace('.','<break time="0.3s"/>');
-                     }
-
-                    k = k + 1;
-
-                }
-                // console.log(ssldata);
+                speechmarksrt = speechmarksrt +
+                "\r\n" + j + "\r\n" +
+                start + " --> " + end + "\r\n" +
+                speechmarksJsonDataItem.value;
             }
+
         }
+        console.log(speechmarksrt);
+
+        Logger.debug("14.10. save speechmarks srt into a speechmarks.srt file under temp/AIResults/SSML");
+        let s3Bucket_smsrt = jobInput.outputLocation.awsS3Bucket;
+        let s3Key_smsrt = jobInput.outputLocation.awsS3KeyPrefix + "speechmarks.srt" ;
+        let s3Params_smsrt = {
+            Bucket: s3Bucket_smsrt,
+            Key: s3Key_smsrt,
+            Body: speechmarksrt
+        }
+        await S3PutObject(s3Params_smsrt);
+        
+
+        Logger.debug("14.11. get edited/synched srt of translation after alignment with srt_output_clean from temp/srt bucket and timing adjustment, inserting srt_translation_output(_synched).srt in the workflow");
+        const s3Bucket_syncsrt = jobInput.outputLocation.awsS3Bucket;
+//        const s3Key_syncsrt = "srt/srt_translation_output_synched.srt";
+        const s3Key_syncsrt = "srt/srt_translation_output.srt";
+        let s3Object_syncsrt;
+        try {
+            s3Object_syncsrt = await S3GetObject({
+                Bucket: s3Bucket_syncsrt,
+                Key: s3Key_syncsrt,
+            });
+        } catch (error) {
+            throw new Error("Unable to read file in bucket '" + s3Bucket_syncsrt + "' with key '" + s3Key_syncsrt + "' due to error: " + error.message);
+        }
+
+        Logger.debug("14.12. retrieve and jsonify text from srt_translation_output(_synched).srt and format as valid parsable json");
+        const jsonfromsrt = fromSrt(s3Object_syncsrt.Body.toString());
+//        console.log(jsonfromsrt);
+        const syncSrtJson = "{ \"results\": {\"items\": [" + jsonfromsrt.toString() + "]}}";
+        console.log(syncSrtJson);
+
+        const syncSrtJsonData = JSON.parse(syncSrtJson);
+        console.log(syncSrtJsonData);
+
+        Logger.debug("14.13. generate SSML file with breaks and translation sentences from speech marks and timings from stt");
+        let ssldata ="<speak>";
+
+        for (var j = 0; j < syncSrtJsonData.results.items.length; j++) {
+            let item = syncSrtJsonData.results.items[j];
+
+            let itemstart = item.startTime;
+            itemstart = itemstart.replace(',','.');
+//            console.log(itemstart);
+            let itemstartsplit = itemstart.split(':')
+//            console.log(itemstartsplit);
+            let itemstartms = parseInt(itemstartsplit[0]*3600000) + parseInt(itemstartsplit[1])*60000 + parseFloat(itemstartsplit[2])*1000;
+//            console.log(itemstartms);
+            let itemend = item.endTime;
+            itemend = itemend.replace(',','.')
+//            console.log(itemend);
+            let itemendsplit = itemend.split(':')
+            let itemendms = parseInt(itemendsplit[0]*3600000) + parseInt(itemendsplit[1])*60000 + parseFloat(itemendsplit[2])*1000;
+//            console.log(itemendms);
+
+            let breaktime = 0;
+            let breaktimeSecond = 0;
+            let m = 0;
+
+            if (j === 0 & itemstartms > 0 ) {
+
+                breakTime = itemstartms/1000;
+                breakTimeSecond = breakTime;
+
+                ssldata = ssldata + "<break time=\"" + breakTimeSecond + "s\"/>";
+
+                if (j+1 < syncSrtJsonData.results.items.length ){
+                    let m = j+1;
+                    let nextitem1 = syncSrtJsonData.results.items[m];
+                    let nextitem1start = nextitem1.startTime;
+                    let nextitem1startsplit = nextitem1start.split(':')
+                    let nextitem1startms = parseInt(nextitem1startsplit[0]*3600000) + parseInt(nextitem1startsplit[1])*60000 + parseFloat(nextitem1startsplit[2])*1000;
+                    breakTime = ((nextitem1startms - itemendms)/1000);
+                    if (breakTime < 0){
+                        breakTime = 0;
+                    }
+                    breakTimeSecond = breakTime;
+
+                    ssldata = ssldata  + item.text  + "<break time=\"" + breakTimeSecond + "s\"/>";
+                }
+            } else if (j+1 < syncSrtJsonData.results.items.length ){
+                let m = j+1;
+                let nextitem = syncSrtJsonData.results.items[m];
+                let nextitemstart = nextitem.startTime;
+                let nextitemstartsplit = nextitemstart.split(':')
+                let nextitemstartms = parseInt(nextitemstartsplit[0]*3600000) + parseInt(nextitemstartsplit[1])*60000 + parseFloat(nextitemstartsplit[2])*1000;
+                breakTime = ((nextitemstartms - itemendms)/1000);
+                if (breakTime < 0){
+                    breakTime = 0;
+                }
+                breakTimeSecond = breakTime;
+
+                ssldata = ssldata  + item.text  + "<break time=\"" + breakTimeSecond + "s\"/>";
+
+            } else if (j+1 === syncSrtJsonData.results.items.length ){
+                ssldata = ssldata  + item.text;
+            }
+//            console.log(ssldata);
+        }
+
         ssldata=ssldata + "</speak>";
 
         Logger.debug("14.14. visualise SSML data");
         console.log(ssldata);
-
 
         Logger.debug("14.15. save ssml data into a ssml.txt file");
         let s3Bucket_ssml = jobInput.outputLocation.awsS3Bucket;

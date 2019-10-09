@@ -86,21 +86,17 @@ exports.handler = async (event, context) => {
     await S3PutObject(s3Params);
     // console.log(bmContent.awsAiMetadata.transcription.tokenizedTranslation);
 
-/*    let s3Object;
-        try {
-            s3Object = await S3GetObject({
-                Bucket: s3Bucket,
-                Key: s3Key,
-            });
-        } catch (error) {
-            throw new Error("Unable to copy ssml file in bucket '" + s3Bucket + "' with key '" + s3Key + "' due to error: " + error.message);
-        }
-    console.log(s3Object.Body.toString());
-*/
+    // HARD ENCODE SSML and Save as ssmlTranslationSynched.txt in tempBucket
+//    let s3BucketSynched = TempBucket;
+//    let s3KeySynched = "AiInput/ssmlTranslationSynched.txt";
+
+
     let notificationUrl = ActivityCallbackUrl + "?taskToken=" + encodeURIComponent(taskToken);
     console.log("NotificationUrl:", notificationUrl);
 
     // creating Polly job for text to speech in French using ssml translation data
+    // change inputFile from ssmlTranslation.txt (s3Bucket and s3Key) coming from the workflow 
+    // with ssmlTranslationSynched.txt (s3BucketSynched and s3KeySynched) hard encoded
     let job = new AIJob({
         jobProfile: jobProfileId,
         jobInput: new JobParameterBag({

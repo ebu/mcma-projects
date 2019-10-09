@@ -47,7 +47,7 @@ async function ssmlTextToSpeech(workerJobHelper) {
             Key: s3Key_ssml,
         });
     } catch (error) {
-        throw new Error("Unable to read file in bucket '" + s3Bucket + "' with key '" + s3Key + "' due to error: " + error.message);
+        throw new Error("Unable to read file in bucket '" + s3Bucket_ssml + "' with key '" + s3Key_ssml + "' due to error: " + error.message);
     }
 
     Logger.debug("16.2. extract SSML file content");
@@ -64,11 +64,11 @@ async function ssmlTextToSpeech(workerJobHelper) {
             TextType: 'ssml'
         }
     const data = await PollyStartSpeechSynthesisTask(params_ssml);
-    Logger.debug("16.3. job result with output mp3 url provided by the the AWS service")
+    Logger.debug("16.4. job result with output mp3 url provided by the the AWS service")
     console.log(" -> see request.input.outputFile in processSsmlTextToSpeechJobresult");
     console.log("out:" + JSON.stringify(data, null, 2));
 
-    Logger.debug("16.4. OutputS3KeyPrefix used in s3-trigger");
+    Logger.debug("16.5. OutputS3KeyPrefix used in s3-trigger");
     console.log("See regex for ssmltextToSpeechJob in aws-ai-service/se-trigger/src/index.js")
     console.log(params_ssml.OutputS3KeyPrefix);
 }
@@ -91,10 +91,10 @@ const processSsmlTextToSpeechJobResult = async (request) => {
     try {
         await workerJobHelper.initialize();
 
-        Logger.debug("16.5. Retrieve job inputParameters");
+        Logger.debug("16.6. Retrieve job inputParameters");
         let jobInput = workerJobHelper.getJobInput();
 
-        Logger.debug("16.6. Copy textToSpeech output file to output location defined in Job");
+        Logger.debug("16.7. Copy textToSpeech output file to output location defined in Job");
         // request.input.outputFile -> process temporary output file
         let copySource = encodeURI(request.input.outputFile.awsS3Bucket + "/" + request.input.outputFile.awsS3Key);
         console.log(copySource);
@@ -112,7 +112,7 @@ const processSsmlTextToSpeechJobResult = async (request) => {
             throw new Error("Unable to copy output file to bucket '" + s3Bucket + "' with key '" + s3Key + "' due to error: " + error.message);
         }
 
-        Logger.debug("16.7. updating jobAssignment with jobOutput");
+        Logger.debug("16.8. updating jobAssignment with jobOutput");
         workerJobHelper.getJobOutput().outputFile = new Locator({
             awsS3Bucket: s3Bucket,
             awsS3Key: s3Key

@@ -43,7 +43,7 @@ async function createDubbingSrt(workerJobHelper) {
         const dub = "/tmp/" + "ssmlTranslation.mp3";
         await fsWriteFile(dub, data_dub.Body);
 
-        Logger.debug("18.4. write srt to ffmpeg local tmp storage");
+        Logger.debug("18.4. write srt of original language track to ffmpeg local tmp storage");
         const data_srt = await S3GetObject({ Bucket: inputFile.awsS3Bucket, Key: "temp/srt_output_clean.srt" });
         const srt = "/tmp/" + "srt_output_clean.srt";
         await fsWriteFile(srt, data_srt.Body);
@@ -65,6 +65,10 @@ async function createDubbingSrt(workerJobHelper) {
         const params_srt = ["-i", dubbed, "-i", srt, "-c", "copy", "-c:s", "mov_text", output];
         console.log(params_srt);
         await ffmpeg(params_srt);
+
+        // Copy two srt (original english plus french translation) in one mp4 file
+        //ffmpeg -i proxy.mp4 -i srt.srt -i french.srt -c:s mov_text -c:v copy -c:a copy -map 0:v -map 0:a -map 1 -map 2 -metadata:s:s:0 language=eng -metadata:s:s:1 language=fre With2CC.mp4
+        // TBD but HTML5 player doesn't play srt, only VTT.
 
         Logger.debug("18.8. removing file from ffmpeg local temp repo");
         await fsUnlink(input);
