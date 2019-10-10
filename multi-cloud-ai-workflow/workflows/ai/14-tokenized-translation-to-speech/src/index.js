@@ -10,6 +10,7 @@ const StepFunctionsGetActivityTask = util.promisify(StepFunctions.getActivityTas
 
 const S3 = new AWS.S3();
 const S3PutObject = util.promisify(S3.putObject.bind(S3));
+const S3GetObject = util.promisify(S3.getObject.bind(S3));
 
 const { EnvironmentVariableProvider, AIJob, JobParameterBag, Locator, NotificationEndpoint, JobProfile } = require("mcma-core");
 const { getAwsV4ResourceManager } = require("mcma-aws");
@@ -19,6 +20,7 @@ const resourceManager = getAwsV4ResourceManager(environmentVariableProvider);
 
 // Environment Variable(AWS Lambda)
 const TempBucket = process.env.TempBucket;
+const WebsiteBucket = process.env.WebsiteBucket;
 const ActivityCallbackUrl = process.env.ActivityCallbackUrl;
 const ActivityArn = process.env.ActivityArn;
 
@@ -86,6 +88,25 @@ exports.handler = async (event, context) => {
     }
     await S3PutObject(s3Params);
     console.log(bmContent.awsAiMetadata.transcription.translation);
+
+
+    // extract preloaded and edited srt_translation_output.srt websiteBucket/assets/srt and transfer in a file in tempBucket/srt
+    let s3Object_assets_srt;
+    try {
+        s3Object_assets_srt = await S3GetObject({
+            Bucket: WebsiteBucket,
+            Key: "assets/srt/srt_translation_output.srt",
+        });
+    } catch (error) {
+        throw new Error("Unable to copy translation srt file from bucket '" + WebsiteBucket + "' with key '" + "assets/srt/srt_translation_output.srt" + "' due to error: " + error.message);
+    }
+    let s3Params_translation_srt = {
+        Bucket: TempBucket,
+        Key: "srt/srt_translation_output.srt",
+        Body: s3Object_assets_srt.Body
+    }
+    await S3PutObject(s3Params_translation_srt);
+
 
 
     let notificationUrl = ActivityCallbackUrl + "?taskToken=" + encodeURIComponent(taskToken);
