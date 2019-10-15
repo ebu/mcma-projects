@@ -261,6 +261,22 @@ const createServices = (serviceUrls) => {
                     })
                 );
                 break;
+            case "google_ai_service_url":
+                serviceList.push(
+                    new Service({
+                        name: "AZURE AI Service",
+                        resources: [
+                            new ResourceEndpoint({ resourceType: "JobAssignment", httpEndpoint: serviceUrls[prop] + "/job-assignments" })
+                        ],
+                        authType: "AWS4",
+                        jobType: "AIJob",
+                        jobProfiles: [
+                            JOB_PROFILES.AzureExtractAllAIMetadata.id ? JOB_PROFILES.AzureExtractAllAIMetadata.id : JOB_PROFILES.AzureExtractAllAIMetadata,
+                            JOB_PROFILES.ValidateSpeechToTextAzure.id ? JOB_PROFILES.ValidateSpeechToTextAzure.id : JOB_PROFILES.ValidateSpeechToTextAzure,
+                        ]
+                    })
+                );
+                break;
             case "job_processor_service_url":
                 serviceList.push(new Service({
                     name: "Job Processor Service",

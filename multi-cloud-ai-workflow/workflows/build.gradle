@@ -22,6 +22,8 @@ task build {
     dependsOn "ai:32-register-validate-speech-to-text:build"
     dependsOn "ai:41-validate-speech-to-text-azure:build"
     dependsOn "ai:42-register-validate-speech-to-text-azure:build"
+    dependsOn "ai:51-extract-audio-google:build"
+    dependsOn "ai:52-speech-to-text-google:build"
     dependsOn "ai:20-rekognition-aws:build"
     dependsOn "conform:01-validate-workflow-input:build"
     dependsOn "conform:02-move-content-to-file-repository:build"

@@ -105,67 +105,12 @@ resource "aws_sfn_activity" "ai-31-validate-speech-to-text" {
   name = "${var.global_prefix}-ai-31-validate-speech-to-text"
 }
 
-resource "aws_lambda_function" "ai-41-validate-speech-to-text-azure" {
-  filename         = "./../workflows/ai/41-validate-speech-to-text-azure/dist/lambda.zip"
-  function_name    = "${format("%.64s", "${var.global_prefix}-ai-41-validate-speech-to-text-azure")}"
-  role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
-  handler          = "index.handler"
-  source_code_hash = "${filebase64sha256("./../workflows/ai/41-validate-speech-to-text-azure/dist/lambda.zip")}"
-  runtime          = "nodejs8.10"
-  timeout          = "60"
-  memory_size      = "256"
-
-  environment {
-    variables = {
-      ServicesUrl         = "${var.services_url}"
-      ServicesAuthType    = "${var.services_auth_type}"
-      ServicesAuthContext = "${var.services_auth_context}"
-      RepositoryBucket    = "${var.repository_bucket}"
-      TempBucket          = "${var.temp_bucket}"
-      WebsiteBucket       = "${var.website_bucket}"
-      ActivityCallbackUrl = "${local.workflow_activity_callback_handler_url}"
-      ActivityArn         = "${aws_sfn_activity.ai-41-validate-speech-to-text-azure.id}"
-    }
-  }
-}
-
-resource "aws_sfn_activity" "ai-41-validate-speech-to-text-azure" {
-  name = "${var.global_prefix}-ai-41-validate-speech-to-text-azure"
-}
-
-
-
-
-
-
 resource "aws_lambda_function" "ai-32-register-validate-speech-to-text" {
   filename         = "./../workflows/ai/32-register-validate-speech-to-text/dist/lambda.zip"
   function_name    = "${format("%.64s", "${var.global_prefix}-ai-32-register-validate-speech-to-text")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
   source_code_hash = "${filebase64sha256("./../workflows/ai/32-register-validate-speech-to-text/dist/lambda.zip")}"
-  runtime          = "nodejs8.10"
-  timeout          = "60"
-  memory_size      = "256"
-
-  environment {
-    variables = {
-      ServicesUrl         = "${var.services_url}"
-      ServicesAuthType    = "${var.services_auth_type}"
-      ServicesAuthContext = "${var.services_auth_context}"
-      RepositoryBucket    = "${var.repository_bucket}"
-      TempBucket          = "${var.temp_bucket}"
-      WebsiteBucket       = "${var.website_bucket}"
-    }
-  }
-}
-
-resource "aws_lambda_function" "ai-42-register-validate-speech-to-text-azure" {
-  filename         = "./../workflows/ai/42-register-validate-speech-to-text-azure/dist/lambda.zip"
-  function_name    = "${format("%.64s", "${var.global_prefix}-ai-42-register-validate-speech-to-text-azure")}"
-  role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
-  handler          = "index.handler"
-  source_code_hash = "${filebase64sha256("./../workflows/ai/42-register-validate-speech-to-text-azure/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "60"
   memory_size      = "256"
@@ -604,6 +549,106 @@ resource "aws_lambda_function" "ai-20-rekognition-aws" {
   }
 }
 
+resource "aws_lambda_function" "ai-41-validate-speech-to-text-azure" {
+  filename         = "./../workflows/ai/41-validate-speech-to-text-azure/dist/lambda.zip"
+  function_name    = "${format("%.64s", "${var.global_prefix}-ai-41-validate-speech-to-text-azure")}"
+  role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
+  handler          = "index.handler"
+  source_code_hash = "${filebase64sha256("./../workflows/ai/41-validate-speech-to-text-azure/dist/lambda.zip")}"
+  runtime          = "nodejs8.10"
+  timeout          = "60"
+  memory_size      = "256"
+
+  environment {
+    variables = {
+      ServicesUrl         = "${var.services_url}"
+      ServicesAuthType    = "${var.services_auth_type}"
+      ServicesAuthContext = "${var.services_auth_context}"
+      RepositoryBucket    = "${var.repository_bucket}"
+      TempBucket          = "${var.temp_bucket}"
+      WebsiteBucket       = "${var.website_bucket}"
+      ActivityCallbackUrl = "${local.workflow_activity_callback_handler_url}"
+      ActivityArn         = "${aws_sfn_activity.ai-41-validate-speech-to-text-azure.id}"
+    }
+  }
+}
+
+resource "aws_sfn_activity" "ai-41-validate-speech-to-text-azure" {
+  name = "${var.global_prefix}-ai-41-validate-speech-to-text-azure"
+}
+
+resource "aws_lambda_function" "ai-42-register-validate-speech-to-text-azure" {
+  filename         = "./../workflows/ai/42-register-validate-speech-to-text-azure/dist/lambda.zip"
+  function_name    = "${format("%.64s", "${var.global_prefix}-ai-42-register-validate-speech-to-text-azure")}"
+  role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
+  handler          = "index.handler"
+  source_code_hash = "${filebase64sha256("./../workflows/ai/42-register-validate-speech-to-text-azure/dist/lambda.zip")}"
+  runtime          = "nodejs8.10"
+  timeout          = "60"
+  memory_size      = "256"
+
+  environment {
+    variables = {
+      ServicesUrl         = "${var.services_url}"
+      ServicesAuthType    = "${var.services_auth_type}"
+      ServicesAuthContext = "${var.services_auth_context}"
+      RepositoryBucket    = "${var.repository_bucket}"
+      TempBucket          = "${var.temp_bucket}"
+      WebsiteBucket       = "${var.website_bucket}"
+    }
+  }
+}
+
+
+resource "aws_lambda_function" "ai-51-extract-audio-google" {
+  filename         = "./../workflows/ai/51-extract-audio-google/dist/lambda.zip"
+  function_name    = "${format("%.64s", "${var.global_prefix}-ai-51-extract-audio-google")}"
+  role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
+  handler          = "index.handler"
+  source_code_hash = "${filebase64sha256("./../workflows/ai/51-extract-audio-google/dist/lambda.zip")}"
+  runtime          = "nodejs8.10"
+  timeout          = "60"
+  memory_size      = "256"
+
+  environment {
+    variables = {
+      ServicesUrl         = "${var.services_url}"
+      ServicesAuthType    = "${var.services_auth_type}"
+      ServicesAuthContext = "${var.services_auth_context}"
+      RepositoryBucket    = "${var.repository_bucket}"
+      TempBucket          = "${var.temp_bucket}"
+      WebsiteBucket       = "${var.website_bucket}"
+      ActivityCallbackUrl = "${local.workflow_activity_callback_handler_url}"
+      ActivityArn         = "${aws_sfn_activity.ai-51-extract-audio-google.id}"
+    }
+  }
+}
+
+resource "aws_sfn_activity" "ai-51-extract-audio-google" {
+  name = "${var.global_prefix}-ai-51-extract-audio-google"
+}
+
+resource "aws_lambda_function" "ai-52-speech-to-text-google" {
+  filename         = "./../workflows/ai/52-speech-to-text-google/dist/lambda.zip"
+  function_name    = "${format("%.64s", "${var.global_prefix}-ai-52-speech-to-text-google")}"
+  role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
+  handler          = "index.handler"
+  source_code_hash = "${filebase64sha256("./../workflows/ai/52-speech-to-text-google/dist/lambda.zip")}"
+  runtime          = "nodejs8.10"
+  timeout          = "60"
+  memory_size      = "256"
+
+  environment {
+    variables = {
+      ServicesUrl         = "${var.services_url}"
+      ServicesAuthType    = "${var.services_auth_type}"
+      ServicesAuthContext = "${var.services_auth_context}"
+      RepositoryBucket    = "${var.repository_bucket}"
+      TempBucket          = "${var.temp_bucket}"
+      WebsiteBucket       = "${var.website_bucket}"
+    }
+  }
+}
 # #################################
 # #  Step Functions : AI Workflow
 # #################################
@@ -650,11 +695,16 @@ data "template_file" "ai-workflow" {
     activity-41-validate-speech-to-text-azure             = "${aws_sfn_activity.ai-41-validate-speech-to-text-azure.id}"
     lambda-42-register-validate-speech-to-text-azure      = "${aws_lambda_function.ai-42-register-validate-speech-to-text-azure.arn}"
 
+    lambda-51-extract-audio-google                        = "${aws_lambda_function.ai-51-extract-audio-google.arn}"
+    activity-51-extract-audio-google                      = "${aws_sfn_activity.ai-51-extract-audio-google.id}"
+    lambda-52-speech-to-text-google                       = "${aws_lambda_function.ai-52-speech-to-text-google.arn}"
+
 
     lambda-20-rekognition-aws                             = "${aws_lambda_function.ai-20-rekognition-aws.arn}"
     lambda-process-workflow-completion                    = "${aws_lambda_function.process-workflow-completion.arn}"
     lambda-process-workflow-failure                       = "${aws_lambda_function.process-workflow-failure.arn}"
   }
+
 }
 
 resource "aws_sfn_state_machine" "ai-workflow" {

@@ -1,0 +1,15 @@
+{
+    "name": "google-ai-service-api-handler",
+    "version": "0.0.0",
+    "description": "AWS Lambda based service leveraging Google Cloud AI services to do AI operations",
+    "private": true,
+    "engines": {
+        "node": "~8.10.0"
+    },
+    "main": "src/index.js",
+    "license": "Apache-2.0",
+    "dependencies": {
+        "aws-sdk": "^2.473.0",
+        "mcma-aws": "0.3.13"
+    }
+}

@@ -352,6 +352,77 @@
                     }
                 },
                 {
+                    "StartAt": "50-google",
+                    "States": {
+                        "50-google": {
+                            "Type": "Parallel",
+                            "Branches": [
+                                {
+                                    "StartAt": "51-extract-audio-google",
+                                    "States": {
+                                        "51-extract-audio-google": {
+                                            "Type": "Task",
+                                            "Resource": "${lambda-51-extract-audio-google}",
+                                            "End": true
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt": "51-wait-for-job-completion",
+                                    "States": {
+                                        "51-wait-for-job-completion": {
+                                            "Type": "Task",
+                                            "Resource": "${activity-51-extract-audio-google}",
+                                            "TimeoutSeconds": 3600,
+                                            "HeartbeatSeconds": 1800,
+                                            "End": true
+                                        }
+                                    }
+                                }
+                            ],
+                            "ResultPath": "$.data.googleJobId",
+                            "Next": "52-speech-to-text-google",
+                            "Catch": [
+                                {
+                                    "ErrorEquals": [
+                                        "States.ALL"
+                                    ],
+                                    "ResultPath": "$.error",
+                                    "Next": "process-failure-branch-4"
+                                }
+                            ]
+                        },
+                        "52-speech-to-text-google": {
+                            "Type": "Task",
+                            "Resource": "${lambda-52-speech-to-text-google}",
+                            "ResultPath": null,
+                            "Next": "process-completion-branch-4",
+                            "Catch": [
+                                {
+                                    "ErrorEquals": [
+                                        "States.ALL"
+                                    ],
+                                    "ResultPath": "$.error",
+                                    "Next": "process-failure-branch-4"
+                                }
+                            ]
+                        },
+                        "process-failure-branch-4": {
+                            "Type": "Pass",
+                            "End": true
+                        },
+                        "process-completion-branch-4": {
+                            "Type": "Pass",
+                            "End": true
+                        }
+                    }
+                },
+
+
+
+
+
+                {
                     "StartAt": "08-detect-celebrities-azure-parent",
                     "States": {
                         "08-detect-celebrities-azure-parent": {
@@ -465,186 +536,6 @@
                             "End": true
                         },
                         "process-completion-branch-3": {
-                            "Type": "Pass",
-                            "End": true
-                        }
-                    }
-                },
-                {
-                    "StartAt": "20-rekognition-aws",
-                    "States": {
-                        "20-rekognition-aws": {
-                            "Type": "Parallel",
-                            "Branches": [
-                                {
-                                    "StartAt": "06-detect-celebrities-aws-parent",
-                                    "States": {
-                                        "06-detect-celebrities-aws-parent": {
-                                            "Type": "Parallel",
-                                            "Branches": [
-                                                {
-                                                    "StartAt": "06-detect-celebrities-aws",
-                                                    "States": {
-                                                        "06-detect-celebrities-aws": {
-                                                            "Type": "Task",
-                                                            "Resource": "${lambda-06-detect-celebrities-aws}",
-                                                            "End": true
-                                                        }
-                                                    }
-                                                },
-                                                {
-                                                    "StartAt": "06-wait-for-job-completion",
-                                                    "States": {
-                                                        "06-wait-for-job-completion": {
-                                                            "Type": "Task",
-                                                            "Resource": "${activity-06-detect-celebrities-aws}",
-                                                            "TimeoutSeconds": 3600,
-                                                            "HeartbeatSeconds": 1800,
-                                                            "End": true
-                                                        }
-                                                    }
-                                                }
-                                            ],
-                                            "ResultPath": "$.data.awsCelebritiesJobId",
-                                            "Next": "07-register-celebrities-info-aws",
-                                            "Catch": [
-                                                {
-                                                    "ErrorEquals": [
-                                                        "States.ALL"
-                                                    ],
-                                                    "ResultPath": "$.error",
-                                                    "Next": "process-failure-branch-2"
-                                                }
-                                            ]
-                                        },
-                                        "07-register-celebrities-info-aws": {
-                                            "Type": "Task",
-                                            "Resource": "${lambda-07-register-celebrities-info-aws}",
-                                            "ResultPath": null,
-                                            "Next": "process-completion-branch-2",
-                                            "Catch": [
-                                                {
-                                                    "ErrorEquals": [
-                                                        "States.ALL"
-                                                    ],
-                                                    "ResultPath": "$.error",
-                                                    "Next": "process-failure-branch-2"
-                                                }
-                                            ]
-                                        },
-                                        "process-failure-branch-2": {
-                                            "Type": "Pass",
-                                            "End": true
-                                        },
-                                        "process-completion-branch-2": {
-                                            "Type": "Pass",
-                                            "End": true
-                                        }
-                                    }
-                                },
-                                {
-                                    "StartAt": "10-detect-emotions-aws-parent",
-                                    "States": {
-                                        "10-detect-emotions-aws-parent": {
-                                            "Type": "Parallel",
-                                            "Branches": [
-                                                {
-                                                    "StartAt": "10-detect-emotions-aws",
-                                                    "States": {
-                                                        "10-detect-emotions-aws": {
-                                                            "Type": "Task",
-                                                            "Resource": "${lambda-10-detect-emotions-aws}",
-                                                            "End": true
-                                                        }
-                                                    }
-                                                },
-                                                {
-                                                    "StartAt": "10-wait-for-job-completion",
-                                                    "States": {
-                                                        "10-wait-for-job-completion": {
-                                                            "Type": "Task",
-                                                            "Resource": "${activity-10-detect-emotions-aws}",
-                                                            "TimeoutSeconds": 3600,
-                                                            "HeartbeatSeconds": 1800,
-                                                            "End": true
-                                                        }
-                                                    }
-                                                }
-                                            ],
-                                            "ResultPath": "$.data.awsEmotionsJobId",
-                                            "Next": "11-register-emotions-info-aws",
-                                            "Catch": [
-                                                {
-                                                    "ErrorEquals": [
-                                                        "States.ALL"
-                                                    ],
-                                                    "ResultPath": "$.error",
-                                                    "Next": "process-failure-branch-4"
-                                                }
-                                            ]
-                                        },
-                                        "11-register-emotions-info-aws": {
-                                            "Type": "Task",
-                                            "Resource": "${lambda-11-register-emotions-info-aws}",
-                                            "ResultPath": null,
-                                            "Next": "process-completion-branch-4",
-                                            "Catch": [
-                                                {
-                                                    "ErrorEquals": [
-                                                        "States.ALL"
-                                                    ],
-                                                    "ResultPath": "$.error",
-                                                    "Next": "process-failure-branch-4"
-                                                }
-                                            ]
-                                        },
-                                        "process-failure-branch-4": {
-                                            "Type": "Pass",
-                                            "End": true
-                                        },
-                                        "process-completion-branch-4": {
-                                            "Type": "Pass",
-                                            "End": true
-                                        }
-                                    }
-                                }
-                            ],
-                            "ResultPath": "$.data.awsRekognition",
-                            "Next": "rekognition-aws-completion",
-                            "Catch": [
-                                {
-                                    "ErrorEquals": [
-                                        "States.ALL"
-                                    ],
-                                    "ResultPath": "$.error",
-                                    "Next": "rekognition-aws-failure"
-                                }
-                            ]
-                        },
-                        "rekognition-aws-failure": {
-                            "Type": "Pass",
-                            "End": true
-                        },
-                        "process-rekognition-aws": {
-                            "Type": "Task",
-                            "Resource": "${lambda-20-rekognition-aws}",
-                            "ResultPath": null,
-                            "Next": "rekognition-aws-completion-2",
-                            "Catch": [
-                                {
-                                    "ErrorEquals": [
-                                        "States.ALL"
-                                    ],
-                                    "ResultPath": "$.error",
-                                    "Next": "rekognition-aws-failure"
-                                }
-                            ]
-                        },
-                        "rekognition-aws-completion": {
-                            "Type": "Pass",
-                            "Next": "process-rekognition-aws"
-                        },
-                        "rekognition-aws-completion-2": {
                             "Type": "Pass",
                             "End": true
                         }
