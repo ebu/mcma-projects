@@ -600,12 +600,12 @@ resource "aws_lambda_function" "ai-42-register-validate-speech-to-text-azure" {
 }
 
 
-resource "aws_lambda_function" "ai-51-extract-audio-google" {
-  filename         = "./../workflows/ai/51-extract-audio-google/dist/lambda.zip"
-  function_name    = "${format("%.64s", "${var.global_prefix}-ai-51-extract-audio-google")}"
+resource "aws_lambda_function" "ai-61-extract-audio-google" {
+  filename         = "./../workflows/ai/61-extract-audio-google/dist/lambda.zip"
+  function_name    = "${format("%.64s", "${var.global_prefix}-ai-61-extract-audio-google")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${filebase64sha256("./../workflows/ai/51-extract-audio-google/dist/lambda.zip")}"
+  source_code_hash = "${filebase64sha256("./../workflows/ai/61-extract-audio-google/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "60"
   memory_size      = "256"
@@ -619,21 +619,21 @@ resource "aws_lambda_function" "ai-51-extract-audio-google" {
       TempBucket          = "${var.temp_bucket}"
       WebsiteBucket       = "${var.website_bucket}"
       ActivityCallbackUrl = "${local.workflow_activity_callback_handler_url}"
-      ActivityArn         = "${aws_sfn_activity.ai-51-extract-audio-google.id}"
+      ActivityArn         = "${aws_sfn_activity.ai-61-extract-audio-google.id}"
     }
   }
 }
 
-resource "aws_sfn_activity" "ai-51-extract-audio-google" {
-  name = "${var.global_prefix}-ai-51-extract-audio-google"
+resource "aws_sfn_activity" "ai-61-extract-audio-google" {
+  name = "${var.global_prefix}-ai-61-extract-audio-google"
 }
 
-resource "aws_lambda_function" "ai-52-speech-to-text-google" {
-  filename         = "./../workflows/ai/52-speech-to-text-google/dist/lambda.zip"
-  function_name    = "${format("%.64s", "${var.global_prefix}-ai-52-speech-to-text-google")}"
+resource "aws_lambda_function" "ai-62-register-extract-audio-google" {
+  filename         = "./../workflows/ai/62-register-extract-audio-google/dist/lambda.zip"
+  function_name    = "${format("%.64s", "${var.global_prefix}-ai-62-register-extract-audio-google")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
-  source_code_hash = "${filebase64sha256("./../workflows/ai/52-speech-to-text-google/dist/lambda.zip")}"
+  source_code_hash = "${filebase64sha256("./../workflows/ai/62-register-extract-audio-google/dist/lambda.zip")}"
   runtime          = "nodejs8.10"
   timeout          = "60"
   memory_size      = "256"
@@ -695,9 +695,9 @@ data "template_file" "ai-workflow" {
     activity-41-validate-speech-to-text-azure             = "${aws_sfn_activity.ai-41-validate-speech-to-text-azure.id}"
     lambda-42-register-validate-speech-to-text-azure      = "${aws_lambda_function.ai-42-register-validate-speech-to-text-azure.arn}"
 
-    lambda-51-extract-audio-google                        = "${aws_lambda_function.ai-51-extract-audio-google.arn}"
-    activity-51-extract-audio-google                      = "${aws_sfn_activity.ai-51-extract-audio-google.id}"
-    lambda-52-speech-to-text-google                       = "${aws_lambda_function.ai-52-speech-to-text-google.arn}"
+    lambda-61-extract-audio-google                        = "${aws_lambda_function.ai-61-extract-audio-google.arn}"
+    activity-61-extract-audio-google                      = "${aws_sfn_activity.ai-61-extract-audio-google.id}"
+    lambda-62-register-extract-audio-google               = "${aws_lambda_function.ai-62-register-extract-audio-google.arn}"
 
 
     lambda-20-rekognition-aws                             = "${aws_lambda_function.ai-20-rekognition-aws.arn}"

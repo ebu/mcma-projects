@@ -1,0 +1,15 @@
+{
+    "name": "azure-ai-service-api-handler-non-secure",
+    "version": "0.0.0",
+    "description": "Azure Lambda based service leveraging AWS AI services to do AI operations",
+    "private": true,
+    "engines": {
+        "node": "~8.10.0"
+    },
+    "main": "src/index.js",
+    "license": "Apache-2.0",
+    "dependencies": {
+        "aws-sdk": "^2.473.0",
+        "mcma-aws": "0.3.13"
+    }
+}

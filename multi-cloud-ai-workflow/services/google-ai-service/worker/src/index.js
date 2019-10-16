@@ -3,15 +3,15 @@ const { Logger, AIJob } = require("mcma-core");
 const { WorkerBuilder, WorkerRequest } = require("mcma-worker");
 require("mcma-aws");
 
-const { createDubbingSrt } = require('./profiles/create-dubbing-srt');
+const { extractAudio } = require('./profiles/extract-audio');
 
 
+// declare worker with same profileName as defined in initialisation step
 const worker =
     new WorkerBuilder().useAwsJobDefaults()
         .handleJobsOfType(AIJob, x =>
-            x.addProfile(createDubbingSrt.profileName, createDubbingSrt)
+            x.addProfile(extractAudio.profileName, extractAudio)
         )
-        .handleOperation(processNotification)
         .build();
 
 exports.handler = async (event, context) => {

@@ -200,6 +200,16 @@ const JOB_PROFILES = {
             new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
         ]
     }),
+    ExtractAudio: new JobProfile({
+        name: "ExtractAudio",
+        inputParameters: [
+            new JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
+            new JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
+        ],
+        outputParameters: [
+            new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
+        ]
+    }),
 }
 
 const createServices = (serviceUrls) => {
@@ -264,15 +274,14 @@ const createServices = (serviceUrls) => {
             case "google_ai_service_url":
                 serviceList.push(
                     new Service({
-                        name: "AZURE AI Service",
+                        name: "GOOGLE AI Service",
                         resources: [
                             new ResourceEndpoint({ resourceType: "JobAssignment", httpEndpoint: serviceUrls[prop] + "/job-assignments" })
                         ],
                         authType: "AWS4",
                         jobType: "AIJob",
                         jobProfiles: [
-                            JOB_PROFILES.AzureExtractAllAIMetadata.id ? JOB_PROFILES.AzureExtractAllAIMetadata.id : JOB_PROFILES.AzureExtractAllAIMetadata,
-                            JOB_PROFILES.ValidateSpeechToTextAzure.id ? JOB_PROFILES.ValidateSpeechToTextAzure.id : JOB_PROFILES.ValidateSpeechToTextAzure,
+                            JOB_PROFILES.ExtractAudio.id ? JOB_PROFILES.ExtractAudio.id : JOB_PROFILES.ExtractAudio,
                         ]
                     })
                 );

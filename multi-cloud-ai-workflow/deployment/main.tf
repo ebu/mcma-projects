@@ -191,6 +191,10 @@ output "azure_ai_service_url" {
   value = "${module.services.azure_ai_service_url}"
 }
 
+output "google_ai_service_url" {
+  value = "${module.services.google_ai_service_url}"
+}
+
 # output "ec2_transform_service_hostname" {
 #   value = "${module.ec2.elb.hostname}"
 # }

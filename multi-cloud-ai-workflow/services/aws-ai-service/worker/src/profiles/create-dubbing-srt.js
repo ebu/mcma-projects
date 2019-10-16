@@ -27,13 +27,12 @@ async function createDubbingSrt(workerJobHelper) {
     const inputFile = jobInput.inputFile;
     const outputLocation = jobInput.outputLocation;
 
-    let tempFilename;
     if (inputFile.awsS3Bucket && inputFile.awsS3Key) {
 
         Logger.debug("18.1. obtain data from s3 object");
         const data = await S3GetObject({ Bucket: inputFile.awsS3Bucket, Key: inputFile.awsS3Key });
 
-        Logger.debug("18.2. write proxy to local ffmpeg tmp storage");
+        Logger.debug("18.2. write copy of proxy input file to local ffmpeg tmp storage");
         // the tmp directory is local to the ffmpeg running instance
         const input = "/tmp/" + "proxy.mp4";
         await fsWriteFile(input, data.Body);
@@ -78,7 +77,7 @@ async function createDubbingSrt(workerJobHelper) {
     }
 
     // 7. Writing ffmepg output to output location
-    Logger.debug("18.9. Writing ffmepg output to output location");
+    Logger.debug("18.9. Writing ffmpeg output to output location");
     const s3Params = {
         Bucket: outputLocation.awsS3Bucket,
         Key: (outputLocation.awsS3KeyPrefix ? outputLocation.awsS3KeyPrefix : "") + "final.mp4",
