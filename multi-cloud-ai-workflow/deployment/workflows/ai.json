@@ -49,7 +49,7 @@
                                     }
                                 }
                             ],
-                            "ResultPath": "$.data.googleJobId",
+                            "ResultPath": "$.data.extractAudioJobId",
                             "Next": "62-register-extract-audio-google",
                             "Catch": [
                                 {

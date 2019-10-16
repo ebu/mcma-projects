@@ -19,8 +19,6 @@ const resourceManager = getAwsV4ResourceManager(environmentVariableProvider);
 // Environment Variable(AWS Lambda)
 const WebsiteBucket = process.env.WebsiteBucket;
 
-
-
 /**
  * Create New BMEssence Object
  * @param {*} bmContent the URL to the BMContent
@@ -56,11 +54,11 @@ exports.handler = async (event, context) => {
         console.warn("Failed to send notification", error);
     }
 
-    let jobId = event.data.dubbingSrtJobId.find(id => id);
+    let jobId = event.data.extractAudioJobId.find(id => id);
     if (!jobId) {
-        throw new Error("Failed to obtain ssmlTranslationToSpeechJobId");
+        throw new Error("Failed to obtain extractAudioJobId");
     }
-    console.log("[DubbingSrtJobId]:", jobId);
+    console.log("[ExtractAudioJobId]:", jobId);
 
     // get result of ai job
     let job = await resourceManager.resolve(jobId);

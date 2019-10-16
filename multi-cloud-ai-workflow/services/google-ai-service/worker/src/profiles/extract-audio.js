@@ -55,7 +55,7 @@ async function extractAudio(workerJobHelper) {
     Logger.debug("61.6. Writing ffmpeg output to output location");
     const s3Params = {
         Bucket: outputLocation.awsS3Bucket,
-        Key: (outputLocation.awsS3KeyPrefix ? outputLocation.awsS3KeyPrefix : "") + "audioGoogle.mp3",
+        Key: (outputLocation.awsS3KeyPrefix ? outputLocation.awsS3KeyPrefix : "") + "audioGoogle.flac",
         Body: await fsReadFile(output)
     }
     await S3PutObject(s3Params);
