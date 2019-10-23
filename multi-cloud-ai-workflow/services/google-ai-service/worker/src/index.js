@@ -23,4 +23,4 @@ exports.handler = async (event, context) => {
         Logger.error("Error occurred when handling action '" + event.operationName + "'")
         Logger.exception(error.toString());
     }
-}
+};

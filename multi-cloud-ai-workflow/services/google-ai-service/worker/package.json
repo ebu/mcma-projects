@@ -4,7 +4,7 @@
     "description": "AWS Lambda based service leveraging Google Cloud AI services to do AI operations",
     "private": true,
     "engines": {
-        "node": "~8.10.0"
+        "node": "~10.x"
     },
     "main": "src/index.js",
     "license": "Apache-2.0",
@@ -14,6 +14,8 @@
         "mcma-aws": "0.3.13",
         "node-json-rpc2": "1.1.0",
         "parse-srt": "^1.0.0-alpha",
-        "subtitles-parser": "0.0.2"
+        "request": "^2.88.0",
+        "subtitles-parser": "0.0.2",
+        "@google-cloud/storage": "^3.3.1"
     }
 }

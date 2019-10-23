@@ -168,8 +168,8 @@
                                 </mat-tab>
                                 <mat-tab label="STT Benchmarking">
                                     <div class="ai-data-item ai-sttbenchmarking-data">
-                                        <span *ngIf="content?.azureWorddiffs; else azureTranscriptNoData" [innerHTML]="content.azureWorddiffs"></span>
-                                        <ng-template #azureTranscriptNoData>
+                                        <span *ngIf="content?.azureWorddiffs; else azureSTTBenchmarking" [innerHTML]="content.azureWorddiffs"></span>
+                                        <ng-template #azureSTTBenchmarking>
                                             <span *ngIf="!aiJobVm.isFinished">Still processing...</span>
                                             <span *ngIf="aiJobVm.isFinished">Data not available</span>
                                         </ng-template>
@@ -225,6 +225,30 @@
                                         <span *ngIf="aiJobVm.isFinished">Data not available</span>
                                     </ng-template>
                                 </mat-tab>
+                            </mat-tab-group>
+                        </div>
+                    </mat-tab>
+                    <mat-tab label="Google">
+                        <div class="ai-data-group">
+                            <mat-tab-group>
+                                <mat-tab label="Transcript">
+                                    <div class="ai-data-item ai-transcript-data">
+                                        <span *ngIf="content?.googleTranscription; else googleTranscriptNoData">{{ content?.googleTranscription }}</span>
+                                        <ng-template #googleTranscriptNoData>
+                                            <span *ngIf="!aiJobVm.isFinished">Still processing...</span>
+                                            <span *ngIf="aiJobVm.isFinished">Data not available</span>
+                                        </ng-template>
+                                    </div>
+                                </mat-tab>
+                                <!--<mat-tab label="STT Benchmarking">
+                                    <div class="ai-data-item ai-sttbenchmarking-data">
+                                        <span *ngIf="content?.azureWorddiffs; else googleSTTBenchmarkingNoData" [innerHTML]="content.azureWorddiffs"></span>
+                                        <ng-template #googleSTTBenchmarkingNoData>
+                                            <span *ngIf="!aiJobVm.isFinished">Still processing...</span>
+                                            <span *ngIf="aiJobVm.isFinished">Data not available</span>
+                                        </ng-template>
+                                    </div>
+                                </mat-tab>-->
                             </mat-tab-group>
                         </div>
                     </mat-tab>

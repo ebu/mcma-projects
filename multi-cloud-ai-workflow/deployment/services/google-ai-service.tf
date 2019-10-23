@@ -8,7 +8,7 @@ resource "aws_lambda_function" "google-ai-service-api-handler" {
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
   source_code_hash = "${filebase64sha256("./../services/google-ai-service/api-handler/dist/lambda.zip")}"
-  runtime          = "nodejs8.10"
+  runtime          = "nodejs10.x"
   timeout          = "30"
   memory_size      = "256"
 }
@@ -24,7 +24,7 @@ resource "aws_lambda_function" "google-ai-service-worker" {
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
   source_code_hash = "${filebase64sha256("./../services/google-ai-service/worker/dist/lambda.zip")}"
-  runtime          = "nodejs8.10"
+  runtime          = "nodejs10.x"
   timeout          = "300"
   memory_size      = "3008"
 }

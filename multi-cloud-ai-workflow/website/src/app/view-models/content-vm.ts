@@ -8,7 +8,6 @@ export class ContentViewModel {
     awsTranscription: string;
     awsTranslation: string;
     awsWorddiffs: string;
-    azureWorddiffs: string;
     awsSpeechToSpeech: {mp4?: string, vtt?: string} = {};
     awsCelebrities: {
         selected: {
@@ -29,9 +28,11 @@ export class ContentViewModel {
         },
         data: []
     };
-
     azureTranscription: string;
     azureCelebrities: {selected: any, data: any[]} = {selected: null, data: []};
+    azureWorddiffs: string;
+    googleAiMetadata: { transcription };
+    googleTranscription: string;
 
     get noData(): boolean {
         return !this.awsTranscription && !this.awsTranslation && this.awsCelebrities.data.length === 0 &&
@@ -46,6 +47,7 @@ export class ContentViewModel {
         console.log('bmContent', bmContent);
         this.populateAwsData();
         this.populateAzureData();
+        this.populateGoogleData();
         this.callBMEssences();
     }
 
@@ -114,7 +116,7 @@ export class ContentViewModel {
                 k => celebsByName[k]
             );
 
-            if (celebritiesEmotions != undefined) {
+            if (celebritiesEmotions !== undefined) {
                 for (const celebrityAppearences of celebritiesAppearences) {
                     if (celebritiesEmotions[celebrityAppearences.name]) {
                         celebrityAppearences.emotions = celebritiesEmotions[celebrityAppearences.name];
@@ -197,4 +199,12 @@ export class ContentViewModel {
         }
 
     }
+
+    private populateGoogleData(): void {
+        if (this.bmContent && this.bmContent.googleAiMetadata && this.bmContent.googleAiMetadata.transcription) {
+            this.googleTranscription = this.bmContent.googleAiMetadata.transcription;
+            console.log(this.googleTranscription);
+        }
+    }
+
 }

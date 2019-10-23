@@ -606,7 +606,7 @@ resource "aws_lambda_function" "ai-61-extract-audio-google" {
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
   source_code_hash = "${filebase64sha256("./../workflows/ai/61-extract-audio-google/dist/lambda.zip")}"
-  runtime          = "nodejs8.10"
+  runtime          = "nodejs10.x"
   timeout          = "60"
   memory_size      = "256"
 
@@ -634,7 +634,7 @@ resource "aws_lambda_function" "ai-62-register-extract-audio-google" {
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
   source_code_hash = "${filebase64sha256("./../workflows/ai/62-register-extract-audio-google/dist/lambda.zip")}"
-  runtime          = "nodejs8.10"
+  runtime          = "nodejs10.x"
   timeout          = "60"
   memory_size      = "256"
 

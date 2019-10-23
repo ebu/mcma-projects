@@ -42,7 +42,7 @@ exports.handler = async (event, context) => {
     // send update notification
     try {
         event.status = "RUNNING";
-        event.progress = 54;
+        // event.progress = 54;
         await resourceManager.sendNotification(event);
     } catch (error) {
         console.warn("Failed to send notification", error);
@@ -58,7 +58,7 @@ exports.handler = async (event, context) => {
 
     // using input from activity task to ensure we don't have race conditions if two workflows execute simultanously.
     event = JSON.parse(data.input);
-    console.log(event);
+    console.log("event:", event);
 
     // get job profiles filtered by name
     let jobProfiles = await resourceManager.get(JobProfile, { name: JOB_PROFILE_NAME });
@@ -69,7 +69,7 @@ exports.handler = async (event, context) => {
     }
 
     let notificationUrl = ActivityCallbackUrl + "?taskToken=" + encodeURIComponent(taskToken);
-    console.log("NotificationUrl:", notificationUrl);
+    console.log("notificationUrl:", notificationUrl);
 
     // creating the dubbbing srt job giving the original mp4 file as input. To be associated with SRT subtitles and dubbing audio track in service
     let job = new AIJob({
@@ -87,7 +87,7 @@ exports.handler = async (event, context) => {
     });
 
     // posting the transformjob to the job repository
-    job = await resourceManager.create(job);
+    await resourceManager.create(job);
 
     console.log("###############################");
     console.log("61-extract-audio-google - END  ");
