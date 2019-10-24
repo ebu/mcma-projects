@@ -4,13 +4,14 @@ const { WorkerBuilder, WorkerRequest } = require("mcma-worker");
 require("mcma-aws");
 
 const { extractAudio } = require('./profiles/extract-audio');
-
+const { validateSpeechToTextGoogle } = require('./profiles/validate-speech-to-text-google');
 
 // declare worker with same profileName as defined in initialisation step
 const worker =
     new WorkerBuilder().useAwsJobDefaults()
         .handleJobsOfType(AIJob, x =>
             x.addProfile(extractAudio.profileName, extractAudio)
+                .addProfile(validateSpeechToTextGoogle.profileName, validateSpeechToTextGoogle)
         )
         .build();
 

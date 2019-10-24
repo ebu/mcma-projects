@@ -170,6 +170,16 @@ const JOB_PROFILES = {
             new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
         ]
     }),
+    ValidateSpeechToTextGoogle: new JobProfile({
+        name: "ValidateSpeechToTextGoogle",
+        inputParameters: [
+            new JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
+            new JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
+        ],
+        outputParameters: [
+            new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
+        ]
+    }),
     AWSDetectCelebrities: new JobProfile({
         name: "AWSDetectCelebrities",
         inputParameters: [
@@ -282,6 +292,7 @@ const createServices = (serviceUrls) => {
                         jobType: "AIJob",
                         jobProfiles: [
                             JOB_PROFILES.ExtractAudio.id ? JOB_PROFILES.ExtractAudio.id : JOB_PROFILES.ExtractAudio,
+                            JOB_PROFILES.ValidateSpeechToTextGoogle.id ? JOB_PROFILES.ValidateSpeechToTextGoogle.id : JOB_PROFILES.ValidateSpeechToTextGoogle,
                         ]
                     })
                 );

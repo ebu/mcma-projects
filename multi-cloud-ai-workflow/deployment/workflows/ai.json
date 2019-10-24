@@ -695,6 +695,59 @@
                             "Type": "Task",
                             "Resource": "${lambda-62-register-extract-audio-google}",
                             "ResultPath": null,
+                            "Next": "63-validate-speech-to-text-parent-google",
+                            "Catch": [
+                                {
+                                    "ErrorEquals": [
+                                        "States.ALL"
+                                    ],
+                                    "ResultPath": "$.error",
+                                    "Next": "process-failure-branch-5"
+                                }
+                            ]
+                        },
+                        "63-validate-speech-to-text-parent-google": {
+                            "Type": "Parallel",
+                            "Branches": [
+                                {
+                                    "StartAt": "63-validate-speech-to-text-google",
+                                    "States": {
+                                        "63-validate-speech-to-text-google": {
+                                            "Type": "Task",
+                                            "Resource": "${lambda-63-validate-speech-to-text-google}",
+                                            "End": true
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt": "63-wait-for-job-completion",
+                                    "States": {
+                                        "63-wait-for-job-completion": {
+                                            "Type": "Task",
+                                            "Resource": "${activity-63-validate-speech-to-text-google}",
+                                            "TimeoutSeconds": 3600,
+                                            "HeartbeatSeconds": 1800,
+                                            "End": true
+                                        }
+                                    }
+                                }
+                            ],
+                            "ResultPath": "$.data.validateSpeechToTextGoogleJobId",
+                            "Next": "64-register-validate-speech-to-text-google",
+                            "Catch": [
+                                {
+                                    "ErrorEquals": [
+                                        "States.ALL"
+                                    ],
+                                    "ResultPath": "$.error",
+                                    "Next": "process-failure-branch-5"
+                                }
+                            ]
+                        },
+                        "64-register-validate-speech-to-text-google": {
+                            "Type": "Task",
+                            "Resource": "${lambda-64-register-validate-speech-to-text-google}",
+                            "ResultPath": null,
                             "Next": "process-completion-branch-5",
                             "Catch": [
                                 {

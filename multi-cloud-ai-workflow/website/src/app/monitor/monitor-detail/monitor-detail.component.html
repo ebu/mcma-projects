@@ -208,10 +208,7 @@
                                                 </div>
                                                 <div class="job-field">
                                                     <span style="margin-left:5vh;">
-                                                        <button mat-raised-button
-                                                                style="margin-right:1vw;"
-                                                                *ngFor="let instance of content.azureCelebrities.selected.instances"
-                                                                (click)="seekVideoAzure(instance)">{{ instance.start }}
+                                                        <button mat-raised-button style="margin-right:1vw;" *ngFor="let instance of content.azureCelebrities.selected.instances" (click)="seekVideoAzure(instance)">{{ instance.start }}
                                                         </button>
                                                     </span>
                                                 </div>
@@ -240,15 +237,15 @@
                                         </ng-template>
                                     </div>
                                 </mat-tab>
-                                <!--<mat-tab label="STT Benchmarking">
+                                <mat-tab label="STT Benchmarking">
                                     <div class="ai-data-item ai-sttbenchmarking-data">
-                                        <span *ngIf="content?.azureWorddiffs; else googleSTTBenchmarkingNoData" [innerHTML]="content.azureWorddiffs"></span>
+                                        <span *ngIf="content?.googleWorddiffs; else googleSTTBenchmarkingNoData" [innerHTML]="content.googleWorddiffs"></span>
                                         <ng-template #googleSTTBenchmarkingNoData>
                                             <span *ngIf="!aiJobVm.isFinished">Still processing...</span>
                                             <span *ngIf="aiJobVm.isFinished">Data not available</span>
                                         </ng-template>
                                     </div>
-                                </mat-tab>-->
+                                </mat-tab>
                             </mat-tab-group>
                         </div>
                     </mat-tab>

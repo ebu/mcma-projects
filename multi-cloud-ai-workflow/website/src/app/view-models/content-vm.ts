@@ -4,11 +4,11 @@ import { from } from 'rxjs';
 import { switchMap, tap } from 'rxjs/operators';
 
 export class ContentViewModel {
-    awsAiMetadata: {transcription: {original, translation, worddiffs}};
+    awsAiMetadata: { transcription: { original, translation, worddiffs } };
     awsTranscription: string;
     awsTranslation: string;
     awsWorddiffs: string;
-    awsSpeechToSpeech: {mp4?: string, vtt?: string} = {};
+    awsSpeechToSpeech: { mp4?: string, vtt?: string } = {};
     awsCelebrities: {
         selected: {
             name,
@@ -29,10 +29,11 @@ export class ContentViewModel {
         data: []
     };
     azureTranscription: string;
-    azureCelebrities: {selected: any, data: any[]} = {selected: null, data: []};
+    azureCelebrities: { selected: any, data: any[] } = { selected: null, data: [] };
     azureWorddiffs: string;
     googleAiMetadata: { transcription };
     googleTranscription: string;
+    googleWorddiffs: string;
 
     get noData(): boolean {
         return !this.awsTranscription && !this.awsTranslation && this.awsCelebrities.data.length === 0 &&
@@ -89,14 +90,14 @@ export class ContentViewModel {
                 this.awsWorddiffs = JSON.parse(this.bmContent.awsAiMetadata.transcription.worddiffs).result;
             }
 
-            const celebsByName: {[key: string]: any} = {};
+            const celebsByName: { [key: string]: any } = {};
 
             const celebritiesEmotions = this.bmContent.awsAiMetadata.celebritiesEmotions;
 
             if (this.bmContent.awsAiMetadata.celebrities) {
                 for (const celebrity of this.bmContent.awsAiMetadata.celebrities) {
                     if (celebrity.Celebrity) {
-                        if (!celebsByName[celebrity.Celebrity.Id]) {
+                        if ( !celebsByName[celebrity.Celebrity.Id]) {
                             celebsByName[celebrity.Celebrity.Id] = {
                                 id: celebrity.Celebrity.Id,
                                 name: celebrity.Celebrity.Name,
@@ -137,7 +138,7 @@ export class ContentViewModel {
                             });
                         }
                     }
-                    if (!celebritiesAppearencesItem.emotionsCleaned) {
+                    if ( !celebritiesAppearencesItem.emotionsCleaned) {
                         celebritiesAppearencesItem.emotionsCleaned = celebrityEmotions;
                     }
                 }
@@ -184,7 +185,7 @@ export class ContentViewModel {
                         for (const face of video.insights.faces) {
                             if (face.imageUrl) {
                                 this.azureCelebrities.data.push(face);
-                                if (!this.azureCelebrities.selected) {
+                                if ( !this.azureCelebrities.selected) {
                                     this.azureCelebrities.selected = face;
                                 }
                             }
@@ -194,17 +195,24 @@ export class ContentViewModel {
             }
         }
 
-        if (this.bmContent && this.bmContent.azureAiMetadata.azureTranscription.transcription) {
+        if (this.bmContent && this.bmContent.azureAiMetadata.azureTranscription) {
             this.azureWorddiffs = JSON.parse(this.bmContent.azureAiMetadata.azureTranscription.worddiffs).result;
         }
 
     }
 
     private populateGoogleData(): void {
+
         if (this.bmContent && this.bmContent.googleAiMetadata && this.bmContent.googleAiMetadata.transcription) {
             this.googleTranscription = this.bmContent.googleAiMetadata.transcription;
             console.log(this.googleTranscription);
         }
+
+        if (this.bmContent && this.bmContent.googleAiMetadata.worddiffs) {
+            this.googleWorddiffs = JSON.parse(this.bmContent.googleAiMetadata.worddiffs).result;
+            console.log(this.googleWorddiffs);
+        }
+
     }
 
 }
