@@ -284,7 +284,7 @@ const createServices = (serviceUrls) => {
             case "google_ai_service_url":
                 serviceList.push(
                     new Service({
-                        name: "GOOGLE AI Service",
+                        name: "Google AI Service",
                         resources: [
                             new ResourceEndpoint({ resourceType: "JobAssignment", httpEndpoint: serviceUrls[prop] + "/job-assignments" })
                         ],

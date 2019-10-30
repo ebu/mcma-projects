@@ -177,7 +177,6 @@
                                 </mat-tab>
                                 <mat-tab label="Celebrities">
                                     <div class="ai-data-item celebrity-info" *ngIf="content?.azureCelebrities?.data?.length > 0; else azureCelebritiesNoData">
-
                                         <table mat-table [dataSource]="content.azureCelebrities.data">
                                             <ng-container matColumnDef="name">
                                                 <th mat-header-cell *matHeaderCellDef>Name</th>
@@ -186,7 +185,6 @@
 
                                             <tr mat-row *matRowDef="let row; columns: ['name']" [class.highlight]="row === content?.azureCelebrities?.selected" (click)="content.azureCelebrities.selected = row"></tr>
                                         </table>
-
                                         <div class="celebrity-fields" style="flex: 1;" *ngIf="content?.azureCelebrities?.selected">
                                             <div class="job-fields">
                                                 <div class="job-field">
@@ -215,7 +213,6 @@
                                             </div>
                                             <img style="margin-left:2vw; width: 10vw;" [src]="content.azureCelebrities.selected.imageUrl ? content.azureCelebrities.selected.imageUrl : '#'"/>
                                         </div>
-
                                     </div>
                                     <ng-template #azureCelebritiesNoData>
                                         <span *ngIf="!aiJobVm.isFinished">Still processing...</span>
