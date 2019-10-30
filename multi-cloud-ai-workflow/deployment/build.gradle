@@ -13,6 +13,12 @@ task generateTerraformTFVars {
     inputs.property("AZURE_SUBSCRIPTION_ID", "${AzureSubscriptionKey}")
     inputs.property("AZURE_API_URL", "${AzureApiUrl}")
 
+    inputs.property("GOOGLE_PROJECT_ID", "${googleProjectId}")
+    inputs.property("GOOGLE_BUCKET_NAME", "${googleBucketName}")
+    inputs.property("GOOGLE_CLIENT_EMAIL", "${googleClientEmail}")
+    inputs.property("GOOGLE_PRIVATE_KEY", "${googlePrivateKey}")
+
+
     outputs.file("${projectDir}/terraform.tfvars")
     doLast {
         def targetFile = new File("${projectDir}/terraform.tfvars")
@@ -33,6 +39,10 @@ task generateTerraformTFVars {
         targetFile.append("azure_account_id = \"${AzureAccountID}\"\r\n")
         targetFile.append("azure_subscription_key = \"${AzureSubscriptionKey}\"\r\n")
         targetFile.append("azure_api_url = \"${AzureApiUrl}\"\r\n")
+        targetFile.append("google_project_id = \"${googleProjectId}\"\r\n")
+        targetFile.append("google_bucket_name = \"${googleBucketName}\"\r\n")
+        targetFile.append("google_client_email = \"${googleClientEmail}\"\r\n")
+        targetFile.append("google_private_key = \"${googlePrivateKey}\"\r\n")
     }
 }
 

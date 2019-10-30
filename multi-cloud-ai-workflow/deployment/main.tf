@@ -72,6 +72,10 @@ module "services" {
   azure_api_url          = "${var.azure_api_url}"
   environment_name       = "${var.environment_name}"
   environment_type       = "${var.environment_type}"
+  google_project_id      = "${var.google_project_id}"
+  google_bucket_name     = "${var.google_bucket_name}"
+  google_client_email    = "${var.google_client_email}"
+  google_private_key     = "${var.google_private_key}"
 }
 
 module "workflows" {

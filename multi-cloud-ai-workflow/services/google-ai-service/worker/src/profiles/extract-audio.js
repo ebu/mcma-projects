@@ -30,6 +30,8 @@ async function extractAudio(workerJobHelper) {
     Logger.debug("########################");
 
     const jobInput = workerJobHelper.getJobInput();
+    const googleProjectId = workerJobHelper.getRequest().getRequiredContextVariable("googleProjectId");
+    console.log('googleProjectId', googleProjectId);
 
     Logger.debug("61. Extract audio track from mp4 source using ffmpeg");
     const inputFile = jobInput.inputFile;
@@ -71,7 +73,7 @@ async function extractAudio(workerJobHelper) {
                 storageClass: 'Standard',
             });
             console.log(`Bucket ${bucketName} created.`);
-        }else {
+        } else {
             console.log(`Bucket ${bucketName} already exists.`);
         }
 

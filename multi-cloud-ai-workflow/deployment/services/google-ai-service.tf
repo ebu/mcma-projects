@@ -111,6 +111,10 @@ resource "aws_api_gateway_deployment" "google_ai_service_deployment" {
     "ServicesAuthContext"  = "${local.services_auth_context}"
     "WorkerFunctionName"   = "${aws_lambda_function.google-ai-service-worker.function_name}"
     "DeploymentHash"       = "${filesha256("./services/google-ai-service.tf")}"
+    "googleProjectId"      = "${var.google_project_id}"
+    "googleBucketName"     = "${var.google_bucket_name}"
+    "googleClientEmail"    = "${var.google_client_email}"
+    "googlePrivateKey"     = "${var.azure_subscription_key}"
   }
 }
 
