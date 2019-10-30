@@ -16,6 +16,7 @@
         "parse-srt": "^1.0.0-alpha",
         "request": "^2.88.0",
         "subtitles-parser": "0.0.2",
-        "@google-cloud/storage": "^3.3.1"
+        "@google-cloud/storage": "^3.3.1",
+        "@google-cloud/speech": "^3.3.1"
     }
 }
