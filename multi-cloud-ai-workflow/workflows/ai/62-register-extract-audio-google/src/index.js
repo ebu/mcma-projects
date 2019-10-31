@@ -3,10 +3,10 @@
 // require
 const util = require("util");
 
-
 const AWS = require("aws-sdk");
 const S3 = new AWS.S3();
 
+const S3GetObject = util.promisify(S3.getObject.bind(S3));
 const S3GetBucketLocation = util.promisify(S3.getBucketLocation.bind(S3));
 
 const { EnvironmentVariableProvider, BMEssence, Locator } = require("mcma-core");
@@ -77,17 +77,28 @@ exports.handler = async (event, context) => {
     console.log("httpEndpoint_web", httpEndpoint_web);
     console.log("mediaFileUri", mediaFileUri);
 
+    let s3Object;
+    try {
+        s3Object = await S3GetObject({
+            Bucket: s3Bucket,
+            Key: s3Key,
+        });
+    } catch (error) {
+        throw new Error("Unable to access file in bucket '" + s3Bucket + "' with key '" + s3Key + "' due to error: " + error.message);
+    }
 
+    console.log('s3Object.Body.toString()', s3Object.Body.toString());
 
+    let transcription = s3Object.Body.toString();
 
     // acquire the registered BMContent
     let bmContent = await resourceManager.resolve(event.input.bmContent);
 
-    /*if (!bmContent.googleAiMetadata) {
+    if (!bmContent.googleAiMetadata) {
         bmContent.googleAiMetadata = {};
     }
 
-    bmContent.googleAiMetadata.transcription = transcription;*/
+    bmContent.googleAiMetadata.transcription = transcription;
 
     // create BMEssence
     let locator = new Locator({

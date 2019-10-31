@@ -110,12 +110,12 @@ async function extractAudio(workerJobHelper) {
 
     // 7. Writing ffmepg output to output location
     Logger.debug("61.7. Writing ffmpeg output to output location");
-    const s3Params = {
-        Bucket: outputLocation.awsS3Bucket,
-        Key: (outputLocation.awsS3KeyPrefix ? outputLocation.awsS3KeyPrefix : "") + "audioGoogle.flac",
-        Body: await fsReadFile(output)
-    };
-    await S3PutObject(s3Params);
+    // const s3Params = {
+    //     Bucket: outputLocation.awsS3Bucket,
+    //     Key: (outputLocation.awsS3KeyPrefix ? outputLocation.awsS3KeyPrefix : "") + "audioGoogle.flac",
+    //     Body: await fsReadFile(output)
+    // };
+    // await S3PutObject(s3Params);
 
     console.log("######################");
     console.log("Speech to Text - START");
@@ -162,6 +162,20 @@ async function extractAudio(workerJobHelper) {
 
     const projectId = client.getProjectId();
     console.log(projectId);
+
+    let s3Params = {
+        Bucket: outputLocation.awsS3Bucket,
+        Key: (outputLocation.awsS3KeyPrefix ? outputLocation.awsS3KeyPrefix : "") + "google-transcription.txt",
+        Body: transcription
+    };
+    await S3PutObject(s3Params);
+
+    // const s3Params = {
+    //     Bucket: outputLocation.awsS3Bucket,
+    //     Key: (outputLocation.awsS3KeyPrefix ? outputLocation.awsS3KeyPrefix : "") + "audioGoogle.flac",
+    //     Body: await fsReadFile(output)
+    // };
+    // await S3PutObject(s3Params);
 
     console.log("##################");
     console.log("Speech to Text END");

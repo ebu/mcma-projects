@@ -114,7 +114,7 @@ resource "aws_api_gateway_deployment" "google_ai_service_deployment" {
     "googleProjectId"      = "${var.google_project_id}"
     "googleBucketName"     = "${var.google_bucket_name}"
     "googleClientEmail"    = "${var.google_client_email}"
-    "googlePrivateKey"     = "${var.azure_subscription_key}"
+    "googlePrivateKey"     = "${var.google_private_key}"
   }
 }
 
