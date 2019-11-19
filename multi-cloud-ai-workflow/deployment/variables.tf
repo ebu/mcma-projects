@@ -36,6 +36,10 @@ variable "azure_account_id" {}
 variable "azure_subscription_key" {}
 variable "azure_api_url" {}
 
+#########################
+# Google Variables
+#########################
+
 variable "google_project_id" {}
 variable "google_bucket_name" {}
 variable "google_client_email" {}

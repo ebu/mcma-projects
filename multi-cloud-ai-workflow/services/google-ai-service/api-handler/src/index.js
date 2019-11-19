@@ -2,6 +2,7 @@
 const { Logger, JobAssignment } = require("mcma-core");
 const { awsDefaultRoutes, invokeLambdaWorker } = require("mcma-aws");
 
+
 const restController = awsDefaultRoutes(JobAssignment).withDynamoDb().forJobAssignments(invokeLambdaWorker).toApiGatewayApiController();
 
 exports.handler = async (event, context) => {

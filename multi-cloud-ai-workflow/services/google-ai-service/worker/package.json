@@ -17,6 +17,7 @@
         "request": "^2.88.0",
         "subtitles-parser": "0.0.2",
         "@google-cloud/storage": "^3.3.1",
-        "@google-cloud/speech": "^3.3.1"
+        "@google-cloud/speech": "^3.3.1",
+        "uuid": "3.3.3"
     }
 }

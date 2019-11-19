@@ -4,13 +4,12 @@
     "description": "Move generated proxy to file repository and register asset as a new BMEssence in media repository",
     "private": true,
     "engines": {
-        "node": "~8.10"
+        "node": "~8.10.0"
     },
     "main": "src/index.js",
     "license": "Apache-2.0",
     "dependencies": {
         "aws-sdk": "^2.473.0",
-        "mcma-aws": "0.3.13",
-        "@google-cloud/storage": "^3.3.1"
+        "mcma-aws": "0.3.13"
     }
 }
