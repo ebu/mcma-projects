@@ -4,7 +4,7 @@
     "description": "With Locator received from previous step, create a BMContent with provided metadata and BMEssence with Locator to file in the Media Repository",
     "private": true,
     "engines": {
-        "node": "~8.10.0"
+        "node": "~10.x"
     },
     "main": "src/index.js",
     "license": "Apache-2.0",

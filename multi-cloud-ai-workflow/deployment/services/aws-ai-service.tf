@@ -1,3 +1,4 @@
+
 #################################
 #  aws_lambda_function : aws-ai-service-api-handler
 #################################
@@ -8,7 +9,7 @@ resource "aws_lambda_function" "aws-ai-service-api-handler" {
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
   source_code_hash = "${filebase64sha256("./../services/aws-ai-service/api-handler/dist/lambda.zip")}"
-  runtime          = "nodejs8.10"
+  runtime          = "nodejs10.x"
   timeout          = "30"
   memory_size      = "256"
 }
@@ -23,7 +24,7 @@ resource "aws_lambda_function" "aws-ai-service-s3-trigger" {
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
   source_code_hash = "${filebase64sha256("./../services/aws-ai-service/s3-trigger/dist/lambda.zip")}"
-  runtime          = "nodejs8.10"
+  runtime          = "nodejs10.x"
   timeout          = "30"
   memory_size      = "256"
 
@@ -74,7 +75,7 @@ resource "aws_lambda_function" "aws-ai-service-sns-trigger" {
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
   source_code_hash = "${filebase64sha256("./../services/aws-ai-service/sns-trigger/dist/lambda.zip")}"
-  runtime          = "nodejs8.10"
+  runtime          = "nodejs10.x"
   timeout          = "30"
   memory_size      = "256"
 
@@ -101,7 +102,7 @@ resource "aws_lambda_function" "aws-ai-service-worker" {
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
   source_code_hash = "${filebase64sha256("./../services/aws-ai-service/worker/dist/lambda.zip")}"
-  runtime          = "nodejs8.10"
+  runtime          = "nodejs10.x"
   timeout          = "300"
   memory_size      = "3008"
 

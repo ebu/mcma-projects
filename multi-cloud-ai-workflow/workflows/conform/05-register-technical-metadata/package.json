@@ -4,7 +4,7 @@
     "description": "Add the technical metadata obtained in previous step to the BMEssence that points to the media file",
     "private": true,
     "engines": {
-        "node": "~8.10.0"
+        "node": "~10.x"
     },
     "main": "src/index.js",
     "license": "Apache-2.0",

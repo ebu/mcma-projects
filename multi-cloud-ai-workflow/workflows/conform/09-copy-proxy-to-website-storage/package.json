@@ -4,7 +4,7 @@
     "description": "Copy the generated proxy to the website storage",
     "private": true,
     "engines": {
-        "node": "~8.10.0"
+        "node": "~10.x"
     },
     "main": "src/index.js",
     "license": "Apache-2.0",
