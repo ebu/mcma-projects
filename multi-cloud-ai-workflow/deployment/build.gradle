@@ -7,8 +7,6 @@ task generateTerraformTFVars {
     inputs.property("AWS_ACCESS_KEY", awsAccessKey)
     inputs.property("AWS_SECRET_KEY", awsSecretKey)
     inputs.property("AWS_REGION", awsRegion)
-    inputs.property("AWS_INSTANCE_TYPE", awsInstanceType)
-    inputs.property("AWS_INSTANCE_COUNT", awsInstanceCount)
 
     inputs.property("AZURE_LOCATION", AzureLocation)
     inputs.property("AZURE_ACCOUNT_ID", AzureAccountID)
@@ -38,9 +36,6 @@ task generateTerraformTFVars {
                 aws_access_key        : awsAccessKey,
                 aws_secret_key        : awsSecretKey,
                 aws_region            : awsRegion,
-
-                aws_instance_type     : awsInstanceType,
-                aws_instance_count    : awsInstanceCount,
 
                 azure_location        : AzureLocation,
                 azure_account_id      : AzureAccountID,

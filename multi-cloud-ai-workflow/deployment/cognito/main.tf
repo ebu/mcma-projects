@@ -4,17 +4,17 @@ resource "aws_cognito_user_pool" "user_pool" {
 
 resource "aws_cognito_user_pool_client" "client" {
   name            = "${var.global_prefix}_user_pool_client"
-  user_pool_id    = "${aws_cognito_user_pool.user_pool.id}"
+  user_pool_id    = aws_cognito_user_pool.user_pool.id
   generate_secret = false
 }
 
 resource "aws_cognito_identity_pool" "identity_pool" {
-  identity_pool_name               = "${replace("${replace("${var.global_prefix}", "/[^a-zA-Z0-9 ]/", " ")}", "/[ ]+/", " ")}"
+  identity_pool_name               = replace(replace(var.global_prefix, "/[^a-zA-Z0-9 ]/", " "), "/[ ]+/", " ")
   allow_unauthenticated_identities = false
 
   cognito_identity_providers {
-    client_id               = "${aws_cognito_user_pool_client.client.id}"
-    provider_name           = "${aws_cognito_user_pool.user_pool.endpoint}"
+    client_id               = aws_cognito_user_pool_client.client.id
+    provider_name           = aws_cognito_user_pool.user_pool.endpoint
     server_side_token_check = false
   }
 }
@@ -48,7 +48,7 @@ EOF
 
 resource "aws_iam_role_policy" "authenticated" {
   name = "${var.global_prefix}-${var.aws_region}-authenticated-policy"
-  role = "${aws_iam_role.authenticated.id}"
+  role = aws_iam_role.authenticated.id
 
   policy = <<EOF
 {
@@ -109,7 +109,7 @@ EOF
 
 resource "aws_iam_role_policy" "unauthenticated" {
   name = "${var.global_prefix}-${var.aws_region}-unauthenticated-policy"
-  role = "${aws_iam_role.unauthenticated.id}"
+  role = aws_iam_role.unauthenticated.id
 
   policy = <<EOF
 {
@@ -131,22 +131,10 @@ EOF
 }
 
 resource "aws_cognito_identity_pool_roles_attachment" "main" {
-  identity_pool_id = "${aws_cognito_identity_pool.identity_pool.id}"
+  identity_pool_id = aws_cognito_identity_pool.identity_pool.id
 
   roles = {
-    authenticated   = "${aws_iam_role.authenticated.arn}"
-    unauthenticated = "${aws_iam_role.unauthenticated.arn}"
+    authenticated   = aws_iam_role.authenticated.arn
+    unauthenticated = aws_iam_role.unauthenticated.arn
   }
-}
-
-output "user_pool_id" {
-  value = "${aws_cognito_user_pool.user_pool.id}"
-}
-
-output "user_pool_client_id" {
-  value = "${aws_cognito_user_pool_client.client.id}"
-}
-
-output "identity_pool_id" {
-  value = "${aws_cognito_identity_pool.identity_pool.id}"
 }
