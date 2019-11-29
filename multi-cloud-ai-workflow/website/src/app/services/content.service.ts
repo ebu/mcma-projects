@@ -1,14 +1,19 @@
 import { Injectable } from '@angular/core';
 import { Observable, BehaviorSubject, from, timer } from 'rxjs';
-import { map, concatMap, takeWhile, switchMap, tap } from 'rxjs/operators';
+import { takeWhile, switchMap, tap } from 'rxjs/operators';
 
 import { BMContent } from 'mcma-core';
 import { McmaClientService } from './mcma-client.service';
 import { ContentViewModel } from '../view-models/content-vm';
+import { HttpClient } from "@angular/common/http";
 
 @Injectable()
 export class ContentService {
-    constructor(private mcmaClientService: McmaClientService) {}
+    constructor(
+        private mcmaClientService: McmaClientService,
+        public http: HttpClient,
+    ) {
+    }
 
     getContent(contentUrl: string): Observable<BMContent> {
         //console.log('getting content at ' + contentUrl);
@@ -18,6 +23,19 @@ export class ContentService {
                 return from(resourceManager.resolve<BMContent>(contentUrl)).pipe(
                     tap(data => {
                         console.log('got content (tap 1)', data);
+                        if (data && data.bmEssences) {
+                            console.log(data.bmEssences);
+                            let bmEssences = data.bmEssences;
+                            for (let bmEssencesItem of bmEssences) {
+                                console.log(bmEssencesItem);
+                                let test1 = from(resourceManager.resolve<any>(bmEssencesItem)).pipe(
+                                    tap(data => {
+                                        console.log('data', data);
+                                    })
+                                );
+                                test1.subscribe();
+                            }
+                        }
                     })
                 );
             }),
@@ -38,7 +56,7 @@ export class ContentService {
                 stopSub.unsubscribe();
             }
         });
-        
+
         // poll until completion, emitting every 3 secs until the job is completed
         // when the job completes, unsubscribe from polling and load it one more time
         const sub1 =
@@ -49,7 +67,7 @@ export class ContentService {
             ).subscribe(
                 content => {
                     console.log('finished polling content', content);
-                    subject.next(new ContentViewModel(content));
+                    subject.next(new ContentViewModel(content, this.mcmaClientService));
                 },
                 err => subject.error(err),
                 () => {
@@ -59,7 +77,7 @@ export class ContentService {
                     const sub2 = this.getContent(bmContentId).subscribe(
                         bmContent => {
                             console.log('emitting content vm', bmContent);
-                            subject.next(new ContentViewModel(bmContent));
+                            subject.next(new ContentViewModel(bmContent, this.mcmaClientService));
                         },
                         err => {
                             console.log('failed to get content vm');

@@ -17,6 +17,8 @@ const resourceManager = getAwsV4ResourceManager(environmentVariableProvider);
 
 // Environment Variable(AWS Lambda)
 const WebsiteBucket = process.env.WebsiteBucket;
+const TempBucket = process.env.TempBucket;
+
 
 /**
  * get amejob id
@@ -75,6 +77,7 @@ exports.handler = async (event, context) => {
 
     let s3Bucket = WebsiteBucket;
     let s3Key = "media/" + uuidv4();
+//    let s3Key = "media/proxycopy_" + uuidv4();
 
     // addin file extension
     let idxLastDot = outputFile.awsS3Key.lastIndexOf(".");
@@ -93,6 +96,44 @@ exports.handler = async (event, context) => {
     } catch (error) {
         throw new Error("Unable to read input file in bucket '" + s3Bucket + "' with key '" + s3Key + "' due to error: " + error.message);
     }
+
+    // copy to temp bucket
+    let s3Bucket_copy = TempBucket;
+    let s3Key_copy = "temp/proxy";
+    s3Key_copy += outputFile.awsS3Key.substring(idxLastDot);
+    try {
+        let params_copy = {
+            CopySource: copySource,
+            Bucket: s3Bucket_copy,
+            Key: s3Key_copy,
+        };
+        await S3CopyObject(params_copy);
+    } catch (error) {
+        throw new Error("Unable to read input file in bucket '" + s3Bucket_copy + "' with key '" + s3Key_copy + "' due to error: " + error.message);
+    }
+
+    // acquire the registered BMContent
+//    let bmc = await resourceManager.resolve(event.data.bmContent);
+
+    // create BMEssence
+//    let locator = new Locator({
+//        "awsS3Bucket": s3Bucket,
+//        "awsS3Key": s3Key
+//    });
+
+//    let bme = createBMEssence(bmc, locator, "proxy-copy", "proxy-copy");
+
+    // register BMEssence
+//    bme = await resourceManager.create(bme);
+//    if (!bme.id) {
+//        throw new Error("Failed to register BMEssence.");
+//    }
+
+    // addin BMEssence ID
+//    bmc.bmEssences.push(bme.id);
+
+    // update BMContents
+//    bmc = await resourceManager.update(bmc);
 
     // construct public https endpoint
     let data = await S3GetBucketLocation({ Bucket: s3Bucket });

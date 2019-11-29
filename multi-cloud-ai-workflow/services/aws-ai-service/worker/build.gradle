@@ -1,0 +1,10 @@
+task copyFfmepgBin(type: Copy) {
+    from "externals/ffmpeg"
+    into "dist/staging/bin"
+}
+
+build.dependsOn copyFfmepgBin
+
+build {
+    fileMode 0755
+}

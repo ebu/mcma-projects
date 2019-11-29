@@ -4,12 +4,14 @@
     "description": "",
     "private": true,
     "engines": {
-        "node": "~8.10.0"
+        "node": "~10.x"
     },
     "main": "src/index.js",
     "license": "Apache-2.0",
     "dependencies": {
         "aws-sdk": "^2.473.0",
-        "mcma-aws": "0.3.13"
+        "mcma-aws": "0.3.13",
+        "aws-transcription-to-srt": "1.0.5",
+        "subtitle-utils": "1.2.3"
     }
 }

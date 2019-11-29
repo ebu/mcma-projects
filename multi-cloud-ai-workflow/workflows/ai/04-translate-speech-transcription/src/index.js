@@ -64,27 +64,28 @@ exports.handler = async (event, context) => {
         throw new Error("JobProfile '" + JOB_PROFILE_NAME + "' not found");
     }
 
+    // manage notification
+    let notificationUrl = ActivityCallbackUrl + "?taskToken=" + encodeURIComponent(taskToken);
+    console.log("NotificationUrl:", notificationUrl);
+
     // writing speech transcription to a textfile in temp bucket
     let bmContent = await resourceManager.resolve(event.input.bmContent);
 
+    // writing CLEAN speech transcription from bmContent to a textfile in temp bucket for transfer to translation service
     if (!bmContent.awsAiMetadata ||
-        !bmContent.awsAiMetadata.transcription ||
-        !bmContent.awsAiMetadata.transcription.original) {
+        !bmContent.awsAiMetadata.cleanTranscription ||
+        !bmContent.awsAiMetadata.cleanTranscription.original) {
         throw new Error("Missing transcription on BMContent")
     }
 
     let s3Params = {
         Bucket: TempBucket,
-        Key: "AiInput/" + uuidv4() + ".txt",
-        Body: bmContent.awsAiMetadata.transcription.original
+        Key: "AiInput/stt_output_clean.txt",
+        Body: bmContent.awsAiMetadata.cleanTranscription.original
     }
-
     await S3PutObject(s3Params);
 
-    let notificationUrl = ActivityCallbackUrl + "?taskToken=" + encodeURIComponent(taskToken);
-    console.log("NotificationUrl:", notificationUrl);
-
-    // creating job
+    // creating job translation of clean transcription
     let job = new AIJob({
         jobProfile: jobProfileId,
         jobInput: new JobParameterBag({
@@ -92,7 +93,8 @@ exports.handler = async (event, context) => {
                 awsS3Bucket: s3Params.Bucket,
                 awsS3Key: s3Params.Key
             }),
-            targetLanguageCode: "ja",
+            targetLanguageCode: "fr",
+//            targetLanguageCode: "ja",
             outputLocation: new Locator({
                 awsS3Bucket: TempBucket,
                 awsS3KeyPrefix: JOB_RESULTS_PREFIX

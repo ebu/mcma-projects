@@ -7,6 +7,10 @@
     display: flex;
 }
 
+::ng-deep .pie-label {
+    fill: #fff !important;
+}
+
 .workflow-job-data {
     display: flex;
     flex: 1;
@@ -17,16 +21,19 @@
     display: flex;
     margin-bottom: 1vw;
 
-    mat-icon {
-        width: 30px;
-        height: 30px;
-        font-size: 30px;
+    .job-field {
+
+        mat-icon {
+            width: 30px;
+            height: 30px;
+            font-size: 30px;
+        }
+
+        span {
+            font-size: 20px;
+        }
     }
 
-    span {
-        font-size: 20px;
-        margin-left: 10px;
-    }
 }
 
 .job-preview-player {
@@ -62,7 +69,7 @@
 
 .job-field {
     display: flex;
-    align-items: center;
+    align-items: normal;
     margin-bottom: 1vw;
 
     label {
@@ -78,7 +85,7 @@
         font-size: 20px;
         color: white;
     }
-    
+
     a[mat-button] {
         font-size: 18px;
     }
@@ -102,6 +109,17 @@
 
 .ai-data-group {
     margin: 25px;
+
+    ::ng-deep .ai-sttbenchmarking-data {
+
+        .delete {
+            color: green;
+        }
+
+        .insert {
+            color: red;
+        }
+    }
 }
 
 .ai-state {
@@ -154,12 +172,13 @@
 
 tr.mat-row {
     cursor: pointer;
+
     &:hover {
         background: rgba(255, 255, 255, 0.1);
     }
 
     &.highlight {
-        background:  rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.1);
     }
 }
 

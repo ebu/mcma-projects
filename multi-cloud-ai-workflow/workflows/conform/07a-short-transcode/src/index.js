@@ -63,6 +63,7 @@ exports.handler = async (event, context) => {
     let notificationUrl = ActivityCallbackUrl + "?taskToken=" + encodeURIComponent(taskToken);
     console.log("NotificationUrl:", notificationUrl);
 
+
     // creating the tranformjob(lambda)
     let createProxyJob = new TransformJob({
         jobProfile: jobProfileId,

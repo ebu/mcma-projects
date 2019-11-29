@@ -83,6 +83,39 @@ const JOB_PROFILES = {
             new JobParameter({ parameterName: "ebucore:height" })
         ]
     }),
+    AWSTextToSpeech: new JobProfile({
+        name: "AWSTextToSpeech",
+        inputParameters: [
+            new JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
+            new JobParameter({ parameterName: "voiceId", parameterType: "AWSVoiceId" }),
+            new JobParameter({ parameterName: "outputLocation", parameterType: "Locator" }),
+        ],
+        outputParameters: [
+            new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
+        ]
+    }),
+    AWSTokenizedTextToSpeech: new JobProfile({
+        name: "AWSTokenizedTextToSpeech",
+        inputParameters: [
+            new JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
+            new JobParameter({ parameterName: "voiceId", parameterType: "AWSVoiceId" }),
+            new JobParameter({ parameterName: "outputLocation", parameterType: "Locator" }),
+        ],
+        outputParameters: [
+            new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
+        ]
+    }),
+    AWSSsmlTextToSpeech: new JobProfile({
+        name: "AWSSsmlTextToSpeech",
+        inputParameters: [
+            new JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
+            new JobParameter({ parameterName: "voiceId", parameterType: "AWSVoiceId" }),
+            new JobParameter({ parameterName: "outputLocation", parameterType: "Locator" }),
+        ],
+        outputParameters: [
+            new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
+        ]
+    }),
     AWSTranscribeAudio: new JobProfile({
         name: "AWSTranscribeAudio",
         inputParameters: [
@@ -107,6 +140,46 @@ const JOB_PROFILES = {
             new JobParameter({ parameterName: "sourceLanguageCode", parameterType: "awsLanguageCode" })
         ]
     }),
+    CreateDubbingSrt: new JobProfile({
+        name: "CreateDubbingSrt",
+        inputParameters: [
+            new JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
+            new JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
+        ],
+        outputParameters: [
+            new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
+        ]
+    }),
+    ValidateSpeechToText: new JobProfile({
+        name: "ValidateSpeechToText",
+        inputParameters: [
+            new JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
+            new JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
+        ],
+        outputParameters: [
+            new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
+        ]
+    }),
+    ValidateSpeechToTextAzure: new JobProfile({
+        name: "ValidateSpeechToTextAzure",
+        inputParameters: [
+            new JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
+            new JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
+        ],
+        outputParameters: [
+            new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
+        ]
+    }),
+    ValidateSpeechToTextGoogle: new JobProfile({
+        name: "ValidateSpeechToTextGoogle",
+        inputParameters: [
+            new JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
+            new JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
+        ],
+        outputParameters: [
+            new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
+        ]
+    }),
     AWSDetectCelebrities: new JobProfile({
         name: "AWSDetectCelebrities",
         inputParameters: [
@@ -117,8 +190,28 @@ const JOB_PROFILES = {
             new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
         ]
     }),
+    AWSDetectEmotions: new JobProfile({
+        name: "AWSDetectEmotions",
+        inputParameters: [
+            new JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
+            new JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
+        ],
+        outputParameters: [
+            new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
+        ]
+    }),
     AzureExtractAllAIMetadata: new JobProfile({
         name: "AzureExtractAllAIMetadata",
+        inputParameters: [
+            new JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
+            new JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
+        ],
+        outputParameters: [
+            new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
+        ]
+    }),
+    ExtractAudio: new JobProfile({
+        name: "ExtractAudio",
         inputParameters: [
             new JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
             new JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
@@ -159,9 +252,15 @@ const createServices = (serviceUrls) => {
                         authType: "AWS4",
                         jobType: "AIJob",
                         jobProfiles: [
+                            JOB_PROFILES.AWSTextToSpeech.id ? JOB_PROFILES.AWSTextToSpeech.id : JOB_PROFILES.AWSTextToSpeech,
+                            JOB_PROFILES.AWSSsmlTextToSpeech.id ? JOB_PROFILES.AWSSsmlTextToSpeech.id : JOB_PROFILES.AWSSsmlTextToSpeech,
+                            JOB_PROFILES.AWSTokenizedTextToSpeech.id ? JOB_PROFILES.AWSTokenizedTextToSpeech.id : JOB_PROFILES.AWSTokenizedTextToSpeech,
                             JOB_PROFILES.AWSTranscribeAudio.id ? JOB_PROFILES.AWSTranscribeAudio.id : JOB_PROFILES.AWSTranscribeAudio,
                             JOB_PROFILES.AWSTranslateText.id ? JOB_PROFILES.AWSTranslateText.id : JOB_PROFILES.AWSTranslateText,
-                            JOB_PROFILES.AWSDetectCelebrities.id ? JOB_PROFILES.AWSDetectCelebrities.id : JOB_PROFILES.AWSDetectCelebrities
+                            JOB_PROFILES.AWSDetectCelebrities.id ? JOB_PROFILES.AWSDetectCelebrities.id : JOB_PROFILES.AWSDetectCelebrities,
+                            JOB_PROFILES.AWSDetectEmotions.id ? JOB_PROFILES.AWSDetectEmotions.id : JOB_PROFILES.AWSDetectEmotions,
+                            JOB_PROFILES.ValidateSpeechToText.id ? JOB_PROFILES.ValidateSpeechToText.id : JOB_PROFILES.ValidateSpeechToText,
+                            JOB_PROFILES.CreateDubbingSrt.id ? JOB_PROFILES.CreateDubbingSrt.id : JOB_PROFILES.CreateDubbingSrt
                         ]
                     })
                 );
@@ -176,7 +275,24 @@ const createServices = (serviceUrls) => {
                         authType: "AWS4",
                         jobType: "AIJob",
                         jobProfiles: [
-                            JOB_PROFILES.AzureExtractAllAIMetadata.id ? JOB_PROFILES.AzureExtractAllAIMetadata.id : JOB_PROFILES.AzureExtractAllAIMetadata
+                            JOB_PROFILES.AzureExtractAllAIMetadata.id ? JOB_PROFILES.AzureExtractAllAIMetadata.id : JOB_PROFILES.AzureExtractAllAIMetadata,
+                            JOB_PROFILES.ValidateSpeechToTextAzure.id ? JOB_PROFILES.ValidateSpeechToTextAzure.id : JOB_PROFILES.ValidateSpeechToTextAzure,
+                        ]
+                    })
+                );
+                break;
+            case "google_ai_service_url":
+                serviceList.push(
+                    new Service({
+                        name: "Google AI Service",
+                        resources: [
+                            new ResourceEndpoint({ resourceType: "JobAssignment", httpEndpoint: serviceUrls[prop] + "/job-assignments" })
+                        ],
+                        authType: "AWS4",
+                        jobType: "AIJob",
+                        jobProfiles: [
+                            JOB_PROFILES.ExtractAudio.id ? JOB_PROFILES.ExtractAudio.id : JOB_PROFILES.ExtractAudio,
+                            JOB_PROFILES.ValidateSpeechToTextGoogle.id ? JOB_PROFILES.ValidateSpeechToTextGoogle.id : JOB_PROFILES.ValidateSpeechToTextGoogle,
                         ]
                     })
                 );

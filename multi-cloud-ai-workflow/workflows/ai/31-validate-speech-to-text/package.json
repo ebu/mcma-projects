@@ -1,0 +1,15 @@
+{
+    "name": "02-extract-speech-to-text",
+    "version": "0.0.0",
+    "description": "",
+    "private": true,
+    "engines": {
+        "node": "~10.x"
+    },
+    "main": "src/index.js",
+    "license": "Apache-2.0",
+    "dependencies": {
+        "aws-sdk": "^2.473.0",
+        "mcma-aws": "0.3.13"
+    }
+}

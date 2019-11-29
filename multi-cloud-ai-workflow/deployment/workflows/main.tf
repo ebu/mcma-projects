@@ -93,7 +93,7 @@ resource "aws_lambda_function" "process-workflow-completion" {
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
   source_code_hash = "${filebase64sha256("./../workflows/process-workflow-completion/dist/lambda.zip")}"
-  runtime          = "nodejs8.10"
+  runtime          = "nodejs10.x"
   timeout          = "30"
   memory_size      = "256"
 
@@ -112,7 +112,7 @@ resource "aws_lambda_function" "process-workflow-failure" {
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
   source_code_hash = "${filebase64sha256("./../workflows/process-workflow-failure/dist/lambda.zip")}"
-  runtime          = "nodejs8.10"
+  runtime          = "nodejs10.x"
   timeout          = "30"
   memory_size      = "256"
 
@@ -135,7 +135,7 @@ resource "aws_lambda_function" "workflow-activity-callback-handler" {
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "index.handler"
   source_code_hash = "${filebase64sha256("./../workflows/workflow-activity-callback-handler/dist/lambda.zip")}"
-  runtime          = "nodejs8.10"
+  runtime          = "nodejs10.x"
   timeout          = "30"
   memory_size      = "256"
 }

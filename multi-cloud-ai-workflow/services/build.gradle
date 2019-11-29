@@ -8,6 +8,8 @@ task build {
     dependsOn "azure-ai-service:api-handler:build"
     dependsOn "azure-ai-service:api-handler-non-secure:build"
     dependsOn "azure-ai-service:worker:build"
+    dependsOn "google-ai-service:api-handler:build"
+    dependsOn "google-ai-service:worker:build"
     dependsOn "job-processor-service:api-handler:build"
     dependsOn "job-processor-service:worker:build"
     dependsOn "job-repository:api-handler:build"

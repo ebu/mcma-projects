@@ -22,7 +22,6 @@ const resourceManager = getAwsV4ResourceManager(environmentVariableProvider);
 }
 
 Note that the notification endpoint is optional. But is used to notify progress and completed/failed of workflow.
-
 */
 
 

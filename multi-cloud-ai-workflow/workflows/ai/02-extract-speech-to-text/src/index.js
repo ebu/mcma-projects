@@ -10,12 +10,14 @@ const StepFunctionsGetActivityTask = util.promisify(StepFunctions.getActivityTas
 const { EnvironmentVariableProvider, AIJob, JobParameterBag, Locator, NotificationEndpoint, JobProfile } = require("mcma-core");
 const { getAwsV4ResourceManager } = require("mcma-aws");
 
-// Environment Variable(AWS Lambda)
+// Environment Variable(AWS Lambda) and identification of buckets e.g. the TempBucket below
 const TempBucket = process.env.TempBucket;
 const ActivityCallbackUrl = process.env.ActivityCallbackUrl;
 const ActivityArn = process.env.ActivityArn;
 
+// link to the service.profileName defined in the service associated with the job
 const JOB_PROFILE_NAME = "AWSTranscribeAudio";
+// directorunder which result of that job / service will be retruned. The Bucket where this directory will be created isdefined in the job profile below
 const JOB_RESULTS_PREFIX = "AIResults/";
 
 const environmentVariableProvider = new EnvironmentVariableProvider();
@@ -47,23 +49,23 @@ exports.handler = async (event, context) => {
         throw new Error("Failed to obtain activity task")
     }
 
-    // using input from activity task to ensure we don't have race conditions if two workflows execute simultanously.
+    // using input from activity task to ensure we don't have race conditions if two workflows executing simultanously.
     event = JSON.parse(data.input);
 
     // get job profiles filtered by name
     let jobProfiles = await resourceManager.get(JobProfile, { name: JOB_PROFILE_NAME });
-
     let jobProfileId = jobProfiles.length ? jobProfiles[0].id : null;
-
     // if not found bail out
     if (!jobProfileId) {
         throw new Error("JobProfile '" + JOB_PROFILE_NAME + "' not found");
     }
 
+    // define a url to receive notifications to be visualised in CloudWatch (AWS console) in console logs
     let notificationUrl = ActivityCallbackUrl + "?taskToken=" + encodeURIComponent(taskToken);
     console.log("NotificationUrl:", notificationUrl);
 
     // creating job
+    // the awsS3KeyPrefix is a directory
     let job = new AIJob({
         jobProfile: jobProfileId,
         jobInput: new JobParameterBag({

@@ -57,10 +57,34 @@ exports.handler = async (event, context) => {
     console.log("AzureResult: " + JSON.stringify(azureResult, null, 2));
 
     let bmContent = await resourceManager.resolve(event.input.bmContent);
-    
+
     let azureAiMetadata = bmContent.azureAiMetadata || {};
     azureAiMetadata = azureResult;
     bmContent.azureAiMetadata = azureAiMetadata;
+
+    let azureTranscription = '';
+    if (azureAiMetadata.videos) {
+        for (const video of azureAiMetadata.videos) {
+            if (video.insights) {
+                if (video.insights.transcript) {
+
+                    for (const transcript of video.insights.transcript) {
+                        if (transcript.text) {
+                            azureTranscription += transcript.text + ' ';
+                        }
+                    }
+                    azureTranscription.trim();
+                }
+
+            }
+        }
+    }
+
+    if (!bmContent.azureAiMetadata.azureTranscription) {
+        bmContent.azureAiMetadata.azureTranscription = {}
+    }
+
+    bmContent.azureAiMetadata.azureTranscription.transcription = azureTranscription;
 
     await resourceManager.update(bmContent);
 
