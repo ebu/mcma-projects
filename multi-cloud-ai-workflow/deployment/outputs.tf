@@ -15,11 +15,11 @@ output "cognito_identity_pool_id" {
 }
 
 output "upload_bucket" {
-  value = module.storage.upload_bucket
+  value = module.storage.upload_bucket.id
 }
 
 output "website_bucket" {
-  value = module.storage.website_bucket
+  value = module.storage.website_bucket.id
 }
 
 output "website_url" {
@@ -30,16 +30,8 @@ output "service_registry_url" {
   value = module.services.service_registry_url
 }
 
-output "services_url" {
-  value = module.services.services_url
-}
-
-output "services_auth_type" {
+output "service_registry_auth_type" {
   value = module.services.services_auth_type
-}
-
-output "services_auth_context" {
-  value = module.services.services_auth_context
 }
 
 output "media_repository_url" {

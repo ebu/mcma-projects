@@ -218,7 +218,7 @@ const JOB_PROFILES = {
     }),
 };
 
-async function createServices(terraformOutput) {
+function createServices(terraformOutput) {
     const serviceList = [];
 
     for (const prop in terraformOutput) {
@@ -440,7 +440,7 @@ async function main() {
 
     try {
         const params = {
-            UserPoolId: terraformOutput.cognito_user_pool_id,
+            UserPoolId: terraformOutput["cognito_user_pool_id"].value,
             Username: "mcma"
         };
 
@@ -454,7 +454,7 @@ async function main() {
 
     try {
         const params = {
-            UserPoolId: terraformOutput.cognito_user_pool_id,
+            UserPoolId: terraformOutput["cognito_user_pool_id"].value,
             Username: username,
             MessageAction: "SUPPRESS",
             TemporaryPassword: tempPassword
@@ -473,8 +473,8 @@ async function main() {
         };
         const authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails(authenticationData);
         const poolData = {
-            UserPoolId: terraformOutput.cognito_user_pool_id,
-            ClientId: terraformOutput.cognito_user_pool_client_id
+            UserPoolId: terraformOutput["cognito_user_pool_id"].value,
+            ClientId: terraformOutput["cognito_user_pool_client_id"].value
         };
         const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
         const userData = {
@@ -517,17 +517,17 @@ async function main() {
             servicesAuthContext,
         },
         aws: {
-            region: terraformOutput.aws_region.value,
+            region: terraformOutput["aws_region"].value,
             s3: {
-                uploadBucket: terraformOutput.upload_bucket.value
+                uploadBucket: terraformOutput["upload_bucket"].value
             },
             cognito: {
                 userPool: {
-                    UserPoolId: terraformOutput.cognito_user_pool_id.value,
-                    ClientId: terraformOutput.cognito_user_pool_client_id.value
+                    UserPoolId: terraformOutput["cognito_user_pool_id"].value,
+                    ClientId: terraformOutput["cognito_user_pool_client_id"].value
                 },
                 identityPool: {
-                    id: terraformOutput.cognito_identity_pool_id.value
+                    id: terraformOutput["cognito_identity_pool_id"].value
                 }
             }
         }
