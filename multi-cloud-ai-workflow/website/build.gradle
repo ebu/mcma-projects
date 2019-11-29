@@ -37,7 +37,7 @@ task installAngularCLI {
     }
 }
 
-task build (type: Exec) {
+task build(type: Exec) {
     dependsOn npmInstall, installAngularCLI
     inputs.dir("src")
     outputs.dir("dist")
