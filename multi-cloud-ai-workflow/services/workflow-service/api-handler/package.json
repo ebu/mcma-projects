@@ -4,7 +4,7 @@
     "description": "AWS Lambda based service leveraging AWS step functions to execute a workflow",
     "private": true,
     "engines": {
-        "node": "~10.x"
+        "node": "~10.16.3"
     },
     "main": "src/index.js",
     "license": "Apache-2.0",

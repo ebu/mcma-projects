@@ -4,7 +4,7 @@
     "description": "Validating input for conform workflow. Check if required metadata (name, description) is defined and if Locator points to a media file",
     "private": true,
     "engines": {
-        "node": "~10.x"
+        "node": "~10.16.3"
     },
     "main": "src/index.js",
     "license": "Apache-2.0",

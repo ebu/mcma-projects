@@ -1,23 +1,19 @@
 //"use strict";
 
-const util = require("util");
-const uuidv4 = require("uuid/v4");
 const fs = require("fs");
 
 const AWS = require("aws-sdk");
 AWS.config.loadFromPath("./aws-credentials.json");
-const S3 = new AWS.S3();
-const S3PutObject = util.promisify(S3.putObject.bind(S3));
 
+const S3 = new AWS.S3();
 const Cognito = new AWS.CognitoIdentityServiceProvider();
-const CognitoAdminCreateUser = util.promisify(Cognito.adminCreateUser.bind(Cognito));
-const CognitoAdminDeleteUser = util.promisify(Cognito.adminDeleteUser.bind(Cognito));
 
 global.fetch = require("node-fetch");
 const AmazonCognitoIdentity = require("amazon-cognito-identity-js");
 
-const { JobProfile, JobParameter, Service, ResourceEndpoint, ResourceManager } = require("mcma-core");
-const { AwsV4Authenticator } = require("mcma-aws");
+const { JobProfile, JobParameter, Service, ResourceEndpoint } = require("@mcma/core");
+const { ResourceManager, AuthProvider } = require("@mcma/client");
+require("@mcma/aws-client");
 
 const JOB_PROFILES = {
     ConformWorkflow: new JobProfile({
@@ -220,154 +216,207 @@ const JOB_PROFILES = {
             new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
         ]
     }),
-}
+};
 
-const createServices = (serviceUrls) => {
+async function createServices(terraformOutput) {
     const serviceList = [];
 
-    for (const prop in serviceUrls) {
-        switch (prop) {
-            case "ame_service_url":
-                serviceList.push(
-                    new Service({
-                        name: "MediaInfo AME Service",
+    for (const prop in terraformOutput) {
+        if (terraformOutput.hasOwnProperty(prop)) {
+            switch (prop) {
+                case "ame_service_url":
+                    serviceList.push(
+                        new Service({
+                            name: "MediaInfo AME Service",
+                            resources: [
+                                new ResourceEndpoint({
+                                    resourceType: "JobAssignment",
+                                    httpEndpoint: terraformOutput[prop].value + "/job-assignments"
+                                })
+                            ],
+                            authType: "AWS4",
+                            jobType: "AmeJob",
+                            jobProfiles: [
+                                JOB_PROFILES.ExtractTechnicalMetadata.id ? JOB_PROFILES.ExtractTechnicalMetadata.id : JOB_PROFILES.ExtractTechnicalMetadata
+                            ]
+                        })
+                    );
+                    break;
+                case "aws_ai_service_url":
+                    serviceList.push(
+                        new Service({
+                            name: "AWS AI Service",
+                            resources: [
+                                new ResourceEndpoint({
+                                    resourceType: "JobAssignment",
+                                    httpEndpoint: terraformOutput[prop].value + "/job-assignments"
+                                })
+                            ],
+                            authType: "AWS4",
+                            jobType: "AIJob",
+                            jobProfiles: [
+                                JOB_PROFILES.AWSTextToSpeech.id ? JOB_PROFILES.AWSTextToSpeech.id : JOB_PROFILES.AWSTextToSpeech,
+                                JOB_PROFILES.AWSSsmlTextToSpeech.id ? JOB_PROFILES.AWSSsmlTextToSpeech.id : JOB_PROFILES.AWSSsmlTextToSpeech,
+                                JOB_PROFILES.AWSTokenizedTextToSpeech.id ? JOB_PROFILES.AWSTokenizedTextToSpeech.id : JOB_PROFILES.AWSTokenizedTextToSpeech,
+                                JOB_PROFILES.AWSTranscribeAudio.id ? JOB_PROFILES.AWSTranscribeAudio.id : JOB_PROFILES.AWSTranscribeAudio,
+                                JOB_PROFILES.AWSTranslateText.id ? JOB_PROFILES.AWSTranslateText.id : JOB_PROFILES.AWSTranslateText,
+                                JOB_PROFILES.AWSDetectCelebrities.id ? JOB_PROFILES.AWSDetectCelebrities.id : JOB_PROFILES.AWSDetectCelebrities,
+                                JOB_PROFILES.AWSDetectEmotions.id ? JOB_PROFILES.AWSDetectEmotions.id : JOB_PROFILES.AWSDetectEmotions,
+                                JOB_PROFILES.ValidateSpeechToText.id ? JOB_PROFILES.ValidateSpeechToText.id : JOB_PROFILES.ValidateSpeechToText,
+                                JOB_PROFILES.CreateDubbingSrt.id ? JOB_PROFILES.CreateDubbingSrt.id : JOB_PROFILES.CreateDubbingSrt
+                            ]
+                        })
+                    );
+                    break;
+                case "azure_ai_service_url":
+                    serviceList.push(
+                        new Service({
+                            name: "AZURE AI Service",
+                            resources: [
+                                new ResourceEndpoint({
+                                    resourceType: "JobAssignment",
+                                    httpEndpoint: terraformOutput[prop].value + "/job-assignments"
+                                })
+                            ],
+                            authType: "AWS4",
+                            jobType: "AIJob",
+                            jobProfiles: [
+                                JOB_PROFILES.AzureExtractAllAIMetadata.id ? JOB_PROFILES.AzureExtractAllAIMetadata.id : JOB_PROFILES.AzureExtractAllAIMetadata,
+                                JOB_PROFILES.ValidateSpeechToTextAzure.id ? JOB_PROFILES.ValidateSpeechToTextAzure.id : JOB_PROFILES.ValidateSpeechToTextAzure,
+                            ]
+                        })
+                    );
+                    break;
+                case "google_ai_service_url":
+                    serviceList.push(
+                        new Service({
+                            name: "Google AI Service",
+                            resources: [
+                                new ResourceEndpoint({
+                                    resourceType: "JobAssignment",
+                                    httpEndpoint: terraformOutput[prop].value + "/job-assignments"
+                                })
+                            ],
+                            authType: "AWS4",
+                            jobType: "AIJob",
+                            jobProfiles: [
+                                JOB_PROFILES.ExtractAudio.id ? JOB_PROFILES.ExtractAudio.id : JOB_PROFILES.ExtractAudio,
+                                JOB_PROFILES.ValidateSpeechToTextGoogle.id ? JOB_PROFILES.ValidateSpeechToTextGoogle.id : JOB_PROFILES.ValidateSpeechToTextGoogle,
+                            ]
+                        })
+                    );
+                    break;
+                case "job_processor_service_url":
+                    serviceList.push(new Service({
+                        name: "Job Processor Service",
                         resources: [
-                            new ResourceEndpoint({ resourceType: "JobAssignment", httpEndpoint: serviceUrls[prop] + "/job-assignments" })
+                            new ResourceEndpoint({
+                                resourceType: "JobProcess",
+                                httpEndpoint: terraformOutput[prop].value + "/job-processes"
+                            })
                         ],
-                        authType: "AWS4",
-                        jobType: "AmeJob",
-                        jobProfiles: [
-                            JOB_PROFILES.ExtractTechnicalMetadata.id ? JOB_PROFILES.ExtractTechnicalMetadata.id : JOB_PROFILES.ExtractTechnicalMetadata
-                        ]
-                    })
-                );
-                break;
-            case "aws_ai_service_url":
-                serviceList.push(
-                    new Service({
-                        name: "AWS AI Service",
+                        authType: "AWS4"
+                    }));
+                    break;
+                case "job_repository_url":
+                    serviceList.push(new Service({
+                        name: "Job Repository",
                         resources: [
-                            new ResourceEndpoint({ resourceType: "JobAssignment", httpEndpoint: serviceUrls[prop] + "/job-assignments" })
+                            new ResourceEndpoint({
+                                resourceType: "AmeJob",
+                                httpEndpoint: terraformOutput[prop].value + "/jobs"
+                            }),
+                            new ResourceEndpoint({
+                                resourceType: "AIJob",
+                                httpEndpoint: terraformOutput[prop].value + "/jobs"
+                            }),
+                            new ResourceEndpoint({
+                                resourceType: "CaptureJob",
+                                httpEndpoint: terraformOutput[prop].value + "/jobs"
+                            }),
+                            new ResourceEndpoint({
+                                resourceType: "QAJob",
+                                httpEndpoint: terraformOutput[prop].value + "/jobs"
+                            }),
+                            new ResourceEndpoint({
+                                resourceType: "TransferJob",
+                                httpEndpoint: terraformOutput[prop].value + "/jobs"
+                            }),
+                            new ResourceEndpoint({
+                                resourceType: "TransformJob",
+                                httpEndpoint: terraformOutput[prop].value + "/jobs"
+                            }),
+                            new ResourceEndpoint({
+                                resourceType: "WorkflowJob",
+                                httpEndpoint: terraformOutput[prop].value + "/jobs"
+                            })
                         ],
-                        authType: "AWS4",
-                        jobType: "AIJob",
-                        jobProfiles: [
-                            JOB_PROFILES.AWSTextToSpeech.id ? JOB_PROFILES.AWSTextToSpeech.id : JOB_PROFILES.AWSTextToSpeech,
-                            JOB_PROFILES.AWSSsmlTextToSpeech.id ? JOB_PROFILES.AWSSsmlTextToSpeech.id : JOB_PROFILES.AWSSsmlTextToSpeech,
-                            JOB_PROFILES.AWSTokenizedTextToSpeech.id ? JOB_PROFILES.AWSTokenizedTextToSpeech.id : JOB_PROFILES.AWSTokenizedTextToSpeech,
-                            JOB_PROFILES.AWSTranscribeAudio.id ? JOB_PROFILES.AWSTranscribeAudio.id : JOB_PROFILES.AWSTranscribeAudio,
-                            JOB_PROFILES.AWSTranslateText.id ? JOB_PROFILES.AWSTranslateText.id : JOB_PROFILES.AWSTranslateText,
-                            JOB_PROFILES.AWSDetectCelebrities.id ? JOB_PROFILES.AWSDetectCelebrities.id : JOB_PROFILES.AWSDetectCelebrities,
-                            JOB_PROFILES.AWSDetectEmotions.id ? JOB_PROFILES.AWSDetectEmotions.id : JOB_PROFILES.AWSDetectEmotions,
-                            JOB_PROFILES.ValidateSpeechToText.id ? JOB_PROFILES.ValidateSpeechToText.id : JOB_PROFILES.ValidateSpeechToText,
-                            JOB_PROFILES.CreateDubbingSrt.id ? JOB_PROFILES.CreateDubbingSrt.id : JOB_PROFILES.CreateDubbingSrt
-                        ]
-                    })
-                );
-                break;
-            case "azure_ai_service_url":
-                serviceList.push(
-                    new Service({
-                        name: "AZURE AI Service",
+                        authType: "AWS4"
+                    }));
+                    break;
+                case "media_repository_url":
+                    serviceList.push(new Service({
+                        name: "Media Repository",
                         resources: [
-                            new ResourceEndpoint({ resourceType: "JobAssignment", httpEndpoint: serviceUrls[prop] + "/job-assignments" })
+                            new ResourceEndpoint({
+                                resourceType: "BMContent",
+                                httpEndpoint: terraformOutput[prop].value + "/bm-contents"
+                            }),
+                            new ResourceEndpoint({
+                                resourceType: "BMEssence",
+                                httpEndpoint: terraformOutput[prop].value + "/bm-essences"
+                            })
                         ],
-                        authType: "AWS4",
-                        jobType: "AIJob",
-                        jobProfiles: [
-                            JOB_PROFILES.AzureExtractAllAIMetadata.id ? JOB_PROFILES.AzureExtractAllAIMetadata.id : JOB_PROFILES.AzureExtractAllAIMetadata,
-                            JOB_PROFILES.ValidateSpeechToTextAzure.id ? JOB_PROFILES.ValidateSpeechToTextAzure.id : JOB_PROFILES.ValidateSpeechToTextAzure,
-                        ]
-                    })
-                );
-                break;
-            case "google_ai_service_url":
-                serviceList.push(
-                    new Service({
-                        name: "Google AI Service",
-                        resources: [
-                            new ResourceEndpoint({ resourceType: "JobAssignment", httpEndpoint: serviceUrls[prop] + "/job-assignments" })
-                        ],
-                        authType: "AWS4",
-                        jobType: "AIJob",
-                        jobProfiles: [
-                            JOB_PROFILES.ExtractAudio.id ? JOB_PROFILES.ExtractAudio.id : JOB_PROFILES.ExtractAudio,
-                            JOB_PROFILES.ValidateSpeechToTextGoogle.id ? JOB_PROFILES.ValidateSpeechToTextGoogle.id : JOB_PROFILES.ValidateSpeechToTextGoogle,
-                        ]
-                    })
-                );
-                break;
-            case "job_processor_service_url":
-                serviceList.push(new Service({
-                    name: "Job Processor Service",
-                    resources: [
-                        new ResourceEndpoint({ resourceType: "JobProcess", httpEndpoint: serviceUrls[prop] + "/job-processes" })
-                    ],
-                    authType: "AWS4"
-                }));
-                break;
-            case "job_repository_url":
-                serviceList.push(new Service({
-                    name: "Job Repository",
-                    resources: [
-                        new ResourceEndpoint({ resourceType: "AmeJob", httpEndpoint: serviceUrls[prop] + "/jobs" }),
-                        new ResourceEndpoint({ resourceType: "AIJob", httpEndpoint: serviceUrls[prop] + "/jobs" }),
-                        new ResourceEndpoint({ resourceType: "CaptureJob", httpEndpoint: serviceUrls[prop] + "/jobs" }),
-                        new ResourceEndpoint({ resourceType: "QAJob", httpEndpoint: serviceUrls[prop] + "/jobs" }),
-                        new ResourceEndpoint({ resourceType: "TransferJob", httpEndpoint: serviceUrls[prop] + "/jobs" }),
-                        new ResourceEndpoint({ resourceType: "TransformJob", httpEndpoint: serviceUrls[prop] + "/jobs" }),
-                        new ResourceEndpoint({ resourceType: "WorkflowJob", httpEndpoint: serviceUrls[prop] + "/jobs" })
-                    ],
-                    authType: "AWS4"
-                }));
-                break;
-            case "media_repository_url":
-                serviceList.push(new Service({
-                    name: "Media Repository",
-                    resources: [
-                        new ResourceEndpoint({ resourceType: "BMContent", httpEndpoint: serviceUrls[prop] + "/bm-contents" }),
-                        new ResourceEndpoint({ resourceType: "BMEssence", httpEndpoint: serviceUrls[prop] + "/bm-essences" })
-                    ],
-                    authType: "AWS4"
-                }));
-                break;
-            case "transform_service_url":
-                serviceList.push(
-                    new Service({
-                        name: "FFmpeg TransformService",
-                        resources: [
-                            new ResourceEndpoint({ resourceType: "JobAssignment", httpEndpoint: serviceUrls[prop] + "/job-assignments" })
-                        ],
-                        authType: "AWS4",
-                        jobType: "TransformJob",
-                        jobProfiles: [
-                            JOB_PROFILES.CreateProxyLambda.id ? JOB_PROFILES.CreateProxyLambda.id : JOB_PROFILES.CreateProxyLambda,
-                            JOB_PROFILES.CreateProxyEC2.id ? JOB_PROFILES.CreateProxyEC2.id : JOB_PROFILES.CreateProxyEC2,
-                        ],
-                    })
-                );
-                break;
-            case "workflow_service_url":
-                serviceList.push(
-                    new Service({
-                        name: "Workflow Service",
-                        resources: [
-                            new ResourceEndpoint({ resourceType: "JobAssignment", httpEndpoint: serviceUrls[prop] + "/job-assignments" }),
-                            new ResourceEndpoint({ resourceType: "Notification", httpEndpoint: serviceUrls["workflow_service_notification_url"] })
-                        ],
-                        authType: "AWS4",
-                        jobType: "WorkflowJob",
-                        jobProfiles: [
-                            JOB_PROFILES.ConformWorkflow.id ? JOB_PROFILES.ConformWorkflow.id : JOB_PROFILES.ConformWorkflow,
-                            JOB_PROFILES.AiWorkflow.id ? JOB_PROFILES.AiWorkflow.id : JOB_PROFILES.AiWorkflow
-                        ]
-                    })
-                );
-                break;
+                        authType: "AWS4"
+                    }));
+                    break;
+                case "transform_service_url":
+                    serviceList.push(
+                        new Service({
+                            name: "FFmpeg TransformService",
+                            resources: [
+                                new ResourceEndpoint({
+                                    resourceType: "JobAssignment",
+                                    httpEndpoint: terraformOutput[prop].value + "/job-assignments"
+                                })
+                            ],
+                            authType: "AWS4",
+                            jobType: "TransformJob",
+                            jobProfiles: [
+                                JOB_PROFILES.CreateProxyLambda.id ? JOB_PROFILES.CreateProxyLambda.id : JOB_PROFILES.CreateProxyLambda,
+                                JOB_PROFILES.CreateProxyEC2.id ? JOB_PROFILES.CreateProxyEC2.id : JOB_PROFILES.CreateProxyEC2,
+                            ],
+                        })
+                    );
+                    break;
+                case "workflow_service_url":
+                    serviceList.push(
+                        new Service({
+                            name: "Workflow Service",
+                            resources: [
+                                new ResourceEndpoint({
+                                    resourceType: "JobAssignment",
+                                    httpEndpoint: terraformOutput[prop].value + "/job-assignments"
+                                }),
+                                new ResourceEndpoint({
+                                    resourceType: "Notification",
+                                    httpEndpoint: terraformOutput["workflow_service_notification_url"].value
+                                })
+                            ],
+                            authType: "AWS4",
+                            jobType: "WorkflowJob",
+                            jobProfiles: [
+                                JOB_PROFILES.ConformWorkflow.id ? JOB_PROFILES.ConformWorkflow.id : JOB_PROFILES.ConformWorkflow,
+                                JOB_PROFILES.AiWorkflow.id ? JOB_PROFILES.AiWorkflow.id : JOB_PROFILES.AiWorkflow
+                            ]
+                        })
+                    );
+                    break;
+            }
         }
     }
 
-    var services = {};
+    let services = {};
 
     for (const service of serviceList) {
         services[service.name] = service;
@@ -376,93 +425,63 @@ const createServices = (serviceUrls) => {
     return services;
 }
 
-const readStdin = async () => {
-    let content = "";
+async function main() {
+    const terraformOutput = JSON.parse(fs.readFileSync("./terraform.output.json", "utf8"));
 
-    process.stdin.on("data", (data) => {
-        content += data.toString();
-    });
-
-    return await new Promise((resolve, reject) => {
-        process.stdin.on("end", () => resolve(content));
-        process.stdin.on("error", reject);
-    });
-}
-
-const parseContent = (content) => {
-    let serviceUrls = {};
-
-    let lines = content.split("\n");
-    for (const line of lines) {
-        var parts = line.split(" = ");
-
-        if (parts.length === 2) {
-            serviceUrls[parts[0]] = parts[1];
-        }
-    }
-
-    return serviceUrls;
-}
-
-const main = async () => {
-    let content = fs.readFileSync("./terraform.output").toString('utf-8');
-    let terraformOutput = parseContent(content);
-
-    let servicesUrl = terraformOutput.services_url;
-    let servicesAuthType = terraformOutput.services_auth_type;
-    let servicesAuthContext = terraformOutput.services_auth_context;
-
-    let jobProfilesUrl = terraformOutput.service_registry_url + "/job-profiles";
+    const servicesAuthType = terraformOutput["service_registry_auth_type"].value;
+    const servicesAuthContext = undefined;
+    const servicesUrl = terraformOutput["service_registry_url"].value + "/services";
+    const jobProfilesUrl = terraformOutput["service_registry_url"].value + "/job-profiles";
 
     // 1. (Re)create cognito user for website
-    let username = "mcma";
-    let tempPassword = "b9BC9aX6B3yQK#nr";
-    let password = "%bshgkUTv*RD$sR7";
+    const username = "mcma";
+    const tempPassword = "b9BC9aX6B3yQK#nr";
+    const password = "%bshgkUTv*RD$sR7";
 
     try {
-        var params = {
+        const params = {
             UserPoolId: terraformOutput.cognito_user_pool_id,
             Username: "mcma"
-        }
+        };
 
         // console.log(JSON.stringify(params, null, 2));
 
-        let data = await CognitoAdminDeleteUser(params);
+        await Cognito.adminDeleteUser(params).promise();
         console.log("Deleting existing user");
         // console.log(JSON.stringify(data, null, 2));
     } catch (error) {
     }
 
     try {
-        var params = {
+        const params = {
             UserPoolId: terraformOutput.cognito_user_pool_id,
             Username: username,
             MessageAction: "SUPPRESS",
             TemporaryPassword: tempPassword
-        }
+        };
 
         // console.log(JSON.stringify(params, null, 2));
 
         console.log("Creating user '" + username + "' with temporary password");
-        let data = await CognitoAdminCreateUser(params);
+        await Cognito.adminCreateUser(params).promise();
 
         // console.log(JSON.stringify(data, null, 2));
 
-        var authenticationData = {
+        const authenticationData = {
             Username: username,
             Password: tempPassword,
         };
-        var authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails(authenticationData);
-        var poolData = {
+        const authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails(authenticationData);
+        const poolData = {
             UserPoolId: terraformOutput.cognito_user_pool_id,
             ClientId: terraformOutput.cognito_user_pool_client_id
         };
-        var userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
-        var userData = {
+        const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+        const userData = {
             Username: username,
             Pool: userPool
         };
-        var cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+        const cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
 
         console.log("Authenticating user '" + username + "' with temporary password");
         cognitoUser.authenticateUser(authenticationDetails, {
@@ -476,7 +495,7 @@ const main = async () => {
             newPasswordRequired: (userAttributes, requiredAttributes) => {
                 console.log("Changing temporary password to final password");
                 cognitoUser.completeNewPasswordChallenge(password, requiredAttributes, {
-                    onSuccess: (session) => {
+                    onSuccess: (ignored) => {
                         console.log("User '" + username + "' is ready with password '" + password + "'");
                     },
                     onFailure: (err) => {
@@ -491,75 +510,62 @@ const main = async () => {
 
     // 2. Uploading configuration to website
     console.log("Uploading deployment configuration to website");
-    let config = {
+    const config = {
         resourceManager: {
             servicesUrl,
             servicesAuthType,
             servicesAuthContext,
         },
         aws: {
-            region: terraformOutput.aws_region,
+            region: terraformOutput.aws_region.value,
             s3: {
-                uploadBucket: terraformOutput.upload_bucket
+                uploadBucket: terraformOutput.upload_bucket.value
             },
             cognito: {
                 userPool: {
-                    UserPoolId: terraformOutput.cognito_user_pool_id,
-                    ClientId: terraformOutput.cognito_user_pool_client_id
+                    UserPoolId: terraformOutput.cognito_user_pool_id.value,
+                    ClientId: terraformOutput.cognito_user_pool_client_id.value
                 },
                 identityPool: {
-                    id: terraformOutput.cognito_identity_pool_id
+                    id: terraformOutput.cognito_identity_pool_id.value
                 }
             }
         }
-    }
+    };
 
-    let s3Params = {
-        Bucket: terraformOutput.website_bucket,
+    const s3Params = {
+        Bucket: terraformOutput.website_bucket.value,
         Key: "config.json",
         Body: JSON.stringify(config)
-    }
+    };
     try {
-        await S3PutObject(s3Params);
+        await S3.putObject(s3Params).promise();
     } catch (error) {
         console.error(error);
         return;
     }
 
     // 3. Inserting / updating service registry
-    let serviceRegistry = new Service({
-        name: "Service Registry",
-        resources: [
-            new ResourceEndpoint({ resourceType: "Service", httpEndpoint: servicesUrl }),
-            new ResourceEndpoint({ resourceType: "JobProfile", httpEndpoint: jobProfilesUrl })
-        ],
-        authType: "AWS4"
-    });
-
-    const authenticatorAWS4 = new AwsV4Authenticator({
-        accessKey: AWS.config.credentials.accessKeyId,
-        secretKey: AWS.config.credentials.secretAccessKey,
-        sessionToken: AWS.config.credentials.sessionToken,
-        region: AWS.config.region
-    });
-
-    const authProvider = {
-        getAuthenticator: async (authType, authContext) => {
-            switch (authType) {
-                case "AWS4":
-                    return authenticatorAWS4;
-            }
-        }
-    };
-
     try {
-        let resourceManager = new ResourceManager({
+        // 1. Inserting / updating service registry
+        let serviceRegistry = new Service({
+            name: "Service Registry",
+            resources: [
+                new ResourceEndpoint({ resourceType: "Service", httpEndpoint: servicesUrl }),
+                new ResourceEndpoint({ resourceType: "JobProfile", httpEndpoint: jobProfilesUrl })
+            ],
+            authType: servicesAuthType
+        });
+
+        const resourceManagerConfig = {
             servicesUrl,
             servicesAuthType,
-            servicesAuthContext,
-            authProvider
-        });
-        let retrievedServices = await resourceManager.get(Service);
+            servicesAuthContext
+        };
+
+        const resourceManager = new ResourceManager(resourceManagerConfig, new AuthProvider().addAwsV4Auth(AWS));
+
+        let retrievedServices = await resourceManager.query(Service);
 
         for (const retrievedService of retrievedServices) {
             if (retrievedService.name === "Service Registry") {
@@ -580,11 +586,11 @@ const main = async () => {
             serviceRegistry = await resourceManager.create(serviceRegistry);
         }
 
-        // 4. reinitializing resourceManager
+        // 2. reinitializing resourceManager
         await resourceManager.init();
 
-        // 5. Inserting / updating job profiles
-        let retrievedJobProfiles = await resourceManager.get(JobProfile);
+        // 3. Inserting / updating job profiles
+        let retrievedJobProfiles = await resourceManager.query(JobProfile);
 
         for (const retrievedJobProfile of retrievedJobProfiles) {
             let jobProfile = JOB_PROFILES[retrievedJobProfile.name];
@@ -596,7 +602,6 @@ const main = async () => {
                 await resourceManager.update(jobProfile);
             } else {
                 console.log("Removing " + (jobProfile && jobProfile.id ? "duplicate " : "") + "JobProfile '" + retrievedJobProfile.name + "'");
-                //await resourceManager.delete(jobProfile[i]);
                 await resourceManager.delete(retrievedJobProfile);
             }
         }
@@ -609,10 +614,10 @@ const main = async () => {
             }
         }
 
-        // 6. Inserting / updating services
+        // 4. Inserting / updating services
         const SERVICES = createServices(terraformOutput);
 
-        retrievedServices = await resourceManager.get(Service);
+        retrievedServices = await resourceManager.query(Service);
 
         for (const retrievedService of retrievedServices) {
             if (retrievedService.name === serviceRegistry.name) {
@@ -633,19 +638,21 @@ const main = async () => {
         }
 
         for (const serviceName in SERVICES) {
-            let service = SERVICES[serviceName];
-            if (!service.id) {
-                console.log("Inserting Service '" + service.name + "'");
-                SERVICES[serviceName] = await resourceManager.create(service);
+            if (SERVICES.hasOwnProperty(serviceName)) {
+                let service = SERVICES[serviceName];
+                if (!service.id) {
+                    console.log("Inserting Service '" + service.name + "'");
+                    SERVICES[serviceName] = await resourceManager.create(service);
+                }
             }
-        };
+        }
     } catch (error) {
         if (error.response) {
             console.error(JSON.stringify(error.response.data.message, null, 2));
         } else {
             console.error(error);
         }
-
     }
 }
-main();
+
+main().then(ignored => console.log("Done")).catch(error => console.error(error));

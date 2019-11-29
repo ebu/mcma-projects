@@ -1,5 +1,5 @@
 include "deployment",
-        "deployment:registry",
+        "deployment:post-deploy",
         "services",
         "services:ame-service:api-handler",
         "services:ame-service:worker",

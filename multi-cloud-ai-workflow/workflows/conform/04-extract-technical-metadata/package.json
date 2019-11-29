@@ -4,7 +4,7 @@
     "description": "Start an AME job to extract the technical metadata from input media file",
     "private": true,
     "engines": {
-        "node": "~10.x"
+        "node": "~10.16.3"
     },
     "main": "src/index.js",
     "license": "Apache-2.0",
