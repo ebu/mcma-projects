@@ -9,9 +9,9 @@
     "main": "src/index.js",
     "license": "Apache-2.0",
     "dependencies": {
-        "@google-cloud/speech": "^3.3.2",
-        "@google-cloud/storage": "^4.1.1",
-        "aws-sdk": "^2.473.0",
+        "@google-cloud/speech": "^3.4.0",
+        "@google-cloud/storage": "^4.1.3",
+        "aws-sdk": "^2.580.0",
         "mcma-aws": "0.3.13"
     }
 }

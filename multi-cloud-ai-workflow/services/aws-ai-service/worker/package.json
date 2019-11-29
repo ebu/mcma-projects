@@ -9,7 +9,7 @@
     "main": "src/index.js",
     "license": "Apache-2.0",
     "dependencies": {
-        "aws-sdk": "^2.473.0",
+        "aws-sdk": "^2.580.0",
         "axios": "0.19.0",
         "mcma-aws": "0.3.13",
         "node-json-rpc2": "1.1.0",

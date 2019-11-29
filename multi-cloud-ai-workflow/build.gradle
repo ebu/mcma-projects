@@ -1,5 +1,4 @@
-
-def requiredVersionNodeJS = "10.9.0"
+def requiredVersionNodeJS = "10.16.3"
 
 allprojects {
     ext {
@@ -29,7 +28,8 @@ def getVersionNodeJS = { ->
             standardOutput stdout
             errorOutput stderr
         }
-    } catch (Exception ex) {}
+    } catch (Exception ex) {
+    }
 
     return stdout.toString().trim().replace("v", "")
 }
@@ -41,7 +41,7 @@ task verifyNodeJS {
         def versionNodeJs = getVersionNodeJS()
         if (versionNodeJs != requiredVersionNodeJS) {
             throw new Exception("Required Node version " + requiredVersionNodeJS + " not installed. Detected version " + versionNodeJs);
-        }      
+        }
     }
 }
 
@@ -54,7 +54,7 @@ task build {
 task clean {}
 
 subprojects {
-    task npmInstall (type: Exec) {
+    task npmInstall(type: Exec) {
         dependsOn verifyNodeJS
         enabled file("package.json").exists()
         inputs.file("package.json")
@@ -68,7 +68,7 @@ subprojects {
         dependsOn verifyNodeJS
         enabled file("package.json").exists()
         inputs.file "package.json"
-        inputs.property("todaysDate", new Date().clearTime() )
+        inputs.property("todaysDate", new Date().clearTime())
         outputs.upToDateWhen { true }
         commandLine npmExecutable
         args "update"
@@ -127,4 +127,17 @@ if (!hasProperty("AzureSubscriptionKey")) {
 
 if (!hasProperty("AzureApiUrl")) {
     ext.AzureApiUrl = "https://api.videoindexer.ai"
+}
+
+if (!hasProperty("googleProjectId")) {
+    ext.googleProjectId = "undefined"
+}
+if (!hasProperty("googleBucketName")) {
+    ext.googleBucketName = "undefined"
+}
+if (!hasProperty("googleClientEmail")) {
+    ext.googleClientEmail = "undefined"
+}
+if (!hasProperty("googlePrivateKey")) {
+    ext.googlePrivateKey = "undefined"
 }
