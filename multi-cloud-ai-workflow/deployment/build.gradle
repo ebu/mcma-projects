@@ -58,7 +58,7 @@ task generateTerraformTFVars {
 task generateTerraformWebsiteTF {
     dependsOn ":build"
 
-    def websiteDir = file("../website/dist")
+    def websiteDir = file("../website/dist/website")
     inputs.dir websiteDir
 
     def websiteFileTfJson = file("storage/website_files.tf.json")
