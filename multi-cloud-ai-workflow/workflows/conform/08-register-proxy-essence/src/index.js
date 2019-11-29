@@ -1,11 +1,10 @@
 //"use strict";
-const AWS = require("aws-sdk");
-const { EnvironmentVariableProvider, BMEssence, Locator } = require("@mcma/core");
-const { ResourceManager, AuthProvider } = require("@mcma/client");
-require("@mcma/aws-client");
+
+const { EnvironmentVariableProvider, BMEssence, Locator } = require("mcma-core");
+const { getAwsV4ResourceManager } = require("mcma-aws");
 
 const environmentVariableProvider = new EnvironmentVariableProvider();
-const resourceManager = new ResourceManager(environmentVariableProvider.getResourceManagerConfig(), new AuthProvider().addAwsV4Auth(AWS));
+const resourceManager = getAwsV4ResourceManager(environmentVariableProvider);
 
 /**
  * get amejob id

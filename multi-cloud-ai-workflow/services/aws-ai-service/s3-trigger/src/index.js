@@ -6,7 +6,8 @@ const AWS = require("aws-sdk");
 const Lambda = new AWS.Lambda({ apiVersion: "2015-03-31" });
 const LambdaInvoke = util.promisify(Lambda.invoke.bind(Lambda));
 
-const { Logger, Locator, EnvironmentVariableProvider } = require("@mcma/core");
+const { Logger, Locator, EnvironmentVariableProvider } = require("mcma-core");
+require("mcma-api");
 
 const environmentVariableProvider = new EnvironmentVariableProvider();
 
@@ -28,11 +29,11 @@ exports.handler = async (event, context) => {
 
             const transcribeJobUUID = awsS3Key.substring(awsS3Key.indexOf("-") + 1, awsS3Key.lastIndexOf("."));
 
-            const jobAssignmentId = environmentVariableProvider.getRequiredContextVariable("PublicUrl") + "/job-assignments/" + transcribeJobUUID;
+            const jobAssignmentId = environmentVariableProvider.publicUrl() + "/job-assignments/" + transcribeJobUUID;
 
             // invoking worker lambda function that will process the results of transcription job
             const params = {
-                FunctionName: environmentVariableProvider.getRequiredContextVariable("WorkerFunctionId"),
+                FunctionName: environmentVariableProvider.getRequiredContextVariable("WorkerFunctionName"),
                 InvocationType: "Event",
                 LogType: "None",
                 Payload: JSON.stringify({

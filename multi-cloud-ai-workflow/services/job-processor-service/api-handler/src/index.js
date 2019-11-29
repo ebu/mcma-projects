@@ -1,21 +1,18 @@
 //"use strict";
-const { JobProcess } = require("@mcma/core");
-const { McmaApiRouteCollection, HttpStatusCode, DefaultRouteCollectionBuilder } = require("@mcma/api");
-const { DynamoDbTableProvider, DynamoDbTable } = require("@mcma/aws-dynamodb");
-const { LambdaWorkerInvoker } = require("@mcma/aws-lambda-worker-invoker");
-require("@mcma/aws-api-gateway");
-
-const workerInvoker = new LambdaWorkerInvoker();
+const { Job, JobProcess } = require("mcma-core");
+const { McmaApiRouteCollection, HttpStatusCode } = require("mcma-api");
+const { invokeLambdaWorker, DynamoDbTable, awsDefaultRoutes } = require("mcma-aws");
 
 const invokeCreateJobAssignment = async (ctx, jobProcess) => {
-    await workerInvoker.invoke(
-        ctx.workerFunctionId(),
-        "createJobAssignment",
-        ctx.getAllContextVariables(),
+    await invokeLambdaWorker(
+        ctx.workerFunctionName(),
         {
-            jobProcessId: jobProcess.id
-        }
-    );
+            operationName: "createJobAssignment",
+            contextVariables: ctx.getAllContextVariables(),
+            input: {
+                jobProcessId: jobProcess.id
+            }
+        });
 }
 
 const processNotification = async (requestContext) => {
@@ -24,14 +21,12 @@ const processNotification = async (requestContext) => {
     let jobProcessId = requestContext.publicUrl() + "/job-processes/" + requestContext.request.pathVariables.id;
 
     let jobProcess = await table.get(jobProcessId);
-    if (!jobProcess) {
-        requestContext.setResponseResourceNotFound();
+    if (!requestContext.resourceIfFound(jobProcess, false)) {
         return;
     }
 
-    let notification = requestContext.getRequestBody();
+    let notification = requestContext.isBadRequestDueToMissingBody();
     if (!notification) {
-        requestContext.setResponseBadRequestDueToMissingBody();
         return;
     }
 
@@ -42,19 +37,21 @@ const processNotification = async (requestContext) => {
     }
 
     // invoking worker lambda function that will process the notification
-    await workerInvoker.invoke(
-        requestContext.workerFunctionId(),
-        "ProcessNotification",
-        requestContext.getAllContextVariables(),
+    await invokeLambdaWorker(
+        requestContext.workerFunctionName(),
         {
-            jobProcessId,
-            notification
+            operationName: "ProcessNotification",
+            contextVariables: requestContext.getAllContextVariables(),
+            input: {
+                jobProcessId,
+                notification
+            }
         });
 }
 
 const routeCollection = new McmaApiRouteCollection();
 
-const jobProcessRouteBuilder = new DefaultRouteCollectionBuilder(new DynamoDbTableProvider(JobProcess), JobProcess).addAll();
+const jobProcessRouteBuilder = awsDefaultRoutes(JobProcess).withDynamoDb().addAll();
 jobProcessRouteBuilder.route(r => r.create).configure(r => r.onCompleted(invokeCreateJobAssignment));
 jobProcessRouteBuilder.route(r => r.update).remove();
 const jobProcessRoutes = jobProcessRouteBuilder.build();

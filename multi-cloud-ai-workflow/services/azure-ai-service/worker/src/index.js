@@ -1,29 +1,18 @@
 //"use strict";
-const AWS = require("aws-sdk");
-
-const { Logger, AIJob, JobAssignment } = require("@mcma/core");
-const { WorkerBuilder, WorkerRequest } = require("@mcma/worker");
-const { ResourceManagerProvider, AuthProvider } = require("@mcma/client");
-const { DynamoDbTableProvider } = require("@mcma/aws-dynamodb");
-require("@mcma/aws-client");
+const { Logger, AIJob } = require("mcma-core");
+const { WorkerBuilder, WorkerRequest } = require("mcma-worker");
+require("mcma-aws");
 
 const { extractAllAiMetadata, processNotification } = require("./profiles/extract-all-ai-metadata");
-// const { transcribeAudio } = require("./profiles/transcribe-audio");
-// const { translateText } = require("./profiles/translate-text");
-
-const resourceManagerProvider = new ResourceManagerProvider(new AuthProvider().addAwsV4Auth(AWS));
-const dynamoDbTableProvider = new DynamoDbTableProvider(JobAssignment);
+const { transcribeAudio } = require("./profiles/transcribe-audio");
+const { translateText } = require("./profiles/translate-text");
 
 const worker =
-    new WorkerBuilder()
-        .handleJobsOfType(
-            AIJob,
-            dynamoDbTableProvider,
-            resourceManagerProvider,
-            x =>
-                x.addProfile(extractAllAiMetadata.profileName, extractAllAiMetadata)
+    new WorkerBuilder().useAwsJobDefaults()
+        .handleJobsOfType(AIJob, x =>
+            x.addProfile(extractAllAiMetadata.profileName, extractAllAiMetadata)
         )
-        .handleOperation(processNotification(resourceManagerProvider, dynamoDbTableProvider))
+        .handleOperation(processNotification)
         .build();
 
 exports.handler = async (event, context) => {

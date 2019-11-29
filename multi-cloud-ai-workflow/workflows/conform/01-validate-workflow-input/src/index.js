@@ -7,12 +7,11 @@ const AWS = require("aws-sdk");
 const S3 = new AWS.S3()
 const S3HeadObject = util.promisify(S3.headObject.bind(S3));
 
-const { EnvironmentVariableProvider } = require("@mcma/core");
-const { ResourceManager, AuthProvider } = require("@mcma/client");
-require("@mcma/aws-client");
+const { EnvironmentVariableProvider } = require("mcma-core");
+const { getAwsV4ResourceManager } = require("mcma-aws");
 
 const environmentVariableProvider = new EnvironmentVariableProvider();
-const resourceManager = new ResourceManager(environmentVariableProvider.getResourceManagerConfig(), new AuthProvider().addAwsV4Auth(AWS));
+const resourceManager = getAwsV4ResourceManager(environmentVariableProvider);
 
 
 /* Expecting input like the following:

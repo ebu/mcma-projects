@@ -1,12 +1,12 @@
-import { Injectable } from "@angular/core";
-import { BehaviorSubject, zip } from "rxjs";
-import { filter, map } from "rxjs/operators";
+import { Injectable } from '@angular/core';
+import { zip, BehaviorSubject } from 'rxjs';
+import { filter, map } from 'rxjs/operators';
 
-import { ResourceManager, AuthProvider } from "@mcma/client";
-import "@mcma/aws-client";
+import { ResourceManager, AuthenticatorProvider } from 'mcma-core';
+import { AwsV4Authenticator } from 'mcma-aws';
 
-import { ConfigService } from "./config.service";
-import { CognitoAuthService } from "./cognito-auth.service";
+import { ConfigService } from './config.service';
+import { CognitoAuthService } from './cognito-auth.service';
 
 @Injectable()
 export class McmaClientService {
@@ -17,10 +17,10 @@ export class McmaClientService {
     constructor(private configService: ConfigService, private cognitoAuthService: CognitoAuthService) {
         zip(
             this.cognitoAuthService.credentials$.pipe(filter(creds => { console.log(creds); return !!creds && !!creds.accessKeyId; })),
-            this.configService.get<string>("resourceManager.servicesUrl"),
-            this.configService.get<string>("resourceManager.servicesAuthType"),
-            this.configService.get<string>("resourceManager.servicesAuthContext"),
-            this.configService.get<string>("aws.region")
+            this.configService.get<string>('resourceManager.servicesUrl'),
+            this.configService.get<string>('resourceManager.servicesAuthType'),
+            this.configService.get<string>('resourceManager.servicesAuthContext'),
+            this.configService.get<string>('aws.region')
         ).pipe(
             map(([creds, servicesUrl, servicesAuthType, servicesAuthContext, region]) => {
                 const authOptions = {
@@ -30,14 +30,22 @@ export class McmaClientService {
                     region: region
                 };
 
-                console.log("creating resource manager", authOptions);
-                return {
-                    config: { servicesUrl, servicesAuthType, servicesAuthContext },
-                    authContext: authOptions
+                const authenticatorAWS4 = new AwsV4Authenticator(authOptions)
+
+                const authProvider: AuthenticatorProvider = {
+                    getAuthenticator: async (authType, authContext) => {
+                        switch (authType) {
+                            case "AWS4":
+                                return authenticatorAWS4;
+                        }
+                    }
                 };
+
+                console.log('creating resource manager', authOptions);
+                return { servicesUrl, servicesAuthType, servicesAuthContext, authProvider };
             })
-        ).subscribe(x => {
-            this.resourceManagerSubject.next(new ResourceManager(x.config, new AuthProvider().addAwsV4Auth(x.authContext)));
+        ).subscribe(config => {
+            this.resourceManagerSubject.next(new ResourceManager(config));
         });
     }
 }

@@ -107,7 +107,8 @@ resource "aws_api_gateway_deployment" "ame_service_deployment" {
     "PublicUrl"           = "${local.ame_service_url}"
     "ServicesUrl"         = "${local.services_url}"
     "ServicesAuthType"    = "${local.services_auth_type}"
-    "WorkerFunctionId"  = "${aws_lambda_function.ame-service-worker.function_name}"
+    "ServicesAuthContext" = "${local.services_auth_context}"
+    "WorkerFunctionName"  = "${aws_lambda_function.ame-service-worker.function_name}"
     "DeploymentHash"      = "${filesha256("./services/ame-service.tf")}"
   }
 }

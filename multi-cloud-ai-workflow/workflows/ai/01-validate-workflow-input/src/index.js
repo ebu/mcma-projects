@@ -1,14 +1,12 @@
 //"use strict";
-const AWS = require("aws-sdk");
-const { EnvironmentVariableProvider } = require("@mcma/core");
-const { ResourceManager, AuthProvider } = require("@mcma/client");
-require("@mcma/aws-client");
+const { EnvironmentVariableProvider } = require("mcma-core");
+const { getAwsV4ResourceManager } = require("mcma-aws");
 
 // Environment Variable(AWS Lambda)
 const WebsiteBucket = process.env.WebsiteBucket;
 
 const environmentVariableProvider = new EnvironmentVariableProvider();
-const resourceManager = new ResourceManager(environmentVariableProvider.getResourceManagerConfig(), new AuthProvider().addAwsV4Auth(AWS));
+const resourceManager = getAwsV4ResourceManager(environmentVariableProvider);
 
 /* Expecting input like the following:
 

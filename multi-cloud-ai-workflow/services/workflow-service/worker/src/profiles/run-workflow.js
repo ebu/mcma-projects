@@ -4,7 +4,8 @@ const AWS = require("aws-sdk");
 const StepFunctions = new AWS.StepFunctions();
 const StepFunctionsStartExecution = util.promisify(StepFunctions.startExecution.bind(StepFunctions));
 
-const { NotificationEndpoint } = require("@mcma/core");
+const { JobAssignment, NotificationEndpoint } = require("mcma-core");
+const { getAwsV4ResourceManager, DynamoDbTableProvider } = require("mcma-aws");
 
 async function runWorkflow(workerJobHelper) {
     // 6. Launch the appropriate workflow
@@ -28,29 +29,29 @@ async function runWorkflow(workerJobHelper) {
     });
 }
 
-function processNotification(resourceManagerProvider, dbTableProvider) {
-    return async function processNotification(request) {
-        const jobAssignmentId = request.input.jobAssignmentId;
-        const notification = request.input.notification;
+const dynamoDbTableProvider = new DynamoDbTableProvider(JobAssignment);
 
-        const table = dbTableProvider.table(request.tableName());
+const processNotification = async (request) => {
+    const jobAssignmentId = request.input.jobAssignmentId;
+    const notification = request.input.notification;
 
-        const jobAssignment = await table.get(jobAssignmentId);
+    const table = dynamoDbTableProvider.table(request.tableName());
 
-        jobAssignment.status = notification.content.status;
-        jobAssignment.statusMessage = notification.content.statusMessage;
-        if (notification.content.progress !== undefined) {
-            jobAssignment.progress = notification.content.progress;
-        }
-        jobAssignment.jobOutput = notification.content.output;
-        jobAssignment.dateModified = new Date().toISOString();
+    const jobAssignment = await table.get(jobAssignmentId);
 
-        await table.put(jobAssignmentId, jobAssignment);
+    jobAssignment.status = notification.content.status;
+    jobAssignment.statusMessage = notification.content.statusMessage;
+    if (notification.content.progress !== undefined) {
+        jobAssignment.progress = notification.content.progress;
+    }
+    jobAssignment.jobOutput = notification.content.output;
+    jobAssignment.dateModified = new Date().toISOString();
 
-        const resourceManager = resourceManagerProvider.get(request);
+    await table.put(jobAssignmentId, jobAssignment);
 
-        await resourceManager.sendNotification(jobAssignment);
-    };
+    const resourceManager = getAwsV4ResourceManager(request);
+
+    await resourceManager.sendNotification(jobAssignment);
 }
 
 module.exports = {

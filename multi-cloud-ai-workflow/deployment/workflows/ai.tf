@@ -16,6 +16,7 @@ resource "aws_lambda_function" "ai-01-validate-workflow-input" {
     variables = {
       ServicesUrl          = "${var.services_url}"
       ServicesAuthType    = "${var.services_auth_type}"
+      ServicesAuthContext = "${var.services_auth_context}"
       RepositoryBucket    = "${var.repository_bucket}"
       TempBucket          = "${var.temp_bucket}"
       WebsiteBucket       = "${var.website_bucket}"
@@ -37,6 +38,7 @@ resource "aws_lambda_function" "ai-02-extract-speech-to-text" {
     variables = {
       ServicesUrl          = "${var.services_url}"
       ServicesAuthType    = "${var.services_auth_type}"
+      ServicesAuthContext = "${var.services_auth_context}"
       RepositoryBucket     = "${var.repository_bucket}"
       TempBucket           = "${var.temp_bucket}"
       WebsiteBucket        = "${var.website_bucket}"
@@ -64,6 +66,7 @@ resource "aws_lambda_function" "ai-03-register-speech-to-text-output" {
     variables = {
       ServicesUrl          = "${var.services_url}"
       ServicesAuthType    = "${var.services_auth_type}"
+      ServicesAuthContext = "${var.services_auth_context}"
       RepositoryBucket    = "${var.repository_bucket}"
       TempBucket          = "${var.temp_bucket}"
       WebsiteBucket       = "${var.website_bucket}"
@@ -84,11 +87,12 @@ resource "aws_lambda_function" "ai-04-translate-speech-transcription" {
   environment {
     variables = {
       ServicesUrl          = "${var.services_url}"
-      ServicesAuthType     = "${var.services_auth_type}"
+      ServicesAuthType    = "${var.services_auth_type}"
+      ServicesAuthContext = "${var.services_auth_context}"
       RepositoryBucket     = "${var.repository_bucket}"
       TempBucket           = "${var.temp_bucket}"
       WebsiteBucket        = "${var.website_bucket}"
-      ActivityCallbackUrl  = "${local.workflow_activity_callback_handler_url}"
+      ActivityCallbackUrl = "${local.workflow_activity_callback_handler_url}"
       ActivityArn          = "${aws_sfn_activity.ai-04-translate-speech-transcription.id}"
     }
   }
@@ -112,6 +116,7 @@ resource "aws_lambda_function" "ai-05-register-speech-translation" {
     variables = {
       ServicesUrl          = "${var.services_url}"
       ServicesAuthType    = "${var.services_auth_type}"
+      ServicesAuthContext = "${var.services_auth_context}"
       RepositoryBucket    = "${var.repository_bucket}"
       TempBucket          = "${var.temp_bucket}"
       WebsiteBucket       = "${var.website_bucket}"
@@ -132,11 +137,12 @@ resource "aws_lambda_function" "ai-06-detect-celebrities-aws" {
   environment {
     variables = {
       ServicesUrl          = "${var.services_url}"
-      ServicesAuthType     = "${var.services_auth_type}"
+      ServicesAuthType    = "${var.services_auth_type}"
+      ServicesAuthContext = "${var.services_auth_context}"
       RepositoryBucket     = "${var.repository_bucket}"
       TempBucket           = "${var.temp_bucket}"
       WebsiteBucket        = "${var.website_bucket}"
-      ActivityCallbackUrl  = "${local.workflow_activity_callback_handler_url}"
+      ActivityCallbackUrl = "${local.workflow_activity_callback_handler_url}"
       ActivityArn          = "${aws_sfn_activity.ai-06-detect-celebrities-aws.id}"
     }
   }
@@ -159,11 +165,12 @@ resource "aws_lambda_function" "ai-08-detect-celebrities-azure" {
   environment {
     variables = {
       ServicesUrl          = "${var.services_url}"
-      ServicesAuthType     = "${var.services_auth_type}"
+      ServicesAuthType    = "${var.services_auth_type}"
+      ServicesAuthContext = "${var.services_auth_context}"
       RepositoryBucket     = "${var.repository_bucket}"
       TempBucket           = "${var.temp_bucket}"
       WebsiteBucket        = "${var.website_bucket}"
-      ActivityCallbackUrl  = "${local.workflow_activity_callback_handler_url}"
+      ActivityCallbackUrl = "${local.workflow_activity_callback_handler_url}"
       ActivityArn          = "${aws_sfn_activity.ai-08-detect-celebrities-azure.id}"
     }
   }
@@ -185,8 +192,9 @@ resource "aws_lambda_function" "ai-07-register-celebrities-info-aws" {
 
   environment {
     variables = {
-      ServicesUrl         = "${var.services_url}"
+      ServicesUrl          = "${var.services_url}"
       ServicesAuthType    = "${var.services_auth_type}"
+      ServicesAuthContext = "${var.services_auth_context}"
       RepositoryBucket    = "${var.repository_bucket}"
       TempBucket          = "${var.temp_bucket}"
       WebsiteBucket       = "${var.website_bucket}"
@@ -206,8 +214,9 @@ resource "aws_lambda_function" "ai-09-register-celebrities-info-azure" {
 
   environment {
     variables = {
-      ServicesUrl         = "${var.services_url}"
+      ServicesUrl          = "${var.services_url}"
       ServicesAuthType    = "${var.services_auth_type}"
+      ServicesAuthContext = "${var.services_auth_context}"
       RepositoryBucket    = "${var.repository_bucket}"
       TempBucket          = "${var.temp_bucket}"
       WebsiteBucket       = "${var.website_bucket}"
@@ -230,12 +239,12 @@ data "template_file" "ai-workflow" {
     lambda-04-translate-speech-transcription   = "${aws_lambda_function.ai-04-translate-speech-transcription.arn}"
     activity-04-translate-speech-transcription = "${aws_sfn_activity.ai-04-translate-speech-transcription.id}"
     lambda-05-register-speech-translation      = "${aws_lambda_function.ai-05-register-speech-translation.arn}"
-    lambda-06-detect-celebrities-aws           = "${aws_lambda_function.ai-06-detect-celebrities-aws.arn}"
-    activity-06-detect-celebrities-aws         = "${aws_sfn_activity.ai-06-detect-celebrities-aws.id}"
-    lambda-08-detect-celebrities-azure         = "${aws_lambda_function.ai-08-detect-celebrities-azure.arn}"
-    activity-08-detect-celebrities-azure       = "${aws_sfn_activity.ai-08-detect-celebrities-azure.id}"
-    lambda-07-register-celebrities-info-aws    = "${aws_lambda_function.ai-07-register-celebrities-info-aws.arn}"
-    lambda-09-register-celebrities-info-azure  = "${aws_lambda_function.ai-09-register-celebrities-info-azure.arn}"
+    lambda-06-detect-celebrities-aws          = "${aws_lambda_function.ai-06-detect-celebrities-aws.arn}"
+    activity-06-detect-celebrities-aws        = "${aws_sfn_activity.ai-06-detect-celebrities-aws.id}"
+    lambda-08-detect-celebrities-azure        = "${aws_lambda_function.ai-08-detect-celebrities-azure.arn}"
+    activity-08-detect-celebrities-azure      = "${aws_sfn_activity.ai-08-detect-celebrities-azure.id}"
+    lambda-07-register-celebrities-info-aws   = "${aws_lambda_function.ai-07-register-celebrities-info-aws.arn}"
+    lambda-09-register-celebrities-info-azure = "${aws_lambda_function.ai-09-register-celebrities-info-azure.arn}"
     lambda-process-workflow-completion         = "${aws_lambda_function.process-workflow-completion.arn}"
     lambda-process-workflow-failure            = "${aws_lambda_function.process-workflow-failure.arn}"
   }

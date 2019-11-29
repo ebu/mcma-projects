@@ -1,15 +1,17 @@
-import { Component, OnInit } from "@angular/core";
-import { Observable, of } from "rxjs";
-import { tap, map } from "rxjs/operators";
+import { Component, OnInit } from '@angular/core';
+import { Observable, BehaviorSubject, of } from 'rxjs';
+import { tap, map } from 'rxjs/operators';
 
-import { isFinished } from "../models/job-statuses";
-import { WorkflowService } from "../services/workflow.service";
-import { WorkflowJobViewModel } from "../view-models/workflow-job-vm";
+import { WorkflowJob } from 'mcma-core';
+
+import { WorkflowService } from '../services/workflow.service';
+import { JobStatus } from '../models/job-statuses';
+import { WorkflowJobViewModel } from '../view-models/workflow-job-vm';
   
 @Component({
-    selector: "mcma-monitor",
-    templateUrl: "./monitor.component.html",
-    styleUrls: ["./monitor.component.scss"]
+    selector: 'mcma-monitor',
+    templateUrl: './monitor.component.html',
+    styleUrls: ['./monitor.component.scss']
 })
 export class MonitorComponent implements OnInit {
   workflowJobVms$: Observable<Observable<WorkflowJobViewModel>[]>;
@@ -26,7 +28,7 @@ export class MonitorComponent implements OnInit {
       this.workflowService.getWorkflowJobs().pipe(
         map(jobs =>
           jobs.map(j =>
-            !isFinished(j)
+            !JobStatus.isFinished(j)
               ? this.workflowService.pollForCompletion(j.id)
               : of(new WorkflowJobViewModel(j)))),
         tap(jobs => {

@@ -10,12 +10,7 @@
     "license": "Apache-2.0",
     "dependencies": {
         "aws-sdk": "^2.473.0",
-        "@mcma/core": "0.5.3",
-        "@mcma/client": "0.5.3",
-        "@mcma/data": "0.5.3",
-        "@mcma/worker": "0.5.3",
-        "@mcma/aws-client": "0.5.3",
-        "@mcma/aws-dynamodb": "0.5.3",
-        "fast-deep-equal": "^2.0.1"
+        "fast-deep-equal": "^2.0.1",
+        "mcma-aws": "0.3.13"
     }
 }

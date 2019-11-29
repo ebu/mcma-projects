@@ -6,8 +6,8 @@ const StepFunctions = new AWS.StepFunctions();
 const SendTaskSuccess = util.promisify(StepFunctions.sendTaskSuccess.bind(StepFunctions));
 const SendTaskFailure = util.promisify(StepFunctions.sendTaskFailure.bind(StepFunctions));
 
-const { HttpStatusCode, McmaApiRouteCollection } = require("@mcma/api");
-require("@mcma/aws-api-gateway");
+const { HttpStatusCode, McmaApiRouteCollection } = require("mcma-api");
+require("mcma-aws");
 
 // async functions to handle the different routes.
 
@@ -58,10 +58,10 @@ const processNotification = async (requestContext) => {
 }
 
 // Initializing rest controller for API Gateway Endpoint
-const restController =
-    new McmaApiRouteCollection()
-        .addRoute("POST", "/notifications", processNotification)
-        .toApiGatewayApiController();
+const routes = new McmaApiRouteCollection();
+routes.addRoute("POST", "/notifications", processNotification);
+
+const restController = routes.toApiGatewayApiController();
 
 exports.handler = async (event, context) => {
     console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));

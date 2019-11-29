@@ -1,16 +1,8 @@
 //"use strict";
-const { Logger, JobAssignment } = require("@mcma/core");
-const { DefaultRouteCollectionBuilder } = require("@mcma/api");
-const { DynamoDbTableProvider } = require("@mcma/aws-dynamodb");
-const { invokeLambdaWorker } = require("@mcma/aws-lambda-worker-invoker");
-require("@mcma/aws-api-gateway");
+const { Logger, JobAssignment } = require("mcma-core");
+const { awsDefaultRoutes, invokeLambdaWorker } = require("mcma-aws");
 
-const dbTableProvider = new DynamoDbTableProvider(JobAssignment);
-
-const restController =
-    new DefaultRouteCollectionBuilder(dbTableProvider, JobAssignment)
-        .forJobAssignments(invokeLambdaWorker)
-        .toApiGatewayApiController();
+const restController = awsDefaultRoutes(JobAssignment).withDynamoDb().forJobAssignments(invokeLambdaWorker).toApiGatewayApiController();
 
 exports.handler = async (event, context) => {
     Logger.debug(JSON.stringify(event, null, 2));

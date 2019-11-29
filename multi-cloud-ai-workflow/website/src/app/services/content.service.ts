@@ -1,28 +1,28 @@
-import { Injectable } from "@angular/core";
-import { Observable, BehaviorSubject, from, timer } from "rxjs";
-import { takeWhile, switchMap, tap } from "rxjs/operators";
+import { Injectable } from '@angular/core';
+import { Observable, BehaviorSubject, from, timer } from 'rxjs';
+import { map, concatMap, takeWhile, switchMap, tap } from 'rxjs/operators';
 
-import { BMContent } from "@mcma/core";
-import { McmaClientService } from "./mcma-client.service";
-import { ContentViewModel } from "../view-models/content-vm";
+import { BMContent } from 'mcma-core';
+import { McmaClientService } from './mcma-client.service';
+import { ContentViewModel } from '../view-models/content-vm';
 
 @Injectable()
 export class ContentService {
     constructor(private mcmaClientService: McmaClientService) {}
 
     getContent(contentUrl: string): Observable<BMContent> {
-        //console.log("getting content at " + contentUrl);
+        //console.log('getting content at ' + contentUrl);
         return this.mcmaClientService.resourceManager$.pipe(
             switchMap(resourceManager => {
-                console.log("using auth http to get content at " + contentUrl);
+                console.log('using auth http to get content at ' + contentUrl);
                 return from(resourceManager.resolve<BMContent>(contentUrl)).pipe(
                     tap(data => {
-                        console.log("got content (tap 1)", data);
+                        console.log('got content (tap 1)', data);
                     })
                 );
             }),
             tap(data => {
-                console.log("got content (tap 2)", data);
+                console.log('got content (tap 2)', data);
             })
         );
     }
@@ -48,7 +48,7 @@ export class ContentService {
                 takeWhile(() => !stop)
             ).subscribe(
                 content => {
-                    console.log("finished polling content", content);
+                    console.log('finished polling content', content);
                     subject.next(new ContentViewModel(content));
                 },
                 err => subject.error(err),
@@ -58,15 +58,15 @@ export class ContentService {
                     // get finished job data
                     const sub2 = this.getContent(bmContentId).subscribe(
                         bmContent => {
-                            console.log("emitting content vm", bmContent);
+                            console.log('emitting content vm', bmContent);
                             subject.next(new ContentViewModel(bmContent));
                         },
                         err => {
-                            console.log("failed to get content vm");
+                            console.log('failed to get content vm');
                             subject.error(err);
                         },
                         () => {
-                            console.log("unsubscribing from final content get");
+                            console.log('unsubscribing from final content get');
                             sub2.unsubscribe();
                         });
                 }

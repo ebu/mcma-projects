@@ -6,7 +6,7 @@ const AWS = require("aws-sdk");
 const Lambda = new AWS.Lambda({ apiVersion: "2015-03-31" });
 const LambdaInvoke = util.promisify(Lambda.invoke.bind(Lambda));
 
-const { Logger, EnvironmentVariableProvider } = require("@mcma/core");
+const { Logger, EnvironmentVariableProvider } = require("mcma-core");
 
 const environmentVariableProvider = new EnvironmentVariableProvider();
 
@@ -55,7 +55,7 @@ exports.handler = async (event, context) => {
 
             // invoking worker lambda function that will process the results of transcription job
             const params = {
-                FunctionName: environmentVariableProvider.getRequiredContextVariable("WorkerFunctionId"),
+                FunctionName: environmentVariableProvider.getRequiredContextVariable("WorkerFunctionName"),
                 InvocationType: "Event",
                 LogType: "None",
                 Payload: JSON.stringify({

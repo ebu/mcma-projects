@@ -7,12 +7,11 @@ const AWS = require("aws-sdk");
 const StepFunctions = new AWS.StepFunctions();
 const StepFunctionsGetActivityTask = util.promisify(StepFunctions.getActivityTask.bind(StepFunctions));
 
-const { EnvironmentVariableProvider, JobProfile, TransformJob, JobParameterBag, Locator, NotificationEndpoint } = require("@mcma/core");
-const { ResourceManager, AuthProvider } = require("@mcma/client");
-require("@mcma/aws-client");
+const { EnvironmentVariableProvider, JobProfile, TransformJob, JobParameterBag, Locator, NotificationEndpoint } = require("mcma-core");
+const { getAwsV4ResourceManager } = require("mcma-aws");
 
 const environmentVariableProvider = new EnvironmentVariableProvider();
-const resourceManager = new ResourceManager(environmentVariableProvider.getResourceManagerConfig(), new AuthProvider().addAwsV4Auth(AWS));
+const resourceManager = getAwsV4ResourceManager(environmentVariableProvider);
 
 // Environment Variable(AWS Lambda)
 const ActivityArn = process.env.ActivityArn;

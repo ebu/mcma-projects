@@ -33,7 +33,8 @@ resource "aws_lambda_function" "aws-ai-service-s3-trigger" {
       "PublicUrl"           = "${local.aws_ai_service_url}"
       "ServicesUrl"         = "${local.services_url}"
       "ServicesAuthType"    = "${local.services_auth_type}"
-      "WorkerFunctionId"  = "${aws_lambda_function.aws-ai-service-worker.function_name}"
+      "ServicesAuthContext" = "${local.services_auth_context}"
+      "WorkerFunctionName"  = "${aws_lambda_function.aws-ai-service-worker.function_name}"
       "ServiceOutputBucket" = "${aws_s3_bucket.aws-ai-service-output.id}"
     }
   }
@@ -83,7 +84,8 @@ resource "aws_lambda_function" "aws-ai-service-sns-trigger" {
       "PublicUrl"           = "${local.aws_ai_service_url}"
       "ServicesUrl"         = "${local.services_url}"
       "ServicesAuthType"    = "${local.services_auth_type}"
-      "WorkerFunctionId"  = "${aws_lambda_function.aws-ai-service-worker.function_name}"
+      "ServicesAuthContext" = "${local.services_auth_context}"
+      "WorkerFunctionName"  = "${aws_lambda_function.aws-ai-service-worker.function_name}"
       "ServiceOutputBucket" = "${aws_s3_bucket.aws-ai-service-output.id}"
     }
   }
@@ -363,7 +365,8 @@ resource "aws_api_gateway_deployment" "aws_ai_service_deployment" {
     "PublicUrl"           = "${local.aws_ai_service_url}"
     "ServicesUrl"         = "${local.services_url}"
     "ServicesAuthType"    = "${local.services_auth_type}"
-    "WorkerFunctionId"    = "${aws_lambda_function.aws-ai-service-worker.function_name}"
+    "ServicesAuthContext" = "${local.services_auth_context}"
+    "WorkerFunctionName"  = "${aws_lambda_function.aws-ai-service-worker.function_name}"
     "ServiceOutputBucket" = "${aws_s3_bucket.aws-ai-service-output.id}"
     "DeploymentHash"      = "${filesha256("./services/aws-ai-service.tf")}"
   }

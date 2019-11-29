@@ -1,14 +1,14 @@
-import { ThemePalette } from "@angular/material";
+import { ThemePalette } from '@angular/material';
 
-import { WorkflowJob, JobStatus } from "@mcma/core";
+import { WorkflowJob } from 'mcma-core';
 
-import { isCompleted, isFinished } from "../models/job-statuses";
+import { JobStatus } from '../models/job-statuses';
 
 export class WorkflowJobViewModel {
     
     constructor(public workflowJob: WorkflowJob, fakeRunning = false) {
         if (fakeRunning) {
-            workflowJob.status = "RUNNING";
+            workflowJob.status = 'RUNNING';
         }
     }
 
@@ -31,15 +31,15 @@ export class WorkflowJobViewModel {
     }
 
     get isRunning(): boolean {
-        return this.workflowJob && !isFinished(this.workflowJob);
+        return this.workflowJob && !JobStatus.isFinished(this.workflowJob);
     }
 
     get isFinished(): boolean {
-        return this.workflowJob && isFinished(this.workflowJob);
+        return this.workflowJob && JobStatus.isFinished(this.workflowJob);
     }
 
     get isCompleted(): boolean {
-        return this.workflowJob && isCompleted(this.workflowJob);
+        return this.workflowJob && JobStatus.isCompleted(this.workflowJob);
     }
 
     get previewUrl(): string {
@@ -58,19 +58,20 @@ export class WorkflowJobViewModel {
 
     get statusIcon(): string {
         if (!this.workflowJob || !this.workflowJob.status) {
-            return "";
+            return '';
         }
 
-        if (JobStatus.new.equals(this.workflowJob.status) ||
-            JobStatus.queued.equals(this.workflowJob.status) ||
-            JobStatus.scheduled.equals(this.workflowJob.status)) {
-            return "schedule";
-        } else if (JobStatus.running.equals(this.workflowJob.status)) {
-            return "play_arrow";
-        } else if (JobStatus.completed.equals(this.workflowJob.status)) {
-            return "check";
-        } else if (JobStatus.failed.equals(this.workflowJob.status)) {
-            return "error";
+        switch (this.workflowJob.status) {
+            case JobStatus.NEW:
+            case JobStatus.QUEUED:
+            case JobStatus.SCHEDULED:
+                return 'schedule';
+            case JobStatus.RUNNING:
+                return 'play_arrow';
+            case JobStatus.COMPLETED:
+                return 'check';
+            case JobStatus.FAILED:
+                return 'error';
         }
     }
 
@@ -79,12 +80,14 @@ export class WorkflowJobViewModel {
             return null;
         }
 
-        if (JobStatus.running.equals(this.workflowJob.status) || JobStatus.completed.equals(this.workflowJob.status)) {
-            return "accent";
-        } else if (JobStatus.failed.equals(this.workflowJob.status)) {
-            return "warn";
-        } else {
-            return "primary";
+        switch (this.workflowJob.status) {
+            case JobStatus.RUNNING:
+            case JobStatus.COMPLETED:
+                return 'accent';
+            case JobStatus.FAILED:
+                return 'warn';
+            default:
+                return 'primary';
         }
     }
 }
