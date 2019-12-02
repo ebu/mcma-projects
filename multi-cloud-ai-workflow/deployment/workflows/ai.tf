@@ -3,11 +3,11 @@
 # #################################
 
 resource "aws_lambda_function" "ai-01-validate-workflow-input" {
-  filename         = "./../workflows/ai/01-validate-workflow-input/build/dist/lambda.zip"
+  filename         = "../workflows/ai/01-validate-workflow-input/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-ai-01-validate-workflow-input")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/ai/01-validate-workflow-input/build/dist/lambda.zip")
+  source_code_hash = filebase64sha256("../workflows/ai/01-validate-workflow-input/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "60"
   memory_size      = "256"
@@ -24,11 +24,11 @@ resource "aws_lambda_function" "ai-01-validate-workflow-input" {
 }
 
 resource "aws_lambda_function" "ai-02-extract-speech-to-text" {
-  filename         = "./../workflows/ai/02-extract-speech-to-text/build/dist/lambda.zip"
+  filename         = "../workflows/ai/02-extract-speech-to-text/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-ai-02-extract-speech-to-text")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/ai/02-extract-speech-to-text/build/dist/lambda.zip")
+  source_code_hash = filebase64sha256("../workflows/ai/02-extract-speech-to-text/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "60"
   memory_size      = "256"
@@ -51,11 +51,11 @@ resource "aws_sfn_activity" "ai-02-extract-speech-to-text" {
 }
 
 resource "aws_lambda_function" "ai-03-register-speech-to-text-output" {
-  filename         = "./../workflows/ai/03-register-speech-to-text-output/build/dist/lambda.zip"
+  filename         = "../workflows/ai/03-register-speech-to-text-output/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-ai-03-register-speech-to-text-output")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/ai/03-register-speech-to-text-output/build/dist/lambda.zip")
+  source_code_hash = filebase64sha256("../workflows/ai/03-register-speech-to-text-output/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "60"
   memory_size      = "256"
@@ -75,11 +75,11 @@ resource "aws_lambda_function" "ai-03-register-speech-to-text-output" {
 
 
 resource "aws_lambda_function" "ai-31-validate-speech-to-text" {
-  filename         = "./../workflows/ai/31-validate-speech-to-text/build/dist/lambda.zip"
+  filename         = "../workflows/ai/31-validate-speech-to-text/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-ai-31-validate-speech-to-text")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/ai/31-validate-speech-to-text/build/dist/lambda.zip")
+  source_code_hash = filebase64sha256("../workflows/ai/31-validate-speech-to-text/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "60"
   memory_size      = "256"
@@ -102,11 +102,11 @@ resource "aws_sfn_activity" "ai-31-validate-speech-to-text" {
 }
 
 resource "aws_lambda_function" "ai-32-register-validate-speech-to-text" {
-  filename         = "./../workflows/ai/32-register-validate-speech-to-text/build/dist/lambda.zip"
+  filename         = "../workflows/ai/32-register-validate-speech-to-text/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-ai-32-register-validate-speech-to-text")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/ai/32-register-validate-speech-to-text/build/dist/lambda.zip")
+  source_code_hash = filebase64sha256("../workflows/ai/32-register-validate-speech-to-text/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "60"
   memory_size      = "256"
@@ -123,11 +123,11 @@ resource "aws_lambda_function" "ai-32-register-validate-speech-to-text" {
 }
 
 resource "aws_lambda_function" "ai-04-translate-speech-transcription" {
-  filename         = "./../workflows/ai/04-translate-speech-transcription/build/dist/lambda.zip"
+  filename         = "../workflows/ai/04-translate-speech-transcription/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-ai-04-translate-speech-transcription")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/ai/04-translate-speech-transcription/build/dist/lambda.zip")
+  source_code_hash = filebase64sha256("../workflows/ai/04-translate-speech-transcription/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "60"
   memory_size      = "256"
@@ -150,11 +150,11 @@ resource "aws_sfn_activity" "ai-04-translate-speech-transcription" {
 }
 
 resource "aws_lambda_function" "ai-05-register-speech-translation" {
-  filename         = "./../workflows/ai/05-register-speech-translation/build/dist/lambda.zip"
+  filename         = "../workflows/ai/05-register-speech-translation/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-ai-05-register-speech-translation")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/ai/05-register-speech-translation/build/dist/lambda.zip")
+  source_code_hash = filebase64sha256("../workflows/ai/05-register-speech-translation/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "60"
   memory_size      = "256"
@@ -171,11 +171,11 @@ resource "aws_lambda_function" "ai-05-register-speech-translation" {
 }
 
 resource "aws_lambda_function" "ai-06-detect-celebrities-aws" {
-  filename         = "./../workflows/ai/06-detect-celebrities-aws/build/dist/lambda.zip"
+  filename         = "../workflows/ai/06-detect-celebrities-aws/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-ai-06-detect-celebrities-aws")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/ai/06-detect-celebrities-aws/build/dist/lambda.zip")
+  source_code_hash = filebase64sha256("../workflows/ai/06-detect-celebrities-aws/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "60"
   memory_size      = "256"
@@ -198,11 +198,11 @@ resource "aws_sfn_activity" "ai-06-detect-celebrities-aws" {
 }
 
 resource "aws_lambda_function" "ai-07-register-celebrities-info-aws" {
-  filename         = "./../workflows/ai/07-register-celebrities-info-aws/build/dist/lambda.zip"
+  filename         = "../workflows/ai/07-register-celebrities-info-aws/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-ai-07-register-celebrities-info-aws")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/ai/07-register-celebrities-info-aws/build/dist/lambda.zip")
+  source_code_hash = filebase64sha256("../workflows/ai/07-register-celebrities-info-aws/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "60"
   memory_size      = "256"
@@ -219,11 +219,11 @@ resource "aws_lambda_function" "ai-07-register-celebrities-info-aws" {
 }
 
 resource "aws_lambda_function" "ai-08-detect-celebrities-azure" {
-  filename         = "./../workflows/ai/08-detect-celebrities-azure/build/dist/lambda.zip"
+  filename         = "../workflows/ai/08-detect-celebrities-azure/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-ai-08-detect-celebrities-azure")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/ai/08-detect-celebrities-azure/build/dist/lambda.zip")
+  source_code_hash = filebase64sha256("../workflows/ai/08-detect-celebrities-azure/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "60"
   memory_size      = "256"
@@ -246,11 +246,11 @@ resource "aws_sfn_activity" "ai-08-detect-celebrities-azure" {
 }
 
 resource "aws_lambda_function" "ai-09-register-celebrities-info-azure" {
-  filename = "./../workflows/ai/09-register-celebrities-info-azure/build/dist/lambda.zip"
+  filename = "../workflows/ai/09-register-celebrities-info-azure/build/dist/lambda.zip"
   function_name = format("%.64s", "${var.global_prefix}-ai-09-register-celebrities-info-azure")
   role = aws_iam_role.iam_for_exec_lambda.arn
   handler = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/ai/09-register-celebrities-info-azure/build/dist/lambda.zip")
+  source_code_hash = filebase64sha256("../workflows/ai/09-register-celebrities-info-azure/build/dist/lambda.zip")
   runtime = "nodejs10.x"
   timeout = "60"
   memory_size = "256"
@@ -267,11 +267,11 @@ resource "aws_lambda_function" "ai-09-register-celebrities-info-azure" {
 }
 
 resource "aws_lambda_function" "ai-10-detect-emotions-aws" {
-  filename         = "./../workflows/ai/10-detect-emotions-aws/build/dist/lambda.zip"
+  filename         = "../workflows/ai/10-detect-emotions-aws/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-ai-10-detect-emotions-aws")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/ai/10-detect-emotions-aws/build/dist/lambda.zip")
+  source_code_hash = filebase64sha256("../workflows/ai/10-detect-emotions-aws/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "60"
   memory_size      = "256"
@@ -294,11 +294,11 @@ resource "aws_sfn_activity" "ai-10-detect-emotions-aws" {
 }
 
 resource "aws_lambda_function" "ai-11-register-emotions-info-aws" {
-  filename         = "./../workflows/ai/11-register-emotions-info-aws/build/dist/lambda.zip"
+  filename         = "../workflows/ai/11-register-emotions-info-aws/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-ai-11-register-emotions-info-aws")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/ai/11-register-emotions-info-aws/build/dist/lambda.zip")
+  source_code_hash = filebase64sha256("../workflows/ai/11-register-emotions-info-aws/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "60"
   memory_size      = "256"
@@ -315,11 +315,11 @@ resource "aws_lambda_function" "ai-11-register-emotions-info-aws" {
 }
 
 resource "aws_lambda_function" "ai-12-translation-to-speech" {
-  filename         = "./../workflows/ai/12-translation-to-speech/build/dist/lambda.zip"
+  filename         = "../workflows/ai/12-translation-to-speech/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-ai-12-translation-to-speech")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/ai/12-translation-to-speech/build/dist/lambda.zip")
+  source_code_hash = filebase64sha256("../workflows/ai/12-translation-to-speech/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "60"
   memory_size      = "256"
@@ -342,11 +342,11 @@ resource "aws_sfn_activity" "ai-12-translation-to-speech" {
 }
 
 resource "aws_lambda_function" "ai-13-register-translation-to-speech" {
-  filename         = "./../workflows/ai/13-register-translation-to-speech/build/dist/lambda.zip"
+  filename         = "../workflows/ai/13-register-translation-to-speech/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-ai-13-register-translation-to-speech")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/ai/13-register-translation-to-speech/build/dist/lambda.zip")
+  source_code_hash = filebase64sha256("../workflows/ai/13-register-translation-to-speech/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "60"
   memory_size      = "256"
@@ -363,11 +363,11 @@ resource "aws_lambda_function" "ai-13-register-translation-to-speech" {
 }
 
 resource "aws_lambda_function" "ai-14-tokenized-translation-to-speech" {
-  filename         = "./../workflows/ai/14-tokenized-translation-to-speech/build/dist/lambda.zip"
+  filename         = "../workflows/ai/14-tokenized-translation-to-speech/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-ai-14-tokenized-translation-to-speech")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/ai/14-tokenized-translation-to-speech/build/dist/lambda.zip")
+  source_code_hash = filebase64sha256("../workflows/ai/14-tokenized-translation-to-speech/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "60"
   memory_size      = "256"
@@ -390,11 +390,11 @@ resource "aws_sfn_activity" "ai-14-tokenized-translation-to-speech" {
 }
 
 resource "aws_lambda_function" "ai-15-register-tokenized-translation-to-speech" {
-  filename         = "./../workflows/ai/15-register-tokenized-translation-to-speech/build/dist/lambda.zip"
+  filename         = "../workflows/ai/15-register-tokenized-translation-to-speech/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-ai-15-register-tokenized-translation-to-speech")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/ai/15-register-tokenized-translation-to-speech/build/dist/lambda.zip")
+  source_code_hash = filebase64sha256("../workflows/ai/15-register-tokenized-translation-to-speech/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "60"
   memory_size      = "256"
@@ -411,11 +411,11 @@ resource "aws_lambda_function" "ai-15-register-tokenized-translation-to-speech" 
 }
 
 resource "aws_lambda_function" "ai-16-ssml-translation-to-speech" {
-  filename         = "./../workflows/ai/16-ssml-translation-to-speech/build/dist/lambda.zip"
+  filename         = "../workflows/ai/16-ssml-translation-to-speech/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-ai-16-ssml-translation-to-speech")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/ai/16-ssml-translation-to-speech/build/dist/lambda.zip")
+  source_code_hash = filebase64sha256("../workflows/ai/16-ssml-translation-to-speech/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "60"
   memory_size      = "256"
@@ -438,11 +438,11 @@ resource "aws_sfn_activity" "ai-16-ssml-translation-to-speech" {
 }
 
 resource "aws_lambda_function" "ai-17-register-ssml-translation-to-speech" {
-  filename         = "./../workflows/ai/17-register-ssml-translation-to-speech/build/dist/lambda.zip"
+  filename         = "../workflows/ai/17-register-ssml-translation-to-speech/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-ai-17-register-ssml-translation-to-speech")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/ai/17-register-ssml-translation-to-speech/build/dist/lambda.zip")
+  source_code_hash = filebase64sha256("../workflows/ai/17-register-ssml-translation-to-speech/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "60"
   memory_size      = "256"
@@ -459,11 +459,11 @@ resource "aws_lambda_function" "ai-17-register-ssml-translation-to-speech" {
 }
 
 resource "aws_lambda_function" "ai-18-dubbing-srt" {
-  filename         = "./../workflows/ai/18-dubbing-srt/build/dist/lambda.zip"
+  filename         = "../workflows/ai/18-dubbing-srt/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-ai-18-dubbing-srt")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/ai/18-dubbing-srt/build/dist/lambda.zip")
+  source_code_hash = filebase64sha256("../workflows/ai/18-dubbing-srt/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "60"
   memory_size      = "256"
@@ -486,11 +486,11 @@ resource "aws_sfn_activity" "ai-18-dubbing-srt" {
 }
 
 resource "aws_lambda_function" "ai-19-register-dubbing-srt" {
-  filename         = "./../workflows/ai/19-register-dubbing-srt/build/dist/lambda.zip"
+  filename         = "../workflows/ai/19-register-dubbing-srt/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-ai-19-register-dubbing-srt")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/ai/19-register-dubbing-srt/build/dist/lambda.zip")
+  source_code_hash = filebase64sha256("../workflows/ai/19-register-dubbing-srt/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "60"
   memory_size      = "256"
@@ -507,11 +507,11 @@ resource "aws_lambda_function" "ai-19-register-dubbing-srt" {
 }
 
 resource "aws_lambda_function" "ai-20-rekognition-aws" {
-  filename         = "./../workflows/ai/20-rekognition-aws/build/dist/lambda.zip"
+  filename         = "../workflows/ai/20-rekognition-aws/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-ai-20-rekognition-aws")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/ai/20-rekognition-aws/build/dist/lambda.zip")
+  source_code_hash = filebase64sha256("../workflows/ai/20-rekognition-aws/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "60"
   memory_size      = "256"
@@ -528,11 +528,11 @@ resource "aws_lambda_function" "ai-20-rekognition-aws" {
 }
 
 resource "aws_lambda_function" "ai-41-validate-speech-to-text-azure" {
-  filename         = "./../workflows/ai/41-validate-speech-to-text-azure/build/dist/lambda.zip"
+  filename         = "../workflows/ai/41-validate-speech-to-text-azure/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-ai-41-validate-speech-to-text-azure")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/ai/41-validate-speech-to-text-azure/build/dist/lambda.zip")
+  source_code_hash = filebase64sha256("../workflows/ai/41-validate-speech-to-text-azure/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "60"
   memory_size      = "256"
@@ -555,11 +555,11 @@ resource "aws_sfn_activity" "ai-41-validate-speech-to-text-azure" {
 }
 
 resource "aws_lambda_function" "ai-42-register-validate-speech-to-text-azure" {
-  filename         = "./../workflows/ai/42-register-validate-speech-to-text-azure/build/dist/lambda.zip"
+  filename         = "../workflows/ai/42-register-validate-speech-to-text-azure/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-ai-42-register-validate-speech-to-text-azure")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/ai/42-register-validate-speech-to-text-azure/build/dist/lambda.zip")
+  source_code_hash = filebase64sha256("../workflows/ai/42-register-validate-speech-to-text-azure/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "60"
   memory_size      = "256"
@@ -577,11 +577,11 @@ resource "aws_lambda_function" "ai-42-register-validate-speech-to-text-azure" {
 
 
 resource "aws_lambda_function" "ai-61-extract-audio-google" {
-  filename         = "./../workflows/ai/61-extract-audio-google/build/dist/lambda.zip"
+  filename         = "../workflows/ai/61-extract-audio-google/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-ai-61-extract-audio-google")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/ai/61-extract-audio-google/build/dist/lambda.zip")
+  source_code_hash = filebase64sha256("../workflows/ai/61-extract-audio-google/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "60"
   memory_size      = "256"
@@ -604,11 +604,11 @@ resource "aws_sfn_activity" "ai-61-extract-audio-google" {
 }
 
 resource "aws_lambda_function" "ai-62-register-extract-audio-google" {
-  filename         = "./../workflows/ai/62-register-extract-audio-google/build/dist/lambda.zip"
+  filename         = "../workflows/ai/62-register-extract-audio-google/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-ai-62-register-extract-audio-google")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/ai/62-register-extract-audio-google/build/dist/lambda.zip")
+  source_code_hash = filebase64sha256("../workflows/ai/62-register-extract-audio-google/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "60"
   memory_size      = "256"
@@ -625,11 +625,11 @@ resource "aws_lambda_function" "ai-62-register-extract-audio-google" {
 }
 
 resource "aws_lambda_function" "ai-63-validate-speech-to-text-google" {
-  filename         = "./../workflows/ai/63-validate-speech-to-text-google/build/dist/lambda.zip"
+  filename         = "../workflows/ai/63-validate-speech-to-text-google/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-ai-63-validate-speech-to-text-google")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/ai/63-validate-speech-to-text-google/build/dist/lambda.zip")
+  source_code_hash = filebase64sha256("../workflows/ai/63-validate-speech-to-text-google/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "60"
   memory_size      = "256"
@@ -652,11 +652,11 @@ resource "aws_sfn_activity" "ai-63-validate-speech-to-text-google" {
 }
 
 resource "aws_lambda_function" "ai-64-register-validate-speech-to-text-google" {
-  filename         = "./../workflows/ai/64-register-validate-speech-to-text-google/build/dist/lambda.zip"
+  filename         = "../workflows/ai/64-register-validate-speech-to-text-google/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-ai-64-register-validate-speech-to-text-google")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/ai/64-register-validate-speech-to-text-google/build/dist/lambda.zip")
+  source_code_hash = filebase64sha256("../workflows/ai/64-register-validate-speech-to-text-google/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "60"
   memory_size      = "256"

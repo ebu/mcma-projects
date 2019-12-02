@@ -2,15 +2,21 @@
 #  aws_lambda_function : media-repository-api-handler
 #################################
 
-resource "aws_lambda_function" "media-repository-api-handler" {
-  filename         = "./../services/media-repository/api-handler/build/dist/lambda.zip"
+resource "aws_lambda_function" "media_repository_api_handler" {
+  filename         = "../services/media-repository/api-handler/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-media-repository-api-handler")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../services/media-repository/api-handler/build/dist/lambda.zip")
+  source_code_hash = filebase64sha256("../services/media-repository/api-handler/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
-  timeout          = "30"
-  memory_size      = "256"
+  timeout          = "900"
+  memory_size      = "3008"
+
+  environment {
+    variables = {
+      LogGroupName = var.global_prefix
+    }
+  }
 }
 
 ##################################
@@ -116,14 +122,14 @@ resource "aws_api_gateway_integration" "media_repository_api_method_integration"
   resource_id             = aws_api_gateway_resource.media_repository_api_resource.id
   http_method             = aws_api_gateway_method.media_repository_api_method.http_method
   type                    = "AWS_PROXY"
-  uri                     = "arn:aws:apigateway:${var.aws_region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${var.aws_region}:${var.aws_account_id}:function:${aws_lambda_function.media-repository-api-handler.function_name}/invocations"
+  uri                     = "arn:aws:apigateway:${var.aws_region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${var.aws_region}:${var.aws_account_id}:function:${aws_lambda_function.media_repository_api_handler.function_name}/invocations"
   integration_http_method = "POST"
 }
 
-resource "aws_lambda_permission" "apigw_media-repository-api-handler" {
+resource "aws_lambda_permission" "apigw_media_repository_api_handler" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.media-repository-api-handler.arn
+  function_name = aws_lambda_function.media_repository_api_handler.arn
   principal     = "apigateway.amazonaws.com"
 
   # More: http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-control-access-using-iam-policies-to-invoke-api.html
@@ -137,11 +143,16 @@ resource "aws_api_gateway_deployment" "media_repository_deployment" {
   ]
 
   rest_api_id = aws_api_gateway_rest_api.media_repository_api.id
-  stage_name  = var.environment_type
+}
+
+resource "aws_api_gateway_stage" "media_repository_gateway_stage" {
+  stage_name    = var.environment_type
+  deployment_id = aws_api_gateway_deployment.media_repository_deployment.id
+  rest_api_id   = aws_api_gateway_rest_api.media_repository_api.id
 
   variables = {
-    TableName      = "${var.global_prefix}-media-repository"
-    PublicUrl      = local.media_repository_url
+    TableName = aws_dynamodb_table.media_repository_table.name
+    PublicUrl = local.media_repository_url
     DeploymentHash = filesha256("./services/media-repository.tf")
   }
 }

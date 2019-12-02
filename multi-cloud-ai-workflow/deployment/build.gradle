@@ -202,7 +202,7 @@ task runPostDeployScript(type: Exec) {
     inputs.file "terraform.output.json"
     inputs.file "./post-deploy/src/index.js"
     inputs.file "./post-deploy/package.json"
-    outputs.upToDateWhen { false }
+    outputs.upToDateWhen { true }
     commandLine nodeExecutable
     args "post-deploy/src/index.js", "${projectDir}/terraform.output.json"
 }

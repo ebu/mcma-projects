@@ -3,11 +3,11 @@
 #################################
 
 resource "aws_lambda_function" "google-ai-service-api-handler" {
-  filename         = "./../services/google-ai-service/api-handler/build/dist/lambda.zip"
+  filename         = "../services/google-ai-service/api-handler/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-google-ai-service-api-handler")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../services/google-ai-service/api-handler/build/dist/lambda.zip")
+  source_code_hash = filebase64sha256("../services/google-ai-service/api-handler/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "30"
   memory_size      = "256"
@@ -18,11 +18,11 @@ resource "aws_lambda_function" "google-ai-service-api-handler" {
 #################################
 
 resource "aws_lambda_function" "google-ai-service-worker" {
-  filename         = "./../services/google-ai-service/worker/build/dist/lambda.zip"
+  filename         = "../services/google-ai-service/worker/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-google-ai-service-worker")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../services/google-ai-service/worker/build/dist/lambda.zip")
+  source_code_hash = filebase64sha256("../services/google-ai-service/worker/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "300"
   memory_size      = "3008"
