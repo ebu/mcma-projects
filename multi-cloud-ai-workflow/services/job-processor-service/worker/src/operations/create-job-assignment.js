@@ -1,66 +1,71 @@
 //"use strict";
 
-const AWS = require("aws-sdk");
+const equal = require("fast-deep-equal");
 
-const { Logger, JobProcess, Service, JobAssignment, NotificationEndpoint, JobStatus } = require("mcma-core");
-const { getAwsV4ResourceManager, DynamoDbTable, getAwsV4DefaultAuthProvider } = require("mcma-aws");
+const { Service, JobAssignment, NotificationEndpoint, JobStatus, Exception } = require("@mcma/core");
+const { ServiceClient } = require("@mcma/client");
 
-const createJobAssignment = async (event) => {
-    let resourceManager = getAwsV4ResourceManager(event);
+async function createJobAssignment(providers, workerRequest) {
+    const resourceManager = providers.getResourceManagerProvider().get(workerRequest);
+    const table = providers.getDbTableProvider().get(workerRequest.tableName());
+    const logger = providers.getLoggerProvider().get(workerRequest.tracker);
 
-    let table = new DynamoDbTable(JobProcess, event.tableName());
-
-    let jobProcessId = event.input.jobProcessId;
-    let jobProcess = await table.get(jobProcessId);
+    const jobProcessId = workerRequest.input.jobProcessId;
+    const jobProcess = await table.get(jobProcessId);
 
     try {
+        logger.info("Creating JobAssignment");
+
         // retrieving the job
-        let job = await resourceManager.resolve(jobProcess.job);
+        const job = await resourceManager.get(jobProcess.job);
 
         // retrieving the jobProfile
-        let jobProfile = await resourceManager.resolve(job.jobProfile);
+        const jobProfile = await resourceManager.get(job.jobProfile);
 
         // validating job.jobInput with required input parameters of jobProfile
-        let jobInput = job.jobInput;
+        const jobInput = job.jobInput;
         if (!jobInput) {
-            throw new Error("Job is missing jobInput");
+            throw new Exception("Job is missing jobInput");
         }
 
         if (jobProfile.inputParameters) {
             if (!Array.isArray(jobProfile.inputParameters)) {
-                throw new Error("JobProfile.inputParameters is not an array");
+                throw new Exception("JobProfile.inputParameters is not an array");
             }
 
-            for (let parameter of jobProfile.inputParameters) {
+            for (const parameter of jobProfile.inputParameters) {
                 if (jobInput[parameter.parameterName] === undefined) {
-                    throw new Error("jobInput misses required input parameter '" + parameter.parameterName + "'");
+                    throw new Exception("jobInput misses required input parameter '" + parameter.parameterName + "'");
                 }
             }
         }
 
         // finding a service that is capable of handling the job type and job profile
-        let services = await resourceManager.get(Service);
+        const services = await resourceManager.query(Service);
 
         let selectedService;
         let jobAssignmentResourceEndpoint;
 
-        for (let service of services) {
+        for (const service of services) {
+            let serviceClient;
             try {
-                service = new Service(service, getAwsV4DefaultAuthProvider(AWS));
+                serviceClient = new ServiceClient(service, providers.getAuthProvider());
             } catch (error) {
-                console.warn("Failed to instantiate json " + JSON.stringify(service) + " as a Service due to error " + error.message);
+                logger.warn("Failed to instantiate json as a Service due to error " + error.message);
+                logger.warn(service);
+                continue;
             }
             jobAssignmentResourceEndpoint = null;
 
             if (service.jobType === job["@type"]) {
-                jobAssignmentResourceEndpoint = service.getResourceEndpoint("JobAssignment");
+                jobAssignmentResourceEndpoint = serviceClient.getResourceEndpointClient(JobAssignment);
 
                 if (!jobAssignmentResourceEndpoint) {
                     continue;
                 }
 
                 if (service.jobProfiles) {
-                    for (serviceJobProfile of service.jobProfiles) {
+                    for (let serviceJobProfile of service.jobProfiles) {
                         if (typeof serviceJobProfile === "string") {
                             if (serviceJobProfile === jobProfile.id) {
                                 selectedService = service;
@@ -81,26 +86,44 @@ const createJobAssignment = async (event) => {
         }
 
         if (!jobAssignmentResourceEndpoint) {
-            throw new Error("Failed to find service that could execute the " + job["@type"]);
+            throw new Exception("Failed to find service that could execute the " + job["@type"] + " with Job Profile '" + jobProfile.name + "'");
         }
 
         let jobAssignment = new JobAssignment({
             job: jobProcess.job,
             notificationEndpoint: new NotificationEndpoint({
                 httpEndpoint: jobProcessId + "/notifications"
-            })
+            }),
+            tracker: jobProcess.tracker,
         });
 
-        let response = await jobAssignmentResourceEndpoint.post(jobAssignment);
+        let response;
+        try {
+            response = await jobAssignmentResourceEndpoint.post(jobAssignment);
+        } catch (error) {
+            if (error.response) {
+                logger.error(error.response.data);
+                logger.error(error.response.status);
+                logger.error(error.response.headers);
+            } else if (error.request) {
+                logger.error(error.request + "");
+            } else {
+                // Something happened in setting up the request that triggered an Error
+                logger.error(error.message);
+            }
+            throw new Exception("Failed to post JobAssignment to Service '" + selectedService.name + "' at endpoint: " + jobAssignmentResourceEndpoint.httpEndpoint);
+        }
         jobAssignment = response.data;
 
-        jobProcess.status = JobStatus.scheduled.name;
+        jobProcess.status = JobStatus.SCHEDULED;
         jobProcess.jobAssignment = jobAssignment.id;
-    } catch (error) {
-        Logger.error("Failed to create job assignment");
-        Logger.exception(error);
 
-        jobProcess.status = JobStatus.failed.name;
+        logger.info("Created JobAssignment: " + jobAssignment.id);
+    } catch (error) {
+        logger.error("Failed to create job assignment");
+        logger.error(error.toString());
+
+        jobProcess.status = JobStatus.FAILED;
         jobProcess.statusMessage = error.message;
     }
 
@@ -111,4 +134,6 @@ const createJobAssignment = async (event) => {
     await resourceManager.sendNotification(jobProcess);
 }
 
-module.exports = createJobAssignment;
+module.exports = {
+    createJobAssignment
+};

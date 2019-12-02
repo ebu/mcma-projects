@@ -1,16 +1,20 @@
 //"use strict";
 
-const { getAwsV4ResourceManager } = require("mcma-aws");
+async function deleteJobAssignment(providers, workerRequest) {
+    const jobAssignmentId = workerRequest.input.jobAssignmentId;
 
-const deleteJobAssignment = async (event) => {
-    let jobAssignmentId = event.input.jobAssignmentId;
+    const logger = providers.getLoggerProvider().get(workerRequest.tracker);
+    const resourceManager = providers.getResourceManagerProvider().get(workerRequest);
 
     try {
-        let resourceManager = getAwsV4ResourceManager(event);
-        await resourceManager.delete(jobAssignmentId);
+        let resourceEndpoint = await resourceManager.getResourceEndpointClient(jobAssignmentId);
+        await resourceEndpoint.delete(jobAssignmentId);
     } catch (error) {
-        console.log(error);
+        logger.warn("Failed to delete JobAssignment: " + jobAssignmentId);
+        logger.warn(error.toString());
     }
 }
 
-module.exports = deleteJobAssignment;
+module.exports = {
+    deleteJobAssignment
+};
