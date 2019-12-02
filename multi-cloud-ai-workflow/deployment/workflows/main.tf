@@ -100,7 +100,7 @@ resource "aws_lambda_function" "process-workflow-completion" {
   environment {
     variables = {
       ServicesUrl         = var.services_url
-      ServicesAuthType    = var.services_auth_type
+      ServicesAuthType    = var.service_registry_auth_type
     }
   }
 }
@@ -118,7 +118,7 @@ resource "aws_lambda_function" "process-workflow-failure" {
   environment {
     variables = {
       ServicesUrl         = var.services_url
-      ServicesAuthType    = var.services_auth_type
+      ServicesAuthType    = var.service_registry_auth_type
     }
   }
 }

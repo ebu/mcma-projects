@@ -103,7 +103,7 @@ resource "aws_api_gateway_deployment" "google_ai_service_deployment" {
     TableName           = "${var.global_prefix}-google-ai-service"
     PublicUrl           = local.google_ai_service_url
     ServicesUrl         = local.services_url
-    ServicesAuthType    = local.services_auth_type
+    ServicesAuthType    = local.service_registry_auth_type
     WorkerFunctionName  = aws_lambda_function.google-ai-service-worker.function_name
     DeploymentHash      = filesha256("./services/google-ai-service.tf")
     googleProjectId     = var.google_project_id

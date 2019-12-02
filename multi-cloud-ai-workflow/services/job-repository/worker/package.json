@@ -9,7 +9,13 @@
     "main": "src/index.js",
     "license": "Apache-2.0",
     "dependencies": {
-        "aws-sdk": "^2.580.0",
-        "mcma-aws": "0.3.13"
+        "@mcma/aws-client": "0.8.0",
+        "@mcma/aws-dynamodb": "0.8.0",
+        "@mcma/aws-logger": "0.8.0",
+        "@mcma/client": "0.8.0",
+        "@mcma/core": "0.8.0",
+        "@mcma/data": "0.8.0",
+        "@mcma/worker": "0.8.0",
+        "aws-sdk": "^2.580.0"
     }
 }

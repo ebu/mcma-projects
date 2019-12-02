@@ -31,7 +31,7 @@ output "service_registry_url" {
 }
 
 output "service_registry_auth_type" {
-  value = module.services.services_auth_type
+  value = module.services.service_registry_auth_type
 }
 
 output "media_repository_url" {

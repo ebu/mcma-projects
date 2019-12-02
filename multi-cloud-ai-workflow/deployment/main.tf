@@ -70,8 +70,8 @@ module "workflows" {
   aws_account_id = var.aws_account_id
   aws_region     = var.aws_region
 
-  services_url          = module.services.services_url
-  services_auth_type    = module.services.services_auth_type
+  services_url               = module.services.services_url
+  service_registry_auth_type = module.services.service_registry_auth_type
 
   repository_bucket_name = module.storage.repository_bucket.id
   temp_bucket_name       = module.storage.temp_bucket.id

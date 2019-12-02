@@ -1,29 +1,35 @@
 //"use strict";
 
-const { Job, JobProcess, NotificationEndpoint, JobStatus } = require("mcma-core");
-const { getAwsV4ResourceManager, DynamoDbTable } = require("mcma-aws");
+const { JobProcess, NotificationEndpoint, JobStatus } = require("@mcma/core");
 
-const createJobProcess = async (workerRequest) => {
-    let jobId = workerRequest.input.jobId;
+async function createJobProcess(providers, workerRequest) {
+    const jobId = workerRequest.input.jobId;
 
-    let table = new DynamoDbTable(Job, workerRequest.tableName());
-    let job = await table.get(jobId);
+    const table = providers.getDbTableProvider().get(workerRequest.tableName());
+    const resourceManager = providers.getResourceManagerProvider().get(workerRequest);
+    const logger = providers.getLoggerProvider().get(workerRequest.tracker);
 
-    let resourceManager = getAwsV4ResourceManager(workerRequest);
+    const job = await table.get(jobId);
 
     try {
+        logger.info("Creating Job Process");
+
         let jobProcess = new JobProcess({
             job: jobId,
             notificationEndpoint: new NotificationEndpoint({
                 httpEndpoint: jobId + "/notifications"
-            })
+            }),
+            tracker: job.tracker,
         });
         jobProcess = await resourceManager.create(jobProcess);
 
-        job.status = JobStatus.queued.name;
+        job.status = JobStatus.QUEUED;
         job.jobProcess = jobProcess.id;
+
+        logger.info("Created Job Process: " + jobProcess.id);
     } catch (error) {
-        job.status = JobStatus.failed.name;
+        logger.error("Failed to create JobProcess", error);
+        job.status = JobStatus.FAILED;
         job.statusMessage = "Failed to create JobProcess due to error '" + error.message + "'";
     }
 
@@ -34,4 +40,6 @@ const createJobProcess = async (workerRequest) => {
     await resourceManager.sendNotification(job);
 }
 
-module.exports = createJobProcess;
+module.exports = {
+    createJobProcess
+};

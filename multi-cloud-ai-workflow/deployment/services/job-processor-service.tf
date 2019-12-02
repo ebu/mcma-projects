@@ -103,7 +103,7 @@ resource "aws_api_gateway_deployment" "job_processor_service_deployment" {
     TableName           = "${var.global_prefix}-job-processor-service"
     PublicUrl           = local.job_processor_service_url
     ServicesUrl         = local.services_url
-    ServicesAuthType    = local.services_auth_type
+    ServicesAuthType    = local.service_registry_auth_type
     WorkerFunctionName  = aws_lambda_function.job-processor-service-worker.function_name
     DeploymentHash      = filesha256("./services/job-processor-service.tf")
   }

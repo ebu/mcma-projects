@@ -1,4 +1,3 @@
-
 output "ame_service_url" {
   value = local.ame_service_url
 }
@@ -35,12 +34,12 @@ output "service_registry_url" {
   value = local.service_registry_url
 }
 
-output "services_url" {
-  value = local.services_url
+output "service_registry_auth_type" {
+  value = local.service_registry_auth_type
 }
 
-output "services_auth_type" {
-  value = local.services_auth_type
+output "services_url" {
+  value = local.services_url
 }
 
 output "transform_service_url" {

@@ -131,8 +131,6 @@ resource "aws_lambda_permission" "apigw_media_repository_api_handler" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.media_repository_api_handler.arn
   principal     = "apigateway.amazonaws.com"
-
-  # More: http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-control-access-using-iam-policies-to-invoke-api.html
   source_arn = "arn:aws:execute-api:${var.aws_region}:${var.aws_account_id}:${aws_api_gateway_rest_api.media_repository_api.id}/*/${aws_api_gateway_method.media_repository_api_method.http_method}/*"
 }
 

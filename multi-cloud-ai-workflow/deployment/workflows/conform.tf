@@ -15,7 +15,7 @@ resource "aws_lambda_function" "conform-01-validate-workflow-input" {
   environment {
     variables = {
       ServicesUrl         = var.services_url
-      ServicesAuthType    = var.services_auth_type
+      ServicesAuthType    = var.service_registry_auth_type
       RepositoryBucket    = var.repository_bucket_name
       TempBucket          = var.temp_bucket_name
       WebsiteBucket       = var.website_bucket_name
@@ -36,7 +36,7 @@ resource "aws_lambda_function" "conform-02-move-content-to-file-repository" {
   environment {
     variables = {
       ServicesUrl         = var.services_url
-      ServicesAuthType    = var.services_auth_type
+      ServicesAuthType    = var.service_registry_auth_type
       RepositoryBucket    = var.repository_bucket_name
       TempBucket          = var.temp_bucket_name
       WebsiteBucket       = var.website_bucket_name
@@ -57,7 +57,7 @@ resource "aws_lambda_function" "conform-03-create-media-asset" {
   environment {
     variables = {
       ServicesUrl         = var.services_url
-      ServicesAuthType    = var.services_auth_type
+      ServicesAuthType    = var.service_registry_auth_type
       RepositoryBucket    = var.repository_bucket_name
       TempBucket          = var.temp_bucket_name
       WebsiteBucket       = var.website_bucket_name
@@ -78,7 +78,7 @@ resource "aws_lambda_function" "conform-04-extract-technical-metadata" {
   environment {
     variables = {
       ServicesUrl         = var.services_url
-      ServicesAuthType    = var.services_auth_type
+      ServicesAuthType    = var.service_registry_auth_type
       RepositoryBucket    = var.repository_bucket_name
       TempBucket          = var.temp_bucket_name
       WebsiteBucket       = var.website_bucket_name
@@ -105,7 +105,7 @@ resource "aws_lambda_function" "conform-05-register-technical-metadata" {
   environment {
     variables = {
       ServicesUrl         = var.services_url
-      ServicesAuthType    = var.services_auth_type
+      ServicesAuthType    = var.service_registry_auth_type
       RepositoryBucket    = var.repository_bucket_name
       TempBucket          = var.temp_bucket_name
       WebsiteBucket       = var.website_bucket_name
@@ -126,7 +126,7 @@ resource "aws_lambda_function" "conform-06-decide-transcode-requirements" {
   environment {
     variables = {
       ServicesUrl         = var.services_url
-      ServicesAuthType    = var.services_auth_type
+      ServicesAuthType    = var.service_registry_auth_type
       RepositoryBucket    = var.repository_bucket_name
       TempBucket          = var.temp_bucket_name
       WebsiteBucket       = var.website_bucket_name
@@ -148,7 +148,7 @@ resource "aws_lambda_function" "conform-07a-short-transcode" {
   environment {
     variables = {
       ServicesUrl         = var.services_url
-      ServicesAuthType    = var.services_auth_type
+      ServicesAuthType    = var.service_registry_auth_type
       WebsiteBucket       = var.website_bucket_name
       ActivityCallbackUrl = local.workflow_activity_callback_handler_url
       ActivityArn         = aws_sfn_activity.conform-07a-short-transcode.id
@@ -173,7 +173,7 @@ resource "aws_lambda_function" "conform-07b-long-transcode" {
   environment {
     variables = {
       ServicesUrl         = var.services_url
-      ServicesAuthType    = var.services_auth_type
+      ServicesAuthType    = var.service_registry_auth_type
       RepositoryBucket    = var.repository_bucket_name
       TempBucket          = var.temp_bucket_name
       WebsiteBucket       = var.website_bucket_name
@@ -200,7 +200,7 @@ resource "aws_lambda_function" "conform-08-register-proxy-essence" {
   environment {
     variables = {
       ServicesUrl         = var.services_url
-      ServicesAuthType    = var.services_auth_type
+      ServicesAuthType    = var.service_registry_auth_type
       RepositoryBucket    = var.repository_bucket_name
       TempBucket          = var.temp_bucket_name
       WebsiteBucket       = var.website_bucket_name
@@ -221,7 +221,7 @@ resource "aws_lambda_function" "conform-09-copy-proxy-to-website-storage" {
   environment {
     variables = {
       ServicesUrl         = var.services_url
-      ServicesAuthType    = var.services_auth_type
+      ServicesAuthType    = var.service_registry_auth_type
       RepositoryBucket    = var.repository_bucket_name
       TempBucket          = var.temp_bucket_name
       WebsiteBucket       = var.website_bucket_name
@@ -242,7 +242,7 @@ resource "aws_lambda_function" "conform-10-register-proxy-website-locator" {
   environment {
     variables = {
       ServicesUrl         = var.services_url
-      ServicesAuthType    = var.services_auth_type
+      ServicesAuthType    = var.service_registry_auth_type
       RepositoryBucket    = var.repository_bucket_name
       TempBucket          = var.temp_bucket_name
       WebsiteBucket       = var.website_bucket_name
@@ -263,7 +263,7 @@ resource "aws_lambda_function" "conform-11-start-ai-workflow" {
   environment {
     variables = {
       ServicesUrl         = var.services_url
-      ServicesAuthType    = var.services_auth_type
+      ServicesAuthType    = var.service_registry_auth_type
       RepositoryBucket    = var.repository_bucket_name
       TempBucket          = var.temp_bucket_name
       WebsiteBucket       = var.website_bucket_name

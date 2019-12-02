@@ -32,7 +32,7 @@ resource "aws_lambda_function" "aws-ai-service-s3-trigger" {
       TableName           = aws_dynamodb_table.aws_ai_service_table.name
       PublicUrl           = local.aws_ai_service_url
       ServicesUrl         = local.services_url
-      ServicesAuthType    = local.services_auth_type
+      ServicesAuthType    = local.service_registry_auth_type
       WorkerFunctionName  = aws_lambda_function.aws-ai-service-worker.function_name
       ServiceOutputBucket = aws_s3_bucket.aws-ai-service-output.id
     }
@@ -82,7 +82,7 @@ resource "aws_lambda_function" "aws-ai-service-sns-trigger" {
       TableName           = aws_dynamodb_table.aws_ai_service_table.name
       PublicUrl           = local.aws_ai_service_url
       ServicesUrl         = local.services_url
-      ServicesAuthType    = local.services_auth_type
+      ServicesAuthType    = local.service_registry_auth_type
       WorkerFunctionName  = aws_lambda_function.aws-ai-service-worker.function_name
       ServiceOutputBucket = aws_s3_bucket.aws-ai-service-output.id
     }
@@ -359,7 +359,7 @@ resource "aws_api_gateway_deployment" "aws_ai_service_deployment" {
     TableName           = aws_dynamodb_table.aws_ai_service_table.name
     PublicUrl           = local.aws_ai_service_url
     ServicesUrl         = local.services_url
-    ServicesAuthType    = local.services_auth_type
+    ServicesAuthType    = local.service_registry_auth_type
     WorkerFunctionName  = aws_lambda_function.aws-ai-service-worker.function_name
     ServiceOutputBucket = aws_s3_bucket.aws-ai-service-output.id
     DeploymentHash      = filesha256("./services/aws-ai-service.tf")

@@ -6,4 +6,4 @@ variable "aws_account_id" {}
 variable "aws_region" {}
 variable "environment_type" {}
 variable "services_url" {}
-variable "services_auth_type" {}
+variable "service_registry_auth_type" {}

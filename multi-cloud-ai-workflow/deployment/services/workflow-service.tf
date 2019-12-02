@@ -103,7 +103,7 @@ resource "aws_api_gateway_deployment" "workflow_service_deployment" {
     TableName           = "${var.global_prefix}-workflow-service"
     PublicUrl           = local.workflow_service_url
     ServicesUrl         = local.services_url
-    ServicesAuthType    = local.services_auth_type
+    ServicesAuthType    = local.service_registry_auth_type
     WorkerFunctionName  = aws_lambda_function.workflow-service-worker.function_name
     ConformWorkflowId   = var.conform_workflow_id
     AiWorkflowId        = var.ai_workflow_id

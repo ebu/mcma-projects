@@ -119,7 +119,7 @@ resource "aws_api_gateway_deployment" "azure_ai_service_deployment" {
     PublicUrl            = local.azure_ai_service_url
     PublicUrlNonSecure   = local.azure_ai_service_non_secure_url
     ServicesUrl          = local.services_url
-    ServicesAuthType     = local.services_auth_type
+    ServicesAuthType     = local.service_registry_auth_type
     WorkerFunctionName   = aws_lambda_function.azure-ai-service-worker.function_name
     AzureApiUrl          = var.azure_api_url
     AzureLocation        = var.azure_location
@@ -180,7 +180,7 @@ resource "aws_api_gateway_deployment" "azure_ai_service_deployment_non_secure" {
     PublicUrl            = local.azure_ai_service_url
     PublicUrlNonSecure   = local.azure_ai_service_non_secure_url
     ServicesUrl          = local.services_url
-    ServicesAuthType     = local.services_auth_type
+    ServicesAuthType     = local.service_registry_auth_type
     WorkerFunctionName   = aws_lambda_function.azure-ai-service-worker.function_name
     AzureApiUrl          = var.azure_api_url
     AzureLocation        = var.azure_location

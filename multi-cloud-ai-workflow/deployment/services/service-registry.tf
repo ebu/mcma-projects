@@ -158,5 +158,5 @@ resource "aws_api_gateway_stage" "service_registry_gateway_stage" {
 locals {
   service_registry_url = "https://${aws_api_gateway_rest_api.service_registry_api.id}.execute-api.${var.aws_region}.amazonaws.com/${var.environment_type}"
   services_url         = "${local.service_registry_url}/services"
-  services_auth_type   = "AWS4"
+  service_registry_auth_type   = "AWS4"
 }
