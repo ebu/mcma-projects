@@ -3,11 +3,11 @@
 #################################
 
 resource "aws_lambda_function" "conform-01-validate-workflow-input" {
-  filename         = "./../workflows/conform/01-validate-workflow-input/dist/lambda.zip"
+  filename         = "./../workflows/conform/01-validate-workflow-input/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-conform-01-validate-workflow-input")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/conform/01-validate-workflow-input/dist/lambda.zip")
+  source_code_hash = filebase64sha256("./../workflows/conform/01-validate-workflow-input/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "30"
   memory_size      = "256"
@@ -16,7 +16,6 @@ resource "aws_lambda_function" "conform-01-validate-workflow-input" {
     variables = {
       ServicesUrl         = var.services_url
       ServicesAuthType    = var.services_auth_type
-      ServicesAuthContext = var.services_auth_context
       RepositoryBucket    = var.repository_bucket_name
       TempBucket          = var.temp_bucket_name
       WebsiteBucket       = var.website_bucket_name
@@ -25,11 +24,11 @@ resource "aws_lambda_function" "conform-01-validate-workflow-input" {
 }
 
 resource "aws_lambda_function" "conform-02-move-content-to-file-repository" {
-  filename         = "./../workflows/conform/02-move-content-to-file-repository/dist/lambda.zip"
+  filename         = "./../workflows/conform/02-move-content-to-file-repository/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-conform-02-move-content-to-file-repository")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/conform/02-move-content-to-file-repository/dist/lambda.zip")
+  source_code_hash = filebase64sha256("./../workflows/conform/02-move-content-to-file-repository/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "30"
   memory_size      = "256"
@@ -38,7 +37,6 @@ resource "aws_lambda_function" "conform-02-move-content-to-file-repository" {
     variables = {
       ServicesUrl         = var.services_url
       ServicesAuthType    = var.services_auth_type
-      ServicesAuthContext = var.services_auth_context
       RepositoryBucket    = var.repository_bucket_name
       TempBucket          = var.temp_bucket_name
       WebsiteBucket       = var.website_bucket_name
@@ -47,11 +45,11 @@ resource "aws_lambda_function" "conform-02-move-content-to-file-repository" {
 }
 
 resource "aws_lambda_function" "conform-03-create-media-asset" {
-  filename         = "./../workflows/conform/03-create-media-asset/dist/lambda.zip"
+  filename         = "./../workflows/conform/03-create-media-asset/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-conform-03-create-media-asset")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/conform/03-create-media-asset/dist/lambda.zip")
+  source_code_hash = filebase64sha256("./../workflows/conform/03-create-media-asset/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "30"
   memory_size      = "256"
@@ -60,7 +58,6 @@ resource "aws_lambda_function" "conform-03-create-media-asset" {
     variables = {
       ServicesUrl         = var.services_url
       ServicesAuthType    = var.services_auth_type
-      ServicesAuthContext = var.services_auth_context
       RepositoryBucket    = var.repository_bucket_name
       TempBucket          = var.temp_bucket_name
       WebsiteBucket       = var.website_bucket_name
@@ -69,11 +66,11 @@ resource "aws_lambda_function" "conform-03-create-media-asset" {
 }
 
 resource "aws_lambda_function" "conform-04-extract-technical-metadata" {
-  filename         = "./../workflows/conform/04-extract-technical-metadata/dist/lambda.zip"
+  filename         = "./../workflows/conform/04-extract-technical-metadata/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-conform-04-extract-technical-metadata")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/conform/04-extract-technical-metadata/dist/lambda.zip")
+  source_code_hash = filebase64sha256("./../workflows/conform/04-extract-technical-metadata/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "30"
   memory_size      = "256"
@@ -82,7 +79,6 @@ resource "aws_lambda_function" "conform-04-extract-technical-metadata" {
     variables = {
       ServicesUrl         = var.services_url
       ServicesAuthType    = var.services_auth_type
-      ServicesAuthContext = var.services_auth_context
       RepositoryBucket    = var.repository_bucket_name
       TempBucket          = var.temp_bucket_name
       WebsiteBucket       = var.website_bucket_name
@@ -97,11 +93,11 @@ resource "aws_sfn_activity" "conform-04-extract-technical-metadata" {
 }
 
 resource "aws_lambda_function" "conform-05-register-technical-metadata" {
-  filename         = "./../workflows/conform/05-register-technical-metadata/dist/lambda.zip"
+  filename         = "./../workflows/conform/05-register-technical-metadata/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-conform-05-register-technical-metadata")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/conform/05-register-technical-metadata/dist/lambda.zip")
+  source_code_hash = filebase64sha256("./../workflows/conform/05-register-technical-metadata/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "30"
   memory_size      = "256"
@@ -110,7 +106,6 @@ resource "aws_lambda_function" "conform-05-register-technical-metadata" {
     variables = {
       ServicesUrl         = var.services_url
       ServicesAuthType    = var.services_auth_type
-      ServicesAuthContext = var.services_auth_context
       RepositoryBucket    = var.repository_bucket_name
       TempBucket          = var.temp_bucket_name
       WebsiteBucket       = var.website_bucket_name
@@ -119,11 +114,11 @@ resource "aws_lambda_function" "conform-05-register-technical-metadata" {
 }
 
 resource "aws_lambda_function" "conform-06-decide-transcode-requirements" {
-  filename         = "./../workflows/conform/06-decide-transcode-requirements/dist/lambda.zip"
+  filename         = "./../workflows/conform/06-decide-transcode-requirements/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-conform-06-decide-transcode-requirements")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/conform/06-decide-transcode-requirements/dist/lambda.zip")
+  source_code_hash = filebase64sha256("./../workflows/conform/06-decide-transcode-requirements/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "30"
   memory_size      = "256"
@@ -132,7 +127,6 @@ resource "aws_lambda_function" "conform-06-decide-transcode-requirements" {
     variables = {
       ServicesUrl         = var.services_url
       ServicesAuthType    = var.services_auth_type
-      ServicesAuthContext = var.services_auth_context
       RepositoryBucket    = var.repository_bucket_name
       TempBucket          = var.temp_bucket_name
       WebsiteBucket       = var.website_bucket_name
@@ -142,11 +136,11 @@ resource "aws_lambda_function" "conform-06-decide-transcode-requirements" {
 }
 
 resource "aws_lambda_function" "conform-07a-short-transcode" {
-  filename         = "./../workflows/conform/07a-short-transcode/dist/lambda.zip"
+  filename         = "./../workflows/conform/07a-short-transcode/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-conform-07a-short-transcode")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/conform/07a-short-transcode/dist/lambda.zip")
+  source_code_hash = filebase64sha256("./../workflows/conform/07a-short-transcode/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "30"
   memory_size      = "256"
@@ -155,7 +149,6 @@ resource "aws_lambda_function" "conform-07a-short-transcode" {
     variables = {
       ServicesUrl         = var.services_url
       ServicesAuthType    = var.services_auth_type
-      ServicesAuthContext = var.services_auth_context
       WebsiteBucket       = var.website_bucket_name
       ActivityCallbackUrl = local.workflow_activity_callback_handler_url
       ActivityArn         = aws_sfn_activity.conform-07a-short-transcode.id
@@ -168,11 +161,11 @@ resource "aws_sfn_activity" "conform-07a-short-transcode" {
 }
 
 resource "aws_lambda_function" "conform-07b-long-transcode" {
-  filename         = "./../workflows/conform/07b-long-transcode/dist/lambda.zip"
+  filename         = "./../workflows/conform/07b-long-transcode/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-conform-07b-long-transcode")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/conform/07b-long-transcode/dist/lambda.zip")
+  source_code_hash = filebase64sha256("./../workflows/conform/07b-long-transcode/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "30"
   memory_size      = "256"
@@ -181,7 +174,6 @@ resource "aws_lambda_function" "conform-07b-long-transcode" {
     variables = {
       ServicesUrl         = var.services_url
       ServicesAuthType    = var.services_auth_type
-      ServicesAuthContext = var.services_auth_context
       RepositoryBucket    = var.repository_bucket_name
       TempBucket          = var.temp_bucket_name
       WebsiteBucket       = var.website_bucket_name
@@ -196,11 +188,11 @@ resource "aws_sfn_activity" "conform-07b-long-transcode" {
 }
 
 resource "aws_lambda_function" "conform-08-register-proxy-essence" {
-  filename         = "./../workflows/conform/08-register-proxy-essence/dist/lambda.zip"
+  filename         = "./../workflows/conform/08-register-proxy-essence/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-conform-08-register-proxy-essence")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/conform/08-register-proxy-essence/dist/lambda.zip")
+  source_code_hash = filebase64sha256("./../workflows/conform/08-register-proxy-essence/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "30"
   memory_size      = "256"
@@ -209,7 +201,6 @@ resource "aws_lambda_function" "conform-08-register-proxy-essence" {
     variables = {
       ServicesUrl         = var.services_url
       ServicesAuthType    = var.services_auth_type
-      ServicesAuthContext = var.services_auth_context
       RepositoryBucket    = var.repository_bucket_name
       TempBucket          = var.temp_bucket_name
       WebsiteBucket       = var.website_bucket_name
@@ -218,11 +209,11 @@ resource "aws_lambda_function" "conform-08-register-proxy-essence" {
 }
 
 resource "aws_lambda_function" "conform-09-copy-proxy-to-website-storage" {
-  filename         = "./../workflows/conform/09-copy-proxy-to-website-storage/dist/lambda.zip"
+  filename         = "./../workflows/conform/09-copy-proxy-to-website-storage/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-conform-09-copy-proxy-to-website-storage")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/conform/09-copy-proxy-to-website-storage/dist/lambda.zip")
+  source_code_hash = filebase64sha256("./../workflows/conform/09-copy-proxy-to-website-storage/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "30"
   memory_size      = "256"
@@ -231,7 +222,6 @@ resource "aws_lambda_function" "conform-09-copy-proxy-to-website-storage" {
     variables = {
       ServicesUrl         = var.services_url
       ServicesAuthType    = var.services_auth_type
-      ServicesAuthContext = var.services_auth_context
       RepositoryBucket    = var.repository_bucket_name
       TempBucket          = var.temp_bucket_name
       WebsiteBucket       = var.website_bucket_name
@@ -240,11 +230,11 @@ resource "aws_lambda_function" "conform-09-copy-proxy-to-website-storage" {
 }
 
 resource "aws_lambda_function" "conform-10-register-proxy-website-locator" {
-  filename         = "./../workflows/conform/10-register-proxy-website-locator/dist/lambda.zip"
+  filename         = "./../workflows/conform/10-register-proxy-website-locator/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-conform-10-register-proxy-website-locator")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/conform/10-register-proxy-website-locator/dist/lambda.zip")
+  source_code_hash = filebase64sha256("./../workflows/conform/10-register-proxy-website-locator/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "30"
   memory_size      = "256"
@@ -253,7 +243,6 @@ resource "aws_lambda_function" "conform-10-register-proxy-website-locator" {
     variables = {
       ServicesUrl         = var.services_url
       ServicesAuthType    = var.services_auth_type
-      ServicesAuthContext = var.services_auth_context
       RepositoryBucket    = var.repository_bucket_name
       TempBucket          = var.temp_bucket_name
       WebsiteBucket       = var.website_bucket_name
@@ -262,11 +251,11 @@ resource "aws_lambda_function" "conform-10-register-proxy-website-locator" {
 }
 
 resource "aws_lambda_function" "conform-11-start-ai-workflow" {
-  filename         = "./../workflows/conform/11-start-ai-workflow/dist/lambda.zip"
+  filename         = "./../workflows/conform/11-start-ai-workflow/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-conform-11-start-ai-workflow")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/conform/11-start-ai-workflow/dist/lambda.zip")
+  source_code_hash = filebase64sha256("./../workflows/conform/11-start-ai-workflow/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "30"
   memory_size      = "256"
@@ -275,7 +264,6 @@ resource "aws_lambda_function" "conform-11-start-ai-workflow" {
     variables = {
       ServicesUrl         = var.services_url
       ServicesAuthType    = var.services_auth_type
-      ServicesAuthContext = var.services_auth_context
       RepositoryBucket    = var.repository_bucket_name
       TempBucket          = var.temp_bucket_name
       WebsiteBucket       = var.website_bucket_name

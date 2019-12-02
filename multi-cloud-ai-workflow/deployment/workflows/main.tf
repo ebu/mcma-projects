@@ -88,11 +88,11 @@ resource "aws_iam_role_policy_attachment" "role-policy-api-gateway" {
 #################################
 
 resource "aws_lambda_function" "process-workflow-completion" {
-  filename         = "./../workflows/process-workflow-completion/dist/lambda.zip"
+  filename         = "./../workflows/process-workflow-completion/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-process-workflow-completion")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/process-workflow-completion/dist/lambda.zip")
+  source_code_hash = filebase64sha256("./../workflows/process-workflow-completion/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "30"
   memory_size      = "256"
@@ -101,17 +101,16 @@ resource "aws_lambda_function" "process-workflow-completion" {
     variables = {
       ServicesUrl         = var.services_url
       ServicesAuthType    = var.services_auth_type
-      ServicesAuthContext = var.services_auth_context
     }
   }
 }
 
 resource "aws_lambda_function" "process-workflow-failure" {
-  filename         = "./../workflows/process-workflow-failure/dist/lambda.zip"
+  filename         = "./../workflows/process-workflow-failure/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-process-workflow-failure")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/process-workflow-failure/dist/lambda.zip")
+  source_code_hash = filebase64sha256("./../workflows/process-workflow-failure/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "30"
   memory_size      = "256"
@@ -120,7 +119,6 @@ resource "aws_lambda_function" "process-workflow-failure" {
     variables = {
       ServicesUrl         = var.services_url
       ServicesAuthType    = var.services_auth_type
-      ServicesAuthContext = var.services_auth_context
     }
   }
 }
@@ -130,11 +128,11 @@ resource "aws_lambda_function" "process-workflow-failure" {
 #################################
 
 resource "aws_lambda_function" "workflow-activity-callback-handler" {
-  filename         = "./../workflows/workflow-activity-callback-handler/dist/lambda.zip"
+  filename         = "./../workflows/workflow-activity-callback-handler/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-workflow-activity-callback-handler")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../workflows/workflow-activity-callback-handler/dist/lambda.zip")
+  source_code_hash = filebase64sha256("./../workflows/workflow-activity-callback-handler/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "30"
   memory_size      = "256"

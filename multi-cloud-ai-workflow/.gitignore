@@ -1,4 +1,5 @@
-/.idea/
+.idea
+build
 /deployment/terraform.tfvars.json
 /deployment/storage/website_files.tf.json
 /deployment/terraform.output.json

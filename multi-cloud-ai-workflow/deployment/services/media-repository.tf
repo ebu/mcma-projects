@@ -3,11 +3,11 @@
 #################################
 
 resource "aws_lambda_function" "media-repository-api-handler" {
-  filename         = "./../services/media-repository/api-handler/dist/lambda.zip"
+  filename         = "./../services/media-repository/api-handler/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-media-repository-api-handler")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../services/media-repository/api-handler/dist/lambda.zip")
+  source_code_hash = filebase64sha256("./../services/media-repository/api-handler/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "30"
   memory_size      = "256"

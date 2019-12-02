@@ -2,15 +2,21 @@
 #  aws_lambda_function : service-registry-api-handler
 #################################
 
-resource "aws_lambda_function" "service-registry-api-handler" {
-  filename         = "./../services/service-registry/api-handler/dist/lambda.zip"
+resource "aws_lambda_function" "service_registry_api_handler" {
+  filename         = "../services/service-registry/api-handler/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-service-registry-api-handler")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../services/service-registry/api-handler/dist/lambda.zip")
+  source_code_hash = filebase64sha256("../services/service-registry/api-handler/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
-  timeout          = "30"
-  memory_size      = "256"
+  timeout          = "900"
+  memory_size      = "3008"
+
+  environment {
+    variables = {
+      LogGroupName = var.global_prefix
+    }
+  }
 }
 
 ##################################
@@ -116,14 +122,14 @@ resource "aws_api_gateway_integration" "service_registry_api_method_integration"
   resource_id             = aws_api_gateway_resource.service_registry_api_resource.id
   http_method             = aws_api_gateway_method.service_registry_api_method.http_method
   type                    = "AWS_PROXY"
-  uri                     = "arn:aws:apigateway:${var.aws_region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${var.aws_region}:${var.aws_account_id}:function:${aws_lambda_function.service-registry-api-handler.function_name}/invocations"
+  uri                     = "arn:aws:apigateway:${var.aws_region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${var.aws_region}:${var.aws_account_id}:function:${aws_lambda_function.service_registry_api_handler.function_name}/invocations"
   integration_http_method = "POST"
 }
 
 resource "aws_lambda_permission" "apigw_service-registry-api-handler" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.service-registry-api-handler.arn
+  function_name = aws_lambda_function.service_registry_api_handler.arn
   principal     = "apigateway.amazonaws.com"
 
   # More: http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-control-access-using-iam-policies-to-invoke-api.html
@@ -150,5 +156,4 @@ locals {
   service_registry_url  = "https://${aws_api_gateway_rest_api.service_registry_api.id}.execute-api.${var.aws_region}.amazonaws.com/${var.environment_type}"
   services_url          = "${local.service_registry_url}/services"
   services_auth_type    = "AWS4"
-  services_auth_context = "x"
 }

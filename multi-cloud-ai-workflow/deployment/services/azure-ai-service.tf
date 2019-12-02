@@ -3,11 +3,11 @@
 #################################
 
 resource "aws_lambda_function" "azure-ai-service-api-handler" {
-  filename         = "./../services/azure-ai-service/api-handler/dist/lambda.zip"
+  filename         = "./../services/azure-ai-service/api-handler/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-azure-ai-service-api-handler")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../services/azure-ai-service/api-handler/dist/lambda.zip")
+  source_code_hash = filebase64sha256("./../services/azure-ai-service/api-handler/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "30"
   memory_size      = "256"
@@ -18,11 +18,11 @@ resource "aws_lambda_function" "azure-ai-service-api-handler" {
 #################################
 
 resource "aws_lambda_function" "azure-ai-service-api-handler-non-secure" {
-  filename         = "./../services/azure-ai-service/api-handler-non-secure/dist/lambda.zip"
+  filename         = "./../services/azure-ai-service/api-handler-non-secure/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-azure-ai-service-api-handler-non-secure")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../services/azure-ai-service/api-handler-non-secure/dist/lambda.zip")
+  source_code_hash = filebase64sha256("./../services/azure-ai-service/api-handler-non-secure/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "30"
   memory_size      = "256"
@@ -33,11 +33,11 @@ resource "aws_lambda_function" "azure-ai-service-api-handler-non-secure" {
 #################################
 
 resource "aws_lambda_function" "azure-ai-service-worker" {
-  filename         = "./../services/azure-ai-service/worker/dist/lambda.zip"
+  filename         = "./../services/azure-ai-service/worker/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-azure-ai-service-worker")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../services/azure-ai-service/worker/dist/lambda.zip")
+  source_code_hash = filebase64sha256("./../services/azure-ai-service/worker/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "300"
   memory_size      = "3008"
@@ -120,7 +120,6 @@ resource "aws_api_gateway_deployment" "azure_ai_service_deployment" {
     PublicUrlNonSecure   = local.azure_ai_service_non_secure_url
     ServicesUrl          = local.services_url
     ServicesAuthType     = local.services_auth_type
-    ServicesAuthContext  = local.services_auth_context
     WorkerFunctionName   = aws_lambda_function.azure-ai-service-worker.function_name
     AzureApiUrl          = var.azure_api_url
     AzureLocation        = var.azure_location
@@ -182,7 +181,6 @@ resource "aws_api_gateway_deployment" "azure_ai_service_deployment_non_secure" {
     PublicUrlNonSecure   = local.azure_ai_service_non_secure_url
     ServicesUrl          = local.services_url
     ServicesAuthType     = local.services_auth_type
-    ServicesAuthContext  = local.services_auth_context
     WorkerFunctionName   = aws_lambda_function.azure-ai-service-worker.function_name
     AzureApiUrl          = var.azure_api_url
     AzureLocation        = var.azure_location

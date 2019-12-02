@@ -72,7 +72,6 @@ module "workflows" {
 
   services_url          = module.services.services_url
   services_auth_type    = module.services.services_auth_type
-  services_auth_context = module.services.services_auth_context
 
   repository_bucket_name = module.storage.repository_bucket.id
   temp_bucket_name       = module.storage.temp_bucket.id

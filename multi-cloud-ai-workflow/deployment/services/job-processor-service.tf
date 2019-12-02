@@ -3,11 +3,11 @@
 #################################
 
 resource "aws_lambda_function" "job-processor-service-api-handler" {
-  filename         = "./../services/job-processor-service/api-handler/dist/lambda.zip"
+  filename         = "./../services/job-processor-service/api-handler/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-job-processor-service-api-handler")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../services/job-processor-service/api-handler/dist/lambda.zip")
+  source_code_hash = filebase64sha256("./../services/job-processor-service/api-handler/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "30"
   memory_size      = "256"
@@ -18,11 +18,11 @@ resource "aws_lambda_function" "job-processor-service-api-handler" {
 #################################
 
 resource "aws_lambda_function" "job-processor-service-worker" {
-  filename         = "./../services/job-processor-service/worker/dist/lambda.zip"
+  filename         = "./../services/job-processor-service/worker/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-job-processor-service-worker")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("./../services/job-processor-service/worker/dist/lambda.zip")
+  source_code_hash = filebase64sha256("./../services/job-processor-service/worker/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
   timeout          = "30"
   memory_size      = "256"
@@ -104,7 +104,6 @@ resource "aws_api_gateway_deployment" "job_processor_service_deployment" {
     PublicUrl           = local.job_processor_service_url
     ServicesUrl         = local.services_url
     ServicesAuthType    = local.services_auth_type
-    ServicesAuthContext = local.services_auth_context
     WorkerFunctionName  = aws_lambda_function.job-processor-service-worker.function_name
     DeploymentHash      = filesha256("./services/job-processor-service.tf")
   }

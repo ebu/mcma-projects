@@ -23,22 +23,27 @@ task build {
 }
 
 subprojects {
-    task copyNodeModules (type: Copy) {
+    task copyNodeModules(type: Copy) {
+        enabled file("package.json").exists()
         dependsOn npmInstall
         from "node_modules"
-        into "dist/staging/node_modules"
+        into "build/staging/node_modules"
         exclude awsAvailableLibraries
     }
 
-    task copySource (type: Copy) {
+    task copySource(type: Copy) {
+        enabled file("package.json").exists()
         from "src"
-        into "dist/staging/"
+        into "build/staging/"
     }
 
-    task build (type: Zip) {
+    task build(type: Zip) {
+        enabled file("package.json").exists()
         dependsOn copySource, copyNodeModules
         archiveName "lambda.zip"
-        destinationDir file("dist")
-        from "dist/staging"
+        destinationDir file("build/dist")
+        from "build/staging"
+        preserveFileTimestamps = false
+        reproducibleFileOrder = true
     }
 }

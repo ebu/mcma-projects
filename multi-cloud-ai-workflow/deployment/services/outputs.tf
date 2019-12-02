@@ -43,10 +43,6 @@ output "services_auth_type" {
   value = local.services_auth_type
 }
 
-output "services_auth_context" {
-  value = local.services_auth_context
-}
-
 output "transform_service_url" {
   value = local.transform_service_url
 }
