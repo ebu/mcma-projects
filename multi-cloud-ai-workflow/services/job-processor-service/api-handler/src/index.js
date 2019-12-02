@@ -99,7 +99,7 @@ exports.handler = async (event, context) => {
     try {
         logger.functionStart(context.awsRequestId);
         logger.debug(event);
-        logger.debug(event);
+        logger.debug(context);
 
         return await restController.handleRequest(event, context);
     } finally {
