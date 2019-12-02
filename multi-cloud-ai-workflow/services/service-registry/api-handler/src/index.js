@@ -1,18 +1,30 @@
 //"use strict";
-const { Service, JobProfile, Logger } = require("mcma-core");
-const { McmaApiRouteCollection } = require("mcma-api");
-const { awsDefaultRoutes } = require("mcma-aws");
+const { Service, JobProfile } = require("@mcma/core");
+const { McmaApiRouteCollection, DefaultRouteCollectionBuilder } = require("@mcma/api");
+const { DynamoDbTableProvider } = require("@mcma/aws-dynamodb");
+const { AwsCloudWatchLoggerProvider } = require("@mcma/aws-logger");
+require("@mcma/aws-api-gateway");
 
-const controller =
+const loggerProvider = new AwsCloudWatchLoggerProvider("service-registry-api-handler", process.env.LogGroupName);
+const serviceDbTableProvider = new DynamoDbTableProvider(Service);
+const profileDbTableProvider = new DynamoDbTableProvider(JobProfile);
+
+const restController =
     new McmaApiRouteCollection()
-        .addRoutes(awsDefaultRoutes(Service).withDynamoDb().addAll().build())
-        .addRoutes(awsDefaultRoutes(JobProfile).withDynamoDb().addAll().build())
+        .addRoutes(new DefaultRouteCollectionBuilder(serviceDbTableProvider, Service).addAll().build())
+        .addRoutes(new DefaultRouteCollectionBuilder(profileDbTableProvider, JobProfile).addAll().build())
         .toApiGatewayApiController();
 
 exports.handler = async (event, context) => {
-    Logger.debug(JSON.stringify(event, null, 2),JSON.stringify(event, null, 2));
+    const logger = loggerProvider.get();
+    try {
+        logger.functionStart(context.awsRequestId);
+        logger.debug(event);
+        logger.debug(event);
 
-    const resp = await controller.handleRequest(event, context);
-    Logger.debug(resp);
-    return resp;
-}
+        return await restController.handleRequest(event, context);
+    } finally {
+        logger.functionEnd(context.awsRequestId);
+        await loggerProvider.flush();
+    }
+};
