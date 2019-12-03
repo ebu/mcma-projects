@@ -1,36 +1,33 @@
-const util = require("util");
 const AWS = require("aws-sdk");
 
 const S3 = new AWS.S3();
-const S3GetBucketLocation = util.promisify(S3.getBucketLocation.bind(S3));
-const S3CopyObject = util.promisify(S3.copyObject.bind(S3));
-const S3DeleteObject = util.promisify(S3.deleteObject.bind(S3));
 
 const TranscribeService = new AWS.TranscribeService();
-const TranscribeServiceStartTranscriptionJob = util.promisify(TranscribeService.startTranscriptionJob.bind(TranscribeService));
 
-const { Logger, JobAssignment, Locator, AIJob } = require("mcma-core");
-const { WorkerJobHelper } = require("mcma-worker");
-const { DynamoDbTableProvider, getAwsV4ResourceManager } = require("mcma-aws");
+const { Exception } = require("@mcma/core");
+const { ProcessJobAssignmentHelper } = require("@mcma/worker");
+const { AwsS3FileLocator } = require("@mcma/aws-s3");
 
-async function transcribeAudio(workerJobHelper) {
-    const inputFile = workerJobHelper.getJobInput().inputFile;
-    const jobAssignmentId = workerJobHelper.getJobAssignmentId();
+async function transcribeAudio(providers, jobAssignmentHelper) {
+    const logger = jobAssignmentHelper.getLogger();
 
-    Logger.debug("2. Speech to text transcription service");
+    const inputFile = jobAssignmentHelper.getJobInput().inputFile;
+    const jobAssignmentId = jobAssignmentHelper.getJobAssignmentId();
 
-    Logger.debug("2.1 Obtain input media file URL");
+    logger.debug("2. Speech to text transcription service");
+
+    logger.debug("2.1 Obtain input media file URL");
     let mediaFileUrl;
     if (inputFile.httpEndpoint) {
         mediaFileUrl = inputFile.httpEndpoint;
     } else {
-        const data = await S3GetBucketLocation({ Bucket: inputFile.awsS3Bucket });
-        Logger.debug(JSON.stringify(data, null, 2));
+        const data = await S3.getBucketLocation({ Bucket: inputFile.awsS3Bucket }).promise();
+        logger.debug(data);
         const s3SubDomain = data.LocationConstraint && data.LocationConstraint.length > 0 ? `s3-${data.LocationConstraint}` : "s3";
         mediaFileUrl = "https://" + s3SubDomain + ".amazonaws.com/" + inputFile.awsS3Bucket + "/" + inputFile.awsS3Key;
     }
 
-    Logger.debug("2.2 identify media format");
+    logger.debug("2.2 identify media format");
     let mediaFormat;
     if (mediaFileUrl.toLowerCase().endsWith("mp3")) {
         mediaFormat = "mp3";
@@ -41,10 +38,10 @@ async function transcribeAudio(workerJobHelper) {
     } else if (mediaFileUrl.toLowerCase().endsWith("flac")) {
         mediaFormat = "flac";
     } else {
-        throw new Error("Unable to determine Media Format from input file '" + mediaFileUrl + "'");
+        throw new Exception("Unable to determine Media Format from input file '" + mediaFileUrl + "'");
     }
 
-    Logger.debug("2.3 initialise and call transcription service");
+    logger.debug("2.3 initialise and call transcription service");
     const params = {
         TranscriptionJobName: "TranscriptionJob-" + jobAssignmentId.substring(jobAssignmentId.lastIndexOf("/") + 1),
         LanguageCode: "en-US",
@@ -52,86 +49,76 @@ async function transcribeAudio(workerJobHelper) {
             MediaFileUri: mediaFileUrl
         },
         MediaFormat: mediaFormat,
-//        Settings: {
-//            ChannelIdentification:true
-//        },
-        OutputBucketName: workerJobHelper.getRequest().getRequiredContextVariable("ServiceOutputBucket")
-    }
+        OutputBucketName: jobAssignmentHelper.getRequest().getRequiredContextVariable("ServiceOutputBucket")
+    };
 
-    Logger.debug("2.4 call speech to text service");
-    const data = await TranscribeServiceStartTranscriptionJob(params);
+    logger.debug("2.4 call speech to text service");
+    const data = await TranscribeService.startTranscriptionJob(params).promise();
 
-    Logger.debug("2.5 visualise service results with path to STT results in service local reporsitory");
-    console.log(JSON.stringify(data, null, 2));
+    logger.debug("2.5 visualise service results with path to STT results in service local repository");
+    logger.info(JSON.stringify(data, null, 2));
 
-    Logger.debug("2.6. TranscriptionJobName used in s3-trigger");
-    console.log("See regex for transcriptionJob in aws-ai-service/se-trigger/src/index.js")
-    console.log(params.TranscriptionJobName);
-
+    logger.debug("2.6. TranscriptionJobName used in s3-trigger");
+    logger.debug("See regex for transcriptionJob in aws-ai-service/se-trigger/src/index.js");
+    logger.debug(params.TranscriptionJobName);
 }
 
-const dynamoDbTableProvider = new DynamoDbTableProvider(JobAssignment);
+async function processTranscribeJobResult(providers, workerRequest) {
+    const jobAssignmentHelper = new ProcessJobAssignmentHelper(
+        providers.getDbTableProvider().get(workerRequest.tableName()),
+        providers.getResourceManagerProvider().get(workerRequest),
+        providers.getLoggerProvider().get(workerRequest.tracker),
+        workerRequest);
 
-const processTranscribeJobResult = async (request) => {
-    const workerJobHelper = new WorkerJobHelper(
-        AIJob,
-        dynamoDbTableProvider.table(request.tableName()),
-        getAwsV4ResourceManager(request),
-        request,
-        request.input.jobAssignmentId
-    );
-    
-    let jobAssignmentId = request.input.jobAssignmentId;
+    const logger = jobAssignmentHelper.getLogger();
 
     try {
-        await workerJobHelper.initialize();
+        await jobAssignmentHelper.initialize();
 
-        Logger.debug("2.7. Retrieve job inputParameters");
-        let jobInput = workerJobHelper.getJobInput();
+        logger.debug("2.7. Retrieve job inputParameters");
+        let jobInput = jobAssignmentHelper.getJobInput();
 
-        Logger.debug("2.8. Copy transcribe output file to output location");
-        let copySource = encodeURI(request.input.outputFile.awsS3Bucket + "/" + request.input.outputFile.awsS3Key);
+        logger.debug("2.8. Copy transcribe output file to output location");
+        let copySource = encodeURI(workerRequest.input.outputFile.awsS3Bucket + "/" + workerRequest.input.outputFile.awsS3Key);
         let s3Bucket = jobInput.outputLocation.awsS3Bucket;
-        let s3Key = (jobInput.outputLocation.awsS3KeyPrefix ? jobInput.outputLocation.awsS3KeyPrefix : "") + request.input.outputFile.awsS3Key;
+        let s3Key = (jobInput.outputLocation.awsS3KeyPrefix ? jobInput.outputLocation.awsS3KeyPrefix : "") + workerRequest.input.outputFile.awsS3Key;
         try {
-            await S3CopyObject({
+            await S3.copyObject({
                 CopySource: copySource,
                 Bucket: s3Bucket,
                 Key: s3Key,
-            });
+            }).promise();
         } catch (error) {
-            throw new Error("Unable to copy output file to bucket '" + s3Bucket + "' with key '" + s3Key + "' due to error: " + error.message);
+            throw new Exception("Unable to copy output file to bucket '" + s3Bucket + "' with key '" + s3Key + "' due to error: " + error.message);
         }
 
-        Logger.debug("2.9. updating JobAssignment with jobOutput");
-        workerJobHelper.getJobOutput().outputFile = new Locator({
+        logger.debug("2.9. updating JobAssignment with jobOutput");
+        jobAssignmentHelper.getJobOutput().outputFile = new AwsS3FileLocator({
             awsS3Bucket: s3Bucket,
             awsS3Key: s3Key
         });
-        
-        await workerJobHelper.complete();
+
+        await jobAssignmentHelper.complete();
 
     } catch (error) {
-        Logger.exception(error);
+        logger.error(error);
         try {
-            await workerJobHelper.fail(error.message);
+            await jobAssignmentHelper.fail(error.message);
         } catch (error) {
-            Logger.exception(error);
+            logger.error(error);
         }
     }
 
-    Logger.debug("2.10. Cleanup: Deleting original output file from service");
+    logger.debug("2.10. Cleanup: Deleting original output file from service");
     try {
-        await S3DeleteObject({
-            Bucket: request.input.outputFile.awsS3Bucket,
-            Key: request.input.outputFile.awsS3Key,
-        });
+        await S3.deleteObject({
+            Bucket: workerRequest.input.outputFile.awsS3Bucket,
+            Key: workerRequest.input.outputFile.awsS3Key,
+        }).promise();
     } catch (error) {
         console.warn("Failed to cleanup transcribe output file");
     }
 }
-
-transcribeAudio.profileName = "AWSTranscribeAudio";
 
 module.exports = {
     transcribeAudio,

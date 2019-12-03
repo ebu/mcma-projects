@@ -1,121 +1,84 @@
 //"use strict";
 
-const util = require("util");
-
 const AWS = require("aws-sdk");
 const Lambda = new AWS.Lambda({ apiVersion: "2015-03-31" });
-const LambdaInvoke = util.promisify(Lambda.invoke.bind(Lambda));
 
-const { Logger, Locator, EnvironmentVariableProvider } = require("mcma-core");
-require("mcma-api");
+const { DynamoDbTableProvider } = require("@mcma/aws-dynamodb");
+const { Exception, EnvironmentVariableProvider, JobAssignment } = require("@mcma/core");
+const { AwsCloudWatchLoggerProvider } = require("@mcma/aws-logger");
+const { AwsS3FileLocator } = require("@mcma/aws-s3");
 
+const dbTableProvider = new DynamoDbTableProvider(JobAssignment);
 const environmentVariableProvider = new EnvironmentVariableProvider();
+const loggerProvider = new AwsCloudWatchLoggerProvider("aws-ai-service-s3-trigger", process.env.LogGroupName);
 
 exports.handler = async (event, context) => {
-    Logger.debug(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
+    const logger = loggerProvider.get();
+    try {
+        logger.functionStart(context.awsRequestId);
+        logger.debug(event);
+        logger.debug(context);
 
-    if (!event || !event.Records) {
-        return;
-    }
+        for (const record of event.Records) {
+            try {
+                let awsS3Bucket = record.s3.bucket.name;
+                let awsS3Key = record.s3.object.key;
 
-    for (const record of event.Records) {
-        try {
-            let awsS3Bucket = record.s3.bucket.name;
-            let awsS3Key = record.s3.object.key;
+                let jobAssignmentGuid;
+                let operationName;
 
-            let params;
+                //  EXTRACT UUID FROM FILENAME AS FOLLOWS !!!!!!!!!!!!!!!
+                // "TextToSpeechJob-c0cca2ea-4a23-45c1-bcf4-ab570638ed41.5a321518-b733-48b4-9c53-17a71894c56e.mp3" ->start at 16
+                //                  16                                  52
+                // "001-TokenizedTextToSpeechJob-c0cca2ea-4a23-45c1-bcf4-ab570638ed41.5a321518-b733-48b4-9c53-17a71894c56e.mp3" ->start at 25
+                //                               29                                  65
 
-            //  EXTRACT UUID FROM FILENAME AS FOLLOWS !!!!!!!!!!!!!!!
-            // "TextToSpeechJob-c0cca2ea-4a23-45c1-bcf4-ab570638ed41.5a321518-b733-48b4-9c53-17a71894c56e.mp3" ->start at 16
-            //                  16                                  52
-            // "001-TokenizedTextToSpeechJob-c0cca2ea-4a23-45c1-bcf4-ab570638ed41.5a321518-b733-48b4-9c53-17a71894c56e.mp3" ->start at 25
-            //                               29                                  65
+                if (new RegExp(/^TextToSpeechJob-[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\..*\.mp3$/i).test(awsS3Key)) {
+                    jobAssignmentGuid = awsS3Key.substring(16, 52);
+                    operationName = "ProcessTextToSpeechJobResult";
+                } else if (new RegExp(/^ssmlTextToSpeechJob-[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\..*\.mp3$/i).test(awsS3Key)) {
+                    jobAssignmentGuid = awsS3Key.substring(20, 56);
+                    operationName = "ProcessSsmlTextToSpeechJobResult";
+                } else if (new RegExp(/^[0-9]{3}-TextTokensSpeechMarksJob-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\..*\.marks$/i).test(awsS3Key)) {
+                    jobAssignmentGuid = awsS3Key.substring(29, 65);
+                    operationName = "ProcessTokenizedTextToSpeechJobResult";
+                } else if (new RegExp(/^TranscriptionJob-[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.json$/i).test(awsS3Key)) {
+                    jobAssignmentGuid = awsS3Key.substring(awsS3Key.indexOf("-") + 1, awsS3Key.lastIndexOf("."));
+                    operationName = "ProcessTranscribeJobResult";
+                } else {
+                    throw new Exception("S3 key '" + awsS3Key + "' is not an expected file name processing in this lambda function");
+                }
 
-            if (new RegExp(/^TextToSpeechJob-[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\..*\.mp3$/i).test(awsS3Key)) {
-                const textToSpeechJobUUID = awsS3Key.substring(16, 52);
+                const jobAssignmentId = environmentVariableProvider.getRequiredContextVariable("PublicUrl") + "/job-assignments/" + jobAssignmentGuid;
 
-                const jobAssignmentId = environmentVariableProvider.publicUrl() + "/job-assignments/" + textToSpeechJobUUID;
+                const table = dbTableProvider.get(environmentVariableProvider.tableName());
+                const jobAssignment = await table.get(jobAssignmentId);
+                if (!jobAssignment) {
+                    throw new Exception("Failed to find JobAssignment with id: " + jobAssignmentId);
+                }
 
-                // invoking worker lambda function that will process the results of text to speech job
-                params = {
-                    FunctionName: environmentVariableProvider.getRequiredContextVariable("WorkerFunctionName"),
+                const params = {
+                    FunctionName: environmentVariableProvider.getRequiredContextVariable("WorkerFunctionId"),
                     InvocationType: "Event",
                     LogType: "None",
                     Payload: JSON.stringify({
-                        operationName: "ProcessTextToSpeechJobResult",
+                        operationName,
                         contextVariables: environmentVariableProvider.getAllContextVariables(),
                         input: {
                             jobAssignmentId,
-                            outputFile: new Locator({ awsS3Bucket: awsS3Bucket, awsS3Key: awsS3Key })
-                        }
+                            outputFile: new AwsS3FileLocator({ awsS3Bucket: awsS3Bucket, awsS3Key: awsS3Key })
+                        },
+                        tracker: jobAssignment.tracker
                     })
                 };
-            } else if (new RegExp(/^ssmlTextToSpeechJob-[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\..*\.mp3$/i).test(awsS3Key)) {
-                const ssmlTextToSpeechJobUUID = awsS3Key.substring(20, 56);
 
-                const jobAssignmentId = environmentVariableProvider.publicUrl() + "/job-assignments/" + ssmlTextToSpeechJobUUID;
-
-                // invoking worker lambda function that will process the results of the polly SSML text to speech job
-                params = {
-                    FunctionName: environmentVariableProvider.getRequiredContextVariable("WorkerFunctionName"),
-                    InvocationType: "Event",
-                    LogType: "None",
-                    Payload: JSON.stringify({
-                        operationName: "ProcessSsmlTextToSpeechJobResult",
-                        contextVariables: environmentVariableProvider.getAllContextVariables(),
-                        input: {
-                            jobAssignmentId,
-                            outputFile: new Locator({ awsS3Bucket: awsS3Bucket, awsS3Key: awsS3Key })
-                        }
-                    })
-                };
-            } else if (new RegExp(/^[0-9]{3}-TextTokensSpeechMarksJob-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\..*\.marks$/i).test(awsS3Key)) {
-                const tokenizedTextToSpeechJobUUID = awsS3Key.substring(29, 65);
-
-                const jobAssignmentId = environmentVariableProvider.publicUrl() + "/job-assignments/" + tokenizedTextToSpeechJobUUID;
-
-                // invoking worker lambda function that will process the results of Polly tokenized sentence speechmarks extraction job
-                params = {
-                    FunctionName: environmentVariableProvider.getRequiredContextVariable("WorkerFunctionName"),
-                    InvocationType: "Event",
-                    LogType: "None",
-                    Payload: JSON.stringify({
-                        operationName: "ProcessTokenizedTextToSpeechJobResult",
-                        contextVariables: environmentVariableProvider.getAllContextVariables(),
-                        input: {
-                            jobAssignmentId,
-                            outputFile: new Locator({ awsS3Bucket: awsS3Bucket, awsS3Key: awsS3Key })
-                        }
-                    })
-                };
-            } else if (new RegExp(/^TranscriptionJob-[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.json$/i).test(awsS3Key)) {
-                const transcribeJobUUID = awsS3Key.substring(awsS3Key.indexOf("-") + 1, awsS3Key.lastIndexOf("."));
-
-                const jobAssignmentId = environmentVariableProvider.publicUrl() + "/job-assignments/" + transcribeJobUUID;
-
-                // invoking worker lambda function that will process the results of transcription job
-                params = {
-                    FunctionName: environmentVariableProvider.getRequiredContextVariable("WorkerFunctionName"),
-                    InvocationType: "Event",
-                    LogType: "None",
-                    Payload: JSON.stringify({
-                        operationName: "ProcessTranscribeJobResult",
-                        contextVariables: environmentVariableProvider.getAllContextVariables(),
-                        input: {
-                            jobAssignmentId,
-                            outputFile: new Locator({ awsS3Bucket: awsS3Bucket, awsS3Key: awsS3Key })
-                        }
-                    })
-                };
-            } else {
-                throw new Error("S3 key '" + awsS3Key + "' is not an expected file name for transcribe output or textToSpeech output");
+                await Lambda.invoke(params).promise();
+            } catch (error) {
+                logger.error("Failed processing record", record, error);
             }
-
-            await LambdaInvoke(params);
-
-        } catch (error) {
-            Logger.error("Failed processing record", record, error);
         }
+    } finally {
+        logger.functionEnd(context.awsRequestId);
+        await loggerProvider.flush();
     }
-
-}
+};

@@ -1,7 +1,11 @@
 //"use strict";
-const { Logger, AIJob } = require("mcma-core");
-const { WorkerBuilder, WorkerRequest } = require("mcma-worker");
-require("mcma-aws");
+const AWS = require("aws-sdk");
+const { AIJob, JobAssignment, EnvironmentVariableProvider } = require("@mcma/core");
+const { ResourceManagerProvider, AuthProvider } = require("@mcma/client");
+const { Worker, WorkerRequest, ProcessJobAssignmentOperation, ProviderCollection } = require("@mcma/worker");
+const { DynamoDbTableProvider } = require("@mcma/aws-dynamodb");
+const { AwsCloudWatchLoggerProvider } = require("@mcma/aws-logger");
+require("@mcma/aws-client");
 
 const { transcribeAudio, processTranscribeJobResult } = require('./profiles/transcribe-audio');
 const { translateText } = require('./profiles/translate-text');
@@ -15,36 +19,55 @@ const { detectCelebrities } = require('./profiles/detect-celebrities');
 const { detectEmotions } = require('./profiles/detect-emotions');
 const { processRekognitionResult } = require('./profiles/process-reko-results');
 
+const authProvider = new AuthProvider().addAwsV4Auth(AWS);
+const dbTableProvider = new DynamoDbTableProvider(JobAssignment);
+const environmentVariableProvider = new EnvironmentVariableProvider();
+const loggerProvider = new AwsCloudWatchLoggerProvider("aws-ai-service-worker", process.env.LogGroupName);
+const resourceManagerProvider = new ResourceManagerProvider(authProvider);
+
+const providerCollection = new ProviderCollection({
+    authProvider,
+    dbTableProvider,
+    environmentVariableProvider,
+    loggerProvider,
+    resourceManagerProvider
+});
+
+const processJobAssignmentOperation =
+    new ProcessJobAssignmentOperation(AIJob)
+        .addProfile("AWSDetectCelebrities", detectCelebrities)
+        .addProfile("AWSTranscribeAudio", transcribeAudio)
+        .addProfile("AWSTranslateText", translateText)
+        .addProfile("AWSSsmlTextToSpeech", ssmlTextToSpeech)
+        .addProfile("AWSTextToSpeech", textToSpeech)
+        .addProfile("AWSTokenizedTextToSpeech", tokenizedTextToSpeech)
+        .addProfile("AWSDetectEmotions", detectEmotions)
+        .addProfile("CreateDubbingSrt", createDubbingSrt)
+        .addProfile("ValidateSpeechToText", validateSpeechToText);
+
 const worker =
-    new WorkerBuilder().useAwsJobDefaults()
-        .handleJobsOfType(AIJob, x =>
-            x.addProfile(detectCelebrities.profileName, detectCelebrities)
-                .addProfile(transcribeAudio.profileName, transcribeAudio)
-                .addProfile(translateText.profileName, translateText)
-                .addProfile(ssmlTextToSpeech.profileName, ssmlTextToSpeech)
-                .addProfile(textToSpeech.profileName, textToSpeech)
-                .addProfile(tokenizedTextToSpeech.profileName, tokenizedTextToSpeech)
-                .addProfile(detectEmotions.profileName, detectEmotions)
-                .addProfile(createDubbingSrt.profileName, createDubbingSrt)
-                .addProfile(validateSpeechToText.profileName, validateSpeechToText)
-                .addProfile(detectEmotions.profileName, detectEmotions)
-        )
-        .handleOperation(processRekognitionResult)
-        .handleOperation(processTranscribeJobResult)
-        .handleOperation(processTextToSpeechJobResult)
-        .handleOperation(processSsmlTextToSpeechJobResult)
-        .handleOperation(processTokenizedTextToSpeechJobResult)
-//        .handleOperation(processValidateSpeechToTextJobResult)
-        .build();
-
-
+    new Worker(providerCollection)
+        .addOperation(processJobAssignmentOperation)
+        .addOperation("ProcessRekognitionResult", processRekognitionResult)
+        .addOperation("ProcessTranscribeJobResult", processTranscribeJobResult)
+        .addOperation("ProcessTextToSpeechJobResult", processTextToSpeechJobResult)
+        .addOperation("ProcessSsmlTextToSpeechJobResult", processSsmlTextToSpeechJobResult)
+        .addOperation("ProcessTokenizedTextToSpeechJobResult", processTokenizedTextToSpeechJobResult);
 
 exports.handler = async (event, context) => {
+    const logger = loggerProvider.get(event.tracker);
+
     try {
-        Logger.debug(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
+        logger.functionStart(context.awsRequestId);
+        logger.debug(event);
+        logger.debug(context);
 
         await worker.doWork(new WorkerRequest(event));
     } catch (error) {
-        Logger.error("Processing action '" + event.operationName + "' ended with error: '" + error.message + "'");
+        logger.error("Error occurred when handling operation '" + event.operationName + "'");
+        logger.error(error.toString());
+    } finally {
+        logger.functionEnd(context.awsRequestId);
+        await loggerProvider.flush();
     }
-}
+};

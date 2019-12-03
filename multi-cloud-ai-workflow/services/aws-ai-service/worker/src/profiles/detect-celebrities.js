@@ -1,22 +1,24 @@
-const util = require("util");
 const crypto = require("crypto");
 
-const AWS = require('aws-sdk');
+const AWS = require("aws-sdk");
 
 const Rekognition = new AWS.Rekognition();
-const RekognitionStartCelebrityRecognition = util.promisify(Rekognition.startCelebrityRecognition.bind(Rekognition));
 
-const { Logger, EnvironmentVariableProvider } = require("mcma-core");
+const { EnvironmentVariableProvider } = require("@mcma/core");
 
 const environmentVariableProvider = new EnvironmentVariableProvider();
 
-async function detectCelebrities(workerJobHelper) {
-    const inputFile = workerJobHelper.getJobInput().inputFile;
+async function detectCelebrities(providers, jobAssignmentHelper) {
+    const logger = jobAssignmentHelper.getLogger();
+
+    const inputFile = jobAssignmentHelper.getJobInput().inputFile;
     const clientToken = crypto.randomBytes(16).toString("hex");
-    const base64JobId = new Buffer(workerJobHelper.getJobAssignmentId()).toString("hex");
+    const base64JobId = new Buffer(jobAssignmentHelper.getJobAssignmentId()).toString("hex");
+
+    logger.info("Starting celebrity detection on file '" + inputFile.awsS3Key + "' in bucket '" + inputFile.awsS3Bucket + "'");
 
     const params = {
-        Video: { /* required */
+        Video: {
             S3Object: {
                 Bucket: inputFile.awsS3Bucket,
                 Name: inputFile.awsS3Key
@@ -30,12 +32,10 @@ async function detectCelebrities(workerJobHelper) {
         }
     };
 
-    const data = await RekognitionStartCelebrityRecognition(params);
+    const data = await Rekognition.startCelebrityRecognition(params).promise();
 
-    Logger.debug(JSON.stringify(data, null, 2));
+    logger.debug(data);
 }
-
-detectCelebrities.profileName = "AWSDetectCelebrities";
 
 module.exports = {
     detectCelebrities

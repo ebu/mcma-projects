@@ -1,45 +1,35 @@
-const util = require("util");
 const uuidv4 = require("uuid/v4");
 
-const AWS = require('aws-sdk');
+const AWS = require("aws-sdk");
 const S3 = new AWS.S3();
-const S3PutObject = util.promisify(S3.putObject.bind(S3));
 
 const Rekognition = new AWS.Rekognition();
-const RekognitionGetCelebrityRecognition = util.promisify(Rekognition.getCelebrityRecognition.bind(Rekognition));
-const RekognitionGetFaceDetection = util.promisify(Rekognition.getFaceDetection.bind(Rekognition));
 
-const { Logger, Locator, JobAssignment, AIJob } = require("mcma-core");
-const { WorkerJobHelper } = require("mcma-worker");
-const { DynamoDbTableProvider, getAwsV4ResourceManager } = require("mcma-aws");
+const { ProcessJobAssignmentHelper } = require("@mcma/worker");
+const { AwsS3FileLocator } = require("@mcma/aws-s3");
 
-const dynamoDbTableProvider = new DynamoDbTableProvider(JobAssignment);
-
-const processRekognitionResult = async (request) => {
-    const workerJobHelper = new WorkerJobHelper(
-        AIJob,
-        dynamoDbTableProvider.table(request.tableName()),
-        getAwsV4ResourceManager(request),
-        request,
-        request.input.jobAssignmentId
+async function processRekognitionResult(providers, workerRequest) {
+    const jobAssignmentHelper = new ProcessJobAssignmentHelper(
+        providers.getDbTableProvider().get(workerRequest.tableName()),
+        providers.getResourceManagerProvider().get(workerRequest),
+        providers.getLoggerProvider().get(workerRequest.tracker),
+        workerRequest
     );
 
+    const logger = jobAssignmentHelper.getLogger();
+
     try {
-        await workerJobHelper.initialize();
+        await jobAssignmentHelper.initialize();
 
         // 2. Retrieve job inputParameters
-        let jobInput = workerJobHelper.getJobInput();
+        const jobInput = jobAssignmentHelper.getJobInput();
 
-        let s3Bucket = jobInput.outputLocation.awsS3Bucket;
-
-        let rekoJobId = request.input.jobInfo.rekoJobId;
-        let rekoJobType = request.input.jobInfo.rekoJobType;
-        let status = request.input.jobInfo.status;
-        let videoFileName = jobInput.inputFile.awsS3Key;
-        videoFileName = videoFileName.replace(".mp4", "").replace("media/", "");
+        const rekoJobId = workerRequest.input.jobInfo.rekoJobId;
+        const rekoJobType = workerRequest.input.jobInfo.rekoJobType;
+        const status = workerRequest.input.jobInfo.status;
 
         if (status !== "SUCCEEDED") {
-            throw new Error("AI Rekognition failed job info: rekognition status:" + status);
+            throw new Exception("AI Rekognition failed job info: rekognition status:" + status);
         }
 
         // 3. Get the result from the Rekognition service
@@ -49,19 +39,19 @@ const processRekognitionResult = async (request) => {
         let dataNextToken;
         switch (rekoJobType) {
             case "StartCelebrityRecognition":
-                dataCelebrity = await RekognitionGetCelebrityRecognition({
+                dataCelebrity = await Rekognition.getCelebrityRecognition({
                     JobId: rekoJobId,
                     SortBy: "TIMESTAMP"
-                });
+                }).promise();
                 data = data.concat(dataCelebrity.Celebrities);
                 let count = 0;
-                while (dataCelebrity['Celebrities'].length === 1000) {
-                    dataNextToken = dataCelebrity['NextToken'];
-                    dataCelebrity = await RekognitionGetCelebrityRecognition({
+                while (dataCelebrity["Celebrities"].length === 1000) {
+                    dataNextToken = dataCelebrity["NextToken"];
+                    dataCelebrity = await Rekognition.getCelebrityRecognition({
                         JobId: rekoJobId,
                         SortBy: "TIMESTAMP",
                         NextToken: dataNextToken
-                    });
+                    }).promise();
                     if (count < 1) {
                         data = data.concat(dataCelebrity.Celebrities);
                         count++;
@@ -69,17 +59,17 @@ const processRekognitionResult = async (request) => {
                 }
                 break;
             case "StartFaceDetection":
-                dataFace = await RekognitionGetFaceDetection({
+                dataFace = await Rekognition.getFaceDetection({
                     JobId: rekoJobId,
-                });
+                }).promise();
                 data = data.concat(dataFace.Faces);
                 let count2 = 0;
-                while (dataFace['Faces'].length === 1000) {
-                    dataNextToken = dataFace['NextToken'];
-                    dataFace = await RekognitionGetFaceDetection({
+                while (dataFace["Faces"].length === 1000) {
+                    dataNextToken = dataFace["NextToken"];
+                    dataFace = await Rekognition.getFaceDetection({
                         JobId: rekoJobId,
                         NextToken: dataNextToken
-                    });
+                    }).promise();
                     if (count2 < 1) {
                         data = data.concat(dataFace.Faces);
                         count2++;
@@ -90,13 +80,13 @@ const processRekognitionResult = async (request) => {
             case "StartContentModeration":
             case "StartPersonTracking":
             case "StartFaceSearch":
-                throw new Error(rekoJobType + " : Not implemented");
+                throw new Exception(rekoJobType + " : Not implemented");
             default:
-                throw new Error("Unknown rekoJobType");
+                throw new Exception("Unknown rekoJobType");
         }
 
         if (!data) {
-            throw new Error("No data was returned by AWS Rekogntion");
+            throw new Exception("No data was returned by AWS Rekogntion");
         }
 
         // Logger.debug("data returned by Rekognition", JSON.stringify(data, null, 2));
@@ -105,7 +95,12 @@ const processRekognitionResult = async (request) => {
         walkclean(data);
 
         // 3. write Reko output file to output location
+        const s3Bucket = jobInput.outputLocation.awsS3Bucket;
+
+        let videoFileName = jobInput.inputFile.awsS3Key;
+        videoFileName = videoFileName.replace(".mp4", "").replace("media/", "");
         const newS3Key = "reko_" + "media_" + videoFileName + "_" + rekoJobType + "_" + uuidv4() + ".json";
+
         const s3Params = {
             Bucket: s3Bucket,
             Key: newS3Key,
@@ -113,28 +108,28 @@ const processRekognitionResult = async (request) => {
         };
 
         try {
-            await S3PutObject(s3Params);
+            await S3.putObject(s3Params).promise();
         } catch (error) {
-            throw new Error("Unable to write output file to bucket '" + s3Bucket + "' with key '" + newS3Key + "' due to error: " + error.message);
+            throw new Exception("Unable to write output file to bucket '" + s3Bucket + "' with key '" + newS3Key + "' due to error: " + error.message);
         }
 
-        Logger.debug("Wrote Reko result file to S3 bucket : " + s3Bucket + " S3 key : " + newS3Key);
+        logger.debug("Wrote Reko result file to S3 bucket : " + s3Bucket + " S3 key : " + newS3Key);
 
-        workerJobHelper.getJobOutput().outputFile = new Locator({
+        jobAssignmentHelper.getJobOutput().outputFile = new AwsS3FileLocator({
             awsS3Bucket: s3Bucket,
             awsS3Key: newS3Key
         });
 
-        await workerJobHelper.complete();
+        await jobAssignmentHelper.complete();
     } catch (error) {
-        Logger.exception(error);
+        logger.error(error.toString());
         try {
-            await workerJobHelper.fail(error.message);
+            await jobAssignmentHelper.fail(error.message);
         } catch (error) {
-            Logger.exception(error);
+            logger.error(error.toString());
         }
     }
-};
+}
 
 function walkclean(x) {
     let type = typeof x;
@@ -143,11 +138,13 @@ function walkclean(x) {
     }
     if ((type === "array") || (type === "object")) {
         for (let k in x) {
-            let v = x[k];
-            if ((v === "") && (type === "object")) {
-                delete x[k];
-            } else {
-                walkclean(v);
+            if (x.hasOwnProperty(k)) {
+                const v = x[k];
+                if ((v === "") && (type === "object")) {
+                    delete x[k];
+                } else {
+                    walkclean(v);
+                }
             }
         }
     }

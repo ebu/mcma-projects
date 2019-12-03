@@ -1,350 +1,322 @@
-const util = require("util");
 const AWS = require("aws-sdk");
 
-const uuidv4 = require("uuid/v4");
-
-const fs = require("fs");
-const fsWriteFile = util.promisify(fs.writeFile);
-const fsReadFile = util.promisify(fs.readFile);
-const fsUnlink = util.promisify(fs.unlink);
-
-const { ffmpeg } = require("../ffmpeg");
-
 const S3 = new AWS.S3();
-const S3GetObject = util.promisify(S3.getObject.bind(S3));
-const S3CopyObject = util.promisify(S3.copyObject.bind(S3));
-const S3DeleteObject = util.promisify(S3.deleteObject.bind(S3));
-const S3PutObject = util.promisify(S3.putObject.bind(S3));
 
 const Polly = new AWS.Polly();
-const PollyStartSpeechSynthesisTask = util.promisify(Polly.startSpeechSynthesisTask.bind(Polly));
 
-const { Logger, JobAssignment, Locator, AIJob } = require("mcma-core");
-const { WorkerJobHelper } = require("mcma-worker");
-const { DynamoDbTableProvider, getAwsV4ResourceManager } = require("mcma-aws");
-
+const { Exception } = require("@mcma/core");
+const { ProcessJobAssignmentHelper } = require("@mcma/worker");
+const { AwsS3FileLocator } = require("@mcma/aws-s3");
 
 function msToTime(duration) {
-  var milliseconds = parseInt((duration % 1000) / 100),
-    seconds = Math.floor((duration / 1000) % 60),
-    minutes = Math.floor((duration / (1000 * 60)) % 60),
-    hours = Math.floor((duration / (1000 * 60 * 60)) % 24);
+    let milliseconds = parseInt((duration % 1000) / 100),
+        seconds = Math.floor((duration / 1000) % 60),
+        minutes = Math.floor((duration / (1000 * 60)) % 60),
+        hours = Math.floor((duration / (1000 * 60 * 60)) % 24);
 
-  hours = (hours < 10) ? "0" + hours : hours;
-  minutes = (minutes < 10) ? "0" + minutes : minutes;
-  seconds = (seconds < 10) ? "0" + seconds : seconds;
+    hours = (hours < 10) ? "0" + hours : hours;
+    minutes = (minutes < 10) ? "0" + minutes : minutes;
+    seconds = (seconds < 10) ? "0" + seconds : seconds;
 
-  return hours + ":" + minutes + ":" + seconds + "." + milliseconds;
+    return hours + ":" + minutes + ":" + seconds + "." + milliseconds;
 }
 
- function fromSrt(data) {
+function fromSrt(data) {
 
-        data = data.replace(/\r/g, '');
+    data = data.replace(/\r/g, "");
 
-        var regex = /(\d+)\n(\d{2}:\d{2}:\d{2},\d{3}) --> (\d{2}:\d{2}:\d{2},\d{3})/g;
-        data = data.split(regex);
-//        console.log(data);
-        data.shift();
-//        console.log(data);
+    var regex = /(\d+)\n(\d{2}:\d{2}:\d{2},\d{3}) --> (\d{2}:\d{2}:\d{2},\d{3})/g;
+    data = data.split(regex);
+//        logger.debug(data);
+    data.shift();
+//        logger.debug(data);
 
-        var items = "";
+    var items = "";
 
-        for (var i = 0; i < data.length; i += 4) {
+    for (var i = 0; i < data.length; i += 4) {
 
-            if (i < (data.length-4)){
-                items = items + 
-                    "{" + 
-                    "\"id\": \"" + data[i].trim() +"\"," +
-                    "\"startTime\": \"" + data[i + 1].trim() +"\"," +
-                    "\"endTime\": \"" +  data[i + 2].trim() +"\"," +
+        if (i < (data.length - 4)) {
+            items = items +
+                    "{" +
+                    "\"id\": \"" + data[i].trim() + "\"," +
+                    "\"startTime\": \"" + data[i + 1].trim() + "\"," +
+                    "\"endTime\": \"" + data[i + 2].trim() + "\"," +
                     "\"text\": \"" + data[i + 3].trim() + "\"" +
                     "},";
-            } else if (i === (data.length-4)){
-                items = items + 
-                    "{" + 
-                        "\"id\": \"" + data[i].trim() +"\"," +
-                        "\"startTime\": \"" + data[i + 1].trim() +"\"," +
-                        "\"endTime\": \"" +  data[i + 2].trim() +"\"," +
-                        "\"text\": \"" + data[i + 3].trim() + "\"" +
+        } else if (i === (data.length - 4)) {
+            items = items +
+                    "{" +
+                    "\"id\": \"" + data[i].trim() + "\"," +
+                    "\"startTime\": \"" + data[i + 1].trim() + "\"," +
+                    "\"endTime\": \"" + data[i + 2].trim() + "\"," +
+                    "\"text\": \"" + data[i + 3].trim() + "\"" +
                     "}";
-            };
-        };  
-//      console.log(items);
+        }
+    }
+//      logger.debug(items);
 
-        return items;
-};
+    return items;
+}
 
-console.log(msToTime(300000))
+async function tokenizedTextToSpeech(providers, jobAssignmentHelper) {
+    const logger = jobAssignmentHelper.getLogger();
 
-
-
-
-async function tokenizedTextToSpeech(workerJobHelper) {
-    const jobInput = workerJobHelper.getJobInput();
+    const jobInput = jobAssignmentHelper.getJobInput();
     const inputFile = jobInput.inputFile;
     const voiceId = jobInput.voiceId;
-    const jobAssignmentId = workerJobHelper.getJobAssignmentId();
+    const jobAssignmentId = jobAssignmentHelper.getJobAssignmentId();
 
-    Logger.debug("14. Generate SSML file for Polly from Tokenized translation");
+    logger.debug("14. Generate SSML file for Polly from Tokenized translation");
 
-    Logger.debug("14.1. get input text file from translation service stored in tempBucket (defined in job initiator in step 14");
+    logger.debug("14.1. get input text file from translation service stored in tempBucket (defined in job initiator in step 14");
     const s3Bucket = inputFile.awsS3Bucket;
     const s3Key = inputFile.awsS3Key;
     let s3Object;
     try {
-        s3Object = await S3GetObject({
+        s3Object = await S3.getObject({
             Bucket: s3Bucket,
             Key: s3Key,
-        });
+        }).promise();
     } catch (error) {
-        throw new Error("Unable to read file in bucket '" + s3Bucket + "' with key '" + s3Key + "' due to error: " + error.message);
+        throw new Exception("Unable to read file in bucket '" + s3Bucket + "' with key '" + s3Key + "' due to error: " + error.message);
     }
 
-    Logger.debug("14.2. extract text from file");
+    logger.debug("14.2. extract text from file");
     const inputText = s3Object.Body.toString();
-    console.log("translation:", inputText)
+    logger.debug("translation:", inputText);
 
-    Logger.debug("14.3. setup and call polly service to retrieve speechmarks per sentence");
+    logger.debug("14.3. setup and call polly service to retrieve speechmarks per sentence");
     const params_sm = {
-            OutputFormat: 'json',
-            OutputS3BucketName: workerJobHelper.getRequest().getRequiredContextVariable("ServiceOutputBucket"),
-            OutputS3KeyPrefix:'000-TextTokensSpeechMarksJob-' + jobAssignmentId.substring(jobAssignmentId.lastIndexOf("/") + 1),
-            Text: inputText,
-            SpeechMarkTypes: ["sentence"],
-            VoiceId: voiceId,
-            TextType: 'text'
-        }
-    const data = await PollyStartSpeechSynthesisTask(params_sm);
+        OutputFormat: "json",
+        OutputS3BucketName: jobAssignmentHelper.getRequest().getRequiredContextVariable("ServiceOutputBucket"),
+        OutputS3KeyPrefix: "000-TextTokensSpeechMarksJob-" + jobAssignmentId.substring(jobAssignmentId.lastIndexOf("/") + 1),
+        Text: inputText,
+        SpeechMarkTypes: ["sentence"],
+        VoiceId: voiceId,
+        TextType: "text"
+    };
+    const data = await Polly.startSpeechSynthesisTask(params_sm).promise();
 
-    Logger.debug("14.4. visualise data with url to the speechmarks file generated by the service");
-    console.log(data);
+    logger.debug("14.4. visualise data with url to the speechmarks file generated by the service");
+    logger.debug(data);
 
-    Logger.debug("14.5. OutputS3KeyPrefix used in s3-trigger");
-    console.log("See regex for textTokenSpeechMarksJob in aws-ai-service/se-trigger/src/index.js");
-    console.log(params_sm.OutputS3KeyPrefix);
+    logger.debug("14.5. OutputS3KeyPrefix used in s3-trigger");
+    logger.debug("See regex for textTokenSpeechMarksJob in aws-ai-service/se-trigger/src/index.js");
+    logger.debug(params_sm.OutputS3KeyPrefix);
 
 
 }
 
-const dynamoDbTableProvider = new DynamoDbTableProvider(JobAssignment);
-
-const processTokenizedTextToSpeechJobResult = async (request) => {
-    const workerJobHelper = new WorkerJobHelper(
-        AIJob,
-        dynamoDbTableProvider.table(request.tableName()),
-        getAwsV4ResourceManager(request),
-        request,
-        request.input.jobAssignmentId
+async function processTokenizedTextToSpeechJobResult(providers, workerRequest) {
+    const jobAssignmentHelper = new ProcessJobAssignmentHelper(
+        providers.getDbTableProvider().get(workerRequest.tableName()),
+        providers.getResourceManagerProvider().get(workerRequest),
+        providers.getLoggerProvider().get(workerRequest.tracker),
+        workerRequest
     );
 
-    let jobAssignmentId = request.input.jobAssignmentId;
-    
- 
+    const logger = jobAssignmentHelper.getLogger();
     try {
-        await workerJobHelper.initialize();
+        await jobAssignmentHelper.initialize();
 
-        Logger.debug("14.6. Retrieve job inputParameters");
-        let jobInput = workerJobHelper.getJobInput();
+        logger.debug("14.6. Retrieve job inputParameters");
+        let jobInput = jobAssignmentHelper.getJobInput();
 
-        Logger.debug("14.7. retrieve speechmarks");
-        let s3Bucket = request.input.outputFile.awsS3Bucket;
-        let s3Key = request.input.outputFile.awsS3Key;
-        const speechmarks = await S3GetObject({ Bucket: s3Bucket, Key: s3Key });
-        console.log(speechmarks.Body.toString());
-        let speechmarks_json_a = "{ \"results\": { \"items\": [" + speechmarks.Body.toString().replace(/}/g, '},') + "]}}";
+        logger.debug("14.7. retrieve speechmarks");
+        let s3Bucket = workerRequest.input.outputFile.awsS3Bucket;
+        let s3Key = workerRequest.input.outputFile.awsS3Key;
+        const speechmarks = await S3.getObject({ Bucket: s3Bucket, Key: s3Key }).promise();
+        logger.debug(speechmarks.Body.toString());
+        let speechmarks_json_a = "{ \"results\": { \"items\": [" + speechmarks.Body.toString().replace(/}/g, "},") + "]}}";
         let speechmarks_json_b = speechmarks_json_a.replace(/[\n]/g, "");
-        let speechmarks_json = speechmarks_json_b.replace(',]' , ']');
-        console.log(speechmarks_json);
+        let speechmarks_json = speechmarks_json_b.replace(",]", "]");
+        logger.debug(speechmarks_json);
 
-        Logger.debug("14.8. copy speechmarks in speechmarks json file");
+        logger.debug("14.8. copy speechmarks in speechmarks json file");
         let s3Bucket_sm = jobInput.outputLocation.awsS3Bucket;
-        let s3Key_sm = jobInput.outputLocation.awsS3KeyPrefix + "speechmarks.json" ;
+        let s3Key_sm = jobInput.outputLocation.awsS3KeyPrefix + "speechmarks.json";
         let s3Params_sm = {
             Bucket: s3Bucket_sm,
             Key: s3Key_sm,
             Body: speechmarks_json
-        }
-        await S3PutObject(s3Params_sm);
+        };
+        await S3.putObject(s3Params_sm).promise();
 
-        Logger.debug("14.9. transform speechmarks into srt for subtitle offline editing and synchronisation");
+        logger.debug("14.9. transform speechmarks into srt for subtitle offline editing and synchronisation");
         let speechmarksJsonData = JSON.parse(speechmarks_json);
-        console.log(speechmarksJsonData);
+        logger.debug(speechmarksJsonData);
 
-        let speechmarksrt =""; 
-        let ksrt = 0;
-        for (var j = 0; j < speechmarksJsonData.results.items.length; j++) {
-            let ksrt = j+1;
-            if ( j+1 < speechmarksJsonData.results.items.length){ 
+        let speechmarksrt = "";
+        for (let j = 0; j < speechmarksJsonData.results.items.length; j++) {
+            let ksrt = j + 1;
+            if (j + 1 < speechmarksJsonData.results.items.length) {
                 let speechmarksJsonDataItem = speechmarksJsonData.results.items[j];
-                let speechmarksJsonNextDataItem = speechmarksJsonData.results.items[j+1];
-                let start =  msToTime(speechmarksJsonDataItem.time);
-                let end =  msToTime(speechmarksJsonNextDataItem.time - 10);
+                let speechmarksJsonNextDataItem = speechmarksJsonData.results.items[j + 1];
+                let start = msToTime(speechmarksJsonDataItem.time);
+                let end = msToTime(speechmarksJsonNextDataItem.time - 10);
 
                 speechmarksrt = speechmarksrt +
-                "\r\n" + ksrt + "\r\n" +
-                start + " --> " + end + "\r\n" +
-                speechmarksJsonDataItem.value;
+                                "\r\n" + ksrt + "\r\n" +
+                                start + " --> " + end + "\r\n" +
+                                speechmarksJsonDataItem.value;
 
-            } else if (j+1 === speechmarksJsonData.results.items.length){ 
+            } else if (j + 1 === speechmarksJsonData.results.items.length) {
                 let speechmarksJsonDataItem = speechmarksJsonData.results.items[j];
-                let start =  msToTime(speechmarksJsonDataItem.time);
+                let start = msToTime(speechmarksJsonDataItem.time);
                 let end = start + 1000;
 
                 speechmarksrt = speechmarksrt +
-                "\r\n" + j + "\r\n" +
-                start + " --> " + end + "\r\n" +
-                speechmarksJsonDataItem.value;
+                                "\r\n" + j + "\r\n" +
+                                start + " --> " + end + "\r\n" +
+                                speechmarksJsonDataItem.value;
             }
 
         }
-        console.log(speechmarksrt);
+        logger.debug(speechmarksrt);
 
-        Logger.debug("14.10. save speechmarks srt into a speechmarks.srt file under temp/AIResults/SSML");
+        logger.debug("14.10. save speechmarks srt into a speechmarks.srt file under temp/AIResults/SSML");
         let s3Bucket_smsrt = jobInput.outputLocation.awsS3Bucket;
-        let s3Key_smsrt = jobInput.outputLocation.awsS3KeyPrefix + "speechmarks.srt" ;
+        let s3Key_smsrt = jobInput.outputLocation.awsS3KeyPrefix + "speechmarks.srt";
         let s3Params_smsrt = {
             Bucket: s3Bucket_smsrt,
             Key: s3Key_smsrt,
             Body: speechmarksrt
-        }
-        await S3PutObject(s3Params_smsrt);
-        
+        };
+        await S3.putObject(s3Params_smsrt).promise();
 
-        Logger.debug("14.11. get edited/synched srt of translation after alignment with srt_output_clean from temp/srt bucket and timing adjustment, inserting srt_translation_output(_synched).srt in the workflow");
+
+        logger.debug("14.11. get edited/synched srt of translation after alignment with srt_output_clean from temp/srt bucket and timing adjustment, inserting srt_translation_output(_synched).srt in the workflow");
         const s3Bucket_syncsrt = jobInput.outputLocation.awsS3Bucket;
 //        const s3Key_syncsrt = "srt/srt_translation_output_synched.srt";
         const s3Key_syncsrt = "srt/srt_translation_output.srt";
         let s3Object_syncsrt;
         try {
-            s3Object_syncsrt = await S3GetObject({
+            s3Object_syncsrt = await S3.getObject({
                 Bucket: s3Bucket_syncsrt,
                 Key: s3Key_syncsrt,
-            });
+            }).promise();
         } catch (error) {
-            throw new Error("Unable to read file in bucket '" + s3Bucket_syncsrt + "' with key '" + s3Key_syncsrt + "' due to error: " + error.message);
+            throw new Exception("Unable to read file in bucket '" + s3Bucket_syncsrt + "' with key '" + s3Key_syncsrt + "' due to error: " + error.message);
         }
 
-        Logger.debug("14.12. retrieve and jsonify text from srt_translation_output(_synched).srt and format as valid parsable json");
+        logger.debug("14.12. retrieve and jsonify text from srt_translation_output(_synched).srt and format as valid parsable json");
         const jsonfromsrt = fromSrt(s3Object_syncsrt.Body.toString());
-//        console.log(jsonfromsrt);
+//        logger.debug(jsonfromsrt);
         const syncSrtJson = "{ \"results\": {\"items\": [" + jsonfromsrt.toString() + "]}}";
-        console.log(syncSrtJson);
+        logger.debug(syncSrtJson);
 
         const syncSrtJsonData = JSON.parse(syncSrtJson);
-        console.log(syncSrtJsonData);
+        logger.debug(syncSrtJsonData);
 
-        Logger.debug("14.13. generate SSML file with breaks and translation sentences from speech marks and timings from stt");
-        let ssldata ="<speak>";
+        logger.debug("14.13. generate SSML file with breaks and translation sentences from speech marks and timings from stt");
+        let ssldata = "<speak>";
 
         for (var j = 0; j < syncSrtJsonData.results.items.length; j++) {
             let item = syncSrtJsonData.results.items[j];
 
             let itemstart = item.startTime;
-            itemstart = itemstart.replace(',','.');
-//            console.log(itemstart);
-            let itemstartsplit = itemstart.split(':')
-//            console.log(itemstartsplit);
-            let itemstartms = parseInt(itemstartsplit[0]*3600000) + parseInt(itemstartsplit[1])*60000 + parseFloat(itemstartsplit[2])*1000;
-//            console.log(itemstartms);
+            itemstart = itemstart.replace(",", ".");
+//            logger.debug(itemstart);
+            let itemstartsplit = itemstart.split(":");
+//            logger.debug(itemstartsplit);
+            let itemstartms = parseInt(itemstartsplit[0] * 3600000) + parseInt(itemstartsplit[1]) * 60000 + parseFloat(itemstartsplit[2]) * 1000;
+//            logger.debug(itemstartms);
             let itemend = item.endTime;
-            itemend = itemend.replace(',','.')
-//            console.log(itemend);
-            let itemendsplit = itemend.split(':')
-            let itemendms = parseInt(itemendsplit[0]*3600000) + parseInt(itemendsplit[1])*60000 + parseFloat(itemendsplit[2])*1000;
-//            console.log(itemendms);
+            itemend = itemend.replace(",", ".");
+//            logger.debug(itemend);
+            let itemendsplit = itemend.split(":");
+            let itemendms = parseInt(itemendsplit[0] * 3600000) + parseInt(itemendsplit[1]) * 60000 + parseFloat(itemendsplit[2]) * 1000;
+//            logger.debug(itemendms);
 
-            let breaktime = 0;
-            let breaktimeSecond = 0;
-            let m = 0;
+            let breakTime = 0;
+            let breakTimeSecond = 0;
 
-            if (j === 0 & itemstartms > 0 ) {
+            if (j === 0 && itemstartms > 0) {
 
-                breakTime = itemstartms/1000;
+                breakTime = itemstartms / 1000;
                 breakTimeSecond = breakTime;
 
                 ssldata = ssldata + "<break time=\"" + breakTimeSecond + "s\"/>";
 
-                if (j+1 < syncSrtJsonData.results.items.length ){
-                    let m = j+1;
+                if (j + 1 < syncSrtJsonData.results.items.length) {
+                    let m = j + 1;
                     let nextitem1 = syncSrtJsonData.results.items[m];
                     let nextitem1start = nextitem1.startTime;
-                    let nextitem1startsplit = nextitem1start.split(':')
-                    let nextitem1startms = parseInt(nextitem1startsplit[0]*3600000) + parseInt(nextitem1startsplit[1])*60000 + parseFloat(nextitem1startsplit[2])*1000;
-                    breakTime = ((nextitem1startms - itemendms)/1000);
-                    if (breakTime < 0){
+                    let nextitem1startsplit = nextitem1start.split(":");
+                    let nextitem1startms = parseInt(nextitem1startsplit[0] * 3600000) + parseInt(nextitem1startsplit[1]) * 60000 + parseFloat(nextitem1startsplit[2]) * 1000;
+                    breakTime = ((nextitem1startms - itemendms) / 1000);
+                    if (breakTime < 0) {
                         breakTime = 0;
                     }
                     breakTimeSecond = breakTime;
 
-                    ssldata = ssldata  + item.text  + "<break time=\"" + breakTimeSecond + "s\"/>";
+                    ssldata = ssldata + item.text + "<break time=\"" + breakTimeSecond + "s\"/>";
                 }
-            } else if (j+1 < syncSrtJsonData.results.items.length ){
-                let m = j+1;
+            } else if (j + 1 < syncSrtJsonData.results.items.length) {
+                let m = j + 1;
                 let nextitem = syncSrtJsonData.results.items[m];
                 let nextitemstart = nextitem.startTime;
-                let nextitemstartsplit = nextitemstart.split(':')
-                let nextitemstartms = parseInt(nextitemstartsplit[0]*3600000) + parseInt(nextitemstartsplit[1])*60000 + parseFloat(nextitemstartsplit[2])*1000;
-                breakTime = ((nextitemstartms - itemendms)/1000);
-                if (breakTime < 0){
+                let nextitemstartsplit = nextitemstart.split(":");
+                let nextitemstartms = parseInt(nextitemstartsplit[0] * 3600000) + parseInt(nextitemstartsplit[1]) * 60000 + parseFloat(nextitemstartsplit[2]) * 1000;
+                breakTime = ((nextitemstartms - itemendms) / 1000);
+                if (breakTime < 0) {
                     breakTime = 0;
                 }
                 breakTimeSecond = breakTime;
 
-                ssldata = ssldata  + item.text  + "<break time=\"" + breakTimeSecond + "s\"/>";
+                ssldata = ssldata + item.text + "<break time=\"" + breakTimeSecond + "s\"/>";
 
-            } else if (j+1 === syncSrtJsonData.results.items.length ){
-                ssldata = ssldata  + item.text;
+            } else if (j + 1 === syncSrtJsonData.results.items.length) {
+                ssldata = ssldata + item.text;
             }
-//            console.log(ssldata);
+//            logger.debug(ssldata);
         }
 
-        ssldata=ssldata + "</speak>";
+        ssldata = ssldata + "</speak>";
 
-        Logger.debug("14.14. visualise SSML data");
-        console.log(ssldata);
+        logger.debug("14.14. visualise SSML data");
+        logger.debug(ssldata);
 
-        Logger.debug("14.15. save ssml data into a ssml.txt file");
+        logger.debug("14.15. save ssml data into a ssml.txt file");
         let s3Bucket_ssml = jobInput.outputLocation.awsS3Bucket;
         let s3Key_ssml = jobInput.outputLocation.awsS3KeyPrefix + "ssml.txt";
         let s3Params_ssml = {
             Bucket: s3Bucket_ssml,
             Key: s3Key_ssml,
             Body: ssldata
-        }
-        await S3PutObject(s3Params_ssml);
+        };
+        await S3.putObject(s3Params_ssml);
 
-        Logger.debug("14.16. updating JobAssignment with jobOutput -> ssml txt file");
-        workerJobHelper.getJobOutput().outputFile = new Locator({
+        logger.debug("14.16. updating JobAssignment with jobOutput -> ssml txt file");
+        jobAssignmentHelper.getJobOutput().outputFile = new AwsS3FileLocator({
             awsS3Bucket: s3Bucket_ssml,
             awsS3Key: s3Key_ssml
         });
-        
-        await workerJobHelper.complete();
+
+        await jobAssignmentHelper.complete();
 
 
     } catch (error) {
-        Logger.exception(error);
+        logger.exception(error);
         try {
-            await workerJobHelper.fail(error.message);
+            await jobAssignmentHelper.fail(error.message);
         } catch (error) {
-            Logger.exception(error);
+            logger.exception(error);
         }
     }
 
 
-    Logger.debug("14.17. clean up service output file");
+    logger.debug("14.17. clean up service output file");
     try {
-        await S3DeleteObject({
-            Bucket: request.input.outputFile.awsS3Bucket,
-            Key: request.input.outputFile.awsS3Key,
-        });
+        await S3.deleteObject({
+            Bucket: workerRequest.input.outputFile.awsS3Bucket,
+            Key: workerRequest.input.outputFile.awsS3Key,
+        }).promise();
     } catch (error) {
         console.warn("Failed to cleanup ssml translation output file");
     }
 
 }
-
-tokenizedTextToSpeech.profileName = "AWSTokenizedTextToSpeech";
 
 module.exports = {
     tokenizedTextToSpeech,
