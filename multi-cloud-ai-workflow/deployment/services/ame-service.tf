@@ -2,30 +2,42 @@
 #  aws_lambda_function : ame-service-api-handler
 #################################
 
-resource "aws_lambda_function" "ame-service-api-handler" {
+resource "aws_lambda_function" "ame_service_api_handler" {
   filename         = "../services/ame-service/api-handler/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-ame-service-api-handler")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
   source_code_hash = filebase64sha256("../services/ame-service/api-handler/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
-  timeout          = "30"
-  memory_size      = "256"
+  timeout          = "900"
+  memory_size      = "3008"
+
+  environment {
+    variables = {
+      LogGroupName = var.global_prefix
+    }
+  }
 }
 
 #################################
 #  aws_lambda_function : ame-service-worker
 #################################
 
-resource "aws_lambda_function" "ame-service-worker" {
+resource "aws_lambda_function" "ame_service_worker" {
   filename         = "../services/ame-service/worker/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-ame-service-worker")
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
   source_code_hash = filebase64sha256("../services/ame-service/worker/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
-  timeout          = "300"
+  timeout          = "900"
   memory_size      = "3008"
+
+  environment {
+    variables = {
+      LogGroupName = var.global_prefix
+    }
+  }
 }
 
 ##################################
@@ -67,6 +79,58 @@ resource "aws_api_gateway_resource" "ame_service_api_resource" {
   path_part   = "{proxy+}"
 }
 
+resource "aws_api_gateway_method" "ame_service_options_method" {
+  rest_api_id   = aws_api_gateway_rest_api.ame_service_api.id
+  resource_id   = aws_api_gateway_resource.ame_service_api_resource.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_method_response" "ame_service_options_200" {
+  rest_api_id = aws_api_gateway_rest_api.ame_service_api.id
+  resource_id = aws_api_gateway_resource.ame_service_api_resource.id
+  http_method = aws_api_gateway_method.ame_service_options_method.http_method
+  status_code = "200"
+
+  response_models = {
+    "application/json" = "Empty"
+  }
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+resource "aws_api_gateway_integration" "ame_service_options_integration" {
+  rest_api_id = aws_api_gateway_rest_api.ame_service_api.id
+  resource_id = aws_api_gateway_resource.ame_service_api_resource.id
+  http_method = aws_api_gateway_method.ame_service_options_method.http_method
+  type        = "MOCK"
+
+  request_templates = {
+    "application/json" = "{ \"statusCode\": 200 }"
+  }
+}
+
+resource "aws_api_gateway_integration_response" "ame_service_options_integration_response" {
+  rest_api_id = aws_api_gateway_rest_api.ame_service_api.id
+  resource_id = aws_api_gateway_resource.ame_service_api_resource.id
+  http_method = aws_api_gateway_method.ame_service_options_method.http_method
+  status_code = aws_api_gateway_method_response.ame_service_options_200.status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT,PATCH,DELETE'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+
+  response_templates = {
+    "application/json" = ""
+  }
+}
+
 resource "aws_api_gateway_method" "ame_service_api_method" {
   rest_api_id   = aws_api_gateway_rest_api.ame_service_api.id
   resource_id   = aws_api_gateway_resource.ame_service_api_resource.id
@@ -79,33 +143,40 @@ resource "aws_api_gateway_integration" "ame_service_api_method_integration" {
   resource_id             = aws_api_gateway_resource.ame_service_api_resource.id
   http_method             = aws_api_gateway_method.ame_service_api_method.http_method
   type                    = "AWS_PROXY"
-  uri                     = "arn:aws:apigateway:${var.aws_region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${var.aws_region}:${var.aws_account_id}:function:${aws_lambda_function.ame-service-api-handler.function_name}/invocations"
+  uri                     = "arn:aws:apigateway:${var.aws_region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${var.aws_region}:${var.aws_account_id}:function:${aws_lambda_function.ame_service_api_handler.function_name}/invocations"
   integration_http_method = "POST"
 }
 
-resource "aws_lambda_permission" "apigw_ame-service-api-handler" {
+resource "aws_lambda_permission" "apigw_ame_service_api_handler" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.ame-service-api-handler.arn
+  function_name = aws_lambda_function.ame_service_api_handler.arn
   principal     = "apigateway.amazonaws.com"
-
-  # More: http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-control-access-using-iam-policies-to-invoke-api.html
-  source_arn = "arn:aws:execute-api:${var.aws_region}:${var.aws_account_id}:${aws_api_gateway_rest_api.ame_service_api.id}/*/${aws_api_gateway_method.ame_service_api_method.http_method}/*"
+  source_arn    = "arn:aws:execute-api:${var.aws_region}:${var.aws_account_id}:${aws_api_gateway_rest_api.ame_service_api.id}/*/${aws_api_gateway_method.ame_service_api_method.http_method}/*"
 }
 
 resource "aws_api_gateway_deployment" "ame_service_deployment" {
-  depends_on = [aws_api_gateway_integration.ame_service_api_method_integration]
+  depends_on = [
+    aws_api_gateway_integration.ame_service_api_method_integration,
+    aws_api_gateway_integration.ame_service_options_integration,
+  ]
 
   rest_api_id = aws_api_gateway_rest_api.ame_service_api.id
   stage_name  = var.environment_type
+}
+
+resource "aws_api_gateway_stage" "ame_service_gateway_stage" {
+  stage_name    = var.environment_type
+  deployment_id = aws_api_gateway_deployment.ame_service_deployment.id
+  rest_api_id   = aws_api_gateway_rest_api.ame_service_api.id
 
   variables = {
-    TableName           = "${var.global_prefix}-ame-service"
-    PublicUrl           = local.ame_service_url
-    ServicesUrl         = local.services_url
-    ServicesAuthType    = local.service_registry_auth_type
-    WorkerFunctionName  = aws_lambda_function.ame-service-worker.function_name
-    DeploymentHash      = filesha256("./services/ame-service.tf")
+    TableName        = aws_dynamodb_table.ame_service_table.name
+    PublicUrl        = local.ame_service_url
+    ServicesUrl      = local.services_url
+    ServicesAuthType = local.service_registry_auth_type
+    WorkerFunctionId = aws_lambda_function.ame_service_worker.function_name
+    DeploymentHash   = filesha256("./services/ame-service.tf")
   }
 }
 
