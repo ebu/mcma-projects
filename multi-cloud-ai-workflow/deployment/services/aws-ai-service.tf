@@ -413,7 +413,12 @@ resource "aws_api_gateway_deployment" "aws_ai_service_deployment" {
   ]
 
   rest_api_id = aws_api_gateway_rest_api.aws_ai_service_api.id
-  stage_name  = var.environment_type
+}
+
+resource "aws_api_gateway_stage" "aws_ai_service_gateway_stage" {
+  stage_name    = var.environment_type
+  deployment_id = aws_api_gateway_deployment.aws_ai_service_deployment.id
+  rest_api_id   = aws_api_gateway_rest_api.aws_ai_service_api.id
 
   variables = {
     TableName           = aws_dynamodb_table.aws_ai_service_table.name
