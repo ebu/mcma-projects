@@ -50,6 +50,10 @@ exports.handler = async (event, context) => {
             })
         });
 
+        if (1 === 1) {
+            return;
+        }
+
         // posting the workflowJob to the job repository
         workflowJob = await resourceManager.create(workflowJob);
 

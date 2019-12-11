@@ -1,9 +1,9 @@
 output "ai_workflow_id" {
-  value = aws_sfn_state_machine.ai-workflow.id
+  value = aws_sfn_state_machine.ai_workflow.id
 }
 
 output "conform_workflow_id" {
-  value = aws_sfn_state_machine.conform-workflow.id
+  value = aws_sfn_state_machine.conform_workflow.id
 }
 
 output "workflow_service_notification_url" {

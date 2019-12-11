@@ -1,11 +1,3 @@
-#########################
-# Provider registration 
-#########################
-
-provider "template" {
-  version = "~> 2.1"
-}
-
 #################################
 #  aws_iam_policy : policies
 #################################
@@ -49,22 +41,22 @@ resource "aws_iam_role" "iam_for_exec_lambda" {
   assume_role_policy = file("policies/lambda-assume-role.json")
 }
 
-resource "aws_iam_role_policy_attachment" "role-policy-log" {
+resource "aws_iam_role_policy_attachment" "role_policy_log" {
   role       = aws_iam_role.iam_for_exec_lambda.name
   policy_arn = aws_iam_policy.log_policy.arn
 }
 
-resource "aws_iam_role_policy_attachment" "role-policy-S3" {
+resource "aws_iam_role_policy_attachment" "role_policy_S3" {
   role       = aws_iam_role.iam_for_exec_lambda.name
   policy_arn = aws_iam_policy.S3_policy.arn
 }
 
-resource "aws_iam_role_policy_attachment" "role-policy-steps" {
+resource "aws_iam_role_policy_attachment" "role_policy_steps" {
   role       = aws_iam_role.iam_for_exec_lambda.name
   policy_arn = aws_iam_policy.steps_policy.arn
 }
 
-resource "aws_iam_role_policy_attachment" "role-policy-api-gateway" {
+resource "aws_iam_role_policy_attachment" "role_policy_api_gateway" {
   role       = aws_iam_role.iam_for_exec_lambda.name
   policy_arn = aws_iam_policy.APIGateway_policy.arn
 }
@@ -80,7 +72,7 @@ resource "aws_iam_role" "iam_for_state_machine_execution" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "role-policy-allow-steps-invoke-lambda" {
+resource "aws_iam_role_policy_attachment" "role_policy_allow_steps_invoke_lambda" {
   role       = aws_iam_role.iam_for_state_machine_execution.name
   policy_arn = aws_iam_policy.policy_steps_invoke_lambda.arn
 }
@@ -89,7 +81,7 @@ resource "aws_iam_role_policy_attachment" "role-policy-allow-steps-invoke-lambda
 #  Step Functions : Lambdas used in all workflows
 #################################
 
-resource "aws_lambda_function" "process-workflow-completion" {
+resource "aws_lambda_function" "process_workflow_completion" {
   filename         = "../workflows/process-workflow-completion/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-process-workflow-completion")
   role             = aws_iam_role.iam_for_exec_lambda.arn
@@ -108,7 +100,7 @@ resource "aws_lambda_function" "process-workflow-completion" {
   }
 }
 
-resource "aws_lambda_function" "process-workflow-failure" {
+resource "aws_lambda_function" "process_workflow_failure" {
   filename         = "../workflows/process-workflow-failure/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-process-workflow-failure")
   role             = aws_iam_role.iam_for_exec_lambda.arn
@@ -131,7 +123,7 @@ resource "aws_lambda_function" "process-workflow-failure" {
 #  Step Functions : Workflow activity callback handler
 #################################
 
-resource "aws_lambda_function" "workflow-activity-callback-handler" {
+resource "aws_lambda_function" "workflow_activity_callback_handler" {
   filename         = "../workflows/workflow-activity-callback-handler/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-workflow-activity-callback-handler")
   role             = aws_iam_role.iam_for_exec_lambda.arn
@@ -174,14 +166,14 @@ resource "aws_api_gateway_integration" "workflow_activity_callback_handler_metho
   resource_id             = aws_api_gateway_resource.workflow_activity_callback_handler_resource.id
   http_method             = aws_api_gateway_method.workflow_activity_callback_handler_method.http_method
   type                    = "AWS_PROXY"
-  uri                     = "arn:aws:apigateway:${var.aws_region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${var.aws_region}:${var.aws_account_id}:function:${aws_lambda_function.workflow-activity-callback-handler.function_name}/invocations"
+  uri                     = "arn:aws:apigateway:${var.aws_region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${var.aws_region}:${var.aws_account_id}:function:${aws_lambda_function.workflow_activity_callback_handler.function_name}/invocations"
   integration_http_method = "POST"
 }
 
 resource "aws_lambda_permission" "apigw_workflow_activity_callback_handler" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.workflow-activity-callback-handler.arn
+  function_name = aws_lambda_function.workflow_activity_callback_handler.arn
   principal     = "apigateway.amazonaws.com"
   source_arn    = "arn:aws:execute-api:${var.aws_region}:${var.aws_account_id}:${aws_api_gateway_rest_api.workflow_activity_callback_handler.id}/*/${aws_api_gateway_method.workflow_activity_callback_handler_method.http_method}/*"
 }
