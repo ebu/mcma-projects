@@ -296,11 +296,10 @@ resource "aws_iam_role_policy_attachment" "role_policy_lambda_full_access_SNS_to
 ##################################
 
 resource "aws_dynamodb_table" "aws_ai_service_table" {
-  name           = "${var.global_prefix}-aws-ai-service"
-  read_capacity  = 1
-  write_capacity = 1
-  hash_key       = "resource_type"
-  range_key      = "resource_id"
+  name         = "${var.global_prefix}-aws-ai-service"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "resource_type"
+  range_key    = "resource_id"
 
   attribute {
     name = "resource_type"

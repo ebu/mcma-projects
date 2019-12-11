@@ -45,11 +45,10 @@ resource "aws_lambda_function" "ame_service_worker" {
 ##################################
 
 resource "aws_dynamodb_table" "ame_service_table" {
-  name           = "${var.global_prefix}-ame-service"
-  read_capacity  = 1
-  write_capacity = 1
-  hash_key       = "resource_type"
-  range_key      = "resource_id"
+  name         = "${var.global_prefix}-ame-service"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "resource_type"
+  range_key    = "resource_id"
 
   attribute {
     name = "resource_type"

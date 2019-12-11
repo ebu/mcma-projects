@@ -45,11 +45,10 @@ resource "aws_lambda_function" "google_ai_service_worker" {
 ##################################
 
 resource "aws_dynamodb_table" "google_ai_service_table" {
-  name           = "${var.global_prefix}-google-ai-service"
-  read_capacity  = 1
-  write_capacity = 1
-  hash_key       = "resource_type"
-  range_key      = "resource_id"
+  name         = "${var.global_prefix}-google-ai-service"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "resource_type"
+  range_key    = "resource_id"
 
   attribute {
     name = "resource_type"

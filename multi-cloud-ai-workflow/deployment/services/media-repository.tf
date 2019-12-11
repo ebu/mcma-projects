@@ -24,11 +24,10 @@ resource "aws_lambda_function" "media_repository_api_handler" {
 ##################################
 
 resource "aws_dynamodb_table" "media_repository_table" {
-  name           = "${var.global_prefix}-media-repository"
-  read_capacity  = 1
-  write_capacity = 1
-  hash_key       = "resource_type"
-  range_key      = "resource_id"
+  name         = "${var.global_prefix}-media-repository"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "resource_type"
+  range_key    = "resource_id"
 
   attribute {
     name = "resource_type"
@@ -131,7 +130,7 @@ resource "aws_lambda_permission" "apigw_media_repository_api_handler" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.media_repository_api_handler.arn
   principal     = "apigateway.amazonaws.com"
-  source_arn = "arn:aws:execute-api:${var.aws_region}:${var.aws_account_id}:${aws_api_gateway_rest_api.media_repository_api.id}/*/${aws_api_gateway_method.media_repository_api_method.http_method}/*"
+  source_arn    = "arn:aws:execute-api:${var.aws_region}:${var.aws_account_id}:${aws_api_gateway_rest_api.media_repository_api.id}/*/${aws_api_gateway_method.media_repository_api_method.http_method}/*"
 }
 
 resource "aws_api_gateway_deployment" "media_repository_deployment" {
@@ -149,8 +148,8 @@ resource "aws_api_gateway_stage" "media_repository_gateway_stage" {
   rest_api_id   = aws_api_gateway_rest_api.media_repository_api.id
 
   variables = {
-    TableName = aws_dynamodb_table.media_repository_table.name
-    PublicUrl = local.media_repository_url
+    TableName      = aws_dynamodb_table.media_repository_table.name
+    PublicUrl      = local.media_repository_url
     DeploymentHash = filesha256("./services/media-repository.tf")
   }
 }

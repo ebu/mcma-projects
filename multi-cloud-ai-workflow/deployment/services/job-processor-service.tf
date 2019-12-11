@@ -45,11 +45,10 @@ resource "aws_lambda_function" "job_processor_service_worker" {
 ##################################
 
 resource "aws_dynamodb_table" "job_processor_service_table" {
-  name           = "${var.global_prefix}-job-processor-service"
-  read_capacity  = 1
-  write_capacity = 1
-  hash_key       = "resource_type"
-  range_key      = "resource_id"
+  name         = "${var.global_prefix}-job-processor-service"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "resource_type"
+  range_key    = "resource_id"
 
   attribute {
     name = "resource_type"
@@ -152,7 +151,7 @@ resource "aws_lambda_permission" "apigw_job_processor_service_api_handler" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.job_processor_service_api_handler.arn
   principal     = "apigateway.amazonaws.com"
-  source_arn = "arn:aws:execute-api:${var.aws_region}:${var.aws_account_id}:${aws_api_gateway_rest_api.job_processor_service_api.id}/*/${aws_api_gateway_method.job_processor_service_api_method.http_method}/*"
+  source_arn    = "arn:aws:execute-api:${var.aws_region}:${var.aws_account_id}:${aws_api_gateway_rest_api.job_processor_service_api.id}/*/${aws_api_gateway_method.job_processor_service_api_method.http_method}/*"
 }
 
 resource "aws_api_gateway_deployment" "job_processor_service_deployment" {
@@ -171,11 +170,11 @@ resource "aws_api_gateway_stage" "job_processor_service_gateway_stage" {
 
   variables = {
     TableName        = aws_dynamodb_table.job_processor_service_table.name
-    PublicUrl           = local.job_processor_service_url
-    ServicesUrl         = local.services_url
-    ServicesAuthType    = local.service_registry_auth_type
-    WorkerFunctionId  = aws_lambda_function.job_processor_service_worker.function_name
-    DeploymentHash      = filesha256("./services/job-processor-service.tf")
+    PublicUrl        = local.job_processor_service_url
+    ServicesUrl      = local.services_url
+    ServicesAuthType = local.service_registry_auth_type
+    WorkerFunctionId = aws_lambda_function.job_processor_service_worker.function_name
+    DeploymentHash   = filesha256("./services/job-processor-service.tf")
   }
 }
 
