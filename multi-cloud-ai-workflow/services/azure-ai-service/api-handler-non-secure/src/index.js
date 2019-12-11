@@ -28,7 +28,7 @@ const processNotification = async (requestContext) => {
     let notification = request.queryStringParameters;
     Logger.debug("notification = ", notification);
     if (!notification) {
-        response.statusCode = HttpStatusCode.BAD_REQUEST;
+        response.statusCode = HttpStatusCode.BadRequest;
         response.statusMessage = "Missing notification in request Query String";
         return;
     }

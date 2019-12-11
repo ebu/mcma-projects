@@ -62,7 +62,7 @@ async function processNotification(requestContext) {
     }
 
     if (jobProcess.jobAssignment && jobProcess.jobAssignment !== notification.source) {
-        requestContext.response.statusCode = HttpStatusCode.BAD_REQUEST;
+        requestContext.response.statusCode = HttpStatusCode.BadRequest;
         requestContext.response.statusMessage = "Unexpected notification from '" + notification.source + "'.";
         return;
     }

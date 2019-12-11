@@ -23,13 +23,13 @@ async function createJobProcess(providers, workerRequest) {
         });
         jobProcess = await resourceManager.create(jobProcess);
 
-        job.status = JobStatus.QUEUED;
+        job.status = JobStatus.Queued;
         job.jobProcess = jobProcess.id;
 
         logger.info("Created Job Process: " + jobProcess.id);
     } catch (error) {
         logger.error("Failed to create JobProcess", error);
-        job.status = JobStatus.FAILED;
+        job.status = JobStatus.Failed;
         job.statusMessage = "Failed to create JobProcess due to error '" + error.message + "'";
     }
 

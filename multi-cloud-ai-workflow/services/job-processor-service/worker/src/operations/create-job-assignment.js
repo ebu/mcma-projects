@@ -115,7 +115,7 @@ async function createJobAssignment(providers, workerRequest) {
         }
         jobAssignment = response.data;
 
-        jobProcess.status = JobStatus.SCHEDULED;
+        jobProcess.status = JobStatus.Scheduled;
         jobProcess.jobAssignment = jobAssignment.id;
 
         logger.info("Created JobAssignment: " + jobAssignment.id);
@@ -123,7 +123,7 @@ async function createJobAssignment(providers, workerRequest) {
         logger.error("Failed to create job assignment");
         logger.error(error.toString());
 
-        jobProcess.status = JobStatus.FAILED;
+        jobProcess.status = JobStatus.Failed;
         jobProcess.statusMessage = error.message;
     }
 

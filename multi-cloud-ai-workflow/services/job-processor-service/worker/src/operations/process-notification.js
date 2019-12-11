@@ -12,8 +12,10 @@ async function processNotification(providers, workerRequest) {
     let jobProcess = await table.get(jobProcessId);
 
     // not updating jobProcess if it already was marked as completed or failed.
-    if (jobProcess.status === JobStatus.COMPLETED || jobProcess.status === JobStatus.FAILED || jobProcess.status === JobStatus.CANCELED ||
-        (jobProcess.status === JobStatus.RUNNING && notification.content.status === JobStatus.SCHEDULED)) {
+    if (jobProcess.status === JobStatus.Completed ||
+        jobProcess.status === JobStatus.Failed ||
+        jobProcess.status === JobStatus.Canceled ||
+        (jobProcess.status === JobStatus.Running && notification.content.status === JobStatus.Scheduled)) {
         logger.warn("Ignoring update of job process that tried to change state from " + jobProcess.status + " to " + notification.content.status + ": " + jobProcess.id);
         return;
     }
@@ -21,26 +23,34 @@ async function processNotification(providers, workerRequest) {
     if (jobProcess.status !== notification.content.status) {
         logger.info("JobProcess changed status from " + jobProcess.status + " to " + notification.content.status + ": " + jobProcess.id);
 
-        try {
-            // We'll ignore status change if job assignment already has a different status than the one
-            // received in the notification as to avoid race conditions when updating the job process
-            const jobAssignment = await resourceManager.get(jobProcess.jobAssignment);
-            if (jobAssignment.status !== notification.content.status) {
-                logger.info("Ignoring JobAssignment update as another update is imminent");
-                return;
+        if (notification.content.status !== JobStatus.Completed &&
+            notification.content.status !== JobStatus.Failed &&
+            notification.content.status !== JobStatus.Canceled) {
+
+            try {
+                // wait a bit before we fetch latest version to reduce chance of race conditions
+                await sleep(3000);
+                // We'll ignore status change if job assignment already has a different status than the one
+                // received in the notification as to avoid race conditions when updating the job process
+
+                const jobAssignment = await resourceManager.get(jobProcess.jobAssignment);
+                if (jobAssignment.status !== notification.content.status) {
+                    logger.info("Ignoring JobAssignment update as another update is imminent");
+                    return;
+                }
+            } catch (error) {
             }
-        } catch (error) {
         }
 
         switch (notification.content.status) {
-            case JobStatus.RUNNING:
+            case JobStatus.Running:
                 if (!jobProcess.actualStartDate) {
                     jobProcess.actualStartDate = new Date().toISOString();
                 }
                 break;
-            case JobStatus.FAILED:
-            case JobStatus.CANCELED:
-            case JobStatus.COMPLETED:
+            case JobStatus.Failed:
+            case JobStatus.Canceled:
+            case JobStatus.Completed:
                 if (!jobProcess.actualEndDate) {
                     jobProcess.actualEndDate = new Date().toISOString();
                 }
@@ -71,6 +81,10 @@ async function processNotification(providers, workerRequest) {
     jobProcess = await table.put(jobProcessId, jobProcess);
 
     await resourceManager.sendNotification(jobProcess);
+}
+
+async function sleep(timeout) {
+    return new Promise((resolve) => setTimeout(() => resolve(), timeout));
 }
 
 module.exports = {

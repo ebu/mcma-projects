@@ -13,13 +13,36 @@ async function processNotification(providers, workerRequest) {
     let job = await table.get(jobId);
 
     // not updating job if it already was marked as completed or failed.
-    if (job.status === JobStatus.COMPLETED || job.status === JobStatus.FAILED || job.status === JobStatus.CANCELED ||
-        (job.status === JobStatus.RUNNING && notification.content.status === JobStatus.SCHEDULED)) {
+    if (job.status === JobStatus.Completed ||
+        job.status === JobStatus.Failed ||
+        job.status === JobStatus.Canceled ||
+        (job.status === JobStatus.Running && notification.content.status === JobStatus.Scheduled)) {
         logger.warn("Ignoring update of job that tried to change state from " + job.status + " to " + notification.content.status + ": " + job.id);
         return;
     }
 
     if (job.status !== notification.content.status) {
+
+        // in case are not in a final state check if we have a newer version available, to avoid race conditions
+        if (notification.content.status !== JobStatus.Completed &&
+            notification.content.status !== JobStatus.Failed &&
+            notification.content.status !== JobStatus.Canceled) {
+
+            try {
+                // wait a bit before we fetch latest version to reduce chance of race conditions
+                await sleep(3000);
+                // We'll ignore status change if job assignment already has a different status than the one
+                // received in the notification as to avoid race conditions when updating the job process
+
+                const jobProcess = await resourceManager.get(job.jobProcess);
+                if (jobProcess.status !== notification.content.status) {
+                    logger.info("Ignoring JobProcess update as another update is imminent");
+                    return;
+                }
+            } catch (error) {
+            }
+        }
+
         let jobProfile;
         try {
             jobProfile = await resourceManager.get(job.jobProfile);
@@ -28,13 +51,7 @@ async function processNotification(providers, workerRequest) {
 
         let jobProcess;
         try {
-            // We'll ignore status change if job process already has a different status than the one
-            // received in the notification as to avoid race conditions when updating the job
             jobProcess = await resourceManager.get(job.jobProcess);
-            if (jobProcess.status !== notification.content.status) {
-                logger.info("Ignoring JobProcess update as another update is imminent");
-                return;
-            }
         } catch (error) {
         }
 
@@ -55,12 +72,12 @@ async function processNotification(providers, workerRequest) {
         };
 
         switch (notification.content.status) {
-            case JobStatus.RUNNING:
+            case JobStatus.Running:
                 logger.jobStart(msg);
                 break;
-            case JobStatus.FAILED:
-            case JobStatus.CANCELED:
-            case JobStatus.COMPLETED:
+            case JobStatus.Failed:
+            case JobStatus.Canceled:
+            case JobStatus.Completed:
                 logger.jobEnd(msg);
                 break;
             default:
@@ -78,6 +95,10 @@ async function processNotification(providers, workerRequest) {
     job = await table.put(jobId, job);
 
     await resourceManager.sendNotification(job);
+}
+
+async function sleep(timeout) {
+    return new Promise((resolve) => setTimeout(() => resolve(), timeout));
 }
 
 module.exports = {

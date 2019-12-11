@@ -2,7 +2,7 @@
 const AWS = require("aws-sdk");
 const uuidv4 = require("uuid/v4");
 
-const { Job, McmaTracker } = require("@mcma/core");
+const { Job, McmaTracker, JobStatus } = require("@mcma/core");
 const { McmaApiRouteCollection, HttpStatusCode, DefaultRouteCollectionBuilder } = require("@mcma/api");
 const { DynamoDbTableProvider } = require("@mcma/aws-dynamodb");
 const { LambdaWorkerInvoker } = require("@mcma/aws-lambda-worker-invoker");
@@ -19,6 +19,7 @@ const resourceManagerProvider = new ResourceManagerProvider(authProvider);
 
 async function validateJob(requestContext) {
     let body = requestContext.getRequestBody();
+    body.status = JobStatus.New;
     if (!body.tracker) {
         let label = body["@type"];
 
@@ -62,11 +63,11 @@ async function invokeDeleteJobProcess(requestContext, job) {
 }
 
 async function stopJob(requestContext) {
-    requestContext.setResponseCode(HttpStatusCode.NOT_IMPLEMENTED, "Stopping job is not implemented");
+    requestContext.setResponseCode(HttpStatusCode.NotImplemented, "Stopping job is not implemented");
 }
 
 async function cancelJob(requestContext) {
-    requestContext.setResponseCode(HttpStatusCode.NOT_IMPLEMENTED, "Canceling job is not implemented");
+    requestContext.setResponseCode(HttpStatusCode.NotImplemented, "Canceling job is not implemented");
 }
 
 const processNotification = async (requestContext) => {
@@ -85,7 +86,7 @@ const processNotification = async (requestContext) => {
     }
 
     if (job.jobProcess && job.jobProcess !== notification.source) {
-        requestContext.response.statusCode = HttpStatusCode.BAD_REQUEST;
+        requestContext.response.statusCode = HttpStatusCode.BadRequest;
         requestContext.response.statusMessage = "Unexpected notification from '" + notification.source + "'.";
         return;
     }
