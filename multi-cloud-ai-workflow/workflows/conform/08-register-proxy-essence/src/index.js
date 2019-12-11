@@ -1,14 +1,18 @@
 //"use strict";
+const AWS = require("aws-sdk");
 
-const { EnvironmentVariableProvider, BMEssence, Locator } = require("mcma-core");
-const { getAwsV4ResourceManager } = require("mcma-aws");
+const { Exception, EnvironmentVariableProvider } = require("@mcma/core");
+const { ResourceManager, AuthProvider } = require("@mcma/client");
+const { AwsCloudWatchLoggerProvider } = require("@mcma/aws-logger");
+require("@mcma/aws-client");
 
 const environmentVariableProvider = new EnvironmentVariableProvider();
-const resourceManager = getAwsV4ResourceManager(environmentVariableProvider);
+const resourceManager = new ResourceManager(environmentVariableProvider.getResourceManagerConfig(), new AuthProvider().addAwsV4Auth(AWS));
+const loggerProvider = new AwsCloudWatchLoggerProvider("conform-workflow-08-register-proxy-essence", process.env.LogGroupName);
 
 /**
  * get amejob id
- * @param {*} event 
+ * @param {*} event
  */
 function getTransformJobId(event) {
     let id;
@@ -50,56 +54,68 @@ function createBMEssence(bmContent, location, title, description) {
  * @param {*} context context
  */
 exports.handler = async (event, context) => {
-    console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
-
-    // send update notification
+    const logger = loggerProvider.get(event.tracker);
     try {
-        event.status = "RUNNING";
-        event.progress = 63;
-        await resourceManager.sendNotification(event);
-    } catch (error) {
-        console.warn("Failed to send notification", error);
-    }
+        logger.functionStart(context.awsRequestId);
+        logger.debug(event);
+        logger.debug(context);
 
-    // get transform job id
-    let transformJobId = getTransformJobId(event);
+        // send update notification
+        try {
+            event.progress = 63;
+            await resourceManager.sendNotification(event);
+        } catch (error) {
+            logger.warn("Failed to send notification");
+            logger.warn(error.toString());
+        }
 
-    // in case we did note do a transcode
-    if (!transformJobId) {
-        return event.data.bmEssence;
-    }
+        // get transform job id
+        let transformJobId = getTransformJobId(event);
 
-    // get result of transform job
-    let transformJob = await resourceManager.resolve(transformJobId);
+        // in case we did note do a transcode
+        if (!transformJobId) {
+            return event.data.bmEssence;
+        }
 
-    // get media info
-    let s3Bucket = transformJob.jobOutput.outputFile.awsS3Bucket;
-    let s3Key = transformJob.jobOutput.outputFile.awsS3Key;
+        // get result of transform job
+        let transformJob = await resourceManager.get(transformJobId);
 
-    // acquire the registered BMContent
-    let bmc = await resourceManager.resolve(event.data.bmContent);
+        // get media info
+        let s3Bucket = transformJob.jobOutput.outputFile.awsS3Bucket;
+        let s3Key = transformJob.jobOutput.outputFile.awsS3Key;
 
-    // create BMEssence
-    let locator = new Locator({
-        "awsS3Bucket": s3Bucket,
-        "awsS3Key": s3Key
-    });
+        // acquire the registered BMContent
+        let bmc = await resourceManager.get(event.data.bmContent);
 
-    let bme = createBMEssence(bmc, locator, "proxy-source", "proxy-source");
+        // create BMEssence
+        let locator = new Locator({
+            "awsS3Bucket": s3Bucket,
+            "awsS3Key": s3Key
+        });
+
+        let bme = createBMEssence(bmc, locator, "proxy-source", "proxy-source");
 //    let bme = createBMEssence(bmc, locator);
 
-    // register BMEssence
-    bme = await resourceManager.create(bme);
-    if (!bme.id) {
-        throw new Error("Failed to register BMEssence.");
+        // register BMEssence
+        bme = await resourceManager.create(bme);
+        if (!bme.id) {
+            throw new Error("Failed to register BMEssence.");
+        }
+
+        // addin BMEssence ID
+        bmc.bmEssences.push(bme.id);
+
+        // update BMContents
+        bmc = await resourceManager.update(bmc);
+
+        // the URL to the BMEssence with conformed media
+        return bme.id;
+    } catch (error) {
+        logger.error("Failed to register proxy essence");
+        logger.error(error.toString());
+        throw new Exception("Failed to register proxy essence", error);
+    } finally {
+        logger.functionEnd(context.awsRequestId);
+        await loggerProvider.flush();
     }
-
-    // addin BMEssence ID
-    bmc.bmEssences.push(bme.id);
-
-    // update BMContents
-    bmc = await resourceManager.update(bmc);
-
-    // the URL to the BMEssence with conformed media
-    return bme.id;
-}
+};
