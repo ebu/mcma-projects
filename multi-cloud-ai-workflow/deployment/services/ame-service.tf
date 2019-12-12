@@ -29,7 +29,7 @@ resource "aws_lambda_function" "ame_service_worker" {
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
   source_code_hash = filebase64sha256("../services/ame-service/worker/build/dist/lambda.zip")
-  runtime          = "nodejs10.x"
+  runtime          = "nodejs8.10"
   timeout          = "900"
   memory_size      = "3008"
 

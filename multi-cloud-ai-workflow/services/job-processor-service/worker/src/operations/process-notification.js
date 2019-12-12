@@ -29,10 +29,10 @@ async function processNotification(providers, workerRequest) {
 
             try {
                 // wait a bit before we fetch latest version to reduce chance of race conditions
-                await sleep(3000);
+                await sleep(1000);
+
                 // We'll ignore status change if job assignment already has a different status than the one
                 // received in the notification as to avoid race conditions when updating the job process
-
                 const jobAssignment = await resourceManager.get(jobProcess.jobAssignment);
                 if (jobAssignment.status !== notification.content.status) {
                     logger.info("Ignoring JobAssignment update as another update is imminent");

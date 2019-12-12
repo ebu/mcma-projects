@@ -69,7 +69,7 @@ exports.handler = async (event, context) => {
         // get ame job id
         let ameJobId = getAmeJobId(event);
         if (!ameJobId) {
-            throw new Exception("Faild to obtain AmeJob ID");
+            throw new Exception("Failed to obtain AmeJob ID");
         }
         logger.info("[AmeJobID]:", ameJobId);
 

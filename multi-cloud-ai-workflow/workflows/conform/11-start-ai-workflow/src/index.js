@@ -50,16 +50,12 @@ exports.handler = async (event, context) => {
             })
         });
 
-        if (1 === 1) {
-            return;
-        }
-
         // posting the workflowJob to the job repository
-        workflowJob = await resourceManager.create(workflowJob);
+        // workflowJob = await resourceManager.create(workflowJob);
 
         // returning workflow output
         return {
-            aiWorkflow: workflowJob.id,
+            // aiWorkflow: workflowJob.id,
             bmContent: event.data.bmContent,
             websiteMediaFile: event.data.websiteFile
         };

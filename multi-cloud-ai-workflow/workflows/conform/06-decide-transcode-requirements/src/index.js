@@ -1,4 +1,6 @@
 //"use strict";
+const AWS = require("aws-sdk");
+
 const { Exception, EnvironmentVariableProvider } = require("@mcma/core");
 const { ResourceManager, AuthProvider } = require("@mcma/client");
 const { AwsCloudWatchLoggerProvider } = require("@mcma/aws-logger");

@@ -63,11 +63,14 @@ async function extractTechnicalMetadata(providers, jobAssignmentHelper) {
 
     await S3.putObject(s3Params).promise();
 
+
+    logger.info("Adding Job Output");
     jobAssignmentHelper.getJobOutput().outputFile = new AwsS3FileLocator({
         awsS3Bucket: s3Params.Bucket,
         awsS3Key: s3Params.Key
     });
 
+    logger.info("Marking JobAssignment as completed");
     await jobAssignmentHelper.complete();
 }
 
