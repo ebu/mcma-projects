@@ -1,8 +1,10 @@
 import { Injectable } from '@angular/core';
-import { Observable, Subject, BehaviorSubject, from, timer, of } from 'rxjs';
-import { map, zip, switchMap, concatMap, tap, takeWhile } from 'rxjs/operators';
+import { BehaviorSubject, from, Observable, Subject, timer } from 'rxjs';
+import { map, switchMap, takeWhile, zip } from 'rxjs/operators';
 
-import { ResourceManager, WorkflowJob, JobParameterBag, DescriptiveMetadata, Locator, JobProfile } from 'mcma-core';
+import uuidv4 from 'uuid/v4';
+
+import { DescriptiveMetadata, JobParameterBag, JobProfile, Locator, ResourceManager, WorkflowJob } from 'mcma-core';
 
 import { ConfigService } from './config.service';
 import { McmaClientService } from './mcma-client.service';
@@ -95,10 +97,10 @@ export class WorkflowService {
     }
 
     private async runWorkflowAsync(resourceManager: ResourceManager,
-        profileName: string,
-        uploadBucket: string,
-        objectKey: string,
-        metadata: DescriptiveMetadata): Promise<WorkflowJob> {
+                                   profileName: string,
+                                   uploadBucket: string,
+                                   objectKey: string,
+                                   metadata: DescriptiveMetadata): Promise<WorkflowJob> {
         const jobProfileId = await this.getJobProfileIdAsync(resourceManager, profileName);
 
         // creating workflow job
@@ -112,6 +114,12 @@ export class WorkflowService {
                 })
             })
         });
+
+        workflowJob["tracker"] = {
+            "@type": "McmaTracker",
+            id: uuidv4(),
+            label: "Workflow '" + metadata.name + "' with file '" + objectKey + "'",
+        };
 
         // posting the workflowJob to the job repository
         workflowJob = await resourceManager.create(workflowJob);
