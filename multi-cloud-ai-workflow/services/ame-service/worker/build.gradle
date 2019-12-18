@@ -6,6 +6,7 @@ task copyMediaInfoBin(type: Copy) {
 task copyMediaInfoLibs(type: Copy) {
     from "externals/libmediainfo/18.05.x86_64.RHEL_7"
     from "externals/libzen/0.4.37.x86_64.RHEL_7"
+    from "externals/libs"
     into "build/staging/lib"
 }
 
