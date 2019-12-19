@@ -23,6 +23,12 @@ resource "aws_lambda_function" "ame_service_api_handler" {
 #  aws_lambda_function : ame-service-worker
 #################################
 
+resource "aws_lambda_layer_version" "mediainfo" {
+  filename = "../services/ame-service/mediainfo/MediaInfo_CLI_19.09_Lambda_AL2.zip"
+  layer_name = "${var.global_prefix}-ame-service-mediainfo"
+  source_code_hash = filebase64sha256("../services/ame-service/mediainfo/MediaInfo_CLI_19.09_Lambda_AL2.zip")
+}
+
 resource "aws_lambda_function" "ame_service_worker" {
   filename         = "../services/ame-service/worker/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-ame-service-worker")
@@ -32,6 +38,8 @@ resource "aws_lambda_function" "ame_service_worker" {
   runtime          = "nodejs10.x"
   timeout          = "900"
   memory_size      = "3008"
+
+  layers = [ aws_lambda_layer_version.mediainfo.arn ]
 
   environment {
     variables = {
