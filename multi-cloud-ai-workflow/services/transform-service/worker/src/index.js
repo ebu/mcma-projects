@@ -1,27 +1,50 @@
 //"use strict";
-const { Logger, TransformJob } = require("mcma-core");
-const { WorkerBuilder, WorkerRequest } = require("mcma-worker");
-require("mcma-aws");
+const AWS = require("aws-sdk");
+const { AmeJob, JobAssignment, EnvironmentVariableProvider } = require("@mcma/core");
+const { ResourceManagerProvider, AuthProvider } = require("@mcma/client");
+const { Worker, WorkerRequest, ProcessJobAssignmentOperation, ProviderCollection } = require("@mcma/worker");
+const { DynamoDbTableProvider } = require("@mcma/aws-dynamodb");
+const { AwsCloudWatchLoggerProvider } = require("@mcma/aws-logger");
+require("@mcma/aws-client");
 
 const { createProxyLambda } = require("./profiles/create-proxy-lambda");
-const { createProxyEC2 } = require("./profiles/create-proxy-ec2");
+
+const authProvider = new AuthProvider().addAwsV4Auth(AWS);
+const dbTableProvider = new DynamoDbTableProvider(JobAssignment);
+const environmentVariableProvider = new EnvironmentVariableProvider();
+const loggerProvider = new AwsCloudWatchLoggerProvider("ame-service-worker", process.env.LogGroupName);
+const resourceManagerProvider = new ResourceManagerProvider(authProvider);
+
+const providerCollection = new ProviderCollection({
+    authProvider,
+    dbTableProvider,
+    environmentVariableProvider,
+    loggerProvider,
+    resourceManagerProvider
+});
+
+const processJobAssignmentOperation =
+    new ProcessJobAssignmentOperation(AmeJob)
+        .addProfile("CreateProxyLambda", createProxyLambda);
 
 const worker =
-    new WorkerBuilder().useAwsJobDefaults()
-        .handleJobsOfType(TransformJob, x =>
-            x.addProfile(createProxyLambda)
-             .addProfile(createProxyEC2)
-        )
-        .build();
+    new Worker(providerCollection)
+        .addOperation(processJobAssignmentOperation);
 
 exports.handler = async (event, context) => {
-    try {
-        Logger.debug(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
-        
-        await worker.doWork(new WorkerRequest(event));
+    const logger = loggerProvider.get(event.tracker);
 
+    try {
+        logger.functionStart(context.awsRequestId);
+        logger.debug(event);
+        logger.debug(context);
+
+        await worker.doWork(new WorkerRequest(event));
     } catch (error) {
-        Logger.error("Error occurred when handling action '" + event.operationName + "'")
-        Logger.exception(error.toString());
+        logger.error("Error occurred when handling operation '" + event.operationName + "'");
+        logger.error(error.toString());
+    } finally {
+        logger.functionEnd(context.awsRequestId);
+        await loggerProvider.flush();
     }
-}
+};

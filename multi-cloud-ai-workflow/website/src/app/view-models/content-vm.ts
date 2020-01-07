@@ -97,7 +97,7 @@ export class ContentViewModel {
             if (this.bmContent.awsAiMetadata.celebrities) {
                 for (const celebrity of this.bmContent.awsAiMetadata.celebrities) {
                     if (celebrity.Celebrity) {
-                        if ( !celebsByName[celebrity.Celebrity.Id]) {
+                        if (!celebsByName[celebrity.Celebrity.Id]) {
                             celebsByName[celebrity.Celebrity.Id] = {
                                 id: celebrity.Celebrity.Id,
                                 name: celebrity.Celebrity.Name,
@@ -138,7 +138,7 @@ export class ContentViewModel {
                             });
                         }
                     }
-                    if ( !celebritiesAppearencesItem.emotionsCleaned) {
+                    if (!celebritiesAppearencesItem.emotionsCleaned) {
                         celebritiesAppearencesItem.emotionsCleaned = celebrityEmotions;
                     }
                 }
@@ -168,51 +168,52 @@ export class ContentViewModel {
     }
 
     private populateAzureData(): void {
-        if (this.bmContent && this.bmContent.azureAiMetadata && this.bmContent.azureAiMetadata.videos) {
-            for (const video of this.bmContent.azureAiMetadata.videos) {
-                if (video.insights) {
-                    if (video.insights.transcript) {
-                        this.azureTranscription = '';
-                        for (const transcript of video.insights.transcript) {
-                            if (transcript.text) {
-                                this.azureTranscription += transcript.text + ' ';
+        if (this.bmContent && this.bmContent.azureAiMetadata) {
+            if (this.bmContent.azureAiMetadata.videos) {
+                for (const video of this.bmContent.azureAiMetadata.videos) {
+                    if (video.insights) {
+                        if (video.insights.transcript) {
+                            this.azureTranscription = '';
+                            for (const transcript of video.insights.transcript) {
+                                if (transcript.text) {
+                                    this.azureTranscription += transcript.text + ' ';
+                                }
                             }
+                            this.azureTranscription.trim();
                         }
-                        this.azureTranscription.trim();
-                    }
 
-                    if (video.insights.faces) {
-                        for (const face of video.insights.faces) {
-                            if (face.imageUrl) {
-                                this.azureCelebrities.data.push(face);
-                                if ( !this.azureCelebrities.selected) {
-                                    this.azureCelebrities.selected = face;
+                        if (video.insights.faces) {
+                            for (const face of video.insights.faces) {
+                                if (face.imageUrl) {
+                                    this.azureCelebrities.data.push(face);
+                                    if (!this.azureCelebrities.selected) {
+                                        this.azureCelebrities.selected = face;
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
-        }
 
-        if (this.bmContent && this.bmContent.azureAiMetadata.azureTranscription) {
-            this.azureWorddiffs = JSON.parse(this.bmContent.azureAiMetadata.azureTranscription.worddiffs).result;
+            if (this.bmContent.azureAiMetadata.azureTranscription) {
+                this.azureWorddiffs = JSON.parse(this.bmContent.azureAiMetadata.azureTranscription.worddiffs).result;
+            }
         }
-
     }
 
     private populateGoogleData(): void {
+        if (this.bmContent && this.bmContent.googleAiMetadata) {
+            if (this.bmContent.googleAiMetadata.transcription) {
+                this.googleTranscription = this.bmContent.googleAiMetadata.transcription;
+                console.log(this.googleTranscription);
+            }
 
-        if (this.bmContent && this.bmContent.googleAiMetadata && this.bmContent.googleAiMetadata.transcription) {
-            this.googleTranscription = this.bmContent.googleAiMetadata.transcription;
-            console.log(this.googleTranscription);
+            if (this.bmContent.googleAiMetadata.worddiffs) {
+                this.googleWorddiffs = JSON.parse(this.bmContent.googleAiMetadata.worddiffs).result;
+                console.log(this.googleWorddiffs);
+            }
         }
-
-        if (this.bmContent && this.bmContent.googleAiMetadata.worddiffs) {
-            this.googleWorddiffs = JSON.parse(this.bmContent.googleAiMetadata.worddiffs).result;
-            console.log(this.googleWorddiffs);
-        }
-
     }
 
 }
