@@ -41,7 +41,7 @@ exports.handler = async (event, context) => {
                 let jt = message.JobTag.toString();
                 logger.debug("jt:", jt);
 
-                const jobAssignmentId = new Buffer(jt, "hex").toString("ascii");
+                const jobAssignmentId = Buffer.from(jt, "hex").toString("ascii");
 
                 logger.debug("rekoJobId:", rekoJobId);
                 logger.debug("rekoJobType:", rekoJobType);
@@ -76,7 +76,8 @@ exports.handler = async (event, context) => {
 
                 await Lambda.invoke(params).promise();
             } catch (error) {
-                logger.error("Failed processing record", record, error);
+                logger.error("Failed processing record", record);
+                logger.error(error.toString());
             }
         }
     } finally {

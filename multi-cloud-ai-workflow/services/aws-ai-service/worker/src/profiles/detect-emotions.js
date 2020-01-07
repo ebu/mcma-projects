@@ -13,7 +13,7 @@ async function detectEmotions(providers, jobAssignmentHelper) {
 
     const inputFile = jobAssignmentHelper.getJobInput().inputFile;
     const clientToken = crypto.randomBytes(16).toString("hex");
-    const base64JobId = new Buffer(jobAssignmentHelper.getJobAssignmentId()).toString("hex");
+    const base64JobId = Buffer.from(jobAssignmentHelper.getJobAssignmentId()).toString("hex");
 
     const params = {
         Video: {

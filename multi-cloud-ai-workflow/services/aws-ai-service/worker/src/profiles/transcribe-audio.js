@@ -101,11 +101,11 @@ async function processTranscribeJobResult(providers, workerRequest) {
         await jobAssignmentHelper.complete();
 
     } catch (error) {
-        logger.error(error);
+        logger.error(error.toString());
         try {
             await jobAssignmentHelper.fail(error.message);
         } catch (error) {
-            logger.error(error);
+            logger.error(error.toString());
         }
     }
 

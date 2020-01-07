@@ -77,7 +77,7 @@ async function processSsmlTextToSpeechJobResult(providers, workerRequest) {
 
         logger.debug("16.7. Copy textToSpeech output file to output location defined in Job");
         // request.input.outputFile -> process temporary output file
-        let copySource = encodeURI(request.input.outputFile.awsS3Bucket + "/" + request.input.outputFile.awsS3Key);
+        let copySource = encodeURI(workerRequest.input.outputFile.awsS3Bucket + "/" + workerRequest.input.outputFile.awsS3Key);
         logger.info(copySource);
 
         let s3Bucket = jobInput.outputLocation.awsS3Bucket;
@@ -102,19 +102,19 @@ async function processSsmlTextToSpeechJobResult(providers, workerRequest) {
 
 
     } catch (error) {
-        logger.error(error);
+        logger.error(error.toString());
         try {
             await jobAssignmentHelper.fail(error.message);
         } catch (error) {
-            logger.error(error);
+            logger.error(error.toString());
         }
     }
 
     // Cleanup: Deleting original output file
     try {
         await S3.deleteObject({
-            Bucket: request.input.outputFile.awsS3Bucket,
-            Key: request.input.outputFile.awsS3Key,
+            Bucket: workerRequest.input.outputFile.awsS3Bucket,
+            Key: workerRequest.input.outputFile.awsS3Key,
         }).promise();
     } catch (error) {
         logger.warn("Failed to cleanup transcribe output file");

@@ -285,7 +285,7 @@ async function processTokenizedTextToSpeechJobResult(providers, workerRequest) {
             Key: s3Key_ssml,
             Body: ssldata
         };
-        await S3.putObject(s3Params_ssml);
+        await S3.putObject(s3Params_ssml).promise();
 
         logger.debug("14.16. updating JobAssignment with jobOutput -> ssml txt file");
         jobAssignmentHelper.getJobOutput().outputFile = new AwsS3FileLocator({

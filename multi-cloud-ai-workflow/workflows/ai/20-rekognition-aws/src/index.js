@@ -1,17 +1,15 @@
 //"use strict";
-
-// require
-const util = require("util");
-
 const AWS = require("aws-sdk");
 const S3 = new AWS.S3();
-const S3GetObject = util.promisify(S3.getObject.bind(S3));
 
-const { EnvironmentVariableProvider } = require("mcma-core");
-const { getAwsV4ResourceManager } = require("mcma-aws");
+const { Exception, EnvironmentVariableProvider } = require("@mcma/core");
+const { ResourceManager, AuthProvider } = require("@mcma/client");
+const { AwsCloudWatchLoggerProvider } = require("@mcma/aws-logger");
+require("@mcma/aws-client");
 
 const environmentVariableProvider = new EnvironmentVariableProvider();
-const resourceManager = getAwsV4ResourceManager(environmentVariableProvider);
+const resourceManager = new ResourceManager(environmentVariableProvider.getResourceManagerConfig(), new AuthProvider().addAwsV4Auth(AWS));
+const loggerProvider = new AwsCloudWatchLoggerProvider("ai-workflow-20-rekognition-aws", process.env.LogGroupName);
 
 /**
  * Lambda function handler
@@ -19,63 +17,73 @@ const resourceManager = getAwsV4ResourceManager(environmentVariableProvider);
  * @param {*} context context
  */
 exports.handler = async (event, context) => {
-    console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
-    // send update notification
+    const logger = loggerProvider.get(event.tracker);
     try {
-        event.status = "RUNNING";
-        // event.parallelProgress = { "detect-celebrities-aws": 80 };
-        await resourceManager.sendNotification(event);
+        logger.functionStart(context.awsRequestId);
+        logger.debug(event);
+        logger.debug(context);
+        // send update notification
+        try {
+            await resourceManager.sendNotification(event);
+        } catch (error) {
+            logger.warn("Failed to send notification");
+            logger.warn(error.toString());
+        }
+        // awsCelebrities
+        let awsCelebritiesJobId = event.data.awsRekognition["0"].data.awsCelebritiesJobId.find(id => id);
+        if (!awsCelebritiesJobId) {
+            throw new Exception("Failed to obtain awsCelebritiesJobId");
+        }
+        let awsCelebritiesJob = await resourceManager.get(awsCelebritiesJobId);
+        let s3Bucket = awsCelebritiesJob.jobOutput.outputFile.awsS3Bucket;
+        let s3Key = awsCelebritiesJob.jobOutput.outputFile.awsS3Key;
+        let awsCelebritiesJobS3Object;
+        try {
+            awsCelebritiesJobS3Object = await S3.getObject({
+                Bucket: s3Bucket,
+                Key: s3Key,
+            }).promise();
+        } catch (error) {
+            throw new Exception("Unable to load celebrities info file in bucket '" + s3Bucket + "' with key '" + s3Key + "' due to error: " + error.message);
+        }
+        let celebritiesResult = JSON.parse(awsCelebritiesJobS3Object.Body.toString());
+        // awsEmotions
+        let awsEmotionsJobId = event.data.awsRekognition["1"].data.awsEmotionsJobId.find(id => id);
+        if (!awsEmotionsJobId) {
+            throw new Exception("Failed to obtain awsEmotionsJobId");
+        }
+        let awsEmotionsJob = await resourceManager.get(awsEmotionsJobId);
+        let awsEmotionsS3Bucket = awsEmotionsJob.jobOutput.outputFile.awsS3Bucket;
+        let awsEmotionsS3Key = awsEmotionsJob.jobOutput.outputFile.awsS3Key;
+        let awsEmotionsJobS3Object;
+        try {
+            awsEmotionsJobS3Object = await S3.getObject({
+                Bucket: awsEmotionsS3Bucket,
+                Key: awsEmotionsS3Key,
+            }).promise();
+        } catch (error) {
+            throw new Exception("Unable to load emotions info file in bucket '" + awsEmotionsS3Bucket + "' with key '" + awsEmotionsS3Key + "' due to error: " + error.message);
+        }
+        let emotionsResult = JSON.parse(awsEmotionsJobS3Object.Body.toString());
+        let celebritiesEmotionsScores = createCelebritiesEmotionsScores(celebritiesResult, emotionsResult);
+        let bmContent = await resourceManager.get(event.input.bmContent);
+        if (!bmContent.awsAiMetadata) {
+            bmContent.awsAiMetadata = {};
+        }
+        bmContent.awsAiMetadata.celebritiesEmotions = celebritiesEmotionsScores;
+        await resourceManager.update(bmContent);
+        try {
+            await resourceManager.sendNotification(event);
+        } catch (error) {
+            logger.info("Failed to send notification", error);
+        }
     } catch (error) {
-        console.warn("Failed to send notification", error);
-    }
-    // awsCelebrities
-    let awsCelebritiesJobId = event.data.awsRekognition['0'].data.awsCelebritiesJobId.find(id => id);
-    if (!awsCelebritiesJobId) {
-        throw new Error("Failed to obtain awsCelebritiesJobId");
-    }
-    let awsCelebritiesJob = await resourceManager.resolve(awsCelebritiesJobId);
-    let s3Bucket = awsCelebritiesJob.jobOutput.outputFile.awsS3Bucket;
-    let s3Key = awsCelebritiesJob.jobOutput.outputFile.awsS3Key;
-    let awsCelebritiesJobS3Object;
-    try {
-        awsCelebritiesJobS3Object = await S3GetObject({
-            Bucket: s3Bucket,
-            Key: s3Key,
-        });
-    } catch (error) {
-        throw new Error("Unable to load celebrities info file in bucket '" + s3Bucket + "' with key '" + s3Key + "' due to error: " + error.message);
-    }
-    let celebritiesResult = JSON.parse(awsCelebritiesJobS3Object.Body.toString());
-    // awsEmotions
-    let awsEmotionsJobId = event.data.awsRekognition['1'].data.awsEmotionsJobId.find(id => id);
-    if (!awsEmotionsJobId) {
-        throw new Error("Failed to obtain awsEmotionsJobId");
-    }
-    let awsEmotionsJob = await resourceManager.resolve(awsEmotionsJobId);
-    let awsEmotionsS3Bucket = awsEmotionsJob.jobOutput.outputFile.awsS3Bucket;
-    let awsEmotionsS3Key = awsEmotionsJob.jobOutput.outputFile.awsS3Key;
-    let awsEmotionsJobS3Object;
-    try {
-        awsEmotionsJobS3Object = await S3GetObject({
-            Bucket: awsEmotionsS3Bucket,
-            Key: awsEmotionsS3Key,
-        });
-    } catch (error) {
-        throw new Error("Unable to load emotions info file in bucket '" + awsEmotionsS3Bucket + "' with key '" + awsEmotionsS3Key + "' due to error: " + error.message);
-    }
-    let emotionsResult = JSON.parse(awsEmotionsJobS3Object.Body.toString());
-    let celebritiesEmotionsScores = createCelebritiesEmotionsScores(celebritiesResult, emotionsResult);
-    let bmContent = await resourceManager.resolve(event.input.bmContent);
-    if (!bmContent.awsAiMetadata) {
-        bmContent.awsAiMetadata = {};
-    }
-    bmContent.awsAiMetadata.celebritiesEmotions = celebritiesEmotionsScores;
-    await resourceManager.update(bmContent);
-    try {
-        event.status = "RUNNING";
-        await resourceManager.sendNotification(event);
-    } catch (error) {
-        console.warn("Failed to send notification", error);
+        logger.error("Failed to do rekognition AWS");
+        logger.error(error.toString());
+        throw new Exception("Failed to do rekognition AWS", error);
+    } finally {
+        logger.functionEnd(context.awsRequestId);
+        await loggerProvider.flush();
     }
 };
 
@@ -95,27 +103,27 @@ function genScoreCelebrity(celebrities_faces_list, celebritiesList, emotionsList
         let celebrityEmotions = {};
         for (let emotionItem of emotionsList) {
             celebrityEmotions[emotionItem] = 0;
-            celebrityEmotions['counter'] = 0;
+            celebrityEmotions["counter"] = 0;
         }
         celebrityScore[celebrityItem] = celebrityEmotions;
     }
     for (let nameItem of celebritiesList) {
         for (let celebrities_faces_listItem of celebrities_faces_list) {
             if (nameItem === celebrities_faces_listItem.Celebrity.Name) {
-                if ('Emotions' in celebrities_faces_listItem.FaceReko) {
-                    celebrityScore[nameItem]['counter'] += 1;
+                if ("Emotions" in celebrities_faces_listItem.FaceReko) {
+                    celebrityScore[nameItem]["counter"] += 1;
                     let celebritiesEmotions = celebrities_faces_listItem.FaceReko.Emotions;
                     for (let celebritiesEmotionsItem of celebritiesEmotions) {
-                        celebrityScore[nameItem][celebritiesEmotionsItem['Type']] += celebritiesEmotionsItem['Confidence']
+                        celebrityScore[nameItem][celebritiesEmotionsItem["Type"]] += celebritiesEmotionsItem["Confidence"];
                     }
                 }
             }
         }
     }
     for (let celebrityItem of celebritiesList) {
-        let counter = celebrityScore[celebrityItem]['counter'];
+        let counter = celebrityScore[celebrityItem]["counter"];
         let emotions = celebrityScore[celebrityItem];
-        celebrityScore[celebrityItem]['counter'] = counter;
+        celebrityScore[celebrityItem]["counter"] = counter;
         if (counter === 0) {
             for (let emotionItem in emotions) {
                 celebrityScore[celebrityItem][emotionItem] = 0;
@@ -125,7 +133,7 @@ function genScoreCelebrity(celebrities_faces_list, celebritiesList, emotionsList
                 celebrityScore[celebrityItem][emotionItem] = celebrityScore[celebrityItem][emotionItem] / counter;
             }
         }
-        celebrityScore[celebrityItem]['counter'] = counter;
+        celebrityScore[celebrityItem]["counter"] = counter;
     }
     return celebrityScore;
 }
@@ -156,6 +164,7 @@ function createFacesList(celebritiesAndFacesList) {
     }
     return emotionsList;
 }
+
 function flattenFiles(celebrityRecognitionJSON, faceRecognitionJSON) {
     let celebritiesList = [];
     let facesList = [];
@@ -163,18 +172,18 @@ function flattenFiles(celebrityRecognitionJSON, faceRecognitionJSON) {
         console.log(celebrityRecognitionJSON[i]);
         let celebrity = celebrityRecognitionJSON[i];
         let celebrityTemp = [];
-        celebrityTemp['Timestamp'] = celebrity.Timestamp;
-        celebrityTemp['Celebrity'] = celebrity.Celebrity;
+        celebrityTemp["Timestamp"] = celebrity.Timestamp;
+        celebrityTemp["Celebrity"] = celebrity.Celebrity;
         celebritiesList.push(celebrityTemp);
     }
     for (let i = 0; i < faceRecognitionJSON.length; i++) {
         let face = faceRecognitionJSON[i];
         let faceTemp = [];
-        faceTemp['Timestamp'] = face.Timestamp;
+        faceTemp["Timestamp"] = face.Timestamp;
         let faceTempFace = face.Face;
         delete faceTempFace["Pose"];
         delete faceTempFace["Quality"];
-        faceTemp['Face'] = faceTempFace;
+        faceTemp["Face"] = faceTempFace;
         facesList.push(faceTemp);
     }
     return mergeFacesAndCelebrities(celebritiesList, facesList);
@@ -252,22 +261,22 @@ function mergeFacesAndCelebrities(celebritiesList, facesList, threshold = 5) {
     let celebritiesAndFacesList = [...celebritiesList];
     for (const [index, value] of celebritiesAndFacesList.entries()) {
         if (facesScores[index] > threshold) {
-            let emotionsList = facesList[facesIndexes[index]]['Face']['Emotions'];
+            let emotionsList = facesList[facesIndexes[index]]["Face"]["Emotions"];
             let sumRatio = 0;
             for (let emotion of emotionsList) {
-                sumRatio = sumRatio + emotion['Confidence'];
+                sumRatio = sumRatio + emotion["Confidence"];
             }
             let emotionsListNormalized = [];
             for (let emotion of emotionsList) {
-                emotion['Confidence'] = emotion['Confidence'] / (sumRatio * 0.01);
+                emotion["Confidence"] = emotion["Confidence"] / (sumRatio * 0.01);
                 emotionsListNormalized.push(emotion);
             }
-            facesList[facesIndexes[index]]['Face']['Emotions'] = emotionsListNormalized;
-            celebritiesAndFacesList[index]['FaceReko'] = facesList[facesIndexes[index]]['Face'];
-            celebritiesAndFacesList[index]['FaceReko']['EmotionScore'] = facesScores[index];
+            facesList[facesIndexes[index]]["Face"]["Emotions"] = emotionsListNormalized;
+            celebritiesAndFacesList[index]["FaceReko"] = facesList[facesIndexes[index]]["Face"];
+            celebritiesAndFacesList[index]["FaceReko"]["EmotionScore"] = facesScores[index];
         } else {
-            celebritiesAndFacesList[index]['FaceReko'] = {};
-            celebritiesAndFacesList[index]['FaceReko']['EmotionScore'] = facesScores[index];
+            celebritiesAndFacesList[index]["FaceReko"] = {};
+            celebritiesAndFacesList[index]["FaceReko"]["EmotionScore"] = facesScores[index];
         }
     }
     return (celebritiesAndFacesList);

@@ -24,6 +24,8 @@ async function createDubbingSrt(providers, jobAssignmentHelper) {
     const inputFile = jobInput.inputFile;
     const outputLocation = jobInput.outputLocation;
 
+    let output;
+
     if (inputFile.awsS3Bucket && inputFile.awsS3Key) {
 
         logger.debug("18.1. obtain data from s3 object");
@@ -52,7 +54,7 @@ async function createDubbingSrt(providers, jobAssignmentHelper) {
 
         logger.debug("18.5. declare ffmpeg outputs");
         output = "/tmp/" + "srtproxy.mp4";
-        dubbed = "/tmp/" + "dubbedproxy.mp4";
+        const dubbed = "/tmp/" + "dubbedproxy.mp4";
 
         logger.debug("18.6. add new dubbed track");
         //DUB MUST COME FIRST BEFORE SRT

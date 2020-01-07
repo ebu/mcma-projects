@@ -116,7 +116,7 @@ exports.handler = async (event, context) => {
         }
 
         // acquire the registered BMContent
-//    let bmc = await resourceManager.resolve(event.data.bmContent);
+//    let bmc = await resourceManager.get(event.data.bmContent);
 
         // create BMEssence
 //    let locator = new Locator({

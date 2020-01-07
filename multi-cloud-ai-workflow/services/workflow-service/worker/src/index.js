@@ -27,7 +27,7 @@ const providerCollection = new ProviderCollection({
 const processJobAssignmentOperation =
     new ProcessJobAssignmentOperation(WorkflowJob)
         .addProfile("ConformWorkflow", runWorkflow)
-        .addProfile("AIWorkflow", runWorkflow);
+        .addProfile("AiWorkflow", runWorkflow);
 
 const worker =
     new Worker(providerCollection)
