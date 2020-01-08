@@ -7,7 +7,7 @@ const { AwsCloudWatchLoggerProvider } = require("@mcma/aws-logger");
 require("@mcma/aws-api-gateway");
 
 const dbTableProvider = new DynamoDbTableProvider(JobAssignment);
-const loggerProvider = new AwsCloudWatchLoggerProvider("azure-ai-service-api-handler", process.env.LogGroupName);
+const loggerProvider = new AwsCloudWatchLoggerProvider("azure-ai-service-api-handler-non-secure", process.env.LogGroupName);
 const workerInvoker = new LambdaWorkerInvoker();
 
 async function processNotification(requestContext) {
@@ -23,9 +23,9 @@ async function processNotification(requestContext) {
         return;
     }
 
-    const notification = requestContext.getRequestBody();
+    let notification = request.queryStringParameters;
     if (!notification) {
-        requestContext.setResponseBadRequestDueToMissingBody();
+        requestContext.setResponseStatusCode(HttpStatusCode.BadRequest, "Missing notification in request Query String");
         return;
     }
 
