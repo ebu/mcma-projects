@@ -1,58 +1,61 @@
 //"use strict";
+const { JobAssignment } = require("@mcma/core");
+const { McmaApiRouteCollection } = require("@mcma/api");
+const { DynamoDbTableProvider } = require("@mcma/aws-dynamodb");
+const { LambdaWorkerInvoker } = require("@mcma/aws-lambda-worker-invoker");
+const { AwsCloudWatchLoggerProvider } = require("@mcma/aws-logger");
+require("@mcma/aws-api-gateway");
 
-const AWS = require("aws-sdk");
+const dbTableProvider = new DynamoDbTableProvider(JobAssignment);
+const loggerProvider = new AwsCloudWatchLoggerProvider("azure-ai-service-api-handler", process.env.LogGroupName);
+const workerInvoker = new LambdaWorkerInvoker();
 
-const { Logger, JobAssignment } = require("mcma-core");
-const { McmaApiRouteCollection, HttpStatusCode } = require("mcma-api");
-const { DynamoDbTable, invokeLambdaWorker } = require("mcma-aws");
-
-const processNotification = async (requestContext) => {
+async function processNotification(requestContext) {
     const request = requestContext.request;
-    const response = requestContext.response;
 
-    Logger.debug("processNotification()", JSON.stringify(request, null, 2));
-
-    const table = new DynamoDbTable(JobAssignment, requestContext.tableName());
+    const table = dbTableProvider.get(requestContext.tableName());
 
     const jobAssignmentId = requestContext.publicUrl() + "/job-assignments/" + request.pathVariables.id;
 
     const jobAssignment = await table.get(jobAssignmentId);
-
-    Logger.debug("jobAssignment = ", jobAssignment);
-
-    if (!requestContext.resourceIfFound(jobAssignment)) {
-        Logger.debug("jobAssignment not found", jobAssignment);
+    if (!jobAssignment) {
+        requestContext.setResponseResourceNotFound();
         return;
     }
 
-    let notification = request.queryStringParameters;
-    Logger.debug("notification = ", notification);
+    const notification = requestContext.getRequestBody();
     if (!notification) {
-        response.statusCode = HttpStatusCode.BadRequest;
-        response.statusMessage = "Missing notification in request Query String";
+        requestContext.setResponseBadRequestDueToMissingBody();
         return;
     }
 
-    // invoking worker lambda function that will process the notification
-    await invokeLambdaWorker(
-        requestContext.workerFunctionName(),
+    await workerInvoker.invoke(
+        requestContext.workerFunctionId(),
+        "ProcessNotification",
+        requestContext.getAllContextVariables(),
         {
-            operationName: "ProcessNotification",
-            contextVariables: requestContext.getAllContextVariables(),
-            input: {
-                jobAssignmentId,
-                notification
-            }
-        }
+            jobAssignmentId,
+            notification
+        },
+        jobAssignment.tracker,
     );
 }
 
-// Initializing rest controller for API Gateway Endpoint
-const routeCollection = new McmaApiRouteCollection().addRoute("POST", "/job-assignments/{id}/notifications", processNotification);
-const apiController = routeCollection.toApiGatewayApiController();
+const restController =
+    new McmaApiRouteCollection()
+        .addRoute("POST", "/job-assignments/{id}/notifications", processNotification)
+        .toApiGatewayApiController();
 
 exports.handler = async (event, context) => {
-    console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
+    const logger = loggerProvider.get();
+    try {
+        logger.functionStart(context.awsRequestId);
+        logger.debug(event);
+        logger.debug(context);
 
-    return await apiController.handleRequest(event, context);
-}
+        return await restController.handleRequest(event, context);
+    } finally {
+        logger.functionEnd(context.awsRequestId);
+        await loggerProvider.flush();
+    }
+};
