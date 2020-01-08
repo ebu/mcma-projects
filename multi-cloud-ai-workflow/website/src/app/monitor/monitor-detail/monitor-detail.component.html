@@ -2,14 +2,16 @@
 
     <div class="job-info">
         <div class="job-preview-player">
-            <video *ngIf="conformJobVm.isCompleted && conformJobVm.previewUrl; else statusMessage" controls [src]="conformJobVm.previewUrl" [currentTime]="currentTime$ | async"></video>
+            <video *ngIf="conformJobVm.isCompleted && conformJobVm.previewUrl; else statusMessage" controls
+                   [src]="conformJobVm.previewUrl" [currentTime]="currentTime$ | async"></video>
             <ng-template #statusMessage>
                 <div class="conform-status">
                     <div class="conform-status-icon-text">
                         <mat-icon [color]="conformJobVm.statusColor">{{ conformJobVm.statusIcon }}</mat-icon>
                         <span>{{ conformJobVm.workflowJob.status }}</span>
                     </div>
-                    <span *ngIf="conformJobVm.isRunning && conformJobVm.workflowJob?.progress" class="conform-status-progress">{{ conformJobVm.workflowJob.progress }}%</span>
+                    <span *ngIf="conformJobVm.isRunning && conformJobVm.workflowJob?.progress"
+                          class="conform-status-progress">{{ conformJobVm.workflowJob.progress }}%</span>
                 </div>
             </ng-template>
         </div>
@@ -28,10 +30,12 @@
             </div>
             <div class="job-field">
                 <label>Speech to Speech:</label>
-                <button *ngIf="isSpeechToSpeechVisible" (click)="toggleTabSpeechToSpeech()" mat-raised-button color="accent">
+                <button *ngIf="isSpeechToSpeechVisible" (click)="toggleTabSpeechToSpeech()" mat-raised-button
+                        color="accent">
                     <mat-icon>visibility</mat-icon>
                 </button>
-                <button *ngIf="!isSpeechToSpeechVisible" (click)="toggleTabSpeechToSpeech()" mat-raised-button color="accent">
+                <button *ngIf="!isSpeechToSpeechVisible" (click)="toggleTabSpeechToSpeech()" mat-raised-button
+                        color="accent">
                     <mat-icon>visibility_off</mat-icon>
                 </button>
             </div>
@@ -47,7 +51,8 @@
                         <mat-icon [color]="aiJobVm.statusColor">{{ aiJobVm.statusIcon }}</mat-icon>
                         <span>{{ aiJobVm.workflowJob.status }}</span>
                     </div>
-                    <span *ngIf="aiJobVm.isRunning && aiJobVm.workflowJob?.progress" class="ai-status-progress">{{ aiJobVm.workflowJob.progress }}%</span>
+                    <span *ngIf="aiJobVm.isRunning && aiJobVm.workflowJob?.progress"
+                          class="ai-status-progress">{{ aiJobVm.workflowJob.progress }}%</span>
                 </div>
             </div>
             <ng-container *ngIf="content$ | async as content">
@@ -57,7 +62,8 @@
                             <mat-tab-group>
                                 <mat-tab label="Transcript">
                                     <div class="ai-data-item ai-transcript-data">
-                                        <span *ngIf="content?.awsTranscription; else awsTranscriptNoData">{{ content.awsTranscription }}</span>
+                                        <span
+                                            *ngIf="content?.awsTranscription; else awsTranscriptNoData">{{ content.awsTranscription }}</span>
                                         <ng-template #awsTranscriptNoData>
                                             <span *ngIf="!aiJobVm.isFinished">Still processing...</span>
                                             <span *ngIf="aiJobVm.isFinished">Data not available</span>
@@ -66,7 +72,8 @@
                                 </mat-tab>
                                 <mat-tab *ngIf="isSpeechToSpeechVisible" label="STT Benchmarking">
                                     <div class="ai-data-item ai-sttbenchmarking-data">
-                                        <span *ngIf="content?.awsWorddiffs; else awsSTTBenchmarkingData" [innerHTML]="content.awsWorddiffs"></span>
+                                        <span *ngIf="content?.awsWorddiffs; else awsSTTBenchmarkingData"
+                                              [innerHTML]="content.awsWorddiffs"></span>
                                         <ng-template #awsSTTBenchmarkingData>
                                             <span *ngIf="!aiJobVm.isFinished">Still processing...</span>
                                             <span *ngIf="aiJobVm.isFinished">Data not available</span>
@@ -75,18 +82,23 @@
                                 </mat-tab>
                                 <mat-tab *ngIf="isSpeechToSpeechVisible" label="Translation">
                                     <div class="ai-data-item ai-translation-data">
-                                        <span *ngIf="content?.awsTranslation; else awsTranslationNoData">{{ content?.awsTranslation }}</span>
+                                        <span
+                                            *ngIf="content?.awsTranslation; else awsTranslationNoData">{{ content?.awsTranslation }}</span>
                                         <ng-template #awsTranslationNoData>
                                             <span *ngIf="!aiJobVm.isFinished">Still processing...</span>
                                             <span *ngIf="aiJobVm.isFinished">Data not available</span>
                                         </ng-template>
                                     </div>
                                 </mat-tab>
-                                <mat-tab *ngIf="isSpeechToSpeechVisible" (show)="isSpeechToSpeechVisible" label="Speech to Speech">
+                                <mat-tab *ngIf="isSpeechToSpeechVisible" (show)="isSpeechToSpeechVisible"
+                                         label="Speech to Speech">
                                     <div class="ai-data-item ai-speechtospeech-data">
                                         <span *ngIf="content?.awsSpeechToSpeech; else awsSpeechToSpeechNoData">
-                                            <video style="width: 100%" id="video" [src]="content?.awsSpeechToSpeech.mp4" style="width: 100%"  controls preload="metadata">
-                                               <track *ngIf="content?.awsSpeechToSpeech.vtt" label="English" kind="subtitles" srclang="en" [src]="content?.awsSpeechToSpeech.vtt " default>
+                                            <video style="width: 100%" id="video" [src]="content?.awsSpeechToSpeech.mp4"
+                                                   style="width: 100%" controls preload="metadata">
+                                               <track *ngIf="content?.awsSpeechToSpeech.vtt" label="English"
+                                                      kind="subtitles" srclang="en"
+                                                      [src]="content?.awsSpeechToSpeech.vtt " default>
                                             </video>
                                         </span>
                                         <ng-template #awsSpeechToSpeechNoData>
@@ -97,7 +109,8 @@
                                 </mat-tab>
                                 <mat-tab label="Celebrities">
                                     <div class="ai-data-item ai-celebrity-data">
-                                        <div class="ai-data-item celebrity-info" *ngIf="content?.awsCelebrities?.data?.length > 0; else awsCelebritiesNoData">
+                                        <div class="ai-data-item celebrity-info"
+                                             *ngIf="content?.awsCelebrities?.data?.length > 0; else awsCelebritiesNoData">
 
                                             <table mat-table [dataSource]="content.awsCelebrities.data">
                                                 <ng-container matColumnDef="name">
@@ -105,10 +118,13 @@
                                                     <td mat-cell *matCellDef="let celebrity">{{celebrity.name}} </td>
                                                 </ng-container>
 
-                                                <tr mat-row *matRowDef="let row; columns: ['name']" [class.highlight]="row === content.awsCelebrities.selected" (click)="content.awsCelebrities.selected = row"></tr>
+                                                <tr mat-row *matRowDef="let row; columns: ['name']"
+                                                    [class.highlight]="row === content.awsCelebrities.selected"
+                                                    (click)="content.awsCelebrities.selected = row"></tr>
                                             </table>
 
-                                            <div class="celebrity-fields" style="flex: 1;" *ngIf="content.awsCelebrities.selected">
+                                            <div class="celebrity-fields" style="flex: 1;"
+                                                 *ngIf="content.awsCelebrities.selected">
                                                 <div class="job-fields">
                                                     <div class="job-field">
                                                         <label>Name:</label>
@@ -116,17 +132,21 @@
                                                     </div>
                                                     <div class="job-field">
                                                         <label>Url:</label>
-                                                        <a mat-button *ngIf="content.awsCelebrities.selected.urls[0]" target="_blank" [href]="'https://' + content.awsCelebrities.selected.urls[0]">{{ content.awsCelebrities.selected.urls[0] }}</a></div>
-                                                    <div *ngIf="content.awsCelebrities.selected.emotionsCleaned" class="job-field">
+                                                        <a mat-button *ngIf="content.awsCelebrities.selected.urls[0]"
+                                                           target="_blank"
+                                                           [href]="'https://' + content.awsCelebrities.selected.urls[0]">{{ content.awsCelebrities.selected.urls[0] }}</a>
+                                                    </div>
+                                                    <div *ngIf="content.awsCelebrities.selected.emotionsCleaned"
+                                                         class="job-field">
                                                         <label>Emotions:</label>
                                                         <ngx-charts-pie-chart
-                                                                [view]="[700, 400]"
-                                                                [scheme]="{domain: ['#00a8ff', '#9c88ff', '#fbc531', '#4cd137', '#487eb0', '#e84118', '#f5f6fa', '#7f8fa6']}"
-                                                                [results]=content.awsCelebrities.selected.emotionsCleaned
-                                                                [legend]="true"
-                                                                [explodeSlices]="false"
-                                                                [labels]="true"
-                                                                [doughnut]="false">
+                                                            [view]="[700, 400]"
+                                                            [scheme]="{domain: ['#00a8ff', '#9c88ff', '#fbc531', '#4cd137', '#487eb0', '#e84118', '#f5f6fa', '#7f8fa6']}"
+                                                            [results]=content.awsCelebrities.selected.emotionsCleaned
+                                                            [legend]="true"
+                                                            [explodeSlices]="false"
+                                                            [labels]="true"
+                                                            [doughnut]="false">
                                                         </ngx-charts-pie-chart>
                                                     </div>
                                                     <div class="job-field">
@@ -159,7 +179,8 @@
                             <mat-tab-group>
                                 <mat-tab label="Transcript">
                                     <div class="ai-data-item ai-transcript-data">
-                                        <span *ngIf="content?.azureTranscription; else azureTranscriptNoData">{{ content?.azureTranscription }}</span>
+                                        <span
+                                            *ngIf="content?.azureTranscription; else azureTranscriptNoData">{{ content?.azureTranscription }}</span>
                                         <ng-template #azureTranscriptNoData>
                                             <span *ngIf="!aiJobVm.isFinished">Still processing...</span>
                                             <span *ngIf="aiJobVm.isFinished">Data not available</span>
@@ -168,7 +189,8 @@
                                 </mat-tab>
                                 <mat-tab label="STT Benchmarking">
                                     <div class="ai-data-item ai-sttbenchmarking-data">
-                                        <span *ngIf="content?.azureWorddiffs; else azureSTTBenchmarking" [innerHTML]="content.azureWorddiffs"></span>
+                                        <span *ngIf="content?.azureWorddiffs; else azureSTTBenchmarking"
+                                              [innerHTML]="content.azureWorddiffs"></span>
                                         <ng-template #azureSTTBenchmarking>
                                             <span *ngIf="!aiJobVm.isFinished">Still processing...</span>
                                             <span *ngIf="aiJobVm.isFinished">Data not available</span>
@@ -176,16 +198,20 @@
                                     </div>
                                 </mat-tab>
                                 <mat-tab label="Celebrities">
-                                    <div class="ai-data-item celebrity-info" *ngIf="content?.azureCelebrities?.data?.length > 0; else azureCelebritiesNoData">
+                                    <div class="ai-data-item celebrity-info"
+                                         *ngIf="content?.azureCelebrities?.data?.length > 0; else azureCelebritiesNoData">
                                         <table mat-table [dataSource]="content.azureCelebrities.data">
                                             <ng-container matColumnDef="name">
                                                 <th mat-header-cell *matHeaderCellDef>Name</th>
                                                 <td mat-cell *matCellDef="let celebrity">{{celebrity.name}} </td>
                                             </ng-container>
 
-                                            <tr mat-row *matRowDef="let row; columns: ['name']" [class.highlight]="row === content?.azureCelebrities?.selected" (click)="content.azureCelebrities.selected = row"></tr>
+                                            <tr mat-row *matRowDef="let row; columns: ['name']"
+                                                [class.highlight]="row === content?.azureCelebrities?.selected"
+                                                (click)="content.azureCelebrities.selected = row"></tr>
                                         </table>
-                                        <div class="celebrity-fields" style="flex: 1;" *ngIf="content?.azureCelebrities?.selected">
+                                        <div class="celebrity-fields" style="flex: 1;"
+                                             *ngIf="content?.azureCelebrities?.selected">
                                             <div class="job-fields">
                                                 <div class="job-field">
                                                     <label>Name:</label>
@@ -199,19 +225,23 @@
                                                     <label>Description:</label>
                                                 </div>
                                                 <div class="job-field">
-                                                    <span style="margin-left:5vh;">{{ content.azureCelebrities.selected.description }}</span>
+                                                    <span
+                                                        style="margin-left:5vh;">{{ content.azureCelebrities.selected.description }}</span>
                                                 </div>
                                                 <div class="job-field">
                                                     <label>Appearances:</label>
                                                 </div>
                                                 <div class="job-field">
                                                     <span style="margin-left:5vh;">
-                                                        <button mat-raised-button style="margin-right:1vw;" *ngFor="let instance of content.azureCelebrities.selected.instances" (click)="seekVideoAzure(instance)">{{ instance.start }}
+                                                        <button mat-raised-button style="margin-right:1vw;"
+                                                                *ngFor="let instance of content.azureCelebrities.selected.instances"
+                                                                (click)="seekVideoAzure(instance)">{{ instance.start }}
                                                         </button>
                                                     </span>
                                                 </div>
                                             </div>
-                                            <img style="margin-left:2vw; width: 10vw;" [src]="content.azureCelebrities.selected.imageUrl ? content.azureCelebrities.selected.imageUrl : '#'"/>
+                                            <img style="margin-left:2vw; width: 10vw;"
+                                                 [src]="content.azureCelebrities.selected.imageUrl ? content.azureCelebrities.selected.imageUrl : '#'"/>
                                         </div>
                                     </div>
                                     <ng-template #azureCelebritiesNoData>
@@ -227,7 +257,8 @@
                             <mat-tab-group>
                                 <mat-tab label="Transcript">
                                     <div class="ai-data-item ai-transcript-data">
-                                        <span *ngIf="content?.googleTranscription; else googleTranscriptNoData">{{ content?.googleTranscription }}</span>
+                                        <span
+                                            *ngIf="content?.googleTranscription; else googleTranscriptNoData">{{ content?.googleTranscription }}</span>
                                         <ng-template #googleTranscriptNoData>
                                             <span *ngIf="!aiJobVm.isFinished">Still processing...</span>
                                             <span *ngIf="aiJobVm.isFinished">Data not available</span>
@@ -236,7 +267,8 @@
                                 </mat-tab>
                                 <mat-tab label="STT Benchmarking">
                                     <div class="ai-data-item ai-sttbenchmarking-data">
-                                        <span *ngIf="content?.googleWorddiffs; else googleSTTBenchmarkingNoData" [innerHTML]="content.googleWorddiffs"></span>
+                                        <span *ngIf="content?.googleWorddiffs; else googleSTTBenchmarkingNoData"
+                                              [innerHTML]="content.googleWorddiffs"></span>
                                         <ng-template #googleSTTBenchmarkingNoData>
                                             <span *ngIf="!aiJobVm.isFinished">Still processing...</span>
                                             <span *ngIf="aiJobVm.isFinished">Data not available</span>

@@ -14,7 +14,6 @@
         "@mcma/core": "0.8.5",
         "amazon-cognito-identity-js": "^2.0.30",
         "aws-sdk": "^2.473.0",
-        "mcma-aws": "0.3.13",
         "node-fetch": "^2.6.0"
     }
 }

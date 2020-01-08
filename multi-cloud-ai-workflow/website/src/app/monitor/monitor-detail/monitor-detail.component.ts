@@ -1,16 +1,16 @@
-import { Component, Input, ViewEncapsulation } from '@angular/core';
-import { Observable, of, BehaviorSubject } from 'rxjs';
-import { switchMap, tap, map } from 'rxjs/operators';
+import { Component, Input } from "@angular/core";
+import { BehaviorSubject, Observable, of } from "rxjs";
+import { map, switchMap, tap } from "rxjs/operators";
 
-import { WorkflowService } from '../../services/workflow.service';
-import { ContentService } from '../../services/content.service';
-import { WorkflowJobViewModel } from '../../view-models/workflow-job-vm';
-import { ContentViewModel } from '../../view-models/content-vm';
+import { WorkflowService } from "../../services/workflow.service";
+import { ContentService } from "../../services/content.service";
+import { WorkflowJobViewModel } from "../../view-models/workflow-job-vm";
+import { ContentViewModel } from "../../view-models/content-vm";
 
 @Component({
-    selector: 'mcma-monitor-detail',
-    templateUrl: './monitor-detail.component.html',
-    styleUrls: ['./monitor-detail.component.scss'],
+    selector: "mcma-monitor-detail",
+    templateUrl: "./monitor-detail.component.html",
+    styleUrls: ["./monitor-detail.component.scss"],
     // encapsulation: ViewEncapsulation.None,
 })
 export class MonitorDetailComponent {
@@ -57,7 +57,7 @@ export class MonitorDetailComponent {
                 ),
                 tap(contentVm => {
                         if (contentVm) {
-                            console.log('contentVm', contentVm);
+                            console.log("contentVm", contentVm);
                         }
                     }
                 )
@@ -65,7 +65,7 @@ export class MonitorDetailComponent {
         }
     }
 
-    seekVideoAws(timestamp: {timecode: string, seconds: number}): void {
+    seekVideoAws(timestamp: { timecode: string, seconds: number }): void {
         this.currentTimeSubject$.next(timestamp.seconds);
     }
 
@@ -73,7 +73,7 @@ export class MonitorDetailComponent {
         console.log(instance);
 
         const time = instance.start;
-        const timeParts = time.split(':');
+        const timeParts = time.split(":");
 
         let timeSeconds = 0;
 

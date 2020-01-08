@@ -54,6 +54,7 @@
 
         .upload-button {
             width: 120px;
+
             label {
                 cursor: pointer;
             }
@@ -68,6 +69,7 @@
         .s3-object {
             display: flex;
             align-items: center;
+
             .size {
                 flex: 1;
                 text-align: right;
@@ -99,6 +101,7 @@
 
         .sk-three-bounce {
             width: 220px;
+
             .sk-child {
                 width: 25px;
                 height: 25px;
@@ -144,6 +147,7 @@ button {
         height: 20px;
         margin-top: 10px;
     }
+
     .upload-progress-bar {
         background: mat-color($mcma-accent);
         height: 100%;

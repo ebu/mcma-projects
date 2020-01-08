@@ -1,7 +1,7 @@
-import { BMContent } from 'mcma-core';
-import { McmaClientService } from '../services/mcma-client.service';
-import { from } from 'rxjs';
-import { switchMap, tap } from 'rxjs/operators';
+import { BMContent } from "@mcma/core";
+import { McmaClientService } from "../services/mcma-client.service";
+import { from } from "rxjs";
+import { switchMap, tap } from "rxjs/operators";
 
 export class ContentViewModel {
     awsAiMetadata: { transcription: { original, translation, worddiffs } };
@@ -20,8 +20,8 @@ export class ContentViewModel {
         data: any[]
     } = {
         selected: {
-            name: '',
-            urls: '',
+            name: "",
+            urls: "",
             timestamps: [],
             emotions: [],
             emotionsCleaned: []
@@ -45,7 +45,7 @@ export class ContentViewModel {
         private mcmaClientService: McmaClientService,
         // public http: HttpClient,
     ) {
-        console.log('bmContent', bmContent);
+        console.log("bmContent", bmContent);
         this.populateAwsData();
         this.populateAzureData();
         this.populateGoogleData();
@@ -64,20 +64,20 @@ export class ContentViewModel {
     getBMEssence(contentUrl: string) {
         this.mcmaClientService.resourceManager$.pipe(
             switchMap(resourceManager => {
-                return from(resourceManager.resolve<any>(contentUrl)).pipe(
+                return from(resourceManager.get<any>(contentUrl)).pipe(
                     tap(data => {
-                        console.log('gotBMEssence: data (tap 1)', data);
-                        if (data.title === 'dubbing-srt-output') {
+                        console.log("gotBMEssence: data (tap 1)", data);
+                        if (data.title === "dubbing-srt-output") {
                             this.awsSpeechToSpeech.mp4 = data.locations[0].httpEndpoint;
                         }
-                        if (data.title === 'clean_vtt_output_file') {
+                        if (data.title === "clean_vtt_output_file") {
                             this.awsSpeechToSpeech.vtt = data.locations[0].httpEndpoint;
                         }
                     })
                 );
             }),
             tap(data => {
-                console.log('gotBMEssence: data (tap 2)', data);
+                console.log("gotBMEssence: data (tap 2)", data);
             })
         ).subscribe();
     }
@@ -131,10 +131,10 @@ export class ContentViewModel {
                     const celebritiesEmotionsKeys = Object.keys(contentVmAwsCelebritiesItemEmotions);
                     const celebrityEmotions = [];
                     for (const celebritiesEmotionsObjectItem of celebritiesEmotionsKeys) {
-                        if (celebritiesEmotionsObjectItem !== 'counter') {
+                        if (celebritiesEmotionsObjectItem !== "counter") {
                             celebrityEmotions.push({
-                                'name': celebritiesEmotionsObjectItem,
-                                'value': contentVmAwsCelebritiesItemEmotions[celebritiesEmotionsObjectItem]
+                                "name": celebritiesEmotionsObjectItem,
+                                "value": contentVmAwsCelebritiesItemEmotions[celebritiesEmotionsObjectItem]
                             });
                         }
                     }
@@ -164,7 +164,7 @@ export class ContentViewModel {
 
         const hours = (remaining / 3600000);
 
-        return `${hours < 10 ? '0' : ''}${hours}:${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}.${milliseconds}`;
+        return `${hours < 10 ? "0" : ""}${hours}:${minutes < 10 ? "0" : ""}${minutes}:${seconds < 10 ? "0" : ""}${seconds}.${milliseconds}`;
     }
 
     private populateAzureData(): void {
@@ -173,10 +173,10 @@ export class ContentViewModel {
                 for (const video of this.bmContent.azureAiMetadata.videos) {
                     if (video.insights) {
                         if (video.insights.transcript) {
-                            this.azureTranscription = '';
+                            this.azureTranscription = "";
                             for (const transcript of video.insights.transcript) {
                                 if (transcript.text) {
-                                    this.azureTranscription += transcript.text + ' ';
+                                    this.azureTranscription += transcript.text + " ";
                                 }
                             }
                             this.azureTranscription.trim();
