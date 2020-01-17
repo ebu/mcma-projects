@@ -5,7 +5,7 @@ const { DynamoDbTableProvider } = require("@mcma/aws-dynamodb");
 const { AwsCloudWatchLoggerProvider } = require("@mcma/aws-logger");
 require("@mcma/aws-api-gateway");
 
-const loggerProvider = new AwsCloudWatchLoggerProvider("service-registry-api-handler", process.env.LogGroupName);
+const loggerProvider = new AwsCloudWatchLoggerProvider("media-repository-api-handler", process.env.LogGroupName);
 const bmContentDbTableProvider = new DynamoDbTableProvider(BMContent);
 const bmEssenceDbTableProvider = new DynamoDbTableProvider(BMEssence);
 
