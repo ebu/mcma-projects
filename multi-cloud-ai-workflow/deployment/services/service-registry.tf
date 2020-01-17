@@ -49,6 +49,10 @@ resource "aws_dynamodb_table" "service_registry_table" {
 resource "aws_api_gateway_rest_api" "service_registry_api" {
   name        = "${var.global_prefix}-service-registry"
   description = "Service Registry Rest Api"
+
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
 }
 
 resource "aws_api_gateway_resource" "service_registry_api_resource" {

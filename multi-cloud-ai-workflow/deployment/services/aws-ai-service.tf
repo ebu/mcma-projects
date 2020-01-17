@@ -321,6 +321,10 @@ resource "aws_dynamodb_table" "aws_ai_service_table" {
 resource "aws_api_gateway_rest_api" "aws_ai_service_api" {
   name        = "${var.global_prefix}-aws-ai-service"
   description = "AWS AI Service Rest Api"
+
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
 }
 
 resource "aws_api_gateway_resource" "aws_ai_service_api_resource" {

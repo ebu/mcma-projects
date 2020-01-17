@@ -70,6 +70,10 @@ resource "aws_dynamodb_table" "google_ai_service_table" {
 resource "aws_api_gateway_rest_api" "google_ai_service_api" {
   name        = "${var.global_prefix}-google-ai-service"
   description = "google AI Service Rest Api"
+
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
 }
 
 resource "aws_api_gateway_resource" "google_ai_service_api_resource" {
