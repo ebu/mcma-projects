@@ -70,6 +70,10 @@ resource "aws_dynamodb_table" "job_repository_table" {
 resource "aws_api_gateway_rest_api" "job_repository_api" {
   name        = "${var.global_prefix}-job-repository"
   description = "Job Repository Rest Api"
+
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
 }
 
 resource "aws_api_gateway_resource" "job_repository_api_resource" {

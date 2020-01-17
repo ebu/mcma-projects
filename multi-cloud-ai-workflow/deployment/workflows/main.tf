@@ -146,6 +146,10 @@ resource "aws_lambda_function" "workflow_activity_callback_handler" {
 resource "aws_api_gateway_rest_api" "workflow_activity_callback_handler" {
   name        = "${var.global_prefix}-workflow-activity-callback-handler"
   description = "Workflow Activity Callback Rest Api"
+
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
 }
 
 resource "aws_api_gateway_resource" "workflow_activity_callback_handler_resource" {

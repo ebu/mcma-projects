@@ -70,6 +70,10 @@ resource "aws_dynamodb_table" "job_processor_service_table" {
 resource "aws_api_gateway_rest_api" "job_processor_service_api" {
   name        = "${var.global_prefix}-job-processor-service"
   description = "Job Processor Service Rest Api"
+
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
 }
 
 resource "aws_api_gateway_resource" "job_processor_service_api_resource" {

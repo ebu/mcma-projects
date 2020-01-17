@@ -49,6 +49,10 @@ resource "aws_dynamodb_table" "media_repository_table" {
 resource "aws_api_gateway_rest_api" "media_repository_api" {
   name        = "${var.global_prefix}-media-repository"
   description = "Media Repository Rest Api"
+
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
 }
 
 resource "aws_api_gateway_resource" "media_repository_api_resource" {

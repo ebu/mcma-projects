@@ -70,6 +70,10 @@ resource "aws_dynamodb_table" "workflow_service_table" {
 resource "aws_api_gateway_rest_api" "workflow_service_api" {
   name        = "${var.global_prefix}-workflow-service"
   description = "Workflow Service Rest Api"
+
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
 }
 
 resource "aws_api_gateway_resource" "workflow_service_api_resource" {

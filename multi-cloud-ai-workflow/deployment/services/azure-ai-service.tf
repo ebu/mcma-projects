@@ -91,6 +91,10 @@ resource "aws_dynamodb_table" "azure_ai_service_table" {
 resource "aws_api_gateway_rest_api" "azure_ai_service_api" {
   name        = "${var.global_prefix}-azure-ai-service"
   description = "Azure AI Service Rest Api"
+
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
 }
 
 resource "aws_api_gateway_resource" "azure_ai_service_api_resource" {
@@ -210,6 +214,10 @@ resource "aws_api_gateway_stage" "azure_ai_service_gateway_stage" {
 resource "aws_api_gateway_rest_api" "azure_ai_service_api_non_secure" {
   name        = "${var.global_prefix}-azure-ai-service-non-secure"
   description = "Azure AI Service Non Secure Rest Api For Callbacks by Azure Service"
+
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
 }
 
 resource "aws_api_gateway_resource" "azure_ai_service_api_resource_non_secure" {

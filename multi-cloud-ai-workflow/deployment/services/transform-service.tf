@@ -70,6 +70,10 @@ resource "aws_dynamodb_table" "transform_service_table" {
 resource "aws_api_gateway_rest_api" "transform_service_api" {
   name        = "${var.global_prefix}-transform-service"
   description = "Transform Service Rest Api"
+
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
 }
 
 resource "aws_api_gateway_resource" "transform_service_api_resource" {
