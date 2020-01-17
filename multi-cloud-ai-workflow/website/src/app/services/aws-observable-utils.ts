@@ -1,5 +1,5 @@
-import { Observable, Subject } from 'rxjs';
-import { AWSError } from 'aws-sdk';
+import { Observable, Subject } from "rxjs";
+import { AWSError } from "aws-sdk";
 
 export function asObservable<T>(caller: any, func: (callback: (err: AWSError, result: T) => void) => void): Observable<T> {
     const outputSubject = new Subject<T>();
@@ -16,8 +16,8 @@ export function asObservable<T>(caller: any, func: (callback: (err: AWSError, re
 }
 
 export function asObservableWithInput<TIn, TOut>(caller: any,
-    func: (input: TIn, callback: (err: AWSError, result: TOut) => void) => void,
-    input: TIn): Observable<TOut> {
+                                                 func: (input: TIn, callback: (err: AWSError, result: TOut) => void) => void,
+                                                 input: TIn): Observable<TOut> {
     const outputSubject = new Subject<TOut>();
 
     func.call(caller, input, (err, data) => {

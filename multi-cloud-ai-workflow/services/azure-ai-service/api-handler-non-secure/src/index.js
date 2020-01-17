@@ -1,74 +1,61 @@
 //"use strict";
+const { JobAssignment } = require("@mcma/core");
+const { McmaApiRouteCollection } = require("@mcma/api");
+const { DynamoDbTableProvider } = require("@mcma/aws-dynamodb");
+const { LambdaWorkerInvoker } = require("@mcma/aws-lambda-worker-invoker");
+const { AwsCloudWatchLoggerProvider } = require("@mcma/aws-logger");
+require("@mcma/aws-api-gateway");
 
-const util = require('util');
+const dbTableProvider = new DynamoDbTableProvider(JobAssignment);
+const loggerProvider = new AwsCloudWatchLoggerProvider("azure-ai-service-api-handler-non-secure", process.env.LogGroupName);
+const workerInvoker = new LambdaWorkerInvoker();
 
-const AWS = require("aws-sdk");
-const Lambda = new AWS.Lambda({ apiVersion: "2015-03-31" });
-const LambdaInvoke = util.promisify(Lambda.invoke.bind(Lambda));
+async function processNotification(requestContext) {
+    const request = requestContext.request;
 
-const MCMA_AWS = require("mcma-aws");
-const uuidv4 = require('uuid/v4');
+    const table = dbTableProvider.get(requestContext.tableName());
 
+    const jobAssignmentId = requestContext.publicUrl() + "/job-assignments/" + request.pathVariables.id;
 
-const processNotification = async (request, response) => {
-    console.log("processNotification()", JSON.stringify(request, null, 2));
-
-    let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
-
-    let jobAssignmentId = request.stageVariables.PublicUrl + "/job-assignments/" + request.pathVariables.id;
-
-    let jobAssignment = await table.get("JobAssignment", jobAssignmentId);
-
-    console.log("jobAssignment = ", jobAssignment);
-
+    const jobAssignment = await table.get(jobAssignmentId);
     if (!jobAssignment) {
-        console.log("jobAssignment not found", jobAssignment);
-        response.statusCode = MCMA_AWS.HTTP_NOT_FOUND;
-        response.statusMessage = "No resource found on path '" + request.path + "'.";
+        requestContext.setResponseResourceNotFound();
         return;
     }
 
     let notification = request.queryStringParameters;
-    console.log("notification = ", notification);
     if (!notification) {
-        response.statusCode = MCMA_AWS.HTTP_BAD_REQUEST;
-        response.statusMessage = "Missing notification in request Query String";
+        requestContext.setResponseStatusCode(HttpStatusCode.BadRequest, "Missing notification in request Query String");
         return;
     }
 
-    // invoking worker lambda function that will process the notification
-    var params = {
-        FunctionName: request.stageVariables.WorkerLambdaFunctionName,
-        InvocationType: "Event",
-        LogType: "None",
-        Payload: JSON.stringify({
-            action: "ProcessNotification",
-            stageVariables: request.stageVariables,
+    await workerInvoker.invoke(
+        requestContext.workerFunctionId(),
+        "ProcessNotification",
+        requestContext.getAllContextVariables(),
+        {
             jobAssignmentId,
             notification
-        })
-    };
-
-    console.log("Invoking Lambda : ", params);
-
-    await LambdaInvoke(params);
+        },
+        jobAssignment.tracker,
+    );
 }
 
-// Initializing rest controller for API Gateway Endpoint
-const restController = new MCMA_AWS.ApiGatewayRestController();
-
-// adding routes for GET, POST and DELETE
-// restController.addRoute("GET", "/job-assignments", getJobAssignments);
-// restController.addRoute("POST", "/job-assignments", addJobAssignment);
-// restController.addRoute("DELETE", "/job-assignments", deleteJobAssignments);
-// restController.addRoute("GET", "/job-assignments/{id}", getJobAssignment);
-// restController.addRoute("DELETE", "/job-assignments/{id}", deleteJobAssignment);
-
-// adding route for notifications from azure ai service
-restController.addRoute("POST", "/job-assignments/{id}/notifications", processNotification);
+const restController =
+    new McmaApiRouteCollection()
+        .addRoute("POST", "/job-assignments/{id}/notifications", processNotification)
+        .toApiGatewayApiController();
 
 exports.handler = async (event, context) => {
-    console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
+    const logger = loggerProvider.get();
+    try {
+        logger.functionStart(context.awsRequestId);
+        logger.debug(event);
+        logger.debug(context);
 
-    return await restController.handleRequest(event, context);
-}
+        return await restController.handleRequest(event, context);
+    } finally {
+        logger.functionEnd(context.awsRequestId);
+        await loggerProvider.flush();
+    }
+};

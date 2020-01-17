@@ -1,14 +1,14 @@
-import { ThemePalette } from '@angular/material';
+import { ThemePalette } from "@angular/material";
 
-import { WorkflowJob } from 'mcma-core';
+import { WorkflowJob } from "@mcma/core";
 
-import { JobStatus } from '../models/job-statuses';
+import { JobStatus } from "../models/job-statuses";
 
 export class WorkflowJobViewModel {
-    
+
     constructor(public workflowJob: WorkflowJob, fakeRunning = false) {
         if (fakeRunning) {
-            workflowJob.status = 'RUNNING';
+            workflowJob.status = "RUNNING";
         }
     }
 
@@ -58,20 +58,20 @@ export class WorkflowJobViewModel {
 
     get statusIcon(): string {
         if (!this.workflowJob || !this.workflowJob.status) {
-            return '';
+            return "";
         }
 
         switch (this.workflowJob.status) {
             case JobStatus.NEW:
             case JobStatus.QUEUED:
             case JobStatus.SCHEDULED:
-                return 'schedule';
+                return "schedule";
             case JobStatus.RUNNING:
-                return 'play_arrow';
+                return "play_arrow";
             case JobStatus.COMPLETED:
-                return 'check';
+                return "check";
             case JobStatus.FAILED:
-                return 'error';
+                return "error";
         }
     }
 
@@ -83,11 +83,11 @@ export class WorkflowJobViewModel {
         switch (this.workflowJob.status) {
             case JobStatus.RUNNING:
             case JobStatus.COMPLETED:
-                return 'accent';
+                return "accent";
             case JobStatus.FAILED:
-                return 'warn';
+                return "warn";
             default:
-                return 'primary';
+                return "primary";
         }
     }
 }

@@ -1,12 +1,9 @@
 variable "global_prefix" {}
-variable "temp_bucket" {}
-variable "repository_bucket" {}
-variable "website_bucket" {}
+variable "temp_bucket_name" {}
+variable "repository_bucket_name" {}
+variable "website_bucket_name" {}
 variable "aws_account_id" {}
-variable "aws_access_key" {}
-variable "aws_secret_key" {}
 variable "aws_region" {}
 variable "environment_type" {}
 variable "services_url" {}
-variable "services_auth_type" {}
-variable "services_auth_context" {}
+variable "service_registry_auth_type" {}

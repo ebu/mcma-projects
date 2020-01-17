@@ -1,28 +1,46 @@
-import { Injectable } from '@angular/core';
-import { Observable, BehaviorSubject, from, timer } from 'rxjs';
-import { map, concatMap, takeWhile, switchMap, tap } from 'rxjs/operators';
+import { Injectable } from "@angular/core";
+import { BehaviorSubject, from, Observable, timer } from "rxjs";
+import { switchMap, takeWhile, tap } from "rxjs/operators";
 
-import { BMContent } from 'mcma-core';
-import { McmaClientService } from './mcma-client.service';
-import { ContentViewModel } from '../view-models/content-vm';
+import { BMContent } from "@mcma/core";
+import { McmaClientService } from "./mcma-client.service";
+import { ContentViewModel } from "../view-models/content-vm";
+import { HttpClient } from "@angular/common/http";
 
 @Injectable()
 export class ContentService {
-    constructor(private mcmaClientService: McmaClientService) {}
+    constructor(
+        private mcmaClientService: McmaClientService,
+        public http: HttpClient,
+    ) {
+    }
 
     getContent(contentUrl: string): Observable<BMContent> {
         //console.log('getting content at ' + contentUrl);
         return this.mcmaClientService.resourceManager$.pipe(
             switchMap(resourceManager => {
-                console.log('using auth http to get content at ' + contentUrl);
-                return from<BMContent>(resourceManager.resolve(contentUrl)).pipe(
+                console.log("using auth http to get content at " + contentUrl);
+                return from(resourceManager.get<BMContent>(contentUrl)).pipe(
                     tap(data => {
-                        console.log('got content (tap 1)', data);
+                        console.log("got content (tap 1)", data);
+                        if (data && data.bmEssences) {
+                            console.log(data.bmEssences);
+                            const bmEssences = data.bmEssences;
+                            for (const bmEssencesItem of bmEssences) {
+                                console.log(bmEssencesItem);
+                                const test1 = from(resourceManager.get<any>(bmEssencesItem)).pipe(
+                                    tap(data => {
+                                        console.log("data", data);
+                                    })
+                                );
+                                test1.subscribe();
+                            }
+                        }
                     })
                 );
             }),
             tap(data => {
-                console.log('got content (tap 2)', data);
+                console.log("got content (tap 2)", data);
             })
         );
     }
@@ -38,18 +56,18 @@ export class ContentService {
                 stopSub.unsubscribe();
             }
         });
-        
+
         // poll until completion, emitting every 3 secs until the job is completed
         // when the job completes, unsubscribe from polling and load it one more time
         const sub1 =
             timer(0, 3000).pipe(
                 switchMap(() => this.mcmaClientService.resourceManager$),
-                switchMap(resourceManager => from<BMContent>(resourceManager.resolve(bmContentId))),
+                switchMap(resourceManager => from(resourceManager.get<BMContent>(bmContentId))),
                 takeWhile(() => !stop)
             ).subscribe(
                 content => {
-                    console.log('finished polling content', content);
-                    subject.next(new ContentViewModel(content));
+                    console.log("finished polling content", content);
+                    subject.next(new ContentViewModel(content, this.mcmaClientService));
                 },
                 err => subject.error(err),
                 () => {
@@ -58,15 +76,15 @@ export class ContentService {
                     // get finished job data
                     const sub2 = this.getContent(bmContentId).subscribe(
                         bmContent => {
-                            console.log('emitting content vm', bmContent);
-                            subject.next(new ContentViewModel(bmContent));
+                            console.log("emitting content vm", bmContent);
+                            subject.next(new ContentViewModel(bmContent, this.mcmaClientService));
                         },
                         err => {
-                            console.log('failed to get content vm');
+                            console.log("failed to get content vm");
                             subject.error(err);
                         },
                         () => {
-                            console.log('unsubscribing from final content get');
+                            console.log("unsubscribing from final content get");
                             sub2.unsubscribe();
                         });
                 }

@@ -1,18 +1,6 @@
-import { NgModule } from '@angular/core';
+import { NgModule } from "@angular/core";
 
-import {
-    MatButtonModule,
-    MatCheckboxModule,
-    MatInputModule,
-    MatSidenavModule,
-    MatToolbarModule,
-    MatIconModule,
-    MatListModule,
-    MatTableModule,
-    MatTabsModule,
-    MatPaginatorModule,
-    MatCardModule
-} from '@angular/material';
+import { MatButtonModule, MatCardModule, MatCheckboxModule, MatIconModule, MatInputModule, MatListModule, MatPaginatorModule, MatSidenavModule, MatTableModule, MatTabsModule, MatToolbarModule } from "@angular/material";
 
 @NgModule({
     imports: [

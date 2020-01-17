@@ -1,46 +1,24 @@
 //"use strict";
-
-// require
-const util = require("util");
-
 const AWS = require("aws-sdk");
 const StepFunctions = new AWS.StepFunctions();
-const StepFunctionsGetActivityTask = util.promisify(StepFunctions.getActivityTask.bind(StepFunctions));
 
-const MCMA_CORE = require("mcma-core");
+const { Exception, EnvironmentVariableProvider, NotificationEndpoint, JobParameterBag, AIJob, JobProfile } = require("@mcma/core");
+const { ResourceManager, AuthProvider } = require("@mcma/client");
+const { AwsCloudWatchLoggerProvider } = require("@mcma/aws-logger");
+const { AwsS3FolderLocator } = require("@mcma/aws-s3");
+require("@mcma/aws-client");
+
+const environmentVariableProvider = new EnvironmentVariableProvider();
+const resourceManager = new ResourceManager(environmentVariableProvider.getResourceManagerConfig(), new AuthProvider().addAwsV4Auth(AWS));
+const loggerProvider = new AwsCloudWatchLoggerProvider("ai-workflow-08-detect-celebrities-azure", process.env.LogGroupName);
 
 // Environment Variable(AWS Lambda)
-const TEMP_BUCKET = process.env.TEMP_BUCKET;
-const ACTIVITY_CALLBACK_URL = process.env.ACTIVITY_CALLBACK_URL;
-const ACTIVITY_ARN = process.env.ACTIVITY_ARN;
+const TempBucket = process.env.TempBucket;
+const ActivityCallbackUrl = process.env.ActivityCallbackUrl;
+const ActivityArn = process.env.ActivityArn;
 
-const JOB_PROFILE_NAME = "AzureExtractAllAIMetadata"
-const JOB_RESULTS_PREFIX = "AIResults/"
-
-const creds = {
-    accessKey: AWS.config.credentials.accessKeyId,
-    secretKey: AWS.config.credentials.secretAccessKey,
-    sessionToken: AWS.config.credentials.sessionToken,
-    region: AWS.config.region
-};
-
-const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator(creds);
-
-const authProvider = new MCMA_CORE.AuthenticatorProvider(
-    async (authType, authContext) => {
-        switch (authType) {
-            case "AWS4":
-                return authenticatorAWS4;
-        }
-    }
-);
-
-const resourceManager = new MCMA_CORE.ResourceManager({
-    servicesUrl: process.env.SERVICES_URL,
-    servicesAuthType: process.env.SERVICES_AUTH_TYPE,
-    servicesAuthContext: process.env.SERVICES_AUTH_CONTEXT,
-    authProvider
-});
+const JOB_PROFILE_NAME = "AzureExtractAllAIMetadata";
+const JOB_RESULTS_PREFIX = "AIResults/";
 
 /**
  * Lambda function handler
@@ -48,57 +26,70 @@ const resourceManager = new MCMA_CORE.ResourceManager({
  * @param {*} context context
  */
 exports.handler = async (event, context) => {
-    console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
-    console.log(TEMP_BUCKET, ACTIVITY_CALLBACK_URL, ACTIVITY_ARN);
-
-    // send update notification
+    const logger = loggerProvider.get(event.tracker);
     try {
-        event.status = "RUNNING";
-        event.parallelProgress = { "detect-celebrities-azure": 20 };
-        await resourceManager.sendNotification(event);
+        logger.functionStart(context.awsRequestId);
+        logger.debug(event);
+        logger.debug(context);
+        logger.info(TempBucket, ActivityCallbackUrl, ActivityArn);
+
+        // send update notification
+        try {
+            event.parallelProgress = { "detect-celebrities-azure": 20 };
+            await resourceManager.sendNotification(event);
+        } catch (error) {
+            logger.warn("Failed to send notification");
+            logger.warn(error.toString());
+        }
+
+        // get activity task
+        let data = await StepFunctions.getActivityTask({ activityArn: ActivityArn }).promise();
+
+        let taskToken = data.taskToken;
+        if (!taskToken) {
+            throw new Exception("Failed to obtain activity task");
+        }
+
+        // using input from activity task to ensure we don't have race conditions if two workflows execute simultaneously.
+        event = JSON.parse(data.input);
+
+        // get job profiles filtered by name
+        let jobProfiles = await resourceManager.query(JobProfile, { name: JOB_PROFILE_NAME });
+
+        let jobProfileId = jobProfiles.length ? jobProfiles[0].id : null;
+
+        // if not found bail out
+        if (!jobProfileId) {
+            throw new Exception("JobProfile '" + JOB_PROFILE_NAME + "' not found");
+        }
+
+        let notificationUrl = ActivityCallbackUrl + "?taskToken=" + encodeURIComponent(taskToken);
+        logger.info("NotificationUrl:", notificationUrl);
+
+        // creating job
+        let job = new AIJob({
+            jobProfile: jobProfileId,
+            jobInput: new JobParameterBag({
+                inputFile: event.data.mediaFileLocator,
+                outputLocation: new AwsS3FolderLocator({
+                    awsS3Bucket: TempBucket,
+                    awsS3KeyPrefix: JOB_RESULTS_PREFIX
+                })
+            }),
+            notificationEndpoint: new NotificationEndpoint({
+                httpEndpoint: notificationUrl
+            }),
+            tracker: event.tracker,
+        });
+
+        // posting the job to the job repository
+        job = await resourceManager.create(job);
     } catch (error) {
-        console.warn("Failed to send notification");
+        logger.error("Failed to detect celebrities on Azure");
+        logger.error(error.toString());
+        throw new Exception("Failed to detect celebrities on Azure", error);
+    } finally {
+        logger.functionEnd(context.awsRequestId);
+        await loggerProvider.flush();
     }
-
-    // get activity task
-    let data = await StepFunctionsGetActivityTask({ activityArn: ACTIVITY_ARN });
-
-    let taskToken = data.taskToken;
-    if (!taskToken) {
-        throw new Error("Failed to obtain activity task")
-    }
-
-    // using input from activity task to ensure we don't have race conditions if two workflows execute simultanously.
-    event = JSON.parse(data.input);
-
-    // get job profiles filtered by name
-    let jobProfiles = await resourceManager.get("JobProfile", { name: JOB_PROFILE_NAME });
-
-    let jobProfileId = jobProfiles.length ? jobProfiles[0].id : null;
-
-    // if not found bail out
-    if (!jobProfileId) {
-        throw new Error("JobProfile '" + JOB_PROFILE_NAME + "' not found");
-    }
-
-    let notificationUrl = ACTIVITY_CALLBACK_URL + "?taskToken=" + encodeURIComponent(taskToken);
-    console.log("NotificationUrl:", notificationUrl);
-
-    // creating job
-    let job = new MCMA_CORE.AIJob({
-        jobProfile: jobProfileId,
-        jobInput: new MCMA_CORE.JobParameterBag({
-            inputFile: event.data.mediaFileLocator,
-            outputLocation: new MCMA_CORE.Locator({
-                awsS3Bucket: TEMP_BUCKET,
-                awsS3KeyPrefix: JOB_RESULTS_PREFIX
-            })
-        }),
-        notificationEndpoint: new MCMA_CORE.NotificationEndpoint({
-            httpEndpoint: notificationUrl
-        })
-    });
-
-    // posting the job to the job repository
-    job = await resourceManager.create(job);
-}
+};

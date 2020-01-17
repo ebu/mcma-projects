@@ -1,71 +1,93 @@
-import { Component, Input } from '@angular/core';
-import { Observable, of, BehaviorSubject } from 'rxjs';
-import { switchMap, tap, map } from 'rxjs/operators';
+import { Component, Input } from "@angular/core";
+import { BehaviorSubject, Observable, of } from "rxjs";
+import { map, switchMap, tap } from "rxjs/operators";
 
-import { WorkflowService } from '../../services/workflow.service';
-import { ContentService } from '../../services/content.service';
-import { WorkflowJobViewModel } from '../../view-models/workflow-job-vm';
-import { ContentViewModel } from '../../view-models/content-vm';
+import { WorkflowService } from "../../services/workflow.service";
+import { ContentService } from "../../services/content.service";
+import { WorkflowJobViewModel } from "../../view-models/workflow-job-vm";
+import { ContentViewModel } from "../../view-models/content-vm";
 
 @Component({
-    selector: 'mcma-monitor-detail',
-    templateUrl: './monitor-detail.component.html',
-    styleUrls: ['./monitor-detail.component.scss']
+    selector: "mcma-monitor-detail",
+    templateUrl: "./monitor-detail.component.html",
+    styleUrls: ["./monitor-detail.component.scss"],
+    // encapsulation: ViewEncapsulation.None,
 })
 export class MonitorDetailComponent {
     private _conformJobVm$: Observable<WorkflowJobViewModel>;
     aiJobVm$: Observable<WorkflowJobViewModel>;
     content$: Observable<ContentViewModel>;
+    private currentTimeSubject$ = new BehaviorSubject<number>(0);
+    currentTime$ = this.currentTimeSubject$.asObservable();
+    isSpeechToSpeechVisible = true;
 
-    private currentTimeSubject = new BehaviorSubject<number>(0);
-    currentTime$ = this.currentTimeSubject.asObservable();
+    constructor(
+        private workflowService: WorkflowService,
+        private contentService: ContentService,
+    ) {
 
-    selectedAzureCelebrity;
+    }
 
-    get conformJobVm$(): Observable<WorkflowJobViewModel> { return this._conformJobVm$; }
+    get conformJobVm$(): Observable<WorkflowJobViewModel> {
+        return this._conformJobVm$;
+    }
+
     @Input() set conformJobVm$(val: Observable<WorkflowJobViewModel>) {
         this._conformJobVm$ = val;
 
         if (val) {
             this.aiJobVm$ = val.pipe(
-                switchMap(conformJobVm => 
+                switchMap(conformJobVm =>
                     conformJobVm.isCompleted && conformJobVm.aiJobUrl
                         ? this.workflowService.pollForCompletion(conformJobVm.aiJobUrl)
                         : of(null)
                 )
             );
-            
+
             this.content$ = val.pipe(
                 switchMap(conformJobVm =>
                     conformJobVm.isCompleted && conformJobVm.contentUrl
-                        ? this.contentService.pollUntil(conformJobVm.contentUrl, this.aiJobVm$.pipe(map(aiJobVm => aiJobVm && aiJobVm.isFinished)))
-                        : of (null)
+                        ? this.contentService.pollUntil(
+                        conformJobVm.contentUrl, this.aiJobVm$.pipe(
+                            map(
+                                aiJobVm => aiJobVm && aiJobVm.isFinished)
+                        )
+                        )
+                        : of(null)
                 ),
-                tap(contentVm => console.log('got content vm', contentVm))
+                tap(contentVm => {
+                        if (contentVm) {
+                            console.log("contentVm", contentVm);
+                        }
+                    }
+                )
             );
         }
     }
 
-    constructor(private workflowService: WorkflowService, private contentService: ContentService) {}
-
     seekVideoAws(timestamp: { timecode: string, seconds: number }): void {
-        this.currentTimeSubject.next(timestamp.seconds);
+        this.currentTimeSubject$.next(timestamp.seconds);
     }
 
     seekVideoAzure(instance: any): void {
         console.log(instance);
 
-        let time = instance.start;
-        let timeParts = time.split(":");
+        const time = instance.start;
+        const timeParts = time.split(":");
 
         let timeSeconds = 0;
 
         for (const timePart of timeParts) {
-            let parsed = Number.parseFloat(timePart);
+            const parsed = Number.parseFloat(timePart);
             timeSeconds *= 60;
             timeSeconds += parsed;
         }
 
-        this.currentTimeSubject.next(timeSeconds);
+        this.currentTimeSubject$.next(timeSeconds);
     }
+
+    toggleTabSpeechToSpeech() {
+        this.isSpeechToSpeechVisible = !this.isSpeechToSpeechVisible;
+    }
+
 }

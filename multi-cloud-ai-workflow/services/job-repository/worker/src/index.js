@@ -1,124 +1,51 @@
 //"use strict";
-
 const AWS = require("aws-sdk");
 
-const MCMA_AWS = require("mcma-aws");
-const MCMA_CORE = require("mcma-core");
+const { Job, EnvironmentVariableProvider } = require("@mcma/core");
+const { ResourceManagerProvider, AuthProvider } = require("@mcma/client");
+const { Worker, WorkerRequest, ProviderCollection } = require("@mcma/worker");
+const { DynamoDbTableProvider } = require("@mcma/aws-dynamodb");
+const { AwsCloudWatchLoggerProvider } = require("@mcma/aws-logger");
+require("@mcma/aws-client");
 
-const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator({
-    accessKey: AWS.config.credentials.accessKeyId,
-    secretKey: AWS.config.credentials.secretAccessKey,
-    sessionToken: AWS.config.credentials.sessionToken,
-    region: AWS.config.region
+const { createJobProcess } = require("./operations/create-job-process");
+const { deleteJobProcess } = require("./operations/delete-job-process");
+const { processNotification } = require("./operations/process-notification");
+
+const authProvider = new AuthProvider().addAwsV4Auth(AWS);
+const dbTableProvider = new DynamoDbTableProvider(Job);
+const environmentVariableProvider = new EnvironmentVariableProvider();
+const loggerProvider = new AwsCloudWatchLoggerProvider("job-repository-worker", process.env.LogGroupName);
+const resourceManagerProvider = new ResourceManagerProvider(authProvider);
+
+const providerCollection = new ProviderCollection({
+    authProvider,
+    dbTableProvider,
+    environmentVariableProvider,
+    loggerProvider,
+    resourceManagerProvider
 });
 
-const authProvider = new MCMA_CORE.AuthenticatorProvider(
-    async (authType, authContext) => {
-        switch (authType) {
-            case "AWS4":
-                return authenticatorAWS4;
-        }
-    }
-);
-
-const createResourceManager = (event) => {
-    return new MCMA_CORE.ResourceManager({
-        servicesUrl: event.stageVariables.ServicesUrl,
-        servicesAuthType: event.stageVariables.ServicesAuthType,
-        servicesAuthContext: event.stageVariables.ServicesAuthContext,
-        authProvider
-    });
-}
-
-const createJobProcess = async (event) => {
-    let jobId = event.jobId;
-
-    let table = new MCMA_AWS.DynamoDbTable(AWS, event.stageVariables.TableName);
-    let job = await table.get("Job", jobId);
-
-    let resourceManager = createResourceManager(event);
-
-    try {
-        let jobProcess = new MCMA_CORE.JobProcess({
-            job: jobId,
-            notificationEndpoint: new MCMA_CORE.NotificationEndpoint({
-                httpEndpoint: jobId + "/notifications"
-            })
-        });
-        jobProcess = await resourceManager.create(jobProcess);
-
-        job.status = "QUEUED";
-        job.jobProcess = jobProcess.id;
-    } catch (error) {
-        job.status = "FAILED";
-        job.statusMessage = "Failed to create JobProcess due to error '" + error.message + "'";
-    }
-
-    job.dateModified = new Date().toISOString();
-
-    await table.put("Job", jobId, job);
-
-    await resourceManager.sendNotification(job);
-}
-
-const deleteJobProcess = async (event) => {
-    let jobProcessId = event.jobProcessId;
-
-    try {
-        let resourceManager = createResourceManager(event);
-        await resourceManager.delete(jobProcessId);
-    } catch (error) {
-        console.log(error);
-    }
-}
-
-const processNotification = async (event) => {
-    let jobId = event.jobId;
-    let notification = event.notification;
-
-    let table = new MCMA_AWS.DynamoDbTable(AWS, event.stageVariables.TableName);
-
-    let job = await table.get("Job", jobId);
-
-    // not updating job if it already was marked as completed or failed.
-    if (job.status === "COMPLETED" || job.status === "FAILED") {
-        console.log("Ignoring update of job that tried to change state from " + job.status + " to " + notification.content.status)
-        return;
-    }
-
-    job.status = notification.content.status;
-    job.statusMessage = notification.content.statusMessage;
-    job.progress = notification.content.progress;
-    job.jobOutput = notification.content.jobOutput;
-    job.dateModified = new Date().toISOString();
-
-    await table.put("Job", jobId, job);
-
-    let resourceManager = createResourceManager(event);
-
-    await resourceManager.sendNotification(job);
-}
+const worker =
+    new Worker(providerCollection)
+        .addOperation("CreateJobProcess", createJobProcess)
+        .addOperation("DeleteJobProcess", deleteJobProcess)
+        .addOperation("ProcessNotification", processNotification);
 
 exports.handler = async (event, context) => {
-    try {
-        console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
+    const logger = loggerProvider.get(event.tracker);
 
-        switch (event.action) {
-            case "CreateJobProcess":
-                await createJobProcess(event);
-                break;
-            case "DeleteJobProcess":
-                await deleteJobProcess(event);
-                break;
-            case "ProcessNotification":
-                await processNotification(event);
-                break;
-            default:
-                console.error("No handler implemented for action '" + event.action + "'.");
-                break;
-        }
+    try {
+        logger.functionStart(context.awsRequestId);
+        logger.debug(event);
+        logger.debug(context);
+
+        await worker.doWork(new WorkerRequest(event));
     } catch (error) {
-        console.log("Error occurred when handling action '" + event.action + "'")
-        console.log(error.toString());
+        logger.error("Error occurred when handling operation '" + event.operationName + "'");
+        logger.error(error.toString());
+    } finally {
+        logger.functionEnd(context.awsRequestId);
+        await loggerProvider.flush();
     }
-}
+};

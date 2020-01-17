@@ -1,28 +1,29 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit } from "@angular/core";
 
-import { ModalService } from '../../services/modal.service';
-import { FormControl, FormGroup } from '@angular/forms';
+import { ModalService } from "../../services/modal.service";
+import { FormControl, FormGroup } from "@angular/forms";
 
 @Component({
-  selector: 'mcma-run-metadata-modal',
-  templateUrl: './run-metadata-modal.component.html',
-  styleUrls: ['./run-metadata-modal.component.scss']
+    selector: "mcma-run-metadata-modal",
+    templateUrl: "./run-metadata-modal.component.html",
+    styleUrls: ["./run-metadata-modal.component.scss"]
 })
 export class RunMetadataModalComponent implements OnInit {
-  private title = new FormControl('');
-  private description = new FormControl('');
-  form = new FormGroup({ title: this.title, description: this.description });
+    private title = new FormControl("");
+    private description = new FormControl("");
+    form = new FormGroup({ title: this.title, description: this.description });
 
-  constructor(private modalService: ModalService) { }
+    constructor(private modalService: ModalService) {
+    }
 
-  ngOnInit() {
-  }
+    ngOnInit() {
+    }
 
-  confirm(): void {
-    this.modalService.clearModal({ name: this.title.value, description: this.description.value });
-  }
+    confirm(): void {
+        this.modalService.clearModal({ name: this.title.value, description: this.description.value });
+    }
 
-  close(): void {
-    this.modalService.clearModal();
-  }
+    close(): void {
+        this.modalService.clearModal();
+    }
 }

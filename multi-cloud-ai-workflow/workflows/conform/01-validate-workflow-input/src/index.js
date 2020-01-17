@@ -1,119 +1,98 @@
 //"use strict";
-
-// require
-const util = require("util");
-
 const AWS = require("aws-sdk");
-const S3 = new AWS.S3()
-const S3HeadObject = util.promisify(S3.headObject.bind(S3));
+const S3 = new AWS.S3();
 
-const MCMA_CORE = require("mcma-core");
+const { Exception, EnvironmentVariableProvider } = require("@mcma/core");
+const { ResourceManager, AuthProvider } = require("@mcma/client");
+const { AwsCloudWatchLoggerProvider } = require("@mcma/aws-logger");
+require("@mcma/aws-client");
 
-const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator({
-    accessKey: AWS.config.credentials.accessKeyId,
-    secretKey: AWS.config.credentials.secretAccessKey,
-    sessionToken: AWS.config.credentials.sessionToken,
-    region: AWS.config.region
-});
+const environmentVariableProvider = new EnvironmentVariableProvider();
+const resourceManager = new ResourceManager(environmentVariableProvider.getResourceManagerConfig(), new AuthProvider().addAwsV4Auth(AWS));
+const loggerProvider = new AwsCloudWatchLoggerProvider("conform-workflow-01-validate-workflow-input", process.env.LogGroupName);
 
-const authProvider = new MCMA_CORE.AuthenticatorProvider(
-    async (authType, authContext) => {
-        switch (authType) {
-            case "AWS4":
-                return authenticatorAWS4;
-        }
-    }
-);
+// Expecting input like the following:
+// {
+//     "input": {
+//         "metadata": {
+//             "@type": "DescriptiveMetadata",
+//             "name": "Cat video",
+//             "description": "Great video of cats"
+//         },
+//         "inputFile": {
+//             "@type": "Locator",
+//             "awsS3Bucket": "bucket_name",
+//             "awsS3Key": "key_name"
+//         }
+//     },
+//     "notificationEndpoint": {
+//         "@type": "NotificationEndpoint",
+//         "httpEndpoint": "http://workflow-service/job-assignments/34543-34-534345-34/notifications"
+//     }
+// }
+//
+// Note that the notification endpoint is optional. But is used to notify progress and completed/failed of workflow.
 
-const resourceManager = new MCMA_CORE.ResourceManager({
-    servicesUrl: process.env.SERVICES_URL,
-    servicesAuthType: process.env.SERVICES_AUTH_TYPE,
-    servicesAuthContext: process.env.SERVICES_AUTH_CONTEXT,
-    authProvider
-});
-
-
-/* Expecting input like the following:
-
-{
-    "input": {
-        "metadata": {
-            "@type": "DescriptiveMetadata",
-            "name": "Cat video",
-            "description": "Great video of cats"
-        },
-        "inputFile": {
-            "@type": "Locator",
-            "awsS3Bucket": "bucket_name",
-            "awsS3Key": "key_name"
-        }
-    },
-    "notificationEndpoint": {
-        "@type": "NotificationEndpoint",
-        "httpEndpoint": "http://workflow-service/job-assignments/34543-34-534345-34/notifications"
-    }
-}
-
-Note that the notification endpoint is optional. But is used to notify progress and completed/failed of workflow.
-
-*/
-
-/**
- * Lambda function handler
- * @param {*} event event
- * @param {*} context context
- */
 exports.handler = async (event, context) => {
-    console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
-    
-    // send update notification
+    const logger = loggerProvider.get(event.tracker);
     try {
-        event.status = "RUNNING";
-        event.progress = 0;
-        await resourceManager.sendNotification(event);
+        logger.functionStart(context.awsRequestId);
+        logger.debug(event);
+        logger.debug(context);
+
+        // send update notification
+        try {
+            event.progress = 0;
+            await resourceManager.sendNotification(event);
+        } catch (error) {
+            logger.warn("Failed to send notification");
+            logger.warn(error.toString());
+        }
+
+        // checking input
+        if (!event || !event.input) {
+            throw new Exception("Missing workflow input");
+        }
+
+        let input = event.input;
+
+        if (!input.metadata) {
+            throw new Exception("Missing input.metadata");
+        }
+
+        if (!input.metadata.name) {
+            throw new Exception("Missing input.metadata.name");
+        }
+
+        if (!input.metadata.description) {
+            throw new Exception("Missing input.metadata.description");
+        }
+
+        if (!input.inputFile) {
+            throw new Exception("Missing input.inputFile");
+        }
+
+        let s3Bucket = input.inputFile.awsS3Bucket;
+        let s3Key = input.inputFile.awsS3Key;
+
+        let data;
+
+        try {
+            data = await S3.headObject({
+                Bucket: s3Bucket,
+                Key: s3Key,
+            }).promise();
+        } catch (error) {
+            throw new Exception("Unable to read input file in bucket '" + s3Bucket + "' with key '" + s3Key + "' due to error: " + error.message);
+        }
+
+        return data;
     } catch (error) {
-        console.warn("Failed to send notification");
+        logger.error("Failed to validate workflow input");
+        logger.error(error.toString());
+        throw new Exception("Failed to validate workflow input", error);
+    } finally {
+        logger.functionEnd(context.awsRequestId);
+        await loggerProvider.flush();
     }
-
-    if (!event || !event.input) {
-        throw new Error("Missing workflow input");
-    }
-
-    let input = event.input;
-
-    if (!input.metadata) {
-        throw new Error("Missing input.metadata");
-    }
-
-    if (!input.metadata.name) {
-        throw new Error("Missing input.metadata.name");
-    }
-
-    if (!event.input.metadata.description) {
-        throw new Error("Missing input.metadata.description");
-    }
-
-    if (!input.inputFile) {
-        throw new Error("Missing input.inputFile");
-    }
-
-    let s3Bucket = input.inputFile.awsS3Bucket;
-    let s3Key = input.inputFile.awsS3Key;
-
-    let data;
-
-    try {
-        data = await S3HeadObject({
-            Bucket: s3Bucket,
-            Key: s3Key,
-        });
-    } catch (error) {
-        throw new Error("Unable to read input file in bucket '" + s3Bucket + "' with key '" + s3Key + "' due to error: " + error.message);
-    }
-
-    // if (!data.ContentType.startsWith("video")) {
-    //     throw new Error("Input file is not a video");
-    // }
-
-    return data;
-}
+};

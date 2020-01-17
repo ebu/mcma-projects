@@ -2,45 +2,51 @@
 #  aws_lambda_function : aws-ai-service-api-handler
 #################################
 
-resource "aws_lambda_function" "aws-ai-service-api-handler" {
-  filename         = "./../services/aws-ai-service/api-handler/dist/lambda.zip"
-  function_name    = "${format("%.64s", "${var.global_prefix}-aws-ai-service-api-handler")}"
-  role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
+resource "aws_lambda_function" "aws_ai_service_api_handler" {
+  filename         = "../services/aws-ai-service/api-handler/build/dist/lambda.zip"
+  function_name    = format("%.64s", "${var.global_prefix}-aws-ai-service-api-handler")
+  role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = "${filebase64sha256("./../services/aws-ai-service/api-handler/dist/lambda.zip")}"
-  runtime          = "nodejs8.10"
-  timeout          = "30"
-  memory_size      = "256"
+  source_code_hash = filebase64sha256("../services/aws-ai-service/api-handler/build/dist/lambda.zip")
+  runtime          = "nodejs10.x"
+  timeout          = "900"
+  memory_size      = "3008"
+
+  environment {
+    variables = {
+      LogGroupName = var.global_prefix
+    }
+  }
 }
 
 #################################
 #  aws_lambda_function : aws-ai-service-s3-trigger
 #################################
 
-resource "aws_lambda_function" "aws-ai-service-s3-trigger" {
-  filename         = "./../services/aws-ai-service/s3-trigger/dist/lambda.zip"
-  function_name    = "${format("%.64s", "${var.global_prefix}-aws-ai-service-s3-trigger")}"
-  role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
+resource "aws_lambda_function" "aws_ai_service_s3_trigger" {
+  filename         = "../services/aws-ai-service/s3-trigger/build/dist/lambda.zip"
+  function_name    = format("%.64s", "${var.global_prefix}-aws-ai-service-s3-trigger")
+  role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = "${filebase64sha256("./../services/aws-ai-service/s3-trigger/dist/lambda.zip")}"
-  runtime          = "nodejs8.10"
-  timeout          = "30"
-  memory_size      = "256"
+  source_code_hash = filebase64sha256("../services/aws-ai-service/s3-trigger/build/dist/lambda.zip")
+  runtime          = "nodejs10.x"
+  timeout          = "900"
+  memory_size      = "3008"
 
   environment {
     variables = {
-      "TableName"                = "${aws_dynamodb_table.aws_ai_service_table.name}"
-      "PublicUrl"                = "${local.aws_ai_service_url}"
-      "ServicesUrl"              = "${local.services_url}"
-      "ServicesAuthType"         = "${local.services_auth_type}"
-      "ServicesAuthContext"      = "${local.services_auth_context}"
-      "WorkerLambdaFunctionName" = "${aws_lambda_function.aws-ai-service-worker.function_name}"
-      "ServiceOutputBucket"      = "${aws_s3_bucket.aws-ai-service-output.id}"
+      LogGroupName        = var.global_prefix
+      TableName           = aws_dynamodb_table.aws_ai_service_table.name
+      PublicUrl           = local.aws_ai_service_url
+      ServicesUrl         = local.services_url
+      ServicesAuthType    = local.service_registry_auth_type
+      WorkerFunctionId    = aws_lambda_function.aws_ai_service_worker.function_name
+      ServiceOutputBucket = aws_s3_bucket.aws_ai_service_output.id
     }
   }
 }
 
-resource "aws_s3_bucket" "aws-ai-service-output" {
+resource "aws_s3_bucket" "aws_ai_service_output" {
   bucket        = "${var.environment_name}.${var.aws_region}.${var.environment_type}.aws-ai-service-output"
   acl           = "private"
   force_destroy = true
@@ -49,18 +55,18 @@ resource "aws_s3_bucket" "aws-ai-service-output" {
 resource "aws_lambda_permission" "allow_bucket" {
   statement_id  = "AllowExecutionFromS3Bucket"
   action        = "lambda:InvokeFunction"
-  function_name = "${aws_lambda_function.aws-ai-service-s3-trigger.arn}"
+  function_name = aws_lambda_function.aws_ai_service_s3_trigger.arn
   principal     = "s3.amazonaws.com"
-  source_arn    = "${aws_s3_bucket.aws-ai-service-output.arn}"
+  source_arn    = aws_s3_bucket.aws_ai_service_output.arn
 }
 
-resource "aws_s3_bucket_notification" "aws-ai-service-output-bucket-notification" {
-  bucket = "${aws_s3_bucket.aws-ai-service-output.id}"
+resource "aws_s3_bucket_notification" "aws_ai_service_output_bucket_notification" {
+  bucket = aws_s3_bucket.aws_ai_service_output.id
 
   lambda_function {
-    lambda_function_arn = "${aws_lambda_function.aws-ai-service-s3-trigger.arn}"
+    lambda_function_arn = aws_lambda_function.aws_ai_service_s3_trigger.arn
     events              = ["s3:ObjectCreated:*"]
-    filter_suffix       = "json"
+    #filter_suffix       = "json"
   }
 }
 
@@ -68,25 +74,25 @@ resource "aws_s3_bucket_notification" "aws-ai-service-output-bucket-notification
 #  aws_lambda_function : aws-ai-service-sns-trigger
 #################################
 
-resource "aws_lambda_function" "aws-ai-service-sns-trigger" {
-  filename         = "./../services/aws-ai-service/sns-trigger/dist/lambda.zip"
-  function_name    = "${format("%.64s", "${var.global_prefix}-aws-ai-service-sns-trigger")}"
-  role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
+resource "aws_lambda_function" "aws_ai_service_sns_trigger" {
+  filename         = "../services/aws-ai-service/sns-trigger/build/dist/lambda.zip"
+  function_name    = format("%.64s", "${var.global_prefix}-aws-ai-service-sns-trigger")
+  role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = "${filebase64sha256("./../services/aws-ai-service/sns-trigger/dist/lambda.zip")}"
-  runtime          = "nodejs8.10"
-  timeout          = "30"
-  memory_size      = "256"
+  source_code_hash = filebase64sha256("../services/aws-ai-service/sns-trigger/build/dist/lambda.zip")
+  runtime          = "nodejs10.x"
+  timeout          = "900"
+  memory_size      = "3008"
 
   environment {
     variables = {
-      "TableName"                = "${aws_dynamodb_table.aws_ai_service_table.name}"
-      "PublicUrl"                = "${local.aws_ai_service_url}"
-      "ServicesUrl"              = "${local.services_url}"
-      "ServicesAuthType"         = "${local.services_auth_type}"
-      "ServicesAuthContext"      = "${local.services_auth_context}"
-      "WorkerLambdaFunctionName" = "${aws_lambda_function.aws-ai-service-worker.function_name}"
-      "ServiceOutputBucket"      = "${aws_s3_bucket.aws-ai-service-output.id}"
+      LogGroupName        = var.global_prefix
+      TableName           = aws_dynamodb_table.aws_ai_service_table.name
+      PublicUrl           = local.aws_ai_service_url
+      ServicesUrl         = local.services_url
+      ServicesAuthType    = local.service_registry_auth_type
+      WorkerFunctionId    = aws_lambda_function.aws_ai_service_worker.function_name
+      ServiceOutputBucket = aws_s3_bucket.aws_ai_service_output.id
     }
   }
 }
@@ -95,20 +101,21 @@ resource "aws_lambda_function" "aws-ai-service-sns-trigger" {
 #  aws_lambda_function : aws-ai-service-worker
 #################################
 
-resource "aws_lambda_function" "aws-ai-service-worker" {
-  filename         = "./../services/aws-ai-service/worker/dist/lambda.zip"
-  function_name    = "${format("%.64s", "${var.global_prefix}-aws-ai-service-worker")}"
-  role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
+resource "aws_lambda_function" "aws_ai_service_worker" {
+  filename         = "../services/aws-ai-service/worker/build/dist/lambda.zip"
+  function_name    = format("%.64s", "${var.global_prefix}-aws-ai-service-worker")
+  role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
-  source_code_hash = "${filebase64sha256("./../services/aws-ai-service/worker/dist/lambda.zip")}"
-  runtime          = "nodejs8.10"
-  timeout          = "300"
+  source_code_hash = filebase64sha256("../services/aws-ai-service/worker/build/dist/lambda.zip")
+  runtime          = "nodejs10.x"
+  timeout          = "900"
   memory_size      = "3008"
 
   environment {
     variables = {
-      REKO_SNS_ROLE_ARN = "${aws_iam_role.iam_role_Reko_to_SNS.arn}"
-      SNS_TOPIC_ARN     = "${aws_sns_topic.sns_topic_reko_output.arn}"
+      LogGroupName   = var.global_prefix
+      RekoSnsRoleArn = aws_iam_role.iam_role_Reko_to_SNS.arn
+      SnsTopicArn    = aws_sns_topic.sns_topic_reko_output.arn
     }
   }
 }
@@ -119,7 +126,7 @@ resource "aws_lambda_function" "aws-ai-service-worker" {
 
 # Allows Rekognition to call AWS services on your behalf
 resource "aws_iam_role" "iam_role_Reko_to_SNS" {
-  name = "${format("%.64s", "${var.global_prefix}.${var.aws_region}.services.reko_to_sns_role")}"
+  name = format("%.64s", "${var.global_prefix}.${var.aws_region}.services.reko_to_sns_role")
 
   assume_role_policy = <<EOF
 {
@@ -139,7 +146,7 @@ EOF
 }
 
 resource "aws_iam_policy" "aws_iam_policy_Reko_to_SNS" {
-  name        = "${format("%.64s", "${var.global_prefix}.${var.aws_region}.reko_to_sns_policy")}"
+  name        = format("%.64s", "${var.global_prefix}.${var.aws_region}.reko_to_sns_policy")
   description = "Policy for Reko to access SNS"
 
   policy = <<EOF
@@ -175,7 +182,7 @@ EOF
 }
 
 resource "aws_iam_policy" "rekognition_policy" {
-  name        = "${format("%.64s", "${var.global_prefix}.${var.aws_region}.reko_policy")}"
+  name        = format("%.64s", "${var.global_prefix}.${var.aws_region}.reko_policy")
   description = "Policy to Access rekognition"
 
   policy = <<EOF
@@ -192,28 +199,28 @@ resource "aws_iam_policy" "rekognition_policy" {
 EOF
 }
 
-resource "aws_iam_role_policy_attachment" "role-policy-rekognition" {
-  role       = "${aws_iam_role.iam_for_exec_lambda.name}"
-  policy_arn = "${aws_iam_policy.rekognition_policy.arn}"
+resource "aws_iam_role_policy_attachment" "role_policy_rekognition" {
+  role       = aws_iam_role.iam_for_exec_lambda.name
+  policy_arn = aws_iam_policy.rekognition_policy.arn
 }
 
-resource "aws_iam_role_policy_attachment" "role-policy-reko-to-SNS" {
-  role       = "${aws_iam_role.iam_role_Reko_to_SNS.name}"
-  policy_arn = "${aws_iam_policy.aws_iam_policy_Reko_to_SNS.arn}"
+resource "aws_iam_role_policy_attachment" "role_policy_reko_to_SNS" {
+  role       = aws_iam_role.iam_role_Reko_to_SNS.name
+  policy_arn = aws_iam_policy.aws_iam_policy_Reko_to_SNS.arn
 }
 
-resource "aws_iam_role_policy_attachment" "role-policy-log-reko-to-SNS" {
-  role       = "${aws_iam_role.iam_role_Reko_to_SNS.name}"
-  policy_arn = "${aws_iam_policy.log_policy.arn}"
+resource "aws_iam_role_policy_attachment" "role_policy_log_reko_to_SNS" {
+  role       = aws_iam_role.iam_role_Reko_to_SNS.name
+  policy_arn = aws_iam_policy.log_policy.arn
 }
 
-resource "aws_iam_role_policy_attachment" "role-policy-rekognition-reko-to-SNS" {
-  role       = "${aws_iam_role.iam_role_Reko_to_SNS.name}"
-  policy_arn = "${aws_iam_policy.rekognition_policy.arn}"
+resource "aws_iam_role_policy_attachment" "role_policy_rekognition_reko_to_SNS" {
+  role       = aws_iam_role.iam_role_Reko_to_SNS.name
+  policy_arn = aws_iam_policy.rekognition_policy.arn
 }
 
-resource "aws_iam_role_policy_attachment" "role-policy-lambda-full-access-reko-to-SNS" {
-  role       = "${aws_iam_role.iam_role_Reko_to_SNS.name}"
+resource "aws_iam_role_policy_attachment" "role_policy_lambda_full_access_reko_to_SNS" {
+  role       = aws_iam_role.iam_role_Reko_to_SNS.name
   policy_arn = "arn:aws:iam::aws:policy/AWSLambdaFullAccess"
 }
 
@@ -224,25 +231,23 @@ resource "aws_iam_role_policy_attachment" "role-policy-lambda-full-access-reko-t
 resource "aws_lambda_permission" "aws_lambda_permission_with_sns" {
   statement_id  = "AllowExecutionFromSNS"
   action        = "lambda:InvokeFunction"
-  function_name = "${aws_lambda_function.aws-ai-service-sns-trigger.function_name}"
+  function_name = aws_lambda_function.aws_ai_service_sns_trigger.function_name
   principal     = "sns.amazonaws.com"
-  source_arn    = "${aws_sns_topic.sns_topic_reko_output.arn}"
+  source_arn    = aws_sns_topic.sns_topic_reko_output.arn
 }
 
 resource "aws_sns_topic" "sns_topic_reko_output" {
-  name = "${format("%.256s", "AmazonRekognition_${var.global_prefix}_${var.aws_region}")}"
-
-  // name = "AmazonRekognition_Loic"
+  name = format("%.256s", "AmazonRekognition_${var.global_prefix}_${var.aws_region}")
 }
 
 resource "aws_sns_topic_subscription" "aws_sns_topic_sub_lambda" {
-  topic_arn = "${aws_sns_topic.sns_topic_reko_output.arn}"
+  topic_arn = aws_sns_topic.sns_topic_reko_output.arn
   protocol  = "lambda"
-  endpoint  = "${aws_lambda_function.aws-ai-service-sns-trigger.arn}"
+  endpoint  = aws_lambda_function.aws_ai_service_sns_trigger.arn
 }
 
 resource "aws_iam_role" "aws_iam_role_sns_to_lambda" {
-  name = "${format("%.64s", "${var.global_prefix}.${var.aws_region}.services.sns_to_lambda_role")}"
+  name = format("%.64s", "${var.global_prefix}.${var.aws_region}.services.sns_to_lambda_role")
 
   assume_role_policy = <<EOF
 {
@@ -261,28 +266,28 @@ resource "aws_iam_role" "aws_iam_role_sns_to_lambda" {
 EOF
 }
 
-resource "aws_iam_role_policy_attachment" "role-policy-SNS-to-Lambda" {
-  role       = "${aws_iam_role.aws_iam_role_sns_to_lambda.name}"
-  policy_arn = "${aws_iam_policy.aws_iam_policy_Reko_to_SNS.arn}"
+resource "aws_iam_role_policy_attachment" "role_policy_SNS_to_Lambda" {
+  role       = aws_iam_role.aws_iam_role_sns_to_lambda.name
+  policy_arn = aws_iam_policy.aws_iam_policy_Reko_to_SNS.arn
 }
 
-resource "aws_iam_role_policy_attachment" "role-policy-log-SNS-to-Lambda" {
-  role       = "${aws_iam_role.aws_iam_role_sns_to_lambda.name}"
-  policy_arn = "${aws_iam_policy.log_policy.arn}"
+resource "aws_iam_role_policy_attachment" "role_policy_log_SNS_to_Lambda" {
+  role       = aws_iam_role.aws_iam_role_sns_to_lambda.name
+  policy_arn = aws_iam_policy.log_policy.arn
 }
 
-resource "aws_iam_role_policy_attachment" "role-policy-rekognition-SNS-to-Lambda" {
-  role       = "${aws_iam_role.aws_iam_role_sns_to_lambda.name}"
-  policy_arn = "${aws_iam_policy.rekognition_policy.arn}"
+resource "aws_iam_role_policy_attachment" "role_policy_rekognition_SNS_to_Lambda" {
+  role       = aws_iam_role.aws_iam_role_sns_to_lambda.name
+  policy_arn = aws_iam_policy.rekognition_policy.arn
 }
 
-resource "aws_iam_role_policy_attachment" "role-policy-DynamoDB-SNS-to-Lambda" {
-  role       = "${aws_iam_role.aws_iam_role_sns_to_lambda.name}"
-  policy_arn = "${aws_iam_policy.DynamoDB_policy.arn}"
+resource "aws_iam_role_policy_attachment" "role_policy_DynamoDB_SNS_to_Lambda" {
+  role       = aws_iam_role.aws_iam_role_sns_to_lambda.name
+  policy_arn = aws_iam_policy.DynamoDB_policy.arn
 }
 
-resource "aws_iam_role_policy_attachment" "role-policy-lambda-full-access-SNS-to-Lambda" {
-  role       = "${aws_iam_role.aws_iam_role_sns_to_lambda.name}"
+resource "aws_iam_role_policy_attachment" "role_policy_lambda_full_access_SNS_to_Lambda" {
+  role       = aws_iam_role.aws_iam_role_sns_to_lambda.name
   policy_arn = "arn:aws:iam::aws:policy/AWSLambdaFullAccess"
 }
 
@@ -291,11 +296,10 @@ resource "aws_iam_role_policy_attachment" "role-policy-lambda-full-access-SNS-to
 ##################################
 
 resource "aws_dynamodb_table" "aws_ai_service_table" {
-  name           = "${var.global_prefix}-aws-ai-service"
-  read_capacity  = 1
-  write_capacity = 1
-  hash_key       = "resource_type"
-  range_key      = "resource_id"
+  name         = "${var.global_prefix}-aws-ai-service"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "resource_type"
+  range_key    = "resource_id"
 
   attribute {
     name = "resource_type"
@@ -320,60 +324,110 @@ resource "aws_api_gateway_rest_api" "aws_ai_service_api" {
 }
 
 resource "aws_api_gateway_resource" "aws_ai_service_api_resource" {
-  rest_api_id = "${aws_api_gateway_rest_api.aws_ai_service_api.id}"
-  parent_id   = "${aws_api_gateway_rest_api.aws_ai_service_api.root_resource_id}"
+  rest_api_id = aws_api_gateway_rest_api.aws_ai_service_api.id
+  parent_id   = aws_api_gateway_rest_api.aws_ai_service_api.root_resource_id
   path_part   = "{proxy+}"
 }
 
+resource "aws_api_gateway_method" "aws_ai_service_options_method" {
+  rest_api_id   = aws_api_gateway_rest_api.aws_ai_service_api.id
+  resource_id   = aws_api_gateway_resource.aws_ai_service_api_resource.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_method_response" "aws_ai_service_options_200" {
+  rest_api_id = aws_api_gateway_rest_api.aws_ai_service_api.id
+  resource_id = aws_api_gateway_resource.aws_ai_service_api_resource.id
+  http_method = aws_api_gateway_method.aws_ai_service_options_method.http_method
+  status_code = "200"
+
+  response_models = {
+    "application/json" = "Empty"
+  }
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+resource "aws_api_gateway_integration" "aws_ai_service_options_integration" {
+  rest_api_id = aws_api_gateway_rest_api.aws_ai_service_api.id
+  resource_id = aws_api_gateway_resource.aws_ai_service_api_resource.id
+  http_method = aws_api_gateway_method.aws_ai_service_options_method.http_method
+  type        = "MOCK"
+
+  request_templates = {
+    "application/json" = "{ \"statusCode\": 200 }"
+  }
+}
+
+resource "aws_api_gateway_integration_response" "aws_ai_service_options_integration_response" {
+  rest_api_id = aws_api_gateway_rest_api.aws_ai_service_api.id
+  resource_id = aws_api_gateway_resource.aws_ai_service_api_resource.id
+  http_method = aws_api_gateway_method.aws_ai_service_options_method.http_method
+  status_code = aws_api_gateway_method_response.aws_ai_service_options_200.status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT,PATCH,DELETE'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+
+  response_templates = {
+    "application/json" = ""
+  }
+}
+
 resource "aws_api_gateway_method" "aws_ai_service_api_method" {
-  rest_api_id   = "${aws_api_gateway_rest_api.aws_ai_service_api.id}"
-  resource_id   = "${aws_api_gateway_resource.aws_ai_service_api_resource.id}"
+  rest_api_id   = aws_api_gateway_rest_api.aws_ai_service_api.id
+  resource_id   = aws_api_gateway_resource.aws_ai_service_api_resource.id
   http_method   = "ANY"
   authorization = "AWS_IAM"
 }
 
-resource "aws_api_gateway_integration" "aws_ai_service_api_method-integration" {
-  rest_api_id             = "${aws_api_gateway_rest_api.aws_ai_service_api.id}"
-  resource_id             = "${aws_api_gateway_resource.aws_ai_service_api_resource.id}"
-  http_method             = "${aws_api_gateway_method.aws_ai_service_api_method.http_method}"
+resource "aws_api_gateway_integration" "aws_ai_service_api_method_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.aws_ai_service_api.id
+  resource_id             = aws_api_gateway_resource.aws_ai_service_api_resource.id
+  http_method             = aws_api_gateway_method.aws_ai_service_api_method.http_method
   type                    = "AWS_PROXY"
-  uri                     = "arn:aws:apigateway:${var.aws_region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${var.aws_region}:${var.aws_account_id}:function:${aws_lambda_function.aws-ai-service-api-handler.function_name}/invocations"
+  uri                     = "arn:aws:apigateway:${var.aws_region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${var.aws_region}:${var.aws_account_id}:function:${aws_lambda_function.aws_ai_service_api_handler.function_name}/invocations"
   integration_http_method = "POST"
 }
 
-resource "aws_lambda_permission" "apigw_aws-ai-service-api-handler" {
+resource "aws_lambda_permission" "apigw_aws_ai_service_api_handler" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
-  function_name = "${aws_lambda_function.aws-ai-service-api-handler.arn}"
+  function_name = aws_lambda_function.aws_ai_service_api_handler.arn
   principal     = "apigateway.amazonaws.com"
-
-  # More: http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-control-access-using-iam-policies-to-invoke-api.html
-  source_arn = "arn:aws:execute-api:${var.aws_region}:${var.aws_account_id}:${aws_api_gateway_rest_api.aws_ai_service_api.id}/*/${aws_api_gateway_method.aws_ai_service_api_method.http_method}/*"
+  source_arn    = "arn:aws:execute-api:${var.aws_region}:${var.aws_account_id}:${aws_api_gateway_rest_api.aws_ai_service_api.id}/*/${aws_api_gateway_method.aws_ai_service_api_method.http_method}/*"
 }
 
 resource "aws_api_gateway_deployment" "aws_ai_service_deployment" {
   depends_on = [
-    "aws_api_gateway_method.aws_ai_service_api_method",
-    "aws_api_gateway_integration.aws_ai_service_api_method-integration",
+    aws_api_gateway_integration.aws_ai_service_api_method_integration,
+    aws_api_gateway_integration.aws_ai_service_options_integration,
   ]
 
-  rest_api_id = "${aws_api_gateway_rest_api.aws_ai_service_api.id}"
-  stage_name  = "${var.environment_type}"
-
-  variables = {
-    "TableName"                = "${aws_dynamodb_table.aws_ai_service_table.name}"
-    "PublicUrl"                = "${local.aws_ai_service_url}"
-    "ServicesUrl"              = "${local.services_url}"
-    "ServicesAuthType"         = "${local.services_auth_type}"
-    "ServicesAuthContext"      = "${local.services_auth_context}"
-    "WorkerLambdaFunctionName" = "${aws_lambda_function.aws-ai-service-worker.function_name}"
-    "ServiceOutputBucket"      = "${aws_s3_bucket.aws-ai-service-output.id}"
-    "DeploymentHash"           = "${filesha256("./services/aws-ai-service.tf")}"
-  }
+  rest_api_id = aws_api_gateway_rest_api.aws_ai_service_api.id
 }
 
-output "aws_ai_service_url" {
-  value = "${local.aws_ai_service_url}"
+resource "aws_api_gateway_stage" "aws_ai_service_gateway_stage" {
+  stage_name    = var.environment_type
+  deployment_id = aws_api_gateway_deployment.aws_ai_service_deployment.id
+  rest_api_id   = aws_api_gateway_rest_api.aws_ai_service_api.id
+
+  variables = {
+    TableName           = aws_dynamodb_table.aws_ai_service_table.name
+    PublicUrl           = local.aws_ai_service_url
+    ServicesUrl         = local.services_url
+    ServicesAuthType    = local.service_registry_auth_type
+    WorkerFunctionId    = aws_lambda_function.aws_ai_service_worker.function_name
+    ServiceOutputBucket = aws_s3_bucket.aws_ai_service_output.id
+    DeploymentHash      = filesha256("./services/aws-ai-service.tf")
+  }
 }
 
 locals {

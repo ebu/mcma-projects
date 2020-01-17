@@ -1,25 +1,25 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { async, ComponentFixture, TestBed } from "@angular/core/testing";
 
-import { MonitorDetailComponent } from './monitor-detail.component';
+import { MonitorDetailComponent } from "./monitor-detail.component";
 
-describe('MonitorDetailComponent', () => {
-  let component: MonitorDetailComponent;
-  let fixture: ComponentFixture<MonitorDetailComponent>;
+describe("MonitorDetailComponent", () => {
+    let component: MonitorDetailComponent;
+    let fixture: ComponentFixture<MonitorDetailComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
-      declarations: [ MonitorDetailComponent ]
-    })
-    .compileComponents();
-  }));
+    beforeEach(async(() => {
+        TestBed.configureTestingModule({
+            declarations: [MonitorDetailComponent]
+        })
+            .compileComponents();
+    }));
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(MonitorDetailComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
+    beforeEach(() => {
+        fixture = TestBed.createComponent(MonitorDetailComponent);
+        component = fixture.componentInstance;
+        fixture.detectChanges();
+    });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
+    it("should create", () => {
+        expect(component).toBeTruthy();
+    });
 });

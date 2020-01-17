@@ -1,44 +1,37 @@
 //"use strict";
-
 const AWS = require("aws-sdk");
-const MCMA_CORE = require("mcma-core");
+const { EnvironmentVariableProvider, JobStatus } = require("@mcma/core");
+const { ResourceManager, AuthProvider } = require("@mcma/client");
+const { AwsCloudWatchLoggerProvider } = require("@mcma/aws-logger");
+require("@mcma/aws-client");
 
-const authenticatorAWS4 = new MCMA_CORE.AwsV4Authenticator({
-    accessKey: AWS.config.credentials.accessKeyId,
-    secretKey: AWS.config.credentials.secretAccessKey,
-    sessionToken: AWS.config.credentials.sessionToken,
-    region: AWS.config.region
-});
-
-const authProvider = new MCMA_CORE.AuthenticatorProvider(
-    async (authType, authContext) => {
-        switch (authType) {
-            case "AWS4":
-                return authenticatorAWS4;
-        }
-    }
-);
-
-const resourceManager = new MCMA_CORE.ResourceManager({
-    servicesUrl: process.env.SERVICES_URL,
-    servicesAuthType: process.env.SERVICES_AUTH_TYPE,
-    servicesAuthContext: process.env.SERVICES_AUTH_CONTEXT,
-    authProvider
-});
+const environmentVariableProvider = new EnvironmentVariableProvider();
+const resourceManager = new ResourceManager(environmentVariableProvider.getResourceManagerConfig(), new AuthProvider().addAwsV4Auth(AWS));
+const loggerProvider = new AwsCloudWatchLoggerProvider("process-workflow-failure", process.env.LogGroupName);
 
 exports.handler = async (event, context) => {
-    console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
-
-    event.status = "FAILED";
-    try {
-        event.statusMessage = JSON.parse(event.error.Cause).errorMessage;
-    } catch (error) {
-        event.statusMessage = "Unknown. Failed to parse error message";
-    }
+    const logger = loggerProvider.get(event.tracker);
 
     try {
-        await resourceManager.sendNotification(event);
-    } catch (error) {
-        console.warn("Failed to send notification");
+        logger.functionStart(context.awsRequestId);
+        logger.debug(event);
+        logger.debug(context);
+
+        event.status = JobStatus.Failed;
+        try {
+            event.statusMessage = JSON.parse(event.error.Cause).errorMessage;
+        } catch (error) {
+            event.statusMessage = "Unknown. Failed to parse error message";
+        }
+
+        try {
+            await resourceManager.sendNotification(event);
+        } catch (error) {
+            logger.error("Failed to send notification");
+            logger.error(error.toString());
+        }
+    } finally {
+        logger.functionEnd(context.awsRequestId);
+        await loggerProvider.flush();
     }
-}
+};

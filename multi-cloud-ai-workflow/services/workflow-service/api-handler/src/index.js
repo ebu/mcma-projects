@@ -1,174 +1,62 @@
 //"use strict";
+const { JobAssignment } = require("@mcma/core");
+const { DefaultRouteCollectionBuilder } = require("@mcma/api");
+const { DynamoDbTableProvider } = require("@mcma/aws-dynamodb");
+const { LambdaWorkerInvoker, invokeLambdaWorker } = require("@mcma/aws-lambda-worker-invoker");
+const { AwsCloudWatchLoggerProvider } = require("@mcma/aws-logger");
+require("@mcma/aws-api-gateway");
 
-const util = require('util');
+const dbTableProvider = new DynamoDbTableProvider(JobAssignment);
+const loggerProvider = new AwsCloudWatchLoggerProvider("workflow-service-api-handler", process.env.LogGroupName);
+const workerInvoker = new LambdaWorkerInvoker();
 
-const AWS = require("aws-sdk");
-const Lambda = new AWS.Lambda({ apiVersion: "2015-03-31" });
-const LambdaInvoke = util.promisify(Lambda.invoke.bind(Lambda));
+async function processNotification(requestContext) {
+    const request = requestContext.request;
 
-const MCMA_AWS = require("mcma-aws");
-const uuidv4 = require('uuid/v4');
+    const table = dbTableProvider.get(requestContext.tableName());
 
-// async functions to handle the different routes.
-const getJobAssignments = async (request, response) => {
-    console.log("getJobAssignments()", JSON.stringify(request, null, 2));
+    const jobAssignmentId = requestContext.publicUrl() + "/job-assignments/" + request.pathVariables.id;
 
-    let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
-
-    response.body = await table.getAll("JobAssignment");
-
-    console.log(JSON.stringify(response, null, 2));
-}
-
-const deleteJobAssignments = async (request, response) => {
-    console.log("deleteJobAssignments()", JSON.stringify(request, null, 2));
-
-    let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
-
-    let jobAssignments = await table.getAll("JobAssignment");
-
-    for (let i = 0; i < jobAssignments.length; i++) {
-        await table.delete("JobAssignment", jobAssignments[i].id);
-    }
-
-    console.log(JSON.stringify(response, null, 2));
-}
-
-const addJobAssignment = async (request, response) => {
-    console.log("addJobAssignment()", JSON.stringify(request, null, 2));
-
-    let jobAssignment = request.body;
+    const jobAssignment = await table.get(jobAssignmentId);
     if (!jobAssignment) {
-        response.statusCode = MCMA_AWS.HTTP_BAD_REQUEST;
-        response.statusMessage = "Missing request body.";
+        requestContext.setResponseResourceNotFound();
         return;
     }
 
-    let jobAssignmentId = request.stageVariables.PublicUrl + "/job-assignments/" + uuidv4();
-    if (jobAssignment["@type"] !== "JobAssignment") {
-        jobAssignment["@type"] = "JobAssignment";
-    }
-    jobAssignment.id = jobAssignmentId;
-    jobAssignment.status = "NEW";
-    jobAssignment.dateCreated = new Date().toISOString();
-    jobAssignment.dateModified = jobAssignment.dateCreated;
-
-    let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
-
-    await table.put("JobAssignment", jobAssignmentId, jobAssignment);
-
-    response.statusCode = MCMA_AWS.HTTP_CREATED;
-    response.headers.Location = jobAssignment.id;
-    response.body = jobAssignment;
-
-    console.log(JSON.stringify(response, null, 2));
-
-    // invoking worker lambda function that does the starting of the workflow
-    var params = {
-        FunctionName: request.stageVariables.WorkerLambdaFunctionName,
-        InvocationType: "Event",
-        LogType: "None",
-        Payload: JSON.stringify({
-            action: "ProcessJobAssignment",
-            stageVariables: request.stageVariables,
-            jobAssignmentId
-        })
-    };
-
-    await LambdaInvoke(params);
-}
-
-const getJobAssignment = async (request, response) => {
-    console.log("getJobAssignment()", JSON.stringify(request, null, 2));
-
-    let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
-
-    let jobAssignmentId = request.stageVariables.PublicUrl + request.path;
-
-    response.body = await table.get("JobAssignment", jobAssignmentId);
-
-    if (response.body === null) {
-        response.statusCode = MCMA_AWS.HTTP_NOT_FOUND;
-        response.statusMessage = "No resource found on path '" + request.path + "'.";
-    }
-}
-
-const deleteJobAssignment = async (request, response) => {
-    console.log("deleteJobAssignment()", JSON.stringify(request, null, 2));
-
-    let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
-
-    let jobAssignmentId = request.stageVariables.PublicUrl + request.path;
-
-    let jobAssignment = await table.get("JobAssignment", jobAssignmentId);
-    if (!jobAssignment) {
-        response.statusCode = MCMA_AWS.HTTP_NOT_FOUND;
-        response.statusMessage = "No resource found on path '" + request.path + "'.";
-        return;
-    }
-
-    await table.delete("JobAssignment", jobAssignmentId);
-}
-
-const processNotification = async (request, response) => {
-    console.log("processNotification()", JSON.stringify(request, null, 2));
-
-    let table = new MCMA_AWS.DynamoDbTable(AWS, request.stageVariables.TableName);
-
-    let jobAssignmentId = request.stageVariables.PublicUrl + "/job-assignments/" + request.pathVariables.id;
-
-    let jobAssignment = await table.get("JobAssignment", jobAssignmentId);
-    if (!jobAssignment) {
-        response.statusCode = MCMA_AWS.HTTP_NOT_FOUND;
-        response.statusMessage = "No resource found on path '" + request.path + "'.";
-        return;
-    }
-
-    let notification = request.body;
-
+    const notification = requestContext.getRequestBody();
     if (!notification) {
-        response.statusCode = MCMA_AWS.HTTP_BAD_REQUEST;
-        response.statusMessage = "Missing notification in request body";
+        requestContext.setResponseBadRequestDueToMissingBody();
         return;
     }
 
-    // if (jobAssignment.workflowExecutionId !== notification.source) {
-    //     response.statusCode = MCMA_AWS.HTTP_BAD_REQUEST;
-    //     response.statusMessage = "Unexpected notification from '" + notification.source + "'.";
-    //     return;
-    // }
-
-    // invoking worker lambda function that will process the notification
-    var params = {
-        FunctionName: request.stageVariables.WorkerLambdaFunctionName,
-        InvocationType: "Event",
-        LogType: "None",
-        Payload: JSON.stringify({
-            action: "ProcessNotification",
-            stageVariables: request.stageVariables,
+    await workerInvoker.invoke(
+        requestContext.workerFunctionId(),
+        "ProcessNotification",
+        requestContext.getAllContextVariables(),
+        {
             jobAssignmentId,
             notification
-        })
-    };
-
-    await LambdaInvoke(params);
+        },
+        jobAssignment.tracker,
+    );
 }
 
-// Initializing rest controller for API Gateway Endpoint
-const restController = new MCMA_AWS.ApiGatewayRestController();
-
-// adding routes for GET, POST and DELETE
-restController.addRoute("GET", "/job-assignments", getJobAssignments);
-restController.addRoute("POST", "/job-assignments", addJobAssignment);
-restController.addRoute("DELETE", "/job-assignments", deleteJobAssignments);
-restController.addRoute("GET", "/job-assignments/{id}", getJobAssignment);
-restController.addRoute("DELETE", "/job-assignments/{id}", deleteJobAssignment);
-
-// adding route for notifications from workflow
-restController.addRoute("POST", "/job-assignments/{id}/notifications", processNotification);
+const restController =
+    new DefaultRouteCollectionBuilder(dbTableProvider, JobAssignment)
+        .forJobAssignments(invokeLambdaWorker)
+        .addRoute("POST", "/job-assignments/{id}/notifications", processNotification)
+        .toApiGatewayApiController();
 
 exports.handler = async (event, context) => {
-    console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
+    const logger = loggerProvider.get();
+    try {
+        logger.functionStart(context.awsRequestId);
+        logger.debug(event);
+        logger.debug(context);
 
-    return await restController.handleRequest(event, context);
-}
+        return await restController.handleRequest(event, context);
+    } finally {
+        logger.functionEnd(context.awsRequestId);
+        await loggerProvider.flush();
+    }
+};

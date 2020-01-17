@@ -1,5 +1,10 @@
+import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
 
-def requiredVersionNodeJS = "8.10.0"
+def McmaVersion = "0.8.5"
+
+def requiredVersionTerraform = "0.12.19"
+def requiredVersionNodeJS = "10.16.3"
 
 allprojects {
     ext {
@@ -15,13 +20,13 @@ allprojects {
             terraformExecutable = ["terraform"]
         }
 
-        awsAvailableLibraries = [".bin", "aws-sdk", "base64-js", "buffer", "dynamodb-doc", "events", "ieee754", "isarray", "jmespath", "lodash", "punycode", "querystring", "sax", "url", "uuid", "xml2js", "xmlbuilder"]
+        awsAvailableLibraries = [".bin", "aws-sdk", "buffer", "dynamodb-doc", "events", "ieee754", "jmespath", "lodash", "punycode", "querystring", "url" ]
     }
 }
 
 def getVersionNodeJS = { ->
-    def stdout = new ByteArrayOutputStream();
-    def stderr = new ByteArrayOutputStream();
+    def stdout = new ByteArrayOutputStream()
+    def stderr = new ByteArrayOutputStream()
     try {
         exec {
             commandLine nodeExecutable
@@ -29,7 +34,8 @@ def getVersionNodeJS = { ->
             standardOutput stdout
             errorOutput stderr
         }
-    } catch (Exception ex) {}
+    } catch (Exception ignored) {
+    }
 
     return stdout.toString().trim().replace("v", "")
 }
@@ -38,10 +44,35 @@ task verifyNodeJS {
     inputs.property("VERSION_NODE_JS", requiredVersionNodeJS)
     outputs.upToDateWhen { getVersionNodeJS() == requiredVersionNodeJS }
     doLast {
-        def versionNodeJs = getVersionNodeJS()
-        if (versionNodeJs != requiredVersionNodeJS) {
-            throw new Exception("Required Node version " + requiredVersionNodeJS + " not installed. Detected version " + versionNodeJs);
-        }      
+        if (getVersionNodeJS() != requiredVersionNodeJS) {
+            throw new Exception("Required Node version " + requiredVersionNodeJS + " not installed")
+        }
+    }
+}
+
+def getVersionTerraform = { ->
+    def stdout = new ByteArrayOutputStream()
+    def stderr = new ByteArrayOutputStream()
+    try {
+        exec {
+            commandLine terraformExecutable
+            args "--version"
+            standardOutput stdout
+            errorOutput stderr
+        }
+    } catch (Exception ignored) {
+    }
+
+    return stdout.toString().split("\n")[0].trim().replace("Terraform v", "")
+}
+
+task verifyTerraform {
+    inputs.property("VERSION_TERRAFORM", requiredVersionTerraform)
+    outputs.upToDateWhen { getVersionTerraform() == requiredVersionTerraform }
+    doLast {
+        if (getVersionTerraform() != requiredVersionTerraform) {
+            throw new Exception("Required Terraform version " + requiredVersionTerraform + " not available")
+        }
     }
 }
 
@@ -54,11 +85,46 @@ task build {
 task clean {}
 
 subprojects {
-    task npmInstall (type: Exec) {
+    task setMcmaVersion {
+        def packageJson = file("package.json")
+
+        enabled packageJson.exists()
+        inputs.file(packageJson)
+        inputs.property("VERSION", McmaVersion)
+        outputs.file(packageJson)
+
+        doLast {
+            def jsonSlurper = new JsonSlurper()
+            def object = jsonSlurper.parse(file("package.json"))
+
+            if (object.dependencies != null) {
+                object.dependencies.keySet().each {
+                    object.dependencies[it] = it.startsWith("@mcma/") ? McmaVersion : object.dependencies[it]
+                }
+            }
+            if (object.peerDependencies != null) {
+                object.peerDependencies.keySet().each {
+                    object.peerDependencies[it] = it.startsWith("@mcma/") ? McmaVersion : object.peerDependencies[it]
+                }
+            }
+            if (object.devDependencies != null) {
+                object.devDependencies.keySet().each {
+                    object.devDependencies[it] = it.startsWith("@mcma/") ? McmaVersion : object.devDependencies[it]
+                }
+            }
+
+            def json = JsonOutput.toJson(object)
+            def jsonPretty = JsonOutput.prettyPrint(json) + "\n"
+
+            packageJson.write(jsonPretty)
+        }
+    }
+
+    task npmInstall(type: Exec) {
         dependsOn verifyNodeJS
         enabled file("package.json").exists()
         inputs.file("package.json")
-        inputs.file("package-lock.json")
+        outputs.file("package-lock.json")
         outputs.dir("node_modules")
         commandLine npmExecutable
         args "install"
@@ -68,18 +134,28 @@ subprojects {
         dependsOn verifyNodeJS
         enabled file("package.json").exists()
         inputs.file "package.json"
-        inputs.property("todaysDate", new Date().clearTime() )
+        inputs.property("todaysDate", new Date().clearTime())
         outputs.upToDateWhen { true }
         commandLine npmExecutable
         args "update"
     }
 
+    task npmDedup(type: Exec) {
+        dependsOn verifyNodeJS
+        enabled file("package.json").exists()
+        inputs.file("package.json")
+        outputs.file("package-lock.json")
+        outputs.dir("node_modules")
+        commandLine npmExecutable
+        args "dedup"
+    }
+
     task clean(type: Delete) {
+        delete "build"
         delete "dist"
         delete "node_modules"
     }
 }
-
 
 afterEvaluate {
     // avoiding simultanous connections to npmjs.com
@@ -90,7 +166,7 @@ afterEvaluate {
             if (prevTask != null) {
                 task.mustRunAfter(prevTask)
             }
-            prevTask = task;
+            prevTask = task
         }
     }
 
@@ -101,30 +177,33 @@ afterEvaluate {
             if (prevTask != null) {
                 task.mustRunAfter(prevTask)
             }
-            prevTask = task;
+            prevTask = task
         }
     }
-}
-
-if (!hasProperty("awsInstanceType")) {
-    ext.awsInstanceType = "t2.micro"
-}
-if (!hasProperty("awsInstanceCount")) {
-    ext.awsInstanceCount = "1"
 }
 
 if (!hasProperty("AzureLocation")) {
     ext.AzureLocation = "trial"
 }
-
 if (!hasProperty("AzureAccountID")) {
     ext.AzureAccountID = "undefined"
 }
-
 if (!hasProperty("AzureSubscriptionKey")) {
     ext.AzureSubscriptionKey = "undefined"
 }
-
 if (!hasProperty("AzureApiUrl")) {
     ext.AzureApiUrl = "https://api.videoindexer.ai"
+}
+
+if (!hasProperty("googleProjectId")) {
+    ext.googleProjectId = "undefined"
+}
+if (!hasProperty("googleBucketName")) {
+    ext.googleBucketName = "undefined"
+}
+if (!hasProperty("googleClientEmail")) {
+    ext.googleClientEmail = "undefined"
+}
+if (!hasProperty("googlePrivateKey")) {
+    ext.googlePrivateKey = "undefined"
 }

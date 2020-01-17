@@ -4,13 +4,16 @@
     "description": "S3 trigger to detect finished transcribe jobs for AWS AI Service",
     "private": true,
     "engines": {
-        "node": "~8.10.0"
+        "node": "~10.16.3"
     },
     "main": "src/index.js",
     "license": "Apache-2.0",
     "dependencies": {
-        "aws-sdk": "^2.473.0",
-        "mcma-aws": "0.1.0",
-        "mcma-core": "0.2.5"
+        "@mcma/aws-dynamodb": "0.8.5",
+        "@mcma/aws-logger": "0.8.5",
+        "@mcma/aws-s3": "0.8.5",
+        "@mcma/core": "0.8.5",
+        "@mcma/data": "0.8.5",
+        "aws-sdk": "^2.580.0"
     }
 }

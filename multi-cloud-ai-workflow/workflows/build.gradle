@@ -8,6 +8,25 @@ task build {
     dependsOn "ai:07-register-celebrities-info-aws:build"
     dependsOn "ai:08-detect-celebrities-azure:build"
     dependsOn "ai:09-register-celebrities-info-azure:build"
+    dependsOn "ai:10-detect-emotions-aws:build"
+    dependsOn "ai:11-register-emotions-info-aws:build"
+    dependsOn "ai:12-translation-to-speech:build"
+    dependsOn "ai:13-register-translation-to-speech:build"
+    dependsOn "ai:14-tokenized-translation-to-speech:build"
+    dependsOn "ai:15-register-tokenized-translation-to-speech:build"
+    dependsOn "ai:16-ssml-translation-to-speech:build"
+    dependsOn "ai:17-register-ssml-translation-to-speech:build"
+    dependsOn "ai:18-dubbing-srt:build"
+    dependsOn "ai:19-register-dubbing-srt:build"
+    dependsOn "ai:31-validate-speech-to-text:build"
+    dependsOn "ai:32-register-validate-speech-to-text:build"
+    dependsOn "ai:41-validate-speech-to-text-azure:build"
+    dependsOn "ai:42-register-validate-speech-to-text-azure:build"
+    dependsOn "ai:61-extract-audio-google:build"
+    dependsOn "ai:62-register-extract-audio-google:build"
+    dependsOn "ai:20-rekognition-aws:build"
+    dependsOn "ai:63-validate-speech-to-text-google:build"
+    dependsOn "ai:64-register-validate-speech-to-text-google:build"
     dependsOn "conform:01-validate-workflow-input:build"
     dependsOn "conform:02-move-content-to-file-repository:build"
     dependsOn "conform:03-create-media-asset:build"
@@ -27,21 +46,26 @@ task build {
 
 subprojects {
     task copyNodeModules (type: Copy) {
+        enabled file("package.json").exists()
         dependsOn npmInstall
         from "node_modules"
-        into "dist/staging/node_modules"
+        into "build/staging/node_modules"
         exclude awsAvailableLibraries
     }
 
     task copySource (type: Copy) {
+        enabled file("package.json").exists()
         from "src"
-        into "dist/staging/"
+        into "build/staging/"
     }
 
     task build (type: Zip) {
+        enabled file("package.json").exists()
         dependsOn copySource, copyNodeModules
         archiveName "lambda.zip"
-        destinationDir file("dist")
-        from "dist/staging"
+        destinationDir file("build/dist")
+        from "build/staging"
+        preserveFileTimestamps = false
+        reproducibleFileOrder = true
     }
 }

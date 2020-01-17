@@ -1,19 +1,22 @@
-import { Injectable } from '@angular/core';
-import { Observable, Subject, BehaviorSubject, from, timer, of } from 'rxjs';
-import { map, zip, switchMap, concatMap, tap, takeWhile } from 'rxjs/operators';
+import { Injectable } from "@angular/core";
+import { BehaviorSubject, from, Observable, Subject, timer } from "rxjs";
+import { map, switchMap, takeWhile, zip } from "rxjs/operators";
 
-import { ResourceManager, WorkflowJob, JobParameterBag, DescriptiveMetadata, Locator, AuthenticatedHttp } from 'mcma-core';
+import uuidv4 from "uuid/v4";
 
-import { ConfigService } from './config.service';
-import { McmaClientService } from './mcma-client.service';
-import { JobStatus } from '../models/job-statuses';
-import { WorkflowJobViewModel } from '../view-models/workflow-job-vm';
+import { DescriptiveMetadata, JobParameterBag, JobProfile, Locator, McmaTracker, WorkflowJob } from "@mcma/core";
+import { ResourceManager } from "@mcma/client";
+
+import { ConfigService } from "./config.service";
+import { McmaClientService } from "./mcma-client.service";
+import { JobStatus } from "../models/job-statuses";
+import { WorkflowJobViewModel } from "../view-models/workflow-job-vm";
 
 @Injectable()
 export class WorkflowService {
 
-    readonly WORKFLOW_NAME = 'ConformWorkflow';
-    readonly WORKFLOW_JOB_TYPE = 'WorkflowJob';
+    readonly WORKFLOW_NAME = "ConformWorkflow";
+    readonly WORKFLOW_JOB_TYPE = "WorkflowJob";
 
     constructor(private configService: ConfigService, private mcmaClientService: McmaClientService) {
     }
@@ -22,7 +25,7 @@ export class WorkflowService {
         const workflowJobSubject = new BehaviorSubject<WorkflowJob>(null);
 
         const sub = this.mcmaClientService.resourceManager$.pipe(
-            zip(this.configService.get<string>('aws.s3.uploadBucket')),
+            zip(this.configService.get<string>("aws.s3.uploadBucket")),
             switchMap(([resourceManager, uploadBucket]) => from(this.runWorkflowAsync(resourceManager, profileName, uploadBucket, objectKey, metadata)))
         ).subscribe(job => {
             sub.unsubscribe();
@@ -46,7 +49,7 @@ export class WorkflowService {
     }
 
     private getWorkflowJob(jobId: string): Observable<any> {
-        return this.mcmaClientService.resourceManager$.pipe(switchMap(resourceManager => from<WorkflowJob>(resourceManager.resolve(jobId))));
+        return this.mcmaClientService.resourceManager$.pipe(switchMap(resourceManager => from(resourceManager.get<WorkflowJob>(jobId))));
     }
 
     getWorkflowJobVm(jobId: string): Observable<WorkflowJobViewModel> {
@@ -61,7 +64,7 @@ export class WorkflowService {
         const sub1 =
             timer(0, 3000).pipe(
                 switchMap(() => this.mcmaClientService.resourceManager$),
-                switchMap(resourceManager => from<WorkflowJob>(resourceManager.resolve(workflowJobId))),
+                switchMap(resourceManager => from(resourceManager.get<WorkflowJob>(workflowJobId))),
                 takeWhile(j => !JobStatus.isFinished(j))
             ).subscribe(
                 job => subject.next(new WorkflowJobViewModel(job, fakeRunning)),
@@ -82,7 +85,7 @@ export class WorkflowService {
 
     private async getJobProfileIdAsync(resourceManager: ResourceManager, profileName: string) {
         // get job profiles filtered by name
-        const jobProfiles = await resourceManager.get('JobProfile', { name: profileName });
+        const jobProfiles = await resourceManager.query<JobProfile>("JobProfile", { name: profileName });
 
         const jobProfileId = jobProfiles.length ? jobProfiles[0].id : null;
 
@@ -95,10 +98,10 @@ export class WorkflowService {
     }
 
     private async runWorkflowAsync(resourceManager: ResourceManager,
-        profileName: string,
-        uploadBucket: string,
-        objectKey: string,
-        metadata: DescriptiveMetadata): Promise<WorkflowJob> {
+                                   profileName: string,
+                                   uploadBucket: string,
+                                   objectKey: string,
+                                   metadata: DescriptiveMetadata): Promise<WorkflowJob> {
         const jobProfileId = await this.getJobProfileIdAsync(resourceManager, profileName);
 
         // creating workflow job
@@ -113,6 +116,11 @@ export class WorkflowService {
             })
         });
 
+        workflowJob["tracker"] = new McmaTracker({
+            id: uuidv4(),
+            label: "Workflow '" + metadata.name + "' with file '" + objectKey + "'",
+        });
+
         // posting the workflowJob to the job repository
         workflowJob = await resourceManager.create(workflowJob);
 
@@ -124,11 +132,11 @@ export class WorkflowService {
     private async getWorkflowJobsAsync(resourceManager: ResourceManager): Promise<WorkflowJob[]> {
         const jobProfileId = await this.getJobProfileIdAsync(resourceManager, this.WORKFLOW_NAME);
 
-        const jobs: WorkflowJob[] = await resourceManager.get(this.WORKFLOW_JOB_TYPE);
-        console.log('All jobs', jobs);
+        const jobs = await resourceManager.query(WorkflowJob);
+        console.log("All jobs", jobs);
 
-        const filteredJobs = jobs.filter(j => j['@type'] === this.WORKFLOW_JOB_TYPE && j.jobProfile && j.jobProfile === jobProfileId);
-        console.log('Filtered jobs', filteredJobs);
+        const filteredJobs = jobs.filter(j => j["@type"] === this.WORKFLOW_JOB_TYPE && j.jobProfile && j.jobProfile === jobProfileId);
+        console.log("Filtered jobs", filteredJobs);
 
         filteredJobs.sort((a, b) => new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime());
 

@@ -8,28 +8,32 @@
 
             <ng-container matColumnDef="name">
                 <th mat-header-cell
-                    *matHeaderCellDef>Service Name</th>
+                    *matHeaderCellDef>Service Name
+                </th>
                 <td mat-cell
                     *matCellDef="let service"> {{service.name}} </td>
             </ng-container>
 
             <ng-container matColumnDef="accepts">
                 <th mat-header-cell
-                    *matHeaderCellDef>Accepts</th>
+                    *matHeaderCellDef>Accepts
+                </th>
                 <td mat-cell
                     *matCellDef="let service"> {{service.jobType}} </td>
             </ng-container>
 
             <ng-container matColumnDef="created">
                 <th mat-header-cell
-                    *matHeaderCellDef>Created</th>
+                    *matHeaderCellDef>Created
+                </th>
                 <td mat-cell
                     *matCellDef="let service"> {{service.dateCreated}} </td>
             </ng-container>
 
             <ng-container matColumnDef="modified">
                 <th mat-header-cell
-                    *matHeaderCellDef>Modified</th>
+                    *matHeaderCellDef>Modified
+                </th>
                 <td mat-cell
                     *matCellDef="let service"> {{service.dateModified}} </td>
             </ng-container>
@@ -49,21 +53,24 @@
 
             <ng-container matColumnDef="name">
                 <th mat-header-cell
-                    *matHeaderCellDef>JobProfile Name</th>
+                    *matHeaderCellDef>JobProfile Name
+                </th>
                 <td mat-cell
                     *matCellDef="let jobProfile"> {{jobProfile.name}} </td>
             </ng-container>
 
             <ng-container matColumnDef="input">
                 <th mat-header-cell
-                    *matHeaderCellDef>Input Parameters</th>
+                    *matHeaderCellDef>Input Parameters
+                </th>
                 <td mat-cell
                     *matCellDef="let jobProfile"> {{jobProfile.input}} </td>
             </ng-container>
 
             <ng-container matColumnDef="output">
                 <th mat-header-cell
-                    *matHeaderCellDef>Output Parameters</th>
+                    *matHeaderCellDef>Output Parameters
+                </th>
                 <td mat-cell
                     *matCellDef="let jobProfile"> {{jobProfile.output}} </td>
             </ng-container>
@@ -81,14 +88,16 @@
 
             <ng-container matColumnDef="type">
                 <th mat-header-cell
-                    *matHeaderCellDef>Resource Type</th>
+                    *matHeaderCellDef>Resource Type
+                </th>
                 <td mat-cell
                     *matCellDef="let serviceResource"> {{serviceResource.resourceType}} </td>
             </ng-container>
 
             <ng-container matColumnDef="url">
                 <th mat-header-cell
-                    *matHeaderCellDef>HTTP Endpoint</th>
+                    *matHeaderCellDef>HTTP Endpoint
+                </th>
                 <td mat-cell
                     *matCellDef="let serviceResource"> {{serviceResource.httpEndpoint}} </td>
             </ng-container>
@@ -111,28 +120,32 @@
 
             <ng-container matColumnDef="type">
                 <th mat-header-cell
-                    *matHeaderCellDef>Type</th>
+                    *matHeaderCellDef>Type
+                </th>
                 <td mat-cell
                     *matCellDef="let resource"> {{resource['@type']}} </td>
             </ng-container>
 
             <ng-container matColumnDef="name">
                 <th mat-header-cell
-                    *matHeaderCellDef>Name</th>
+                    *matHeaderCellDef>Name
+                </th>
                 <td mat-cell
                     *matCellDef="let resource"> {{resource.name}} </td>
             </ng-container>
 
             <ng-container matColumnDef="created">
                 <th mat-header-cell
-                    *matHeaderCellDef>Created</th>
+                    *matHeaderCellDef>Created
+                </th>
                 <td mat-cell
                     *matCellDef="let resource"> {{resource.dateCreated}} </td>
             </ng-container>
 
             <ng-container matColumnDef="modified">
                 <th mat-header-cell
-                    *matHeaderCellDef>Modified</th>
+                    *matHeaderCellDef>Modified
+                </th>
                 <td mat-cell
                     *matCellDef="let resource"> {{resource.dateModified}} </td>
             </ng-container>

@@ -1,66 +1,77 @@
 //"use strict";
-const util = require("util");
-
 const AWS = require("aws-sdk");
 const StepFunctions = new AWS.StepFunctions();
-const SendTaskSuccess = util.promisify(StepFunctions.sendTaskSuccess.bind(StepFunctions));
-const SendTaskFailure = util.promisify(StepFunctions.sendTaskFailure.bind(StepFunctions));
 
-const MCMA_AWS = require("mcma-aws");
+const { JobStatus } = require("@mcma/core");
+const { HttpStatusCode, McmaApiRouteCollection } = require("@mcma/api");
+const { AwsCloudWatchLoggerProvider } = require("@mcma/aws-logger");
+require("@mcma/aws-api-gateway");
 
-// async functions to handle the different routes.
+const loggerProvider = new AwsCloudWatchLoggerProvider("workflow-activity-callback-handler", process.env.LogGroupName);
 
-const processNotification = async (request, response) => {
-    console.log("processNotification()", JSON.stringify(request, null, 2));
+const processNotification = async (requestContext) => {
+    const request = requestContext.request;
+    const response = requestContext.response;
 
     let notification = request.body;
 
     if (!notification) {
-        response.statusCode = MCMA_AWS.HTTP_BAD_REQUEST;
+        response.statusCode = HttpStatusCode.BadRequest;
         response.statusMessage = "Missing notification in request body";
         return;
     }
 
     if (!notification.content) {
-        response.statusCode = MCMA_AWS.HTTP_BAD_REQUEST;
+        response.statusCode = HttpStatusCode.BadRequest;
         response.statusMessage = "Missing notification content";
         return;
     }
 
     if (!notification.content.status) {
-        response.statusCode = MCMA_AWS.HTTP_BAD_REQUEST;
+        response.statusCode = HttpStatusCode.BadRequest;
         response.statusMessage = "Missing notification content status";
         return;
     }
 
+    const logger = loggerProvider.get(notification.content.tracker);
+    logger.info("Received update with status " + notification.content.status + " for job id: " + notification.source);
+
     switch (notification.content.status) {
-        case "COMPLETED":
-            await SendTaskSuccess({
+        case JobStatus.Completed:
+            await StepFunctions.sendTaskSuccess({
                 taskToken: request.queryStringParameters.taskToken,
                 output: JSON.stringify(notification.source)
-            });
+            }).promise();
             break;
-        case "FAILED":
-            let error = notification.content["@type"] + " failed execution";
-            let cause = notification.content["@type"] + " with id '" + notification.source + "' failed execution with statusMessage '" + notification.content.statusMessage + "'";
+        case JobStatus.Failed:
+            const error = notification.content["@type"] + " failed execution";
+            const cause = notification.content["@type"] + " with id '" + notification.source + "' failed execution with statusMessage '" + notification.content.statusMessage + "'";
 
-            await SendTaskFailure({
+            await StepFunctions.sendTaskFailure({
                 taskToken: request.queryStringParameters.taskToken,
                 error: error,
                 cause: JSON.stringify(cause)
-            });
+            }).promise();
             break;
     }
-}
+};
 
 // Initializing rest controller for API Gateway Endpoint
-const restController = new MCMA_AWS.ApiGatewayRestController();
-
-// adding routes
-restController.addRoute("POST", "/notifications", processNotification);
+const restController =
+    new McmaApiRouteCollection()
+        .addRoute("POST", "/notifications", processNotification)
+        .toApiGatewayApiController();
 
 exports.handler = async (event, context) => {
-    console.log(JSON.stringify(event, null, 2), JSON.stringify(context, null, 2));
+    const logger = loggerProvider.get();
+    try {
+        logger.functionStart(context.awsRequestId);
+        logger.debug(event);
+        logger.debug(event);
 
-    return await restController.handleRequest(event, context);
-}
+        return await restController.handleRequest(event, context);
+    } finally {
+        logger.functionEnd(context.awsRequestId);
+        await loggerProvider.flush();
+    }
+};

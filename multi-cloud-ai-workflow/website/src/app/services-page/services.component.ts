@@ -1,13 +1,15 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnDestroy, OnInit } from "@angular/core";
+import { JobProfile, Service } from "@mcma/core";
+import { ResourceManager } from "@mcma/client";
 
-import { ConfigService } from '../services/config.service';
-import { McmaClientService } from '../services/mcma-client.service';
-import { Subscription } from 'rxjs';
+import { ConfigService } from "../services/config.service";
+import { McmaClientService } from "../services/mcma-client.service";
+import { Subscription } from "rxjs";
 
 @Component({
-    selector: 'mcma-services',
-    templateUrl: './services.component.html',
-    styleUrls: ['./services.component.scss']
+    selector: "mcma-services",
+    templateUrl: "./services.component.html",
+    styleUrls: ["./services.component.scss"]
 })
 export class ServicesComponent implements OnInit, OnDestroy {
 
@@ -24,22 +26,23 @@ export class ServicesComponent implements OnInit, OnDestroy {
     selectedResource;
     selectedResourceText;
 
-    servicesDisplayedColumns = ['name', 'accepts', 'created', 'modified'];
-    jobProfilesDisplayedColumns = ['name', 'input', 'output']
-    serviceResourcesDisplayedColumns = ['type', 'url']
-    resourcesDisplayedColumns = ['type', 'name', 'created', 'modified'];
-    resourceManager: any;
+    servicesDisplayedColumns = ["name", "accepts", "created", "modified"];
+    jobProfilesDisplayedColumns = ["name", "input", "output"];
+    serviceResourcesDisplayedColumns = ["type", "url"];
+    resourcesDisplayedColumns = ["type", "name", "created", "modified"];
+    resourceManager: ResourceManager;
 
     resourceManagerSubscription: Subscription;
 
-    constructor(private configService: ConfigService, private mcmaClientService: McmaClientService) { }
+    constructor(private configService: ConfigService, private mcmaClientService: McmaClientService) {
+    }
 
     ngOnInit() {
         this.resourceManagerSubscription = this.mcmaClientService.resourceManager$.subscribe(resourceManager => {
             this.resourceManager = resourceManager;
-             if (this.resourceManager) {
-                 this.initialize();  
-             }
+            if (this.resourceManager) {
+                this.initialize();
+            }
         });
     }
 
@@ -51,11 +54,16 @@ export class ServicesComponent implements OnInit, OnDestroy {
     }
 
     private initialize = async () => {
-        let services = await this.resourceManager.get("Service");
+        console.log("[ServicesComponent] getting services", this.resourceManager, Service.name);
+        const services = await this.resourceManager.query<Service>("Service");
+        console.log("[ServicesComponent] retrieved services", services);
 
         this.services = services.sort((a, b) => a.name.localeCompare(b.name));
+        console.log("[ServicesComponent] sorted services", this.services);
 
-        let jobProfiles = await this.resourceManager.get("JobProfile");
+        console.log("[ServicesComponent] getting job profiles", this.resourceManager, JobProfile.name);
+        const jobProfiles = await this.resourceManager.query<JobProfile>("JobProfile");
+        console.log("[ServicesComponent] retrieved job profiles", jobProfiles);
 
         this.jobProfiles = {};
 
@@ -70,7 +78,7 @@ export class ServicesComponent implements OnInit, OnDestroy {
                     input += param.parameterName;
                 }
             }
-            jobProfile.input = input;
+            (<any>jobProfile).input = input;
 
             let output = "";
             if (jobProfile.outputParameters) {
@@ -81,10 +89,11 @@ export class ServicesComponent implements OnInit, OnDestroy {
                     output += param.parameterName;
                 }
             }
-            jobProfile.output = output;
+            (<any>jobProfile).output = output;
 
             this.jobProfiles[jobProfile.id] = jobProfile;
         }
+        console.log("[ServicesComponent] processed job profiles", this.jobProfiles);
 
         this.selectService(this.services[0]);
     }
@@ -93,12 +102,12 @@ export class ServicesComponent implements OnInit, OnDestroy {
         this.selectedService = row;
         console.log(row);
 
-        let filteredJobProfiles = [];
-        let serviceResources = [];
+        const filteredJobProfiles = [];
+        const serviceResources = [];
 
         if (this.selectedService) {
             if (this.selectedService.jobProfiles) {
-                for (let jobProfileId of this.selectedService.jobProfiles) {
+                for (const jobProfileId of this.selectedService.jobProfiles) {
                     filteredJobProfiles.push(this.jobProfiles[jobProfileId]);
                 }
             }
@@ -126,10 +135,10 @@ export class ServicesComponent implements OnInit, OnDestroy {
     }
 
     private getResources = async (httpEndpoint) => {
-        let resourceEndpoint = await this.resourceManager.getResourceEndpoint(httpEndpoint);
+        const resourceEndpoint = await this.resourceManager.getResourceEndpointClient(httpEndpoint);
 
         if (resourceEndpoint) {
-            let response = await resourceEndpoint.get(httpEndpoint)
+            const response = await resourceEndpoint.get(httpEndpoint);
             this.resources = response.data.sort((a, b) => new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime());
         } else {
             this.resources.length = 0;

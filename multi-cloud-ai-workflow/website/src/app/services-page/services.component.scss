@@ -8,7 +8,7 @@
 
 .services-container {
     display: flex;
-    
+
     align-content: start;
 }
 
@@ -51,6 +51,7 @@ tr.mat-row {
 
 .services-table tr.mat-row {
     cursor: pointer;
+
     &:hover {
         background: rgba(255, 255, 255, 0.1);
     }
@@ -58,6 +59,7 @@ tr.mat-row {
 
 .service-resources-table tr.mat-row {
     cursor: pointer;
+
     &:hover {
         background: rgba(255, 255, 255, 0.1);
     }
@@ -65,11 +67,12 @@ tr.mat-row {
 
 .resources-table tr.mat-row {
     cursor: pointer;
+
     &:hover {
         background: rgba(255, 255, 255, 0.1);
     }
 }
 
 tr.highlight {
-    background:  rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.1);
 }
