@@ -1,7 +1,7 @@
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 
-def McmaVersion = "0.8.5"
+def McmaVersion = "0.8.7"
 
 def requiredVersionTerraform = "0.12.19"
 def requiredVersionNodeJS = "10.16.3"
@@ -13,14 +13,16 @@ allprojects {
             ngExecutable = ["cmd", "/c", "ng"]
             npmExecutable = ["cmd", "/c", "npm"]
             terraformExecutable = ["cmd", "/c", "terraform"]
+            tscExecutable = ["cmd", "/c", "tsc"]
         } else {
             nodeExecutable = ["node"]
             ngExecutable = ["ng"]
             npmExecutable = ["npm"]
             terraformExecutable = ["terraform"]
+            tscExecutable = ["tsc"]
         }
 
-        awsAvailableLibraries = [".bin", "aws-sdk", "buffer", "dynamodb-doc", "events", "ieee754", "jmespath", "lodash", "punycode", "querystring", "url" ]
+        awsAvailableLibraries = [".bin", "aws-sdk", "buffer", "dynamodb-doc", "events", "ieee754", "jmespath", "lodash", "punycode", "querystring", "url"]
     }
 }
 
