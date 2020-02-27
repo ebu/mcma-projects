@@ -1,11 +1,15 @@
 //"use strict";
 
-const { JobProcess, NotificationEndpoint, JobStatus } = require("@mcma/core");
+import { Job, JobProcess, JobStatus, NotificationEndpoint } from "@mcma/core";
+import { ProviderCollection, WorkerRequest } from "@mcma/worker";
+import { DynamoDbTable } from "@mcma/aws-dynamodb";
 
-async function createJobProcess(providers, workerRequest) {
+import { logJobEvent } from "../utils";
+
+export async function createJobProcess(providers: ProviderCollection, workerRequest: WorkerRequest) {
     const jobId = workerRequest.input.jobId;
 
-    const table = providers.getDbTableProvider().get(workerRequest.tableName());
+    const table = new DynamoDbTable(workerRequest.tableName(), Job);
     const resourceManager = providers.getResourceManagerProvider().get(workerRequest);
     const logger = providers.getLoggerProvider().get(workerRequest.tracker);
 
@@ -24,9 +28,12 @@ async function createJobProcess(providers, workerRequest) {
         jobProcess = await resourceManager.create(jobProcess);
 
         job.status = JobStatus.Queued;
+        // @ts-ignore TODO remove ignore when library supports it.
         job.jobProcess = jobProcess.id;
 
         logger.info("Created Job Process: " + jobProcess.id);
+
+        await logJobEvent(logger, resourceManager, job);
     } catch (error) {
         logger.error("Failed to create JobProcess", error);
         job.status = JobStatus.Failed;
@@ -40,6 +47,3 @@ async function createJobProcess(providers, workerRequest) {
     await resourceManager.sendNotification(job);
 }
 
-module.exports = {
-    createJobProcess
-};

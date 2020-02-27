@@ -17,5 +17,8 @@
         "@mcma/data": "0.8.7",
         "@mcma/worker": "0.8.7",
         "aws-sdk": "^2.580.0"
+    },
+    "devDependencies": {
+        "@types/node": "^12.12.14"
     }
 }

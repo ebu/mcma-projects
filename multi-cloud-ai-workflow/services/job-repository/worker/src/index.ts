@@ -1,26 +1,23 @@
 //"use strict";
-const AWS = require("aws-sdk");
+import * as AWS from "aws-sdk";
 
-const { Job, EnvironmentVariableProvider } = require("@mcma/core");
-const { ResourceManagerProvider, AuthProvider } = require("@mcma/client");
-const { Worker, WorkerRequest, ProviderCollection } = require("@mcma/worker");
-const { DynamoDbTableProvider } = require("@mcma/aws-dynamodb");
-const { AwsCloudWatchLoggerProvider } = require("@mcma/aws-logger");
-require("@mcma/aws-client");
+import { EnvironmentVariableProvider } from "@mcma/core";
+import { AuthProvider, ResourceManagerProvider } from "@mcma/client";
+import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
+import { ProviderCollection, Worker, WorkerRequest } from "@mcma/worker";
+import "@mcma/aws-client";
 
-const { createJobProcess } = require("./operations/create-job-process");
-const { deleteJobProcess } = require("./operations/delete-job-process");
-const { processNotification } = require("./operations/process-notification");
+import { processNotification } from "./operations/process-notification";
+import { deleteJobProcess } from "./operations/delete-job-process";
+import { createJobProcess } from "./operations/create-job-process";
 
 const authProvider = new AuthProvider().addAwsV4Auth(AWS);
-const dbTableProvider = new DynamoDbTableProvider(Job);
 const environmentVariableProvider = new EnvironmentVariableProvider();
 const loggerProvider = new AwsCloudWatchLoggerProvider("job-repository-worker", process.env.LogGroupName);
 const resourceManagerProvider = new ResourceManagerProvider(authProvider);
 
 const providerCollection = new ProviderCollection({
     authProvider,
-    dbTableProvider,
     environmentVariableProvider,
     loggerProvider,
     resourceManagerProvider
@@ -32,7 +29,7 @@ const worker =
         .addOperation("DeleteJobProcess", deleteJobProcess)
         .addOperation("ProcessNotification", processNotification);
 
-exports.handler = async (event, context) => {
+export async function handler(event, context) {
     const logger = loggerProvider.get(event.tracker);
 
     try {
@@ -48,4 +45,4 @@ exports.handler = async (event, context) => {
         logger.functionEnd(context.awsRequestId);
         await loggerProvider.flush();
     }
-};
+}

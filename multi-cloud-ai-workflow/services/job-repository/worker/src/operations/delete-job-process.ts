@@ -1,6 +1,8 @@
 //"use strict";
 
-async function deleteJobProcess(providers, workerRequest) {
+import { ProviderCollection, WorkerRequest } from "@mcma/worker";
+
+export async function deleteJobProcess(providers: ProviderCollection, workerRequest: WorkerRequest) {
     const jobProcessId = workerRequest.input.jobProcessId;
 
     const logger = providers.getLoggerProvider().get(workerRequest.tracker);
@@ -14,7 +16,3 @@ async function deleteJobProcess(providers, workerRequest) {
         logger.warn(error.toString());
     }
 }
-
-module.exports = {
-    deleteJobProcess
-};
