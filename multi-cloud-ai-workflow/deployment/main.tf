@@ -77,3 +77,11 @@ module "workflows" {
   temp_bucket_name       = module.storage.temp_bucket.id
   website_bucket_name    = module.storage.website_bucket.id
 }
+
+module "monitoring" {
+  source = "./monitoring"
+
+  global_prefix = var.global_prefix
+
+  aws_region = var.aws_region
+}

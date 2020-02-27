@@ -1,0 +1,137 @@
+{
+    "widgets": [
+        {
+            "type": "metric",
+            "x": 0,
+            "y": 3,
+            "width": 24,
+            "height": 6,
+            "properties": {
+                "metrics": [
+                    [ "${global_prefix}", "JobsStarted", { "color": "#1f77b4", "label": "Started" } ],
+                    [ ".", "JobsCompleted", { "yAxis": "left", "label": "Completed", "color": "#2ca02c" } ],
+                    [ ".", "JobsFailed", { "color": "#d62728", "label": "Failed" } ],
+                    [ ".", "JobsCanceled", { "color": "#7f7f7f", "label": "Canceled" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${aws_region}",
+                "stat": "Sum",
+                "period": 300,
+                "yAxis": {
+                    "left": {
+                        "showUnits": false,
+                        "label": "Count"
+                    },
+                    "right": {
+                        "showUnits": false
+                    }
+                },
+                "title": " ",
+                "legend": {
+                    "position": "hidden"
+                }
+            }
+        },
+        {
+            "type": "log",
+            "x": 0,
+            "y": 15,
+            "width": 24,
+            "height": 6,
+            "properties": {
+                "query": "SOURCE '${global_prefix}' | ### Query Jobs\r\nfields @timestamp, message.jobType as jobType, message.jobProfileName as jobProfile, message.jobStatus as status, message.jobActualDuration / 1000 as duration, trackerLabel, trackerId, message.jobId as jobId\r\n| filter type = \"JOB_END\" and message.jobStatus = \"Completed\"\r\n| sort @timestamp desc\r\n| sort @timestamp desc\r\n\r\n",
+                "region": "${aws_region}",
+                "stacked": false,
+                "title": "Completed Jobs",
+                "view": "table"
+            }
+        },
+        {
+            "type": "log",
+            "x": 0,
+            "y": 21,
+            "width": 24,
+            "height": 6,
+            "properties": {
+                "query": "SOURCE '${global_prefix}' | ### Query Jobs\r\nfields @timestamp, message.jobType as jobType, message.jobProfileName as jobProfile, trackerLabel, trackerId, message.jobId as jobId\r\n| filter type = \"JOB_START\"\r\n| sort @timestamp desc\r\n\r\n",
+                "region": "${aws_region}",
+                "stacked": false,
+                "title": "Started Jobs",
+                "view": "table"
+            }
+        },
+        {
+            "type": "metric",
+            "x": 0,
+            "y": 0,
+            "width": 18,
+            "height": 3,
+            "properties": {
+                "metrics": [
+                    [ "${global_prefix}", "JobsStarted", { "label": "Jobs Started", "id": "m1" } ],
+                    [ ".", "JobsCompleted", { "color": "#2ca02c", "label": "Jobs Completed", "id": "m2" } ],
+                    [ ".", "JobsFailed", { "color": "#d62728", "label": "Jobs Failed", "id": "m3" } ],
+                    [ ".", "JobsCanceled", { "color": "#7f7f7f", "label": "Jobs Canceled" } ]
+                ],
+                "view": "singleValue",
+                "region": "${aws_region}",
+                "stat": "Sum",
+                "period": 2592000,
+                "title": "MCMA Job Statistics"
+            }
+        },
+        {
+            "type": "metric",
+            "x": 21,
+            "y": 0,
+            "width": 3,
+            "height": 3,
+            "properties": {
+                "metrics": [
+                    [ { "expression": "100*(m2/(m1+m2+m3))", "label": "Failure rate %", "id": "e1", "stat": "Sum", "period": 2592000, "region": "${aws_region}" } ],
+                    [ "${global_prefix}", "JobsCompleted", { "id": "m1", "visible": false } ],
+                    [ ".", "JobsFailed", { "id": "m2", "visible": false } ],
+                    [ ".", "JobsCanceled", { "id": "m3", "visible": false } ]
+                ],
+                "view": "singleValue",
+                "region": "${aws_region}",
+                "stat": "Sum",
+                "period": 2592000
+            }
+        },
+        {
+            "type": "log",
+            "x": 0,
+            "y": 9,
+            "width": 24,
+            "height": 6,
+            "properties": {
+                "query": "SOURCE '${global_prefix}' | ### Query Jobs\r\nfields @timestamp, message.jobType as jobType, message.jobProfileName as jobProfile, message.jobStatus as status, message.jobStatusMessage as statusMessage, message.jobActualDuration / 1000 as duration, trackerLabel, trackerId, message.jobId as jobId\r\n| filter type = \"JOB_END\" and message.jobStatus != \"Completed\"\r\n| sort @timestamp desc\r\n\r\n",
+                "region": "${aws_region}",
+                "stacked": false,
+                "title": "Failed / Canceled Jobs",
+                "view": "table"
+            }
+        },
+        {
+            "type": "metric",
+            "x": 18,
+            "y": 0,
+            "width": 3,
+            "height": 3,
+            "properties": {
+                "metrics": [
+                    [ { "expression": "100*(m1/(m1+m2+m3))", "label": "Success rate %", "id": "e1", "stat": "Sum", "period": 2592000, "region": "${aws_region}" } ],
+                    [ "${global_prefix}", "JobsCompleted", { "id": "m1", "visible": false } ],
+                    [ ".", "JobsFailed", { "id": "m2", "visible": false } ],
+                    [ ".", "JobsCanceled", { "id": "m3", "visible": false } ]
+                ],
+                "view": "singleValue",
+                "region": "${aws_region}",
+                "stat": "Sum",
+                "period": 2592000
+            }
+        }
+    ]
+}
