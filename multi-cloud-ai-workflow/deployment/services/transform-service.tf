@@ -23,6 +23,12 @@ resource "aws_lambda_function" "transform_service_api_handler" {
 #  aws_lambda_function : ame-service-worker
 #################################
 
+resource "aws_lambda_layer_version" "ffmpeg" {
+  filename         = "../services/transform-service/ffmpeg/ffmpeg.zip"
+  layer_name       = "${var.global_prefix}-transform-service-ffmpeg"
+  source_code_hash = filebase64sha256("../services/transform-service/ffmpeg/ffmpeg.zip")
+}
+
 resource "aws_lambda_function" "transform_service_worker" {
   filename         = "../services/transform-service/worker/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-transform-service-worker")
@@ -32,6 +38,8 @@ resource "aws_lambda_function" "transform_service_worker" {
   runtime          = "nodejs10.x"
   timeout          = "900"
   memory_size      = "3008"
+
+  layers = [aws_lambda_layer_version.ffmpeg.arn]
 
   environment {
     variables = {

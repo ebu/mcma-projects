@@ -65,6 +65,16 @@ const JOB_PROFILES = {
             new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
         ]
     }),
+    ExtractAudio: new JobProfile({
+        name: "ExtractAudio",
+        inputParameters: [
+            new JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
+            new JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
+        ],
+        outputParameters: [
+            new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
+        ]
+    }),
     ExtractThumbnail: new JobProfile({
         name: "ExtractThumbnail",
         inputParameters: [
@@ -205,17 +215,7 @@ const JOB_PROFILES = {
         outputParameters: [
             new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
         ]
-    }),
-    ExtractAudio: new JobProfile({
-        name: "ExtractAudio",
-        inputParameters: [
-            new JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
-            new JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
-        ],
-        outputParameters: [
-            new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
-        ]
-    }),
+    })
 };
 
 function createServices(terraformOutput) {
@@ -300,7 +300,6 @@ function createServices(terraformOutput) {
                             authType: "AWS4",
                             jobType: "AIJob",
                             jobProfiles: [
-                                JOB_PROFILES.ExtractAudio.id ? JOB_PROFILES.ExtractAudio.id : JOB_PROFILES.ExtractAudio,
                                 JOB_PROFILES.ValidateSpeechToTextGoogle.id ? JOB_PROFILES.ValidateSpeechToTextGoogle.id : JOB_PROFILES.ValidateSpeechToTextGoogle,
                             ]
                         })
@@ -385,6 +384,7 @@ function createServices(terraformOutput) {
                             jobProfiles: [
                                 JOB_PROFILES.CreateProxyLambda.id ? JOB_PROFILES.CreateProxyLambda.id : JOB_PROFILES.CreateProxyLambda,
                                 JOB_PROFILES.CreateProxyEC2.id ? JOB_PROFILES.CreateProxyEC2.id : JOB_PROFILES.CreateProxyEC2,
+                                JOB_PROFILES.ExtractAudio.id ? JOB_PROFILES.ExtractAudio.id : JOB_PROFILES.ExtractAudio,
                             ],
                         })
                     );

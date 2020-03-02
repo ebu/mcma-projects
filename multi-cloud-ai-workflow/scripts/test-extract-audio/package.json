@@ -1,0 +1,21 @@
+{
+    "name": "test-extract-audio",
+    "version": "0.0.0",
+    "private": true,
+    "scripts": {
+        "start": "ts-node src/index.ts"
+    },
+    "license": "UNLICENSED",
+    "dependencies": {
+        "@mcma/aws-client": "0.8.7",
+        "@mcma/aws-s3": "0.8.7",
+        "@mcma/client": "0.8.7",
+        "@mcma/core": "0.8.7",
+        "aws-sdk": "^2.542.0"
+    },
+    "devDependencies": {
+        "@types/node": "^13.7.7",
+        "typescript": "^3.8.3",
+        "ts-node": "^8.6.2"
+    }
+}

@@ -1,5 +1,7 @@
 include "deployment",
         "deployment:post-deploy",
+        "scripts",
+        "scripts:test-extract-audio",
         "services",
         "services:ame-service:api-handler",
         "services:ame-service:worker",

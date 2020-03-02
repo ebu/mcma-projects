@@ -14,6 +14,10 @@ output "cognito_identity_pool_id" {
   value = module.cognito.identity_pool_id
 }
 
+output "temp_bucket" {
+  value = module.storage.temp_bucket.id
+}
+
 output "upload_bucket" {
   value = module.storage.upload_bucket.id
 }
