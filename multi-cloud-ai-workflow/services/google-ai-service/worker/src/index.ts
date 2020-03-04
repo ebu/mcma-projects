@@ -1,19 +1,17 @@
-//"use strict";
-const AWS = require("aws-sdk");
-const { AIJob, JobAssignment, EnvironmentVariableProvider } = require("@mcma/core");
-const { ResourceManagerProvider, AuthProvider } = require("@mcma/client");
-const { Worker, WorkerRequest, ProcessJobAssignmentOperation, ProviderCollection } = require("@mcma/worker");
-const { DynamoDbTableProvider } = require("@mcma/aws-dynamodb");
-const { AwsCloudWatchLoggerProvider } = require("@mcma/aws-logger");
-require("@mcma/aws-client");
+import * as AWS from "aws-sdk";
+import { AIJob, EnvironmentVariableProvider, JobAssignment } from "@mcma/core";
+import { AuthProvider, ResourceManagerProvider } from "@mcma/client";
+import { ProcessJobAssignmentOperation, ProviderCollection, Worker, WorkerRequest } from "@mcma/worker";
+import { DynamoDbTableProvider } from "@mcma/aws-dynamodb";
+import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
+import "@mcma/aws-client";
 
-const { extractAudio } = require('./profiles/extract-audio');
-const { validateSpeechToTextGoogle } = require('./profiles/validate-speech-to-text-google');
+import { speechToText } from "./profiles/speech-to-text";
 
 const authProvider = new AuthProvider().addAwsV4Auth(AWS);
 const dbTableProvider = new DynamoDbTableProvider(JobAssignment);
 const environmentVariableProvider = new EnvironmentVariableProvider();
-const loggerProvider = new AwsCloudWatchLoggerProvider("azure-ai-service-worker", process.env.LogGroupName);
+const loggerProvider = new AwsCloudWatchLoggerProvider("google-ai-service-worker", process.env.LogGroupName);
 const resourceManagerProvider = new ResourceManagerProvider(authProvider);
 
 const providerCollection = new ProviderCollection({
@@ -26,8 +24,7 @@ const providerCollection = new ProviderCollection({
 
 const processJobAssignmentOperation =
     new ProcessJobAssignmentOperation(AIJob)
-        .addProfile("ExtractAudio", extractAudio)
-        .addProfile("ValidateSpeechToTextGoogle", validateSpeechToTextGoogle);
+        .addProfile("GoogleSpeechToText", speechToText);
 
 const worker =
     new Worker(providerCollection)

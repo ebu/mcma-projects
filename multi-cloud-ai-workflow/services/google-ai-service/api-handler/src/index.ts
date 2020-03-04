@@ -1,10 +1,9 @@
-//"use strict";
-const { JobAssignment } = require("@mcma/core");
-const { DefaultRouteCollectionBuilder } = require("@mcma/api");
-const { DynamoDbTableProvider } = require("@mcma/aws-dynamodb");
-const { invokeLambdaWorker } = require("@mcma/aws-lambda-worker-invoker");
-const { AwsCloudWatchLoggerProvider } = require("@mcma/aws-logger");
-require("@mcma/aws-api-gateway");
+import { JobAssignment } from "@mcma/core";
+import { DefaultRouteCollectionBuilder } from "@mcma/api";
+import { DynamoDbTableProvider } from "@mcma/aws-dynamodb";
+import { invokeLambdaWorker } from "@mcma/aws-lambda-worker-invoker";
+import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
+import "@mcma/aws-api-gateway";
 
 const loggerProvider = new AwsCloudWatchLoggerProvider("google-ai-service-api-handler", process.env.LogGroupName);
 const dbTableProvider = new DynamoDbTableProvider(JobAssignment);
@@ -14,7 +13,7 @@ const restController =
         .forJobAssignments(invokeLambdaWorker)
         .toApiGatewayApiController();
 
-exports.handler = async (event, context) => {
+export async function handler(event, context) {
     const logger = loggerProvider.get();
     try {
         logger.functionStart(context.awsRequestId);
@@ -26,4 +25,4 @@ exports.handler = async (event, context) => {
         logger.functionEnd(context.awsRequestId);
         await loggerProvider.flush();
     }
-};
+}

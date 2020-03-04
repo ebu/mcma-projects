@@ -13,39 +13,30 @@ task generateTerraformTFVars {
     inputs.property("AZURE_SUBSCRIPTION_ID", AzureSubscriptionKey)
     inputs.property("AZURE_API_URL", AzureApiUrl)
 
-    inputs.property("GOOGLE_PROJECT_ID", googleProjectId)
-    inputs.property("GOOGLE_BUCKET_NAME", googleBucketName)
-    inputs.property("GOOGLE_CLIENT_EMAIL", googleClientEmail)
-    inputs.property("GOOGLE_PRIVATE_KEY", googlePrivateKey)
+    inputs.property("GOOGLE_SERVICE_CREDENTIALS_FILE", GoogleServiceCredentialsFile)
+    inputs.property("GOOGLE_BUCKET_NAME", GoogleBucketName)
 
     def propertyFile = file("${projectDir}/terraform.tfvars.json")
     outputs.file(propertyFile)
 
     doLast {
         def data = [
-                environment_name      : environmentName,
-                environment_type      : environmentType,
-                global_prefix         : "${environmentName}.${environmentType}".replace(".", "-"),
+                environment_name               : environmentName,
+                environment_type               : environmentType,
+                global_prefix                  : "${environmentName}.${environmentType}".replace(".", "-"),
 
-                upload_bucket_name    : "${environmentName}.${awsRegion}.${environmentType}.upload",
-                temp_bucket_name      : "${environmentName}.${awsRegion}.${environmentType}.temp",
-                repository_bucket_name: "${environmentName}.${awsRegion}.${environmentType}.repository",
-                website_bucket_name   : "${environmentName}.${awsRegion}.${environmentType}.website",
+                aws_account_id                 : awsAccountId,
+                aws_access_key                 : awsAccessKey,
+                aws_secret_key                 : awsSecretKey,
+                aws_region                     : awsRegion,
 
-                aws_account_id        : awsAccountId,
-                aws_access_key        : awsAccessKey,
-                aws_secret_key        : awsSecretKey,
-                aws_region            : awsRegion,
+                azure_location                 : AzureLocation,
+                azure_account_id               : AzureAccountID,
+                azure_subscription_key         : AzureSubscriptionKey,
+                azure_api_url                  : AzureApiUrl,
 
-                azure_location        : AzureLocation,
-                azure_account_id      : AzureAccountID,
-                azure_subscription_key: AzureSubscriptionKey,
-                azure_api_url         : AzureApiUrl,
-
-                google_project_id     : googleProjectId,
-                google_bucket_name    : googleBucketName,
-                google_client_email   : googleClientEmail,
-                google_private_key    : googlePrivateKey,
+                google_bucket_name             : GoogleBucketName,
+                google_service_credentials_file: GoogleServiceCredentialsFile,
         ]
 
         def json = JsonOutput.toJson(data)

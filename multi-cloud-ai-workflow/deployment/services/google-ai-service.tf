@@ -1,3 +1,7 @@
+locals {
+  google_service_credentials_file = "${var.environment_type}/google-ai-service-credentials.json"
+}
+
 #################################
 #  aws_lambda_function : google-ai-service-api-handler
 #################################
@@ -35,9 +39,21 @@ resource "aws_lambda_function" "google_ai_service_worker" {
 
   environment {
     variables = {
-      LogGroupName = var.global_prefix
+      LogGroupName                     = var.global_prefix
+      GoogleServiceCredentialsS3Bucket = var.config_bucket.id
+      GoogleServiceCredentialsS3Key    = local.google_service_credentials_file
+      GoogleBucketName                 = var.google_bucket_name
     }
   }
+}
+
+resource "aws_s3_bucket_object" "google_ai_service_credentials_file" {
+  count        = fileexists(var.google_service_credentials_file) ? 1 : 0
+  bucket       = var.config_bucket.id
+  key          = local.google_service_credentials_file
+  source       = var.google_service_credentials_file
+  content_type = "application/json"
+  etag         = md5(file(var.google_service_credentials_file))
 }
 
 ##################################
@@ -173,16 +189,12 @@ resource "aws_api_gateway_stage" "google_ai_service_gateway_stage" {
   rest_api_id   = aws_api_gateway_rest_api.google_ai_service_api.id
 
   variables = {
-    TableName         = aws_dynamodb_table.google_ai_service_table.name
-    PublicUrl         = local.google_ai_service_url
-    ServicesUrl       = local.services_url
-    ServicesAuthType  = local.service_registry_auth_type
-    WorkerFunctionId  = aws_lambda_function.google_ai_service_worker.function_name
-    DeploymentHash    = filesha256("./services/google-ai-service.tf")
-    googleProjectId   = var.google_project_id
-    googleBucketName  = var.google_bucket_name
-    googleClientEmail = var.google_client_email
-    googlePrivateKey  = var.google_private_key
+    TableName        = aws_dynamodb_table.google_ai_service_table.name
+    PublicUrl        = local.google_ai_service_url
+    ServicesUrl      = local.services_url
+    ServicesAuthType = local.service_registry_auth_type
+    WorkerFunctionId = aws_lambda_function.google_ai_service_worker.function_name
+    DeploymentHash   = filesha256("./services/google-ai-service.tf")
   }
 }
 

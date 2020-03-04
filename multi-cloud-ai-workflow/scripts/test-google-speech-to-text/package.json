@@ -1,5 +1,5 @@
 {
-    "name": "test-extract-audio",
+    "name": "test-google-speech-to-text",
     "version": "0.0.0",
     "private": true,
     "scripts": {

@@ -1,3 +1,7 @@
+output "config_bucket" {
+  value = aws_s3_bucket.config
+}
+
 output "upload_bucket" {
   value = aws_s3_bucket.upload
 }
@@ -15,5 +19,5 @@ output "website_bucket" {
 }
 
 output "website_url" {
-  value = "https://s3${var.aws_region != "us-east-1" ? "-${var.aws_region}" : ""}.amazonaws.com/${var.website_bucket_name}/index.html"
+  value = "https://s3${var.aws_region != "us-east-1" ? "-${var.aws_region}" : ""}.amazonaws.com/${aws_s3_bucket.website.bucket}/index.html"
 }

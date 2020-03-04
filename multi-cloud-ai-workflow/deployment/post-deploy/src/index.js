@@ -176,16 +176,7 @@ const JOB_PROFILES = {
             new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
         ]
     }),
-    ValidateSpeechToTextGoogle: new JobProfile({
-        name: "ValidateSpeechToTextGoogle",
-        inputParameters: [
-            new JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
-            new JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
-        ],
-        outputParameters: [
-            new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
-        ]
-    }),
+
     AWSDetectCelebrities: new JobProfile({
         name: "AWSDetectCelebrities",
         inputParameters: [
@@ -215,7 +206,17 @@ const JOB_PROFILES = {
         outputParameters: [
             new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
         ]
-    })
+    }),
+    GoogleSpeechToText: new JobProfile({
+        name: "GoogleSpeechToText",
+        inputParameters: [
+            new JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
+            new JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
+        ],
+        outputParameters: [
+            new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
+        ]
+    }),
 };
 
 function createServices(terraformOutput) {
@@ -300,7 +301,7 @@ function createServices(terraformOutput) {
                             authType: "AWS4",
                             jobType: "AIJob",
                             jobProfiles: [
-                                JOB_PROFILES.ValidateSpeechToTextGoogle.id ? JOB_PROFILES.ValidateSpeechToTextGoogle.id : JOB_PROFILES.ValidateSpeechToTextGoogle,
+                                JOB_PROFILES.GoogleSpeechToText.id,
                             ]
                         })
                     );

@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import * as path from "path";
 
 import { config, S3 } from "aws-sdk";
-import { Exception, JobParameterBag, JobProfile, JobStatus, McmaTracker, TransformJob } from "@mcma/core";
+import { AIJob, Exception, JobParameterBag, JobProfile, JobStatus, McmaTracker, TransformJob } from "@mcma/core";
 import { AuthProvider, ResourceManager } from "@mcma/client";
 import { AwsS3FileLocator, AwsS3FolderLocator } from "@mcma/aws-s3";
 import "@mcma/aws-client";
@@ -13,7 +13,7 @@ config.loadFromPath("../../deployment/aws-credentials.json");
 
 const s3 = new S3();
 
-const TEST_FILE = "../2015_GF_ORF_00_18_09_conv.mp4";
+const TEST_FILE = "../38b4bbe4-df9a-465f-bc1c-8178176ad586.flac";
 
 async function sleep(timeout) {
     return new Promise((resolve) => setTimeout(() => resolve(), timeout));
@@ -34,15 +34,15 @@ async function uploadFileToBucket(bucket, prefix, filename) {
     });
 }
 
-async function createTransformJob(resourceManager: ResourceManager, inputFile: AwsS3FileLocator, outputLocation: AwsS3FolderLocator) {
-    const jobProfiles = await resourceManager.query(JobProfile, { name: "ExtractAudio" });
+async function createAiJob(resourceManager: ResourceManager, inputFile: AwsS3FileLocator, outputLocation: AwsS3FolderLocator) {
+    const jobProfiles = await resourceManager.query(JobProfile, { name: "GoogleSpeechToText" });
 
     const jobProfileId = jobProfiles.shift()?.id;
     if (!jobProfileId) {
-        throw new Exception("JobProfile 'ExtractAudio' not found");
+        throw new Exception("JobProfile 'GoogleSpeechToText' not found");
     }
 
-    const transformJob = new TransformJob({
+    const transformJob = new AIJob({
         jobProfile: jobProfileId,
         jobInput: new JobParameterBag({
             inputFile,
@@ -50,7 +50,7 @@ async function createTransformJob(resourceManager: ResourceManager, inputFile: A
         }),
         tracker: new McmaTracker({
             "id": uuidv4(),
-            "label": "Testjob"
+            "label": "Test"
         })
     });
 
@@ -58,7 +58,7 @@ async function createTransformJob(resourceManager: ResourceManager, inputFile: A
 }
 
 async function main() {
-    console.log("Starting Test Extract Audio");
+    console.log("Starting Test Google Speech To Text");
 
     const terraformOutput = JSON.parse(fs.readFileSync("../../deployment/terraform.output.json", "utf8"));
 
@@ -74,7 +74,7 @@ async function main() {
 
     let resourceManager = new ResourceManager(resourceManagerConfig, new AuthProvider().addAwsV4Auth(config));
 
-    const keyPrefix = "test-extract-audio/" + new Date().toISOString() + "/";
+    const keyPrefix = "test-google-speech-to-text/" + new Date().toISOString() + "/";
 
     const tempBucket = terraformOutput["temp_bucket"]?.value;
     if (!tempBucket) {
@@ -89,8 +89,8 @@ async function main() {
         awsS3KeyPrefix: keyPrefix,
     });
 
-    console.log("Create TransformJob with Extract Audio job profile");
-    let job = await createTransformJob(resourceManager, transformInputFile, transformOutputLocation);
+    console.log("Create AiJob with GoogleSpeechToText job profile");
+    let job = await createAiJob(resourceManager, transformInputFile, transformOutputLocation);
     const jobId = job.id;
     console.log("job.status = " + job.status);
 

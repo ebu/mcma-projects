@@ -6,7 +6,31 @@ def McmaVersion = "0.8.7"
 def requiredVersionTerraform = "0.12.19"
 def requiredVersionNodeJS = "10.16.3"
 
+if (!hasProperty("AzureLocation")) {
+    ext.AzureLocation = "trial"
+}
+if (!hasProperty("AzureAccountID")) {
+    ext.AzureAccountID = "undefined"
+}
+if (!hasProperty("AzureSubscriptionKey")) {
+    ext.AzureSubscriptionKey = "undefined"
+}
+if (!hasProperty("AzureApiUrl")) {
+    ext.AzureApiUrl = "https://api.videoindexer.ai"
+}
+
+if (!hasProperty("GoogleServiceCredentialsFile")) {
+    ext.GoogleServiceCredentialsFile = "undefined"
+}
+if (!hasProperty("GoogleBucketName")) {
+    ext.GoogleBucketName = "undefined"
+}
+
+def googleServiceCredentialsFile = file(ext.GoogleServiceCredentialsFile).path
+
 allprojects {
+    ext.GoogleServiceCredentialsFile = googleServiceCredentialsFile
+
     ext {
         if (org.gradle.internal.os.OperatingSystem.current().isWindows()) {
             nodeExecutable = ["node"]
@@ -160,7 +184,7 @@ subprojects {
 }
 
 afterEvaluate {
-    // avoiding simultanous connections to npmjs.com
+    // avoiding simultaneous connections to npmjs.com
     def prevTask = null
     project.subprojects.each {
         def task = it.tasks.find { task -> task.name.contains('npmUpdate') }
@@ -184,28 +208,3 @@ afterEvaluate {
     }
 }
 
-if (!hasProperty("AzureLocation")) {
-    ext.AzureLocation = "trial"
-}
-if (!hasProperty("AzureAccountID")) {
-    ext.AzureAccountID = "undefined"
-}
-if (!hasProperty("AzureSubscriptionKey")) {
-    ext.AzureSubscriptionKey = "undefined"
-}
-if (!hasProperty("AzureApiUrl")) {
-    ext.AzureApiUrl = "https://api.videoindexer.ai"
-}
-
-if (!hasProperty("googleProjectId")) {
-    ext.googleProjectId = "undefined"
-}
-if (!hasProperty("googleBucketName")) {
-    ext.googleBucketName = "undefined"
-}
-if (!hasProperty("googleClientEmail")) {
-    ext.googleClientEmail = "undefined"
-}
-if (!hasProperty("googlePrivateKey")) {
-    ext.googlePrivateKey = "undefined"
-}

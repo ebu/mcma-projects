@@ -41,6 +41,7 @@ subprojects {
     task tsc(type: Exec) {
         dependsOn npmInstall
         enabled file("tsconfig.json").exists()
+        inputs.file "tsconfig.json"
         inputs.files fileTree(dir: "src", include: "**/*.ts").getFiles()
         outputs.files fileTree(dir: "build/staging", include: "**/*.js", exclude: "node_modules").getFiles()
         commandLine tscExecutable

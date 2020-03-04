@@ -1,0 +1,184 @@
+import * as util from "util";
+import * as fs from "fs";
+
+import * as AWS from "aws-sdk";
+import { v4 as uuidv4 } from "uuid";
+
+import { Storage } from "@google-cloud/storage";
+import speech from "@google-cloud/speech";
+
+import { EnvironmentVariableProvider, Exception } from "@mcma/core";
+import { AwsS3FileLocator } from "@mcma/aws-s3";
+import { google } from "@google-cloud/speech/build/protos/protos";
+import RecognitionConfig = google.cloud.speech.v1.RecognitionConfig;
+import RecognitionAudio = google.cloud.speech.v1p1beta1.RecognitionAudio;
+import AudioEncoding = google.cloud.speech.v1.RecognitionConfig.AudioEncoding;
+
+const fsWriteFile = util.promisify(fs.writeFile);
+const fsUnlink = util.promisify(fs.unlink);
+const S3 = new AWS.S3();
+
+const environmentVariables = new EnvironmentVariableProvider();
+
+async function getGoogleServiceCredentials(): Promise<any> {
+    try {
+        const googleServiceCredentialsS3Bucket = environmentVariables.getRequiredContextVariable("GoogleServiceCredentialsS3Bucket");
+        const googleServiceCredentialsS3Key = environmentVariables.getRequiredContextVariable("GoogleServiceCredentialsS3Key");
+
+        const data = await S3.getObject({
+            Bucket: googleServiceCredentialsS3Bucket,
+            Key: googleServiceCredentialsS3Key,
+        }).promise();
+
+        return JSON.parse(data.Body.toString());
+    } catch (error) {
+        throw new Exception("Failed to obtain Google Service Credentials", error);
+    }
+}
+
+export async function speechToText(providers, jobAssignmentHelper) {
+    const logger = jobAssignmentHelper.getLogger();
+
+    logger.info("Initialization of Google credentials");
+    const googleCredentials = await getGoogleServiceCredentials();
+
+    const googleProjectId = googleCredentials.project_id;
+    const googleClientEmail = googleCredentials.client_email;
+    const googlePrivateKey = googleCredentials.private_key;
+
+    logger.info("Project Id: " + googleProjectId);
+    logger.info("Client Email: " + googleClientEmail);
+    logger.info("Private Key Id: " + googleCredentials.private_key_id);
+
+    const googleBucketName = environmentVariables.getRequiredContextVariable("GoogleBucketName");
+    logger.info("Using google bucket with name: " + googleBucketName);
+
+    const jobInput = jobAssignmentHelper.getJobInput();
+    const inputFile = <AwsS3FileLocator>jobInput.inputFile;
+    const outputLocation = jobInput.outputLocation;
+
+    if (!inputFile.awsS3Bucket || !inputFile.awsS3Key) {
+        throw new Exception("Failed to find awsS3Bucket and/or awsS3Key properties on inputFile:\n" + JSON.stringify(inputFile, null, 2));
+    }
+
+    const storage = new Storage({
+        credentials: {
+            client_email: googleClientEmail,
+            private_key: googlePrivateKey,
+        },
+        projectId: googleProjectId
+    });
+
+    let bucketExists = false;
+    const [buckets] = await storage.getBuckets();
+    logger.info(buckets);
+
+    for (let bucket of buckets) {
+        if (bucket["id"] === googleBucketName) {
+            bucketExists = true;
+        }
+    }
+
+    if (!bucketExists) {
+        await storage.createBucket(googleBucketName, {
+            location: "eu",
+            standard: true
+        });
+        logger.info("Bucket " + googleBucketName + " created.");
+    } else {
+        logger.info("Bucket " + googleBucketName + " already exists.");
+    }
+
+    logger.info("Obtain data from s3 object Bucket: " + inputFile.awsS3Bucket + " and Key: " + inputFile.awsS3Key);
+    const data = await S3.getObject({
+        Bucket: inputFile.awsS3Bucket,
+        Key: inputFile.awsS3Key,
+    }).promise();
+
+    const fileExtension = inputFile.awsS3Key.substring(inputFile.awsS3Key.lastIndexOf(".") + 1);
+    const tempFileName = uuidv4() + "." + fileExtension;
+
+    logger.info("Write file to local tmp storage");
+    const localFilename = "/tmp/" + tempFileName;
+    await fsWriteFile(localFilename, data.Body);
+
+    try {
+        const result = await storage.bucket(googleBucketName).upload(localFilename, {
+            resumable: false,
+            metadata: {
+                cacheControl: "public, max-age=31536000",
+            },
+        });
+        logger.info("Uploaded audio file to google bucket");
+        logger.info(result);
+
+        const client = new speech.SpeechClient({
+            credentials: {
+                client_email: googleClientEmail,
+                private_key: googlePrivateKey,
+            },
+            projectId: googleProjectId
+        });
+
+        const gcsUri = "gs://" + googleBucketName + "/" + tempFileName;
+        const encoding = AudioEncoding.FLAC;
+        const sampleRateHertz = 48000;
+        const languageCode = "en-US";
+        const audioChannelCount = 2;
+
+        const config = new RecognitionConfig({
+            encoding: encoding,
+            sampleRateHertz: sampleRateHertz,
+            audioChannelCount: audioChannelCount,
+            languageCode: languageCode,
+            enableAutomaticPunctuation: true,
+        });
+
+        const audio = new RecognitionAudio({
+            uri: gcsUri,
+        });
+
+        const request = {
+            config: config,
+            audio: audio,
+        };
+
+        const [operation] = await client.longRunningRecognize(request);
+
+        const [response] = await operation.promise();
+        logger.info("Response:");
+        logger.info(response);
+
+        const transcription = response.results
+                                      .map(result => result.alternatives[0].transcript)
+                                      .join("\n");
+        logger.info("Transcription: " + transcription);
+
+        const projectId = client.getProjectId();
+        logger.info(projectId);
+
+        let s3Params = {
+            Bucket: outputLocation.awsS3Bucket,
+            Key: (outputLocation.awsS3KeyPrefix ?? "") + uuidv4() + ".txt",
+            Body: transcription
+        };
+        await S3.putObject(s3Params).promise();
+
+        logger.info("Updating job assignment with output");
+        jobAssignmentHelper.getJobOutput().outputFile = new AwsS3FileLocator({
+            awsS3Bucket: s3Params.Bucket,
+            awsS3Key: s3Params.Key
+        });
+
+        await jobAssignmentHelper.complete();
+    } finally {
+        try {
+            logger.info("Removing file from Google Bucket " + googleBucketName);
+            await storage.bucket(googleBucketName).file(tempFileName).delete();
+        } catch (error) {
+            logger.error("Failed to delete file in Google Bucket " + googleBucketName);
+            logger.error(error);
+        }
+        await fsUnlink(localFilename);
+    }
+}
