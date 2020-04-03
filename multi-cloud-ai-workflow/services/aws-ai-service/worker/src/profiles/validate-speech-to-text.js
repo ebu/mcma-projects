@@ -60,7 +60,7 @@ async function validateSpeechToText(providers, jobAssignmentHelper) {
     // Only worddiffs is used for visualisation of the results but other options are available such as the word error rate 
     let client = new RpcClient({
         protocol: "http",//Optional. Will be http by default
-        host: "52.30.8.180",
+        host: "54.229.249.131",
         path: "/api",
         port: "8080",
         method: "POST"//Optional. POST by default
