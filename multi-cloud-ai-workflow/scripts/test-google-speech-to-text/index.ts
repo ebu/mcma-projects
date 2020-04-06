@@ -13,7 +13,7 @@ config.loadFromPath("../../deployment/aws-credentials.json");
 
 const s3 = new S3();
 
-const TEST_FILE = "../38b4bbe4-df9a-465f-bc1c-8178176ad586.flac";
+const TEST_FILE = "../2015_GF_ORF_00_18_09_conv.flac";
 
 async function sleep(timeout) {
     return new Promise((resolve) => setTimeout(() => resolve(), timeout));
@@ -81,7 +81,7 @@ async function main() {
         throw new Exception("Failed to get temp bucket from terraform output");
     }
 
-    console.log("Uploading test video file to temp bucket");
+    console.log("Uploading test file to temp bucket: " + TEST_FILE);
     const transformInputFile = await uploadFileToBucket(tempBucket, keyPrefix, TEST_FILE);
 
     const transformOutputLocation = new AwsS3FolderLocator({

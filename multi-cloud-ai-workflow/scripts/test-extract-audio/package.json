@@ -3,7 +3,7 @@
     "version": "0.0.0",
     "private": true,
     "scripts": {
-        "start": "ts-node src/index.ts"
+        "start": "tsc && node build/index.js"
     },
     "license": "Apache-2.0",
     "dependencies": {
@@ -15,7 +15,6 @@
     },
     "devDependencies": {
         "@types/node": "^13.7.7",
-        "typescript": "^3.8.3",
-        "ts-node": "^8.6.2"
+        "typescript": "^3.8.3"
     }
 }
