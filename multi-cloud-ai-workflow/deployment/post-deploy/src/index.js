@@ -217,6 +217,17 @@ const JOB_PROFILES = {
             new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
         ]
     }),
+    BenchmarkSTT: new JobProfile({
+        name: "BenchmarkSTT",
+        inputParameters: [
+            new JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
+            new JobParameter({ parameterName: "referenceFile", parameterType: "Locator" }),
+            new JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
+        ],
+        outputParameters: [
+            new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
+        ]
+    }),
 };
 
 function createServices(terraformOutput) {
@@ -284,6 +295,24 @@ function createServices(terraformOutput) {
                             jobProfiles: [
                                 JOB_PROFILES.AzureExtractAllAIMetadata.id ? JOB_PROFILES.AzureExtractAllAIMetadata.id : JOB_PROFILES.AzureExtractAllAIMetadata,
                                 JOB_PROFILES.ValidateSpeechToTextAzure.id ? JOB_PROFILES.ValidateSpeechToTextAzure.id : JOB_PROFILES.ValidateSpeechToTextAzure,
+                            ]
+                        })
+                    );
+                    break;
+                case "benchmarkstt_service_url":
+                    serviceList.push(
+                        new Service({
+                            name: "BenchmarkSTT Service",
+                            resources: [
+                                new ResourceEndpoint({
+                                    resourceType: "JobAssignment",
+                                    httpEndpoint: terraformOutput[prop].value + "/job-assignments"
+                                })
+                            ],
+                            authType: "AWS4",
+                            jobType: "QAJob",
+                            jobProfiles: [
+                                JOB_PROFILES.BenchmarkSTT.id,
                             ]
                         })
                     );

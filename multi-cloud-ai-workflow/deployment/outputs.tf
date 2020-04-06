@@ -77,3 +77,7 @@ output "azure_ai_service_url" {
 output "google_ai_service_url" {
   value = module.services.google_ai_service_url
 }
+
+output "benchmarkstt_service_url" {
+  value = module.services.benchmarkstt_service_url
+}

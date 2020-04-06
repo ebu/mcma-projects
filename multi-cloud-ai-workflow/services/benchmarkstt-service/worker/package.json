@@ -1,0 +1,29 @@
+{
+    "name": "google-ai-service-worker",
+    "version": "0.0.0",
+    "description": "AWS Lambda based service leveraging Google Cloud AI services to do AI operations",
+    "private": true,
+    "engines": {
+        "node": "~10.16.3"
+    },
+    "main": "src/index.js",
+    "license": "Apache-2.0",
+    "dependencies": {
+        "@google-cloud/speech": "^3.6.0",
+        "@google-cloud/storage": "^4.3.2",
+        "@mcma/aws-client": "0.8.7",
+        "@mcma/aws-dynamodb": "0.8.7",
+        "@mcma/aws-logger": "0.8.7",
+        "@mcma/aws-s3": "0.8.7",
+        "@mcma/client": "0.8.7",
+        "@mcma/core": "0.8.7",
+        "@mcma/data": "0.8.7",
+        "@mcma/worker": "0.8.7",
+        "aws-sdk": "^2.580.0",
+        "uuid": "^7.0.1"
+    },
+    "devDependencies": {
+        "@types/node": "^13.7.6",
+        "@types/uuid": "^7.0.0"
+    }
+}
