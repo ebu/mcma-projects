@@ -66,7 +66,6 @@ resource "aws_s3_bucket_notification" "aws_ai_service_output_bucket_notification
   lambda_function {
     lambda_function_arn = aws_lambda_function.aws_ai_service_s3_trigger.arn
     events              = ["s3:ObjectCreated:*"]
-    #filter_suffix       = "json"
   }
 }
 
@@ -211,7 +210,7 @@ resource "aws_iam_role_policy_attachment" "role_policy_reko_to_SNS" {
 
 resource "aws_iam_role_policy_attachment" "role_policy_log_reko_to_SNS" {
   role       = aws_iam_role.iam_role_Reko_to_SNS.name
-  policy_arn = aws_iam_policy.log_policy.arn
+  policy_arn = aws_iam_policy.allow_full_logs.arn
 }
 
 resource "aws_iam_role_policy_attachment" "role_policy_rekognition_reko_to_SNS" {
@@ -273,7 +272,7 @@ resource "aws_iam_role_policy_attachment" "role_policy_SNS_to_Lambda" {
 
 resource "aws_iam_role_policy_attachment" "role_policy_log_SNS_to_Lambda" {
   role       = aws_iam_role.aws_iam_role_sns_to_lambda.name
-  policy_arn = aws_iam_policy.log_policy.arn
+  policy_arn = aws_iam_policy.allow_full_logs.arn
 }
 
 resource "aws_iam_role_policy_attachment" "role_policy_rekognition_SNS_to_Lambda" {
@@ -283,7 +282,7 @@ resource "aws_iam_role_policy_attachment" "role_policy_rekognition_SNS_to_Lambda
 
 resource "aws_iam_role_policy_attachment" "role_policy_DynamoDB_SNS_to_Lambda" {
   role       = aws_iam_role.aws_iam_role_sns_to_lambda.name
-  policy_arn = aws_iam_policy.DynamoDB_policy.arn
+  policy_arn = aws_iam_policy.allow_full_dynamodb.arn
 }
 
 resource "aws_iam_role_policy_attachment" "role_policy_lambda_full_access_SNS_to_Lambda" {

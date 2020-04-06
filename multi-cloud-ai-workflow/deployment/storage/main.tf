@@ -62,7 +62,7 @@ resource "aws_s3_bucket" "temp" {
   force_destroy = true
 
   lifecycle_rule {
-    id      = "cleanup-rule"
+    id      = "Delete after 1 week"
     enabled = true
 
     expiration {

@@ -73,6 +73,15 @@ module "workflows" {
   website_bucket_name    = module.storage.website_bucket.id
 }
 
+module "ecs" {
+  source = "./ecs"
+
+  global_prefix = var.global_prefix
+  aws_region    = var.aws_region
+
+  log_group = module.monitoring.log_group
+}
+
 module "monitoring" {
   source = "./monitoring"
 

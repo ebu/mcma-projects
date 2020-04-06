@@ -3,9 +3,7 @@
     "Statement": [
         {
             "Effect": "Allow",
-            "Action": [
-                "lambda:InvokeFunction"
-            ],
+            "Action": "logs:*",
             "Resource": "*"
         }
     ]
