@@ -54,6 +54,9 @@ module "services" {
 
   google_bucket_name              = var.google_bucket_name
   google_service_credentials_file = var.google_service_credentials_file
+
+  ecs_cluster_name = module.ecs.cluster_name
+  ecs_benchmarkstt_service_name = module.ecs.benchmarkstt_service_name
 }
 
 module "workflows" {

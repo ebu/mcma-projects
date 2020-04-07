@@ -17,6 +17,11 @@ resource "aws_iam_role_policy_attachment" "benchmarkstt_service_allow_full_dynam
   policy_arn = aws_iam_policy.allow_full_dynamodb.arn
 }
 
+resource "aws_iam_role_policy_attachment" "benchmarkstt_service_allow_full_s3" {
+  role       = aws_iam_role.benchmarkstt_service_lambda_execution.id
+  policy_arn = aws_iam_policy.allow_full_s3.arn
+}
+
 resource "aws_iam_role_policy_attachment" "benchmarkstt_service_allow_invoke_lambda" {
   role       = aws_iam_role.benchmarkstt_service_lambda_execution.id
   policy_arn = aws_iam_policy.allow_invoke_lambda.arn
@@ -27,7 +32,10 @@ resource "aws_iam_role_policy_attachment" "benchmarkstt_service_allow_invoke_api
   policy_arn = aws_iam_policy.allow_invoke_api_gateway.arn
 }
 
-
+resource "aws_iam_role_policy_attachment" "benchmarkstt_service_allow_read_only_ecs" {
+  role       = aws_iam_role.benchmarkstt_service_lambda_execution.id
+  policy_arn = aws_iam_policy.allow_read_only_ecs.arn
+}
 #################################
 #  aws_lambda_function : benchmarkstt-service-api-handler
 #################################
@@ -65,7 +73,9 @@ resource "aws_lambda_function" "benchmarkstt_service_worker" {
 
   environment {
     variables = {
-      LogGroupName = var.global_prefix
+      LogGroupName               = var.global_prefix
+      EcsClusterName             = var.ecs_cluster_name
+      EcsBenchmarksttServiceName = var.ecs_benchmarkstt_service_name
     }
   }
 }

@@ -20,6 +20,7 @@
         "@mcma/data": "0.8.7",
         "@mcma/worker": "0.8.7",
         "aws-sdk": "^2.580.0",
+        "node-json-rpc2": "^1.1.0",
         "uuid": "^7.0.1"
     },
     "devDependencies": {

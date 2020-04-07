@@ -3,7 +3,7 @@ import * as fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 import * as path from "path";
 
-import { config, S3 } from "aws-sdk";
+import { config, EC2, ECS, S3 } from "aws-sdk";
 import { Exception, JobParameterBag, JobProfile, JobStatus, McmaTracker, QAJob, TransformJob } from "@mcma/core";
 import { AuthProvider, ResourceManager } from "@mcma/client";
 import { AwsS3FileLocator, AwsS3FolderLocator } from "@mcma/aws-s3";
@@ -60,7 +60,48 @@ async function createBenchmarkSttJob(resourceManager: ResourceManager, inputFile
     return resourceManager.create(transformJob);
 }
 
+async function fargateTest() {
+    const ecs = new ECS();
+    const ec2 = new EC2();
+
+    const data = await ecs.listClusters().promise();
+    console.log(JSON.stringify(data, null, 2));
+
+    const [clusterArn] = data.clusterArns;
+
+    const data2 = await ecs.listTasks({
+        cluster: clusterArn,
+        serviceName: "pt-rovers-mcma-dev-benchmarkstt"
+    }).promise();
+    console.log(JSON.stringify(data2, null, 2));
+
+    const data3 = await ecs.describeTasks({
+        cluster: clusterArn,
+        tasks: data2.taskArns,
+    }).promise();
+    console.log(JSON.stringify(data3, null, 2));
+
+    const data4 = await ec2.describeNetworkInterfaces({
+        NetworkInterfaceIds: [data3.tasks[0].attachments[0].details[1].value]
+    }).promise();
+    console.log(JSON.stringify(data4, null, 2));
+
+    const data5 = await ecs.listServices({
+        cluster: "pt-rovers-mcma-dev",
+    }).promise();
+    console.log(JSON.stringify(data5, null, 2));
+
+    const data6 = await ecs.describeServices({
+        cluster: "pt-rovers-mcma-dev",
+        services: data5.serviceArns,
+    }).promise();
+    console.log(JSON.stringify(data6, null, 2));
+}
+
 async function main() {
+    // await fargateTest();
+    // return;
+
     console.log("Starting Test Benchmark STT");
 
     const terraformOutput = JSON.parse(fs.readFileSync(TERRAFORM_OUTPUT, "utf8"));

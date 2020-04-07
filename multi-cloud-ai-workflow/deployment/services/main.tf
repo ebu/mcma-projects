@@ -39,6 +39,12 @@ resource "aws_iam_policy" "allow_full_step_functions" {
   policy      = file("policies/allow-full-step-functions.json")
 }
 
+resource "aws_iam_policy" "allow_read_only_ecs" {
+  name        = "${var.global_prefix}.${var.aws_region}.services.allow-read-only-ecs"
+  description = "Policy to allow read only access to ECS"
+  policy      = file("policies/allow-read-only-ecs.json")
+}
+
 ###################
 # Lambda Role used by (most) services
 ###################

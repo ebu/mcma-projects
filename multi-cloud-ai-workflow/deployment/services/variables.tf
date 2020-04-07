@@ -17,3 +17,6 @@ variable "azure_api_url" {}
 
 variable "google_bucket_name" {}
 variable "google_service_credentials_file" {}
+
+variable "ecs_cluster_name" {}
+variable "ecs_benchmarkstt_service_name" {}
