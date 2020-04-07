@@ -78,6 +78,11 @@ resource "aws_lambda_function" "benchmarkstt_service_worker" {
       EcsBenchmarksttServiceName = var.ecs_benchmarkstt_service_name
     }
   }
+
+  vpc_config {
+    subnet_ids         = [var.vpc_private_subnet_id]
+    security_group_ids = [var.vpc_default_security_group_id]
+  }
 }
 
 ##################################

@@ -1,4 +1,4 @@
-import { EC2, ECS, S3 } from "aws-sdk";
+import { ECS, S3 } from "aws-sdk";
 
 import { Client as RpcClient } from "node-json-rpc2";
 
@@ -96,7 +96,6 @@ async function getServiceIpAddress(environmentVariableProvider: EnvironmentVaria
     const benchmarksttServiceName = environmentVariableProvider.getRequiredContextVariable("EcsBenchmarksttServiceName");
 
     const ecs = new ECS();
-    const ec2 = new EC2();
 
     logger.info("Listing tasks for cluster '" + clusterName + "' and service '" + benchmarksttServiceName + "'");
     const listTaskData = await ecs.listTasks({
@@ -105,6 +104,10 @@ async function getServiceIpAddress(environmentVariableProvider: EnvironmentVaria
     }).promise();
     logger.info(listTaskData);
 
+    if (listTaskData.taskArns.length === 0) {
+        throw new Exception("Failed to find a running task for service '" + benchmarksttServiceName + "'");
+    }
+
     logger.info("Describing tasks");
     const describeTaskData = await ecs.describeTasks({
         cluster: clusterName,
@@ -112,19 +115,16 @@ async function getServiceIpAddress(environmentVariableProvider: EnvironmentVaria
     }).promise();
     logger.info(describeTaskData);
 
-    logger.info("Determining suitable task to invoke");
+    logger.info("Finding IP address of suitable task");
     let selectedTask = undefined;
     let privateIPv4Address = undefined;
     let networkInterfaceId = undefined;
 
     for (const task of describeTaskData.tasks) {
-        logger.info("lastStatus = " + task.lastStatus);
         if (task.lastStatus !== "RUNNING") {
             continue;
         }
         for (const attachment of task.attachments) {
-            logger.info("attachment.type = " + attachment.type);
-            logger.info("attachment.status = " + attachment.status);
             if (attachment.type !== "ElasticNetworkInterface" || attachment.status !== "ATTACHED") {
                 continue;
             }
@@ -132,26 +132,17 @@ async function getServiceIpAddress(environmentVariableProvider: EnvironmentVaria
             privateIPv4Address = undefined;
             networkInterfaceId = undefined;
             for (const detail of attachment.details) {
-                logger.info(detail);
-
-                switch (detail.name) {
-                    case "networkInterfaceId":
-                        networkInterfaceId = detail.value;
-                        break;
-                    case "privateIPv4Address":
-                        privateIPv4Address = detail.value;
-                        break;
+                if (detail.name === "privateIPv4Address") {
+                    privateIPv4Address = detail.value;
                 }
             }
 
-            if (privateIPv4Address && networkInterfaceId) {
+            if (privateIPv4Address) {
                 break;
             }
         }
 
-        logger.info({ networkInterfaceId, privateIPv4Address });
-
-        if (privateIPv4Address && networkInterfaceId) {
+        if (privateIPv4Address) {
             selectedTask = task;
         }
     }
@@ -160,15 +151,5 @@ async function getServiceIpAddress(environmentVariableProvider: EnvironmentVaria
         throw new Exception("Failed to find a running task for service '" + benchmarksttServiceName + "'");
     }
 
-    logger.info("Obtaining public IP address for service '" + benchmarksttServiceName + "'");
-    const describeNetworkInterfacesData = await ec2.describeNetworkInterfaces({
-        NetworkInterfaceIds: [networkInterfaceId]
-    }).promise();
-    logger.info(describeNetworkInterfacesData);
-
-    let publicIp = describeNetworkInterfacesData.NetworkInterfaces[0]?.Association?.PublicIp;
-    if (!publicIp) {
-        throw new Exception("Failed to find public IP address for service '" + benchmarksttServiceName + "'");
-    }
-    return publicIp;
+    return privateIPv4Address;
 }

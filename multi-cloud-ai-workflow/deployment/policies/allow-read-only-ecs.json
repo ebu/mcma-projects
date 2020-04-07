@@ -6,7 +6,9 @@
             "Action": [
                 "ecs:Describe*",
                 "ecs:List*",
-                "ec2:Describe*"
+                "ec2:Describe*",
+                "ec2:CreateNetworkInterface",
+                "ec2:DeleteNetworkInterface"
             ],
             "Resource": "*"
         }

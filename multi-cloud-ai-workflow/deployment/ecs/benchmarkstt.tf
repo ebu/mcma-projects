@@ -22,9 +22,8 @@ resource "aws_ecs_service" "benchmarkstt" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets          = [aws_subnet.public.id]
-    security_groups  = [aws_security_group.allow_inbound_8080.id]
-    assign_public_ip = true
+    subnets          = [aws_subnet.private.id]
+    security_groups  = [aws_default_security_group.default.id]
   }
 
   desired_count = 1

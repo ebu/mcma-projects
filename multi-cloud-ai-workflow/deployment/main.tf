@@ -57,6 +57,8 @@ module "services" {
 
   ecs_cluster_name = module.ecs.cluster_name
   ecs_benchmarkstt_service_name = module.ecs.benchmarkstt_service_name
+  vpc_private_subnet_id = module.ecs.private_subnet_id
+  vpc_default_security_group_id = module.ecs.default_security_group_id
 }
 
 module "workflows" {
