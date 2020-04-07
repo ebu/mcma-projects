@@ -26,6 +26,10 @@ if (!hasProperty("GoogleBucketName")) {
     ext.GoogleBucketName = "undefined"
 }
 
+if (!hasProperty("EnableECS")) {
+    ext.EnableECS = "true"
+}
+
 def googleServiceCredentialsFile = file(ext.GoogleServiceCredentialsFile).path
 
 allprojects {

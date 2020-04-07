@@ -59,6 +59,7 @@ module "services" {
   ecs_benchmarkstt_service_name = module.ecs.benchmarkstt_service_name
   vpc_private_subnet_id = module.ecs.private_subnet_id
   vpc_default_security_group_id = module.ecs.default_security_group_id
+  ecs_enabled = var.ecs_enabled
 }
 
 module "workflows" {
@@ -85,6 +86,8 @@ module "ecs" {
   aws_region    = var.aws_region
 
   log_group = module.monitoring.log_group
+
+  enabled = var.ecs_enabled
 }
 
 module "monitoring" {

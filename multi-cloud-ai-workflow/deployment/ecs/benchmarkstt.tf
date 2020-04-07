@@ -26,6 +26,6 @@ resource "aws_ecs_service" "benchmarkstt" {
     security_groups  = [aws_default_security_group.default.id]
   }
 
-  desired_count = 1
+  desired_count = var.enabled ? 1 : 0
 }
 

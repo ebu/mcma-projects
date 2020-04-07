@@ -80,8 +80,8 @@ resource "aws_lambda_function" "benchmarkstt_service_worker" {
   }
 
   vpc_config {
-    subnet_ids         = [var.vpc_private_subnet_id]
-    security_group_ids = [var.vpc_default_security_group_id]
+    subnet_ids         = var.ecs_enabled ? [var.vpc_private_subnet_id] : []
+    security_group_ids = var.ecs_enabled ? [var.vpc_default_security_group_id] : []
   }
 }
 

@@ -22,3 +22,6 @@ variable "ecs_cluster_name" {}
 variable "ecs_benchmarkstt_service_name" {}
 variable "vpc_private_subnet_id" {}
 variable "vpc_default_security_group_id" {}
+variable "ecs_enabled" {
+  type = bool
+}

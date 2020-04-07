@@ -12,15 +12,19 @@ resource "aws_route_table" "private" {
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_nat_gateway.gw.id
+    gateway_id = aws_nat_gateway.gw[0].id
   }
 
   tags = {
     Name = "${var.global_prefix}-private"
   }
+
+  count = var.enabled ? 1 : 0
 }
 
 resource "aws_route_table_association" "private" {
   subnet_id      = aws_subnet.private.id
-  route_table_id = aws_route_table.private.id
+  route_table_id = aws_route_table.private[0].id
+
+  count = var.enabled ? 1 : 0
 }

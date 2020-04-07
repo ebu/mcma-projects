@@ -31,3 +31,10 @@ variable "azure_api_url" {}
 
 variable "google_service_credentials_file" {}
 variable "google_bucket_name" {}
+
+#########################
+# Enable/Disable ECS
+#########################
+variable "ecs_enabled" {
+  type = bool
+}

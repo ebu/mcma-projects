@@ -50,4 +50,6 @@ resource "aws_nat_gateway" "gw" {
   tags = {
     Name = "${var.global_prefix}-nat"
   }
+
+  count = var.enabled ? 1 : 0
 }

@@ -16,6 +16,8 @@ task generateTerraformTFVars {
     inputs.property("GOOGLE_SERVICE_CREDENTIALS_FILE", GoogleServiceCredentialsFile)
     inputs.property("GOOGLE_BUCKET_NAME", GoogleBucketName)
 
+    inputs.property("ENABLE_ECS", EnableECS)
+
     def propertyFile = file("${projectDir}/terraform.tfvars.json")
     outputs.file(propertyFile)
 
@@ -37,6 +39,8 @@ task generateTerraformTFVars {
 
                 google_bucket_name             : GoogleBucketName,
                 google_service_credentials_file: GoogleServiceCredentialsFile,
+
+                ecs_enabled                    : EnableECS,
         ]
 
         def json = JsonOutput.toJson(data)
