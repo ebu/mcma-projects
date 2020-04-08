@@ -1,13 +1,13 @@
 import * as fs from "fs";
 
-import { v4 as uuidv4 } from "uuid";
+import { uuid } from "uuidv4";
 import * as path from "path";
 
 import { config, S3 } from "aws-sdk";
-import { AIJob, Exception, JobParameterBag, JobProfile, JobStatus, McmaTracker, TransformJob } from "@mcma/core";
+import { AIJob, McmaException, JobParameterBag, JobProfile, JobStatus, McmaTracker, TransformJob, JobProcess, JobAssignment } from "@mcma/core";
 import { AuthProvider, ResourceManager } from "@mcma/client";
 import { AwsS3FileLocator, AwsS3FolderLocator } from "@mcma/aws-s3";
-import "@mcma/aws-client";
+import { awsV4Auth } from "@mcma/aws-client";
 
 config.loadFromPath("../../deployment/aws-credentials.json");
 
@@ -39,7 +39,7 @@ async function createAiJob(resourceManager: ResourceManager, inputFile: AwsS3Fil
 
     const jobProfileId = jobProfiles.shift()?.id;
     if (!jobProfileId) {
-        throw new Exception("JobProfile 'GoogleSpeechToText' not found");
+        throw new McmaException("JobProfile 'GoogleSpeechToText' not found");
     }
 
     const transformJob = new AIJob({
@@ -49,8 +49,8 @@ async function createAiJob(resourceManager: ResourceManager, inputFile: AwsS3Fil
             outputLocation,
         }),
         tracker: new McmaTracker({
-            "id": uuidv4(),
-            "label": "Test"
+            id: uuid(),
+            label: "Test"
         })
     });
 
@@ -72,13 +72,13 @@ async function main() {
         servicesAuthContext
     };
 
-    let resourceManager = new ResourceManager(resourceManagerConfig, new AuthProvider().addAwsV4Auth(config));
+    let resourceManager = new ResourceManager(resourceManagerConfig, new AuthProvider().add(awsV4Auth(config)));
 
     const keyPrefix = "test-google-speech-to-text/" + new Date().toISOString() + "/";
 
     const tempBucket = terraformOutput["temp_bucket"]?.value;
     if (!tempBucket) {
-        throw new Exception("Failed to get temp bucket from terraform output");
+        throw new McmaException("Failed to get temp bucket from terraform output");
     }
 
     console.log("Uploading test video file to temp bucket");
@@ -107,11 +107,11 @@ async function main() {
     // @ts-ignore
     if (job.jobProcess) {
         // @ts-ignore
-        const jobProcess = await resourceManager.get(job.jobProcess);
+        const jobProcess = await resourceManager.get<JobProcess>(job.jobProcess);
         console.log(JSON.stringify(jobProcess, null, 2));
 
         if (jobProcess.jobAssignment) {
-            const jobAssignment = await resourceManager.get(jobProcess.jobAssignment);
+            const jobAssignment = await resourceManager.get<JobAssignment>(jobProcess.jobAssignment);
             console.log(JSON.stringify(jobAssignment, null, 2));
         }
     }

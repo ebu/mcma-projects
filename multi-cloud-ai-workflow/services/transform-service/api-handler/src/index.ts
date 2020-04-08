@@ -1,20 +1,17 @@
 //"use strict";
-import { JobAssignment } from "@mcma/core";
-import { DefaultRouteCollectionBuilder } from "@mcma/api";
+import { APIGatewayProxyEvent, Context } from "aws-lambda";
+import { defaultRoutesForJobs } from "@mcma/api";
 import { DynamoDbTableProvider } from "@mcma/aws-dynamodb";
 import { invokeLambdaWorker } from "@mcma/aws-lambda-worker-invoker";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
-import "@mcma/aws-api-gateway";
+import { ApiGatewayApiController } from "@mcma/aws-api-gateway"
 
 const loggerProvider = new AwsCloudWatchLoggerProvider("transform-service-api-handler", process.env.LogGroupName);
-const dbTableProvider = new DynamoDbTableProvider(JobAssignment);
+const dbTableProvider = new DynamoDbTableProvider();
 
-const restController =
-    new DefaultRouteCollectionBuilder(dbTableProvider, JobAssignment)
-        .forJobAssignments(invokeLambdaWorker)
-        .toApiGatewayApiController();
+const restController = new ApiGatewayApiController(defaultRoutesForJobs(dbTableProvider, invokeLambdaWorker).build());
 
-exports.handler = async (event, context) => {
+export async function handler(event: APIGatewayProxyEvent, context: Context) {
     const logger = loggerProvider.get();
     try {
         logger.functionStart(context.awsRequestId);

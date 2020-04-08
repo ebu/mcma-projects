@@ -1,6 +1,6 @@
 //"use strict";
 
-import { Job, JobProcess, JobStatus, NotificationEndpoint } from "@mcma/core";
+import { Job, JobProcess, JobStatus, NotificationEndpoint, getTableName } from "@mcma/core";
 import { ProviderCollection, WorkerRequest } from "@mcma/worker";
 import { DynamoDbTable } from "@mcma/aws-dynamodb";
 
@@ -9,9 +9,9 @@ import { logJobEvent } from "../utils";
 export async function createJobProcess(providers: ProviderCollection, workerRequest: WorkerRequest) {
     const jobId = workerRequest.input.jobId;
 
-    const table = new DynamoDbTable(workerRequest.tableName(), Job);
-    const resourceManager = providers.getResourceManagerProvider().get(workerRequest);
-    const logger = providers.getLoggerProvider().get(workerRequest.tracker);
+    const table = new DynamoDbTable(getTableName(workerRequest), Job);
+    const resourceManager = providers.resourceManagerProvider.get(workerRequest);
+    const logger = providers.loggerProvider.get(workerRequest.tracker);
 
     const job = await table.get(jobId);
 
@@ -40,7 +40,7 @@ export async function createJobProcess(providers: ProviderCollection, workerRequ
         job.statusMessage = "Failed to create JobProcess due to error '" + error.message + "'";
     }
 
-    job.dateModified = new Date().toISOString();
+    job.dateModified = new Date();
 
     await table.put(jobId, job);
 

@@ -1,10 +1,18 @@
 {
     "compilerOptions": {
-        "moduleResolution": "node",
         "module": "commonjs",
+        "moduleResolution": "node",
         "target": "es2017",
         "types": [
             "node"
-        ]
+        ],
+        "declaration": true,
+        "lib": [
+            "DOM",
+            "DOM.Iterable",
+            "es6",
+            "es7"
+        ],
+        "downlevelIteration": true
     }
 }

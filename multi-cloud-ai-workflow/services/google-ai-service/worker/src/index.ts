@@ -1,23 +1,24 @@
 import * as AWS from "aws-sdk";
+import { Context } from "aws-lambda";
 import { AIJob, EnvironmentVariableProvider, JobAssignment } from "@mcma/core";
 import { AuthProvider, ResourceManagerProvider } from "@mcma/client";
-import { ProcessJobAssignmentOperation, ProviderCollection, Worker, WorkerRequest } from "@mcma/worker";
+import { ProcessJobAssignmentOperation, ProviderCollection, Worker, WorkerRequest, WorkerRequestProperties } from "@mcma/worker";
 import { DynamoDbTableProvider } from "@mcma/aws-dynamodb";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
-import "@mcma/aws-client";
+import { awsV4Auth } from "@mcma/aws-client";
 
 import { speechToText } from "./profiles/speech-to-text";
 
-const authProvider = new AuthProvider().addAwsV4Auth(AWS);
-const dbTableProvider = new DynamoDbTableProvider(JobAssignment);
-const environmentVariableProvider = new EnvironmentVariableProvider();
+const authProvider = new AuthProvider().add(awsV4Auth(AWS));
+const dbTableProvider = new DynamoDbTableProvider();
+const contextVariableProvider = new EnvironmentVariableProvider();
 const loggerProvider = new AwsCloudWatchLoggerProvider("google-ai-service-worker", process.env.LogGroupName);
 const resourceManagerProvider = new ResourceManagerProvider(authProvider);
 
 const providerCollection = new ProviderCollection({
     authProvider,
     dbTableProvider,
-    environmentVariableProvider,
+    contextVariableProvider,
     loggerProvider,
     resourceManagerProvider
 });
@@ -30,7 +31,7 @@ const worker =
     new Worker(providerCollection)
         .addOperation(processJobAssignmentOperation);
 
-exports.handler = async (event, context) => {
+export async function handler(event: WorkerRequestProperties, context: Context) {
     const logger = loggerProvider.get(event.tracker);
 
     try {

@@ -1,8 +1,7 @@
-import { ThemePalette } from "@angular/material";
+import { ThemePalette } from "@angular/material/core";
+import { WorkflowJob, JobStatus } from "@mcma/core";
 
-import { WorkflowJob } from "@mcma/core";
-
-import { JobStatus } from "../models/job-statuses";
+import { isCompleted, isFinished } from "../models/job-statuses";
 
 export class WorkflowJobViewModel {
 
@@ -13,47 +12,47 @@ export class WorkflowJobViewModel {
     }
 
     get fileName(): string {
-        return this.workflowJob && this.workflowJob.jobInput && this.workflowJob.jobInput.inputFile
+        return this.workflowJob?.jobInput?.inputFile
             ? this.workflowJob.jobInput.inputFile.awsS3Key
             : null;
     }
 
     get title(): string {
-        return this.workflowJob && this.workflowJob.jobInput && this.workflowJob.jobInput.metadata
+        return this.workflowJob?.jobInput?.metadata
             ? this.workflowJob.jobInput.metadata.name
             : null;
     }
 
     get description(): string {
-        return this.workflowJob && this.workflowJob.jobInput && this.workflowJob.jobInput.metadata
+        return this.workflowJob?.jobInput?.metadata
             ? this.workflowJob.jobInput.metadata.description
             : null;
     }
 
     get isRunning(): boolean {
-        return this.workflowJob && !JobStatus.isFinished(this.workflowJob);
+        return this.workflowJob && !isFinished(this.workflowJob);
     }
 
     get isFinished(): boolean {
-        return this.workflowJob && JobStatus.isFinished(this.workflowJob);
+        return this.workflowJob && isFinished(this.workflowJob);
     }
 
     get isCompleted(): boolean {
-        return this.workflowJob && JobStatus.isCompleted(this.workflowJob);
+        return this.workflowJob && isCompleted(this.workflowJob);
     }
 
     get previewUrl(): string {
-        return this.workflowJob && this.workflowJob.jobOutput && this.workflowJob.jobOutput.websiteMediaFile
-            ? this.workflowJob.jobOutput.websiteMediaFile.httpEndpoint
+        return this.workflowJob?.jobOutput?.websiteMediaFile
+            ? this.workflowJob.jobOutput.websiteMediaFile.url
             : null;
     }
 
     get aiJobUrl(): string {
-        return this.workflowJob && this.workflowJob.jobOutput ? this.workflowJob.jobOutput.aiWorkflow : null;
+        return this.workflowJob?.jobOutput?.aiWorkflow ?? null;
     }
 
     get contentUrl(): string {
-        return this.workflowJob && this.workflowJob.jobOutput ? this.workflowJob.jobOutput.bmContent : null;
+        return this.workflowJob?.jobOutput?.bmContent ?? null;
     }
 
     get statusIcon(): string {
@@ -61,17 +60,16 @@ export class WorkflowJobViewModel {
             return "";
         }
 
-        switch (this.workflowJob.status) {
-            case JobStatus.NEW:
-            case JobStatus.QUEUED:
-            case JobStatus.SCHEDULED:
-                return "schedule";
-            case JobStatus.RUNNING:
-                return "play_arrow";
-            case JobStatus.COMPLETED:
-                return "check";
-            case JobStatus.FAILED:
-                return "error";
+        if (JobStatus.New.toLowerCase() === this.workflowJob.status.toLowerCase() ||
+            JobStatus.Queued.toLowerCase() === this.workflowJob.status.toLowerCase() ||
+            JobStatus.Scheduled.toLowerCase() === this.workflowJob.status.toLowerCase()) {
+            return "schedule";
+        } else if (JobStatus.Running.toLowerCase() === this.workflowJob.status.toLowerCase()) {
+            return "play_arrow";
+        } else if (JobStatus.Completed.toLowerCase() === this.workflowJob.status.toLowerCase()) {
+            return "check";
+        } else if (JobStatus.Failed.toLowerCase() === this.workflowJob.status.toLowerCase()) {
+            return "error";
         }
     }
 
@@ -80,14 +78,13 @@ export class WorkflowJobViewModel {
             return null;
         }
 
-        switch (this.workflowJob.status) {
-            case JobStatus.RUNNING:
-            case JobStatus.COMPLETED:
-                return "accent";
-            case JobStatus.FAILED:
-                return "warn";
-            default:
-                return "primary";
+        if (JobStatus.Running.toLowerCase() === this.workflowJob.status.toLowerCase() ||
+            JobStatus.Completed.toLowerCase() === this.workflowJob.status.toLowerCase()) {
+            return "accent";
+        } else if (JobStatus.Failed.toLowerCase() === this.workflowJob.status.toLowerCase()) {
+            return "warn";
+        } else {
+            return "primary";
         }
     }
 }

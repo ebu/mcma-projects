@@ -1,14 +1,14 @@
-import { ILogger, Job, JobStatus } from "@mcma/core";
+import { Logger, Job, JobStatus, JobProfile, JobProcess } from "@mcma/core";
 import { ResourceManager } from "@mcma/client";
 
-export async function logJobEvent(logger: ILogger, resourceManager: ResourceManager, job: Job) {
+export async function logJobEvent(logger: Logger, resourceManager: ResourceManager, job: Job) {
     logger.debug("logJobEvent: job");
     logger.debug(job);
 
     let jobProfile;
     try {
         // @ts-ignore TODO remove ignore when library supports it.
-        jobProfile = await resourceManager.get(job.jobProfile);
+        jobProfile = await resourceManager.get<JobProfile>(job.jobProfile);
     } catch (error) {
         logger.warn("Failed to get jobProfile");
         logger.warn(error);
@@ -20,7 +20,7 @@ export async function logJobEvent(logger: ILogger, resourceManager: ResourceMana
     let jobProcess;
     try {
         // @ts-ignore TODO remove ignore when library supports it.
-        jobProcess = await resourceManager.get(job.jobProcess);
+        jobProcess = await resourceManager.get<JobProcess>(job.jobProcess);
     } catch (error) {
         logger.warn("Failed to get jobProcess");
         logger.warn(error);
@@ -29,16 +29,13 @@ export async function logJobEvent(logger: ILogger, resourceManager: ResourceMana
     logger.debug("logJobEvent: jobProcess");
     logger.debug(jobProcess);
 
-    const msg = {
+    const msg = JSON.stringify({
         jobId: job.id,
         jobType: job["@type"],
-        // @ts-ignore TODO remove ignore when library supports it.
         jobProfile: job.jobProfile,
         jobProfileName: jobProfile?.name,
-        // @ts-ignore TODO remove ignore when library supports it.
         jobProcess: job.jobProcess,
         jobAssignment: jobProcess?.jobAssignment,
-        // @ts-ignore TODO remove ignore when library supports it.
         jobInput: job.jobInput,
         jobStatus: job.status,
         jobStatusMessage: job.statusMessage,
@@ -46,7 +43,7 @@ export async function logJobEvent(logger: ILogger, resourceManager: ResourceMana
         jobActualEndDate: jobProcess?.actualEndDate,
         jobActualDuration: jobProcess?.actualDuration,
         jobOutput: job.jobOutput
-    };
+    });
 
     switch (job.status) {
         case JobStatus.Queued:
@@ -58,7 +55,7 @@ export async function logJobEvent(logger: ILogger, resourceManager: ResourceMana
             logger.jobEnd(msg);
             break;
         default:
-            logger.log(400, "JOB_UPDATE", msg);
+            logger.log({ level: 400, type: "JOB_UPDATE", message: msg, timestamp: new Date() });
             break;
     }
 }

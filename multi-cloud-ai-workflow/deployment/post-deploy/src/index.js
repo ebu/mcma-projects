@@ -1,19 +1,19 @@
 //"use strict";
-
 const fs = require("fs");
-
 const AWS = require("aws-sdk");
+const AmazonCognitoIdentity = require("amazon-cognito-identity-js");
+const nodeFetch = require("node-fetch");
+
+const { JobProfile, JobParameter, Service, ResourceEndpoint } = require("@mcma/core");
+const { ResourceManager, AuthProvider } = require("@mcma/client");
+const { awsV4Auth } = require("@mcma/aws-client");
+
+global.fetch = nodeFetch;
+
 AWS.config.loadFromPath("./aws-credentials.json");
 
 const S3 = new AWS.S3();
 const Cognito = new AWS.CognitoIdentityServiceProvider();
-
-global.fetch = require("node-fetch");
-const AmazonCognitoIdentity = require("amazon-cognito-identity-js");
-
-const { JobProfile, JobParameter, Service, ResourceEndpoint } = require("@mcma/core");
-const { ResourceManager, AuthProvider } = require("@mcma/client");
-require("@mcma/aws-client");
 
 const JOB_PROFILES = {
     ConformWorkflow: new JobProfile({
@@ -564,7 +564,7 @@ async function main() {
             servicesAuthContext
         };
 
-        const resourceManager = new ResourceManager(resourceManagerConfig, new AuthProvider().addAwsV4Auth(AWS));
+        const resourceManager = new ResourceManager(resourceManagerConfig, new AuthProvider().add(awsV4Auth(AWS)));
 
         let retrievedServices = await resourceManager.query(Service);
 
