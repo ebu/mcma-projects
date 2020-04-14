@@ -1,0 +1,16 @@
+{
+    "name": "test-dynamodb-mutex",
+    "version": "0.0.0",
+    "private": true,
+    "scripts": {
+        "start": "tsc && node build/index.js"
+    },
+    "license": "Apache-2.0",
+    "dependencies": {
+        "aws-sdk": "^2.542.0"
+    },
+    "devDependencies": {
+        "@types/node": "^13.7.7",
+        "typescript": "^3.8.3"
+    }
+}

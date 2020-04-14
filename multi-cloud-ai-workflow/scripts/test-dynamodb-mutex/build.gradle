@@ -1,0 +1,5 @@
+task test(type: Exec) {
+    dependsOn "npmInstall"
+    commandLine npmExecutable
+    args "start"
+}
