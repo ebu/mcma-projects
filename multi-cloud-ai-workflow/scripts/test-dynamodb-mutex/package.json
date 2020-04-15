@@ -7,6 +7,7 @@
     },
     "license": "Apache-2.0",
     "dependencies": {
+        "@mcma/core": "^0.8.7",
         "aws-sdk": "^2.542.0"
     },
     "devDependencies": {
