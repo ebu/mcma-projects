@@ -224,6 +224,7 @@ subprojects {
     }
 
     task tsc(type: Exec) {
+        dependsOn npmInstall
         dependsOn verifyNodeJS
         dependsOn verifyTsc
         enabled file("tsconfig.json").exists()
