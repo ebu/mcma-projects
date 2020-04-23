@@ -2,14 +2,17 @@ import { Injectable } from "@angular/core";
 import { BehaviorSubject, from, Observable, Subject, timer } from "rxjs";
 import { map, switchMap, takeWhile, zip } from "rxjs/operators";
 
-import uuidv4 from "uuid/v4";
+import { uuid } from "uuidv4";
 
-import { DescriptiveMetadata, JobParameterBag, JobProfile, Locator, McmaTracker, WorkflowJob } from "@mcma/core";
+import { JobParameterBag, JobProfile, McmaTracker, WorkflowJob } from "@mcma/core";
 import { ResourceManager } from "@mcma/client";
+import { AwsS3FileLocator } from "@mcma/aws-s3";
+
+import { DescriptiveMetadata } from "@local/common";
 
 import { ConfigService } from "./config.service";
 import { McmaClientService } from "./mcma-client.service";
-import { JobStatus } from "../models/job-statuses";
+import { isFinished } from "../models/job-statuses";
 import { WorkflowJobViewModel } from "../view-models/workflow-job-vm";
 
 @Injectable()
@@ -65,7 +68,7 @@ export class WorkflowService {
             timer(0, 3000).pipe(
                 switchMap(() => this.mcmaClientService.resourceManager$),
                 switchMap(resourceManager => from(resourceManager.get<WorkflowJob>(workflowJobId))),
-                takeWhile(j => !JobStatus.isFinished(j))
+                takeWhile(j => !isFinished(j))
             ).subscribe(
                 job => subject.next(new WorkflowJobViewModel(job, fakeRunning)),
                 err => subject.error(err),
@@ -109,16 +112,15 @@ export class WorkflowService {
             jobProfile: jobProfileId,
             jobInput: new JobParameterBag({
                 metadata: metadata,
-                inputFile: new Locator({
+                inputFile: new AwsS3FileLocator({
                     awsS3Bucket: uploadBucket,
                     awsS3Key: objectKey
                 })
+            }),
+            tracker: new McmaTracker({
+                id: uuid(),
+                label: "Workflow '" + metadata.name + "' with file '" + objectKey + "'",
             })
-        });
-
-        workflowJob["tracker"] = new McmaTracker({
-            id: uuidv4(),
-            label: "Workflow '" + metadata.name + "' with file '" + objectKey + "'",
         });
 
         // posting the workflowJob to the job repository
@@ -132,7 +134,7 @@ export class WorkflowService {
     private async getWorkflowJobsAsync(resourceManager: ResourceManager): Promise<WorkflowJob[]> {
         const jobProfileId = await this.getJobProfileIdAsync(resourceManager, this.WORKFLOW_NAME);
 
-        const jobs = await resourceManager.query(WorkflowJob);
+        const jobs = await resourceManager.query<WorkflowJob>("WorkflowJob");
         console.log("All jobs", jobs);
 
         const filteredJobs = jobs.filter(j => j["@type"] === this.WORKFLOW_JOB_TYPE && j.jobProfile && j.jobProfile === jobProfileId);

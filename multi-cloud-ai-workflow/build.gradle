@@ -1,10 +1,11 @@
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 
-def McmaVersion = "0.8.7"
+def McmaVersion = "0.9.0"
 
 def requiredVersionTerraform = "0.12.19"
 def requiredVersionNodeJS = "10.16.3"
+def requiredVersionTsc = "3.7.2"
 
 if (!hasProperty("AzureLocation")) {
     ext.AzureLocation = "trial"
@@ -31,6 +32,19 @@ if (!hasProperty("EnableECS")) {
 }
 
 def googleServiceCredentialsFile = file(ext.GoogleServiceCredentialsFile).path
+
+def isVersionGreaterThanOrEqualTo(expected, actual) {
+    def expectedParts = expected.split(/\./);   
+    def actualParts = actual.split(/\./);
+
+    for (int i = 0; i < actualParts.length; i++) {
+        if (i >= expectedParts.length || expectedParts[i].toInteger() < actualParts[i].toInteger()) {
+            return false;
+        }
+    }
+
+    return true;
+}
 
 allprojects {
     ext.GoogleServiceCredentialsFile = googleServiceCredentialsFile
@@ -102,6 +116,33 @@ task verifyTerraform {
     doLast {
         if (getVersionTerraform() != requiredVersionTerraform) {
             throw new Exception("Required Terraform version " + requiredVersionTerraform + " not available")
+        }
+    }
+}
+
+def getVersionTsc = { ->
+    def stdout = new ByteArrayOutputStream()
+    def stderr = new ByteArrayOutputStream()
+    try {
+        exec {
+            commandLine tscExecutable
+            args "-v"
+            standardOutput stdout
+            errorOutput stderr
+        }
+    } catch (Exception ignored) {
+    }
+
+    return stdout.toString().trim().replace("Version ", "")
+}
+
+task verifyTsc {
+    inputs.property("VERSION_TSC", requiredVersionTsc)
+    outputs.upToDateWhen { isVersionGreaterThanOrEqualTo(getVersionTsc(), requiredVersionTsc) }
+    doLast {
+        def versionTsc = getVersionTsc()
+        if (!isVersionGreaterThanOrEqualTo(versionTsc, requiredVersionTsc)) {
+            throw new Exception("tsc version must be at least " + requiredVersionTsc + ". Detected version " + versionTsc)
         }
     }
 }
@@ -184,6 +225,19 @@ subprojects {
         delete "build"
         delete "dist"
         delete "node_modules"
+    }
+
+    task tsc(type: Exec) {
+        dependsOn npmInstall
+        dependsOn verifyNodeJS
+        dependsOn verifyTsc
+        enabled file("tsconfig.json").exists()
+        enabled file("package.json").exists()
+        inputs.dir("src")
+        inputs.file("tsconfig.json")
+        inputs.file("package.json")
+        outputs.dir("build/staging")
+        commandLine tscExecutable
     }
 }
 

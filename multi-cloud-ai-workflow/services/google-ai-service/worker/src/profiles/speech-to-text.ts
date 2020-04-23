@@ -2,17 +2,19 @@ import * as util from "util";
 import * as fs from "fs";
 
 import * as AWS from "aws-sdk";
-import { v4 as uuidv4 } from "uuid";
+import { uuid } from "uuidv4";
 
 import { Storage } from "@google-cloud/storage";
 import speech from "@google-cloud/speech";
 
-import { EnvironmentVariableProvider, Exception } from "@mcma/core";
-import { AwsS3FileLocator } from "@mcma/aws-s3";
+import { EnvironmentVariableProvider, McmaException, AIJob, JobParameterBag } from "@mcma/core";
+import { AwsS3FileLocator, AwsS3FileLocatorProperties, AwsS3FolderLocatorProperties } from "@mcma/aws-s3";
 import { google } from "@google-cloud/speech/build/protos/protos";
-import RecognitionConfig = google.cloud.speech.v1.RecognitionConfig;
-import RecognitionAudio = google.cloud.speech.v1p1beta1.RecognitionAudio;
-import AudioEncoding = google.cloud.speech.v1.RecognitionConfig.AudioEncoding;
+import { ProcessJobAssignmentHelper, ProviderCollection } from "@mcma/worker";
+
+const RecognitionConfig = google.cloud.speech.v1.RecognitionConfig;
+const RecognitionAudio = google.cloud.speech.v1p1beta1.RecognitionAudio;
+const AudioEncoding = google.cloud.speech.v1.RecognitionConfig.AudioEncoding;
 
 const fsWriteFile = util.promisify(fs.writeFile);
 const fsUnlink = util.promisify(fs.unlink);
@@ -22,8 +24,8 @@ const environmentVariables = new EnvironmentVariableProvider();
 
 async function getGoogleServiceCredentials(): Promise<any> {
     try {
-        const googleServiceCredentialsS3Bucket = environmentVariables.getRequiredContextVariable("GoogleServiceCredentialsS3Bucket");
-        const googleServiceCredentialsS3Key = environmentVariables.getRequiredContextVariable("GoogleServiceCredentialsS3Key");
+        const googleServiceCredentialsS3Bucket = environmentVariables.getRequiredContextVariable<string>("GoogleServiceCredentialsS3Bucket");
+        const googleServiceCredentialsS3Key = environmentVariables.getRequiredContextVariable<string>("GoogleServiceCredentialsS3Key");
 
         const data = await S3.getObject({
             Bucket: googleServiceCredentialsS3Bucket,
@@ -32,12 +34,12 @@ async function getGoogleServiceCredentials(): Promise<any> {
 
         return JSON.parse(data.Body.toString());
     } catch (error) {
-        throw new Exception("Failed to obtain Google Service Credentials", error);
+        throw new McmaException("Failed to obtain Google Service Credentials", error);
     }
 }
 
-export async function speechToText(providers, jobAssignmentHelper) {
-    const logger = jobAssignmentHelper.getLogger();
+export async function speechToText(providers: ProviderCollection, jobAssignmentHelper: ProcessJobAssignmentHelper<AIJob>) {
+    const logger = jobAssignmentHelper.logger;
 
     logger.info("Initialization of Google credentials");
     const googleCredentials = await getGoogleServiceCredentials();
@@ -50,15 +52,15 @@ export async function speechToText(providers, jobAssignmentHelper) {
     logger.info("Client Email: " + googleClientEmail);
     logger.info("Private Key Id: " + googleCredentials.private_key_id);
 
-    const googleBucketName = environmentVariables.getRequiredContextVariable("GoogleBucketName");
+    const googleBucketName = environmentVariables.getRequiredContextVariable<string>("GoogleBucketName");
     logger.info("Using google bucket with name: " + googleBucketName);
 
-    const jobInput = jobAssignmentHelper.getJobInput();
-    const inputFile = <AwsS3FileLocator>jobInput.inputFile;
-    const outputLocation = jobInput.outputLocation;
+    const jobInput = jobAssignmentHelper.jobInput;
+    const inputFile = jobInput.get<AwsS3FileLocatorProperties>("inputFile");
+    const outputLocation = jobInput.get<AwsS3FolderLocatorProperties>("outputLocation");
 
     if (!inputFile.awsS3Bucket || !inputFile.awsS3Key) {
-        throw new Exception("Failed to find awsS3Bucket and/or awsS3Key properties on inputFile:\n" + JSON.stringify(inputFile, null, 2));
+        throw new McmaException("Failed to find awsS3Bucket and/or awsS3Key properties on inputFile:\n" + JSON.stringify(inputFile, null, 2));
     }
 
     const storage = new Storage({
@@ -96,7 +98,7 @@ export async function speechToText(providers, jobAssignmentHelper) {
     }).promise();
 
     const fileExtension = inputFile.awsS3Key.substring(inputFile.awsS3Key.lastIndexOf(".") + 1);
-    const tempFileName = uuidv4() + "." + fileExtension;
+    const tempFileName = uuid() + "." + fileExtension;
 
     logger.info("Write file to local tmp storage");
     const localFilename = "/tmp/" + tempFileName;
@@ -159,16 +161,16 @@ export async function speechToText(providers, jobAssignmentHelper) {
 
         let s3Params = {
             Bucket: outputLocation.awsS3Bucket,
-            Key: (outputLocation.awsS3KeyPrefix ?? "") + uuidv4() + ".txt",
+            Key: (outputLocation.awsS3KeyPrefix ?? "") + uuid() + ".txt",
             Body: transcription
         };
         await S3.putObject(s3Params).promise();
 
         logger.info("Updating job assignment with output");
-        jobAssignmentHelper.getJobOutput().outputFile = new AwsS3FileLocator({
+        jobAssignmentHelper.jobOutput.set("outputFile", new AwsS3FileLocator({
             awsS3Bucket: s3Params.Bucket,
             awsS3Key: s3Params.Key
-        });
+        }));
 
         await jobAssignmentHelper.complete();
     } finally {

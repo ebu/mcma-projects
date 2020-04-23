@@ -61,7 +61,7 @@ subprojects {
 
     task build (type: Zip) {
         enabled file("package.json").exists()
-        dependsOn copySource, copyNodeModules
+        dependsOn copySource, copyNodeModules, tsc
         archiveName "lambda.zip"
         destinationDir file("build/dist")
         from "build/staging"

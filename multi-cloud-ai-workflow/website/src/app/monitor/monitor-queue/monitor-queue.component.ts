@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, Output } from "@angular/core";
-import { PageEvent } from "@angular/material";
+import { PageEvent } from "@angular/material/paginator";
 import { Observable } from "rxjs";
 
 import { WorkflowJobViewModel } from "../../view-models/workflow-job-vm";

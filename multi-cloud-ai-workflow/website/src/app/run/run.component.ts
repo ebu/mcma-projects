@@ -1,5 +1,6 @@
 import { Component, OnInit } from "@angular/core";
-import { MatSelectionListChange } from "@angular/material";
+import { FormControl } from '@angular/forms';
+import { MatSelectionListChange } from "@angular/material/list";
 import { BehaviorSubject, Observable } from "rxjs";
 import { debounceTime, filter, map, share, startWith, tap, withLatestFrom } from "rxjs/operators";
 
@@ -9,7 +10,6 @@ import { S3BucketService } from "../services/s3bucket.service";
 import { WorkflowService } from "../services/workflow.service";
 import { ModalService } from "../services/modal.service";
 import { RunCompleteModalComponent } from "./run-complete-modal/run-complete-modal.component";
-import { FormControl } from "@angular/forms";
 import { S3Object } from "../models/s3-object";
 import { RunMetadataModalComponent } from "./run-metadata-modal/run-metadata-modal.component";
 

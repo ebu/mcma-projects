@@ -1,6 +1,6 @@
 //"use strict";
 
-import { Job, JobStatus } from "@mcma/core";
+import { Job, JobStatus, getTableName } from "@mcma/core";
 import { ProviderCollection, WorkerRequest } from "@mcma/worker";
 import { DynamoDbTable } from "@mcma/aws-dynamodb";
 
@@ -10,9 +10,9 @@ export async function processNotification(providers: ProviderCollection, workerR
     const jobId = workerRequest.input.jobId;
     const notification = workerRequest.input.notification;
 
-    const table = new DynamoDbTable(workerRequest.tableName(), Job);
-    const logger = providers.getLoggerProvider().get(workerRequest.tracker);
-    const resourceManager = providers.getResourceManagerProvider().get(workerRequest);
+    const table = new DynamoDbTable(getTableName(workerRequest), Job);
+    const logger = providers.loggerProvider.get(workerRequest.tracker);
+    const resourceManager = providers.resourceManagerProvider.get(workerRequest);
 
     let job = await table.get(jobId);
 
@@ -37,7 +37,7 @@ export async function processNotification(providers: ProviderCollection, workerR
                 // received in the notification as to avoid race conditions when updating the job process
 
                 // @ts-ignore TODO remove ignore when library supports it.
-                const jobProcess = await resourceManager.get(job.jobProcess);
+                const jobProcess = await resourceManager.get<JobProcess>(job.jobProcess);
                 if (jobProcess.status !== notification.content.status) {
                     logger.info("Ignoring JobProcess update as another update is imminent");
                     return;
@@ -51,7 +51,7 @@ export async function processNotification(providers: ProviderCollection, workerR
     job.statusMessage = notification.content.statusMessage;
     job.progress = notification.content.progress;
     job.jobOutput = notification.content.jobOutput;
-    job.dateModified = new Date().toISOString();
+    job.dateModified = new Date();
 
     job = await table.put(jobId, job);
 

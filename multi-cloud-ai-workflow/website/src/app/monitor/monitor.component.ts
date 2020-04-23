@@ -1,9 +1,10 @@
 import { Component, OnInit } from "@angular/core";
-import { Observable, of } from "rxjs";
+import { Observable, of, zip } from "rxjs";
 import { map, tap } from "rxjs/operators";
 
 import { WorkflowService } from "../services/workflow.service";
-import { JobStatus } from "../models/job-statuses";
+import { ConfigService } from "../services/config.service";
+import { isFinished } from "../models/job-statuses";
 import { WorkflowJobViewModel } from "../view-models/workflow-job-vm";
 
 @Component({
@@ -15,7 +16,7 @@ export class MonitorComponent implements OnInit {
     workflowJobVms$: Observable<Observable<WorkflowJobViewModel>[]>;
     selectedWorkflowJobVm$: Observable<WorkflowJobViewModel>;
 
-    constructor(private workflowService: WorkflowService) {
+    constructor(private workflowService: WorkflowService, private configService: ConfigService) {
     }
 
     ngOnInit(): void {
@@ -24,10 +25,13 @@ export class MonitorComponent implements OnInit {
 
     refresh(): void {
         this.workflowJobVms$ =
-            this.workflowService.getWorkflowJobs().pipe(
-                map(jobs =>
+            zip(
+                this.workflowService.getWorkflowJobs(),
+                this.configService.get<boolean>("enablePolling")
+            ).pipe(
+                map(([jobs, enablePolling]) =>
                     jobs.map(j =>
-                        !JobStatus.isFinished(j)
+                        !isFinished(j) && enablePolling
                             ? this.workflowService.pollForCompletion(j.id)
                             : of(new WorkflowJobViewModel(j)))),
                 tap(jobs => {

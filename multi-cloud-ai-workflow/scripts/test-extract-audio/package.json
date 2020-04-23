@@ -7,11 +7,12 @@
     },
     "license": "Apache-2.0",
     "dependencies": {
-        "@mcma/aws-client": "0.8.7",
-        "@mcma/aws-s3": "0.8.7",
-        "@mcma/client": "0.8.7",
-        "@mcma/core": "0.8.7",
-        "aws-sdk": "^2.542.0"
+        "@mcma/aws-client": "0.9.0",
+        "@mcma/aws-s3": "0.9.0",
+        "@mcma/client": "0.9.0",
+        "@mcma/core": "0.9.0",
+        "aws-sdk": "^2.542.0",
+        "uuidv4": "^6.0.7"
     },
     "devDependencies": {
         "@types/node": "^13.7.7",

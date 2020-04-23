@@ -1,12 +1,14 @@
 //"use strict";
 import * as util from "util";
-import { v4 as uuidv4 } from "uuid";
+import { uuid } from "uuidv4";
 import * as fs from "fs";
 import * as AWS from "aws-sdk";
-import { Exception, TransformJob } from "@mcma/core";
-import { AwsS3FileLocator } from "@mcma/aws-s3";
-import { ffmpeg } from "../ffmpeg";
+
+import { McmaException, TransformJob, JobParameterBag } from "@mcma/core";
 import { ProcessJobAssignmentHelper, ProviderCollection } from "@mcma/worker";
+import { AwsS3FileLocator, AwsS3FileLocatorProperties, AwsS3FolderLocatorProperties } from "@mcma/aws-s3";
+
+import { ffmpeg } from "../ffmpeg";
 
 const fsWriteFile = util.promisify(fs.writeFile);
 const fsReadFile = util.promisify(fs.readFile);
@@ -14,14 +16,14 @@ const fsUnlink = util.promisify(fs.unlink);
 const S3 = new AWS.S3();
 
 export async function createProxyLambda(providers: ProviderCollection, jobAssignmentHelper: ProcessJobAssignmentHelper<TransformJob>) {
-    const logger = jobAssignmentHelper.getLogger();
+    const logger = jobAssignmentHelper.logger;
 
-    const jobInput = jobAssignmentHelper.getJobInput();
+    const jobInput = jobAssignmentHelper.jobInput;
 
     // 6. Execute ffmpeg on input file
     // logger.debug("6. Execute ffmpeg on input file");
-    const inputFile = jobInput.inputFile;
-    const outputLocation = jobInput.outputLocation;
+    const inputFile = jobInput.get<AwsS3FileLocatorProperties>("inputFile");
+    const outputLocation = jobInput.get<AwsS3FolderLocatorProperties>("outputLocation");
 
     let tempFilename;
     if (inputFile.awsS3Bucket && inputFile.awsS3Key) {
@@ -32,12 +34,12 @@ export async function createProxyLambda(providers: ProviderCollection, jobAssign
 
         // 6.2. write data to local tmp storage
         logger.debug("6.2. write data to local tmp storage");
-        const localFilename = "/tmp/" + uuidv4();
+        const localFilename = "/tmp/" + uuid();
         await fsWriteFile(localFilename, data.Body);
 
         // 6.3. obtain ffmpeg output
         logger.debug("6.3. obtain ffmpeg output");
-        tempFilename = "/tmp/" + uuidv4() + ".mp4";
+        tempFilename = "/tmp/" + uuid() + ".mp4";
         const params = ["-y", "-i", localFilename, "-preset", "ultrafast", "-vf", "scale=-1:360", "-c:v", "libx264", "-pix_fmt", "yuv420p", tempFilename];
         await ffmpeg(params);
 
@@ -46,7 +48,7 @@ export async function createProxyLambda(providers: ProviderCollection, jobAssign
         await fsUnlink(localFilename);
 
     } else {
-        throw new Exception("Not able to obtain input file");
+        throw new McmaException("Not able to obtain input file");
     }
 
     // 7. Writing ffmpeg output to output location
@@ -54,7 +56,7 @@ export async function createProxyLambda(providers: ProviderCollection, jobAssign
 
     const s3Params = {
         Bucket: outputLocation.awsS3Bucket,
-        Key: (outputLocation.awsS3KeyPrefix ? outputLocation.awsS3KeyPrefix : "") + uuidv4() + ".mp4",
+        Key: (outputLocation.awsS3KeyPrefix ? outputLocation.awsS3KeyPrefix : "") + uuid() + ".mp4",
         Body: await fsReadFile(tempFilename)
     };
 
@@ -65,10 +67,10 @@ export async function createProxyLambda(providers: ProviderCollection, jobAssign
     await fsUnlink(tempFilename);
 
     // 9. updating JobAssignment with jobOutput
-    jobAssignmentHelper.getJobOutput().outputFile = new AwsS3FileLocator({
+    jobAssignmentHelper.jobOutput.set("outputFile", new AwsS3FileLocator({
         awsS3Bucket: s3Params.Bucket,
         awsS3Key: s3Params.Key
-    });
+    }));
 
     await jobAssignmentHelper.complete();
 }

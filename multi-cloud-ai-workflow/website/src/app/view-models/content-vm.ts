@@ -1,7 +1,9 @@
-import { BMContent } from "@mcma/core";
-import { McmaClientService } from "../services/mcma-client.service";
 import { from } from "rxjs";
 import { switchMap, tap } from "rxjs/operators";
+
+import { BMContent, BMEssence } from "@local/common";
+
+import { McmaClientService } from "../services/mcma-client.service";
 
 export class ContentViewModel {
     awsAiMetadata: { transcription: { original, translation, worddiffs } };
@@ -49,29 +51,28 @@ export class ContentViewModel {
         this.populateAwsData();
         this.populateAzureData();
         this.populateGoogleData();
-        this.callBMEssences();
+        this.getEssences();
     }
 
-    callBMEssences() {
-        if (this.bmContent && this.bmContent.bmEssences) {
-            const bmEssences = this.bmContent.bmEssences;
-            for (const bmEssencesItem of bmEssences) {
-                this.getBMEssence(bmEssencesItem);
+    getEssences() {
+        if (this.bmContent && this.bmContent.essences) {
+            for (const essence of this.bmContent.essences) {
+                this.getEssence(essence);
             }
         }
     }
 
-    getBMEssence(contentUrl: string) {
+    getEssence(essenceUrl: string) {
         this.mcmaClientService.resourceManager$.pipe(
             switchMap(resourceManager => {
-                return from(resourceManager.get<any>(contentUrl)).pipe(
+                return from(resourceManager.get<BMEssence>(essenceUrl)).pipe(
                     tap(data => {
                         console.log("gotBMEssence: data (tap 1)", data);
                         if (data.title === "dubbing-srt-output") {
-                            this.awsSpeechToSpeech.mp4 = data.locations[0].httpEndpoint;
+                            this.awsSpeechToSpeech.mp4 = data.locations[0].url;
                         }
                         if (data.title === "clean_vtt_output_file") {
-                            this.awsSpeechToSpeech.vtt = data.locations[0].httpEndpoint;
+                            this.awsSpeechToSpeech.vtt = data.locations[0].url;
                         }
                     })
                 );

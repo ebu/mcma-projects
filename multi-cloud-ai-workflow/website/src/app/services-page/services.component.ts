@@ -138,7 +138,7 @@ export class ServicesComponent implements OnInit, OnDestroy {
         const resourceEndpoint = await this.resourceManager.getResourceEndpointClient(httpEndpoint);
 
         if (resourceEndpoint) {
-            const response = await resourceEndpoint.get(httpEndpoint);
+            const response = await resourceEndpoint.get<any[]>(httpEndpoint);
             this.resources = response.data.sort((a, b) => new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime());
         } else {
             this.resources.length = 0;

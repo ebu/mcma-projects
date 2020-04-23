@@ -1,5 +1,7 @@
 include "deployment",
         "deployment:post-deploy",
+        "libraries",
+        "libraries:common",
         "scripts",
         "scripts:test-benchmarkstt",
         "scripts:test-dynamodb-mutex",
