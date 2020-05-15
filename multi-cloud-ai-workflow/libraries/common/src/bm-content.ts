@@ -24,7 +24,7 @@ export class BMContent extends McmaResource implements BMContentProperties {
 
     awsSrt?: { transcription?: { original?: string } };
     awsSrtClean?: { transcription?: { original?: string } };
-    
+
     constructor(properties: BMContentProperties) {
         super("BMContent", properties);
     }

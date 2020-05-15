@@ -1,8 +1,7 @@
-//"use strict";
 import * as AWS from "aws-sdk";
 import { Context } from "aws-lambda";
-import { McmaException, EnvironmentVariableProvider, JobBaseProperties, McmaTrackerProperties } from "@mcma/core";
-import { ResourceManager, AuthProvider, getResourceManagerConfig } from "@mcma/client";
+import { EnvironmentVariableProvider, JobBaseProperties, McmaException } from "@mcma/core";
+import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { awsV4Auth } from "@mcma/aws-client";
 import { AwsS3FileLocator } from "@mcma/aws-s3";
@@ -25,8 +24,7 @@ type InputEvent = {
  * @param {*} context context
  */
 export async function handler(event: InputEvent, context: Context) {
-    const tracker = typeof event.tracker === "string" ? JSON.parse(event.tracker) as McmaTrackerProperties : event.tracker;
-    const logger = loggerProvider.get(tracker);
+    const logger = loggerProvider.get(context.awsRequestId, event.tracker);
     try {
         logger.functionStart(context.awsRequestId);
         logger.debug(event);
@@ -58,4 +56,4 @@ export async function handler(event: InputEvent, context: Context) {
         logger.functionEnd(context.awsRequestId);
         await loggerProvider.flush();
     }
-};
+}

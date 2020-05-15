@@ -1,5 +1,5 @@
 import * as AWS from "aws-sdk";
-import { McmaException, AIJob, JobAssignment, getTableName, JobParameterBag } from "@mcma/core";
+import { AIJob, getTableName, JobAssignment, McmaException } from "@mcma/core";
 import { ProcessJobAssignmentHelper, ProviderCollection, WorkerRequest } from "@mcma/worker";
 import { AwsS3FileLocator, AwsS3FileLocatorProperties, AwsS3FolderLocatorProperties } from "@mcma/aws-s3";
 
@@ -12,10 +12,10 @@ function msToTime(duration: string | number) {
     }
     let milliseconds = ((duration % 1000) / 100);
     let seconds = Math.floor((duration / 1000) % 60);
-    let minutes = Math.floor((duration / (1000 * 60)) % 60)
+    let minutes = Math.floor((duration / (1000 * 60)) % 60);
     let hours = Math.floor((duration / (1000 * 60 * 60)) % 24);
 
-    let hoursString = hours < 10 ? "0": "" + hours.toString();
+    let hoursString = hours < 10 ? "0" : "" + hours.toString();
     let minutesString = minutes < 10 ? "0" : "" + minutes.toString();
     let secondsString = seconds < 10 ? "0" : "" + seconds.toString();
     let millisecondsString = (milliseconds < 100 ? "0" : "") + (milliseconds < 10 ? "0" : "") + milliseconds.toString();
@@ -113,7 +113,6 @@ export async function processTokenizedTextToSpeechJobResult(providers: ProviderC
     const jobAssignmentHelper = new ProcessJobAssignmentHelper(
         providers.dbTableProvider.get(getTableName(workerRequest), JobAssignment),
         providers.resourceManagerProvider.get(workerRequest),
-        providers.loggerProvider.get(workerRequest.tracker),
         workerRequest
     );
 

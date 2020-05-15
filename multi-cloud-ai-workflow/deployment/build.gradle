@@ -190,19 +190,7 @@ task terraformOutput(type: Exec) {
     }
 }
 
-task runPostDeployScript(type: Exec) {
-    dependsOn generateAwsCredentialsJson
-    dependsOn terraformOutput
-    dependsOn "post-deploy:npmInstall"
-    inputs.file "terraform.output.json"
-    inputs.file "./post-deploy/src/index.js"
-    inputs.file "./post-deploy/package.json"
-    outputs.upToDateWhen { true }
-    commandLine nodeExecutable
-    args "post-deploy/src/index.js", "${projectDir}/terraform.output.json"
-}
-
-clean {
+task clean {
     delete "${projectDir}/aws-credentials.json"
     delete "${projectDir}/terraform.output"
     delete "${projectDir}/terraform.output.json"
@@ -214,15 +202,18 @@ clean {
     delete "${projectDir}/terraform.tfvars.json"
 }
 
-task plan {}
-plan.dependsOn(terraformPlan)
+task plan {
+    dependsOn(terraformPlan)
+}
 
-task deploy {}
-deploy.dependsOn(terraformApply)
-deploy.dependsOn(runPostDeployScript)
+task deploy {
+    dependsOn terraformApply
+    dependsOn ":scripts:post-deploy:run"
+}
 
-task destroy {}
-destroy.dependsOn(terraformDestroy)
+task destroy {
+    dependsOn(terraformDestroy)
+}
 
 task terraformTaintJobRepository(type: Exec) {
     commandLine terraformExecutable

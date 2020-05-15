@@ -10,7 +10,7 @@ describe("MonitorQueueComponent", () => {
         TestBed.configureTestingModule({
             declarations: [MonitorQueueComponent]
         })
-            .compileComponents();
+               .compileComponents();
     }));
 
     beforeEach(() => {

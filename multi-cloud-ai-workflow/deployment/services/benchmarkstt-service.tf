@@ -36,6 +36,7 @@ resource "aws_iam_role_policy_attachment" "benchmarkstt_service_allow_read_only_
   role       = aws_iam_role.benchmarkstt_service_lambda_execution.id
   policy_arn = aws_iam_policy.allow_read_only_ecs.arn
 }
+
 #################################
 #  aws_lambda_function : benchmarkstt-service-api-handler
 #################################

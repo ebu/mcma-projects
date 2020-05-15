@@ -1,18 +1,17 @@
-//"use strict";
 import { Context } from "aws-lambda";
 import * as AWS from "aws-sdk";
-import { AIJob, JobAssignment, EnvironmentVariableProvider } from "@mcma/core";
-import { ResourceManagerProvider, AuthProvider } from "@mcma/client";
-import { Worker, WorkerRequest, ProcessJobAssignmentOperation, ProviderCollection, WorkerRequestProperties } from "@mcma/worker";
+import { AIJob, EnvironmentVariableProvider } from "@mcma/core";
+import { AuthProvider, ResourceManagerProvider } from "@mcma/client";
+import { ProcessJobAssignmentOperation, ProviderCollection, Worker, WorkerRequest, WorkerRequestProperties } from "@mcma/worker";
 import { DynamoDbTableProvider } from "@mcma/aws-dynamodb";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { awsV4Auth } from "@mcma/aws-client";
 
-import { transcribeAudio, processTranscribeJobResult } from "./profiles/transcribe-audio";
+import { processTranscribeJobResult, transcribeAudio } from "./profiles/transcribe-audio";
 import { translateText } from "./profiles/translate-text";
-import { ssmlTextToSpeech, processSsmlTextToSpeechJobResult } from "./profiles/ssml-text-to-speech";
-import { textToSpeech, processTextToSpeechJobResult } from "./profiles/text-to-speech";
-import { tokenizedTextToSpeech, processTokenizedTextToSpeechJobResult } from "./profiles/tokenized-text-to-speech";
+import { processSsmlTextToSpeechJobResult, ssmlTextToSpeech } from "./profiles/ssml-text-to-speech";
+import { processTextToSpeechJobResult, textToSpeech } from "./profiles/text-to-speech";
+import { processTokenizedTextToSpeechJobResult, tokenizedTextToSpeech } from "./profiles/tokenized-text-to-speech";
 import { createDubbingSrt } from "./profiles/create-dubbing-srt";
 import { validateSpeechToText } from "./profiles/validate-speech-to-text";
 
@@ -55,15 +54,15 @@ const worker =
         .addOperation("ProcessSsmlTextToSpeechJobResult", processSsmlTextToSpeechJobResult)
         .addOperation("ProcessTokenizedTextToSpeechJobResult", processTokenizedTextToSpeechJobResult);
 
-export const handler = async (event: WorkerRequestProperties, context: Context) => {
-    const logger = loggerProvider.get(event.tracker);
+export async function handler(event: WorkerRequestProperties, context: Context) {
+    const logger = loggerProvider.get(context.awsRequestId, event.tracker);
 
     try {
         logger.functionStart(context.awsRequestId);
         logger.debug(event);
         logger.debug(context);
 
-        await worker.doWork(new WorkerRequest(event));
+        await worker.doWork(new WorkerRequest(event, logger));
     } catch (error) {
         logger.error("Error occurred when handling operation '" + event.operationName + "'");
         logger.error(error.toString());
@@ -71,4 +70,4 @@ export const handler = async (event: WorkerRequestProperties, context: Context) 
         logger.functionEnd(context.awsRequestId);
         await loggerProvider.flush();
     }
-};
+}

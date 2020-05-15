@@ -1,89 +1,75 @@
-//"use strict";
-import { JobStatus, JobProcess, getTableName, JobAssignment } from "@mcma/core";
+import { getTableName, JobProcess, JobStatus } from "@mcma/core";
 import { ProviderCollection, WorkerRequest } from "@mcma/worker";
+import { DynamoDbMutex } from "@mcma/aws-dynamodb";
 
-export async function processNotification(providers: ProviderCollection, workerRequest: WorkerRequest) {
+export async function processNotification(providers: ProviderCollection, workerRequest: WorkerRequest, context: any) {
     const jobProcessId = workerRequest.input.jobProcessId;
     const notification = workerRequest.input.notification;
 
-    const logger = providers.loggerProvider.get(workerRequest.tracker);
+    const logger = workerRequest.logger;
     const resourceManager = providers.resourceManagerProvider.get(workerRequest);
-    const table = providers.dbTableProvider.get(getTableName(workerRequest), JobProcess);
 
-    let jobProcess = await table.get(jobProcessId);
+    const tableName = getTableName(workerRequest);
+    const table = providers.dbTableProvider.get(tableName, JobProcess);
+    const mutex = new DynamoDbMutex(jobProcessId, context.awsRequestId, tableName, logger);
 
-    // not updating jobProcess if it already was marked as completed or failed.
-    if (jobProcess.status === JobStatus.Completed ||
-        jobProcess.status === JobStatus.Failed ||
-        jobProcess.status === JobStatus.Canceled ||
-        (jobProcess.status === JobStatus.Running && notification.content.status === JobStatus.Scheduled)) {
-        logger.warn("Ignoring update of job process that tried to change state from " + jobProcess.status + " to " + notification.content.status + ": " + jobProcess.id);
-        return;
-    }
+    let jobProcess: JobProcess;
 
-    if (jobProcess.status !== notification.content.status) {
-        logger.info("JobProcess changed status from " + jobProcess.status + " to " + notification.content.status + ": " + jobProcess.id);
+    await mutex.lock();
+    try {
+        jobProcess = new JobProcess(await table.get(jobProcessId));
 
-        if (notification.content.status !== JobStatus.Completed &&
-            notification.content.status !== JobStatus.Failed &&
-            notification.content.status !== JobStatus.Canceled) {
+        // not updating jobProcess if it already was marked as completed or failed.
+        if (jobProcess.status === JobStatus.Completed || jobProcess.status === JobStatus.Failed || jobProcess.status === JobStatus.Canceled ||
+            (jobProcess.status === JobStatus.Running && notification.content.status === JobStatus.Scheduled)) {
+            logger.warn("Ignoring notification for job process that would change state from " + jobProcess.status + " to " + notification.content.status + ": " + jobProcess.id);
+            return;
+        }
 
-            try {
-                // wait a bit before we fetch latest version to reduce chance of race conditions
-                await sleep(1000);
+        if (jobProcess.status !== notification.content.status) {
+            logger.info("JobProcess changed status from " + jobProcess.status + " to " + notification.content.status + ": " + jobProcess.id);
 
-                // We'll ignore status change if job assignment already has a different status than the one
-                // received in the notification as to avoid race conditions when updating the job process
-                const jobAssignment = typeof jobProcess.jobAssignment === "string" ? await resourceManager.get<JobAssignment>(jobProcess.jobAssignment) : jobProcess.jobAssignment;
-                if (jobAssignment.status !== notification.content.status) {
-                    logger.info("Ignoring JobAssignment update as another update is imminent");
-                    return;
-                }
-            } catch (error) {
+            switch (notification.content.status) {
+                case JobStatus.Scheduled:
+                case JobStatus.Running:
+                    if (!jobProcess.actualStartDate) {
+                        jobProcess.actualStartDate = new Date();
+                    }
+                    break;
+                case JobStatus.Failed:
+                case JobStatus.Canceled:
+                case JobStatus.Completed:
+                    if (!jobProcess.actualEndDate) {
+                        jobProcess.actualEndDate = new Date();
+                    }
+
+                    jobProcess.actualDuration = 0;
+
+                    if (jobProcess.actualStartDate && jobProcess.actualEndDate) {
+                        let startDate = jobProcess.actualStartDate.getTime();
+                        let endDate = jobProcess.actualEndDate.getTime();
+                        if (Number.isInteger(startDate) && Number.isInteger(endDate) && startDate < endDate) {
+                            jobProcess.actualDuration = endDate - startDate;
+                        }
+                    }
+                    break;
             }
         }
 
-        switch (notification.content.status) {
-            case JobStatus.Running:
-                if (!jobProcess.actualStartDate) {
-                    jobProcess.actualStartDate = new Date();
-                }
-                break;
-            case JobStatus.Failed:
-            case JobStatus.Canceled:
-            case JobStatus.Completed:
-                if (!jobProcess.actualEndDate) {
-                    jobProcess.actualEndDate = new Date();
-                }
-
-                jobProcess.actualDuration = 0;
-
-                if (jobProcess.actualStartDate && jobProcess.actualEndDate) {
-                    let startDate = jobProcess.actualStartDate;
-                    let endDate = jobProcess.actualEndDate;
-                    if (startDate && endDate && startDate < endDate) {
-                        jobProcess.actualDuration = endDate.getTime() - startDate.getTime();
-                    }
-                }
-                break;
+        if (jobProcess.statusMessage !== notification.content.statusMessage) {
+            logger.info("JobProcess has statusMessage '" + notification.content.statusMessage + "': " + jobProcess.id);
         }
+
+        jobProcess.status = notification.content.status;
+        jobProcess.statusMessage = notification.content.statusMessage;
+        jobProcess.progress = notification.content.progress;
+        jobProcess.jobOutput = notification.content.jobOutput;
+        jobProcess.dateModified = new Date();
+
+        jobProcess = await table.put(jobProcessId, jobProcess);
+    } finally {
+        await mutex.unlock();
     }
-
-    if (jobProcess.statusMessage !== notification.content.statusMessage) {
-        logger.info("JobProcess has statusMessage '" + notification.content.statusMessage + "': " + jobProcess.id);
-    }
-
-    jobProcess.status = notification.content.status;
-    jobProcess.statusMessage = notification.content.statusMessage;
-    jobProcess.progress = notification.content.progress;
-    jobProcess.jobOutput = notification.content.jobOutput;
-    jobProcess.dateModified = new Date();
-
-    jobProcess = await table.put(jobProcessId, jobProcess);
 
     await resourceManager.sendNotification(jobProcess);
-}
-
-async function sleep(timeout) {
-    return new Promise((resolve) => setTimeout(() => resolve(), timeout));
 }

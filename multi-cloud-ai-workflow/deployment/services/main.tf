@@ -45,6 +45,12 @@ resource "aws_iam_policy" "allow_read_only_ecs" {
   policy      = file("policies/allow-read-only-ecs.json")
 }
 
+resource "aws_iam_policy" "allow_kms_decrypt" {
+  name        = "${var.global_prefix}.${var.aws_region}.services.allow-kms-decrypt"
+  description = "Policy to decrypt KMS keys"
+  policy      = file("policies/allow-kms-decrypt.json")
+}
+
 ###################
 # Lambda Role used by (most) services
 ###################
@@ -82,19 +88,4 @@ resource "aws_iam_role_policy_attachment" "service_allow_invoke_lambda" {
 resource "aws_iam_role_policy_attachment" "service_allow_full_step_functions" {
   role       = aws_iam_role.iam_for_exec_lambda.name
   policy_arn = aws_iam_policy.allow_full_step_functions.arn
-}
-
-resource "aws_iam_role_policy_attachment" "service_allow_full_transcribe" {
-  role       = aws_iam_role.iam_for_exec_lambda.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonTranscribeFullAccess"
-}
-
-resource "aws_iam_role_policy_attachment" "service_allow_translate_only" {
-  role       = aws_iam_role.iam_for_exec_lambda.name
-  policy_arn = "arn:aws:iam::aws:policy/TranslateReadOnly"
-}
-
-resource "aws_iam_role_policy_attachment" "service_allow_full_amazon_polly" {
-  role       = aws_iam_role.iam_for_exec_lambda.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonPollyFullAccess"
 }

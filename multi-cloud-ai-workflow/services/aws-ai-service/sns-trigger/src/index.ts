@@ -1,9 +1,7 @@
-//"use strict";
-
 import * as AWS from "aws-sdk";
-import { SNSEvent, Context } from "aws-lambda";
+import { Context, SNSEvent } from "aws-lambda";
 import { DynamoDbTableProvider } from "@mcma/aws-dynamodb";
-import { McmaException, EnvironmentVariableProvider, JobAssignment, getTableName } from "@mcma/core";
+import { EnvironmentVariableProvider, getTableName, JobAssignment, McmaException } from "@mcma/core";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 
 const Lambda = new AWS.Lambda({ apiVersion: "2015-03-31" });
@@ -12,8 +10,8 @@ const dbTableProvider = new DynamoDbTableProvider();
 const environmentVariableProvider = new EnvironmentVariableProvider();
 const loggerProvider = new AwsCloudWatchLoggerProvider("aws-ai-service-sns-trigger", process.env.LogGroupName);
 
-export const handler = async (event: SNSEvent, context: Context) => {
-    const logger = loggerProvider.get();
+export async function handler(event: SNSEvent, context: Context) {
+    const logger = loggerProvider.get(context.awsRequestId);
     try {
         logger.functionStart(context.awsRequestId);
         logger.debug(event);
@@ -85,4 +83,4 @@ export const handler = async (event: SNSEvent, context: Context) => {
         logger.functionEnd(context.awsRequestId);
         await loggerProvider.flush();
     }
-};
+}

@@ -4,10 +4,11 @@ import { v4 as uuidv4 } from "uuid";
 import * as path from "path";
 
 import { config, EC2, ECS, S3 } from "aws-sdk";
-import { Exception, JobParameterBag, JobProfile, JobStatus, McmaTracker, QAJob, TransformJob } from "@mcma/core";
+import { JobAssignment, JobParameterBag, JobProcess, JobProfile, JobStatus, McmaException, McmaTracker, QAJob, TransformJob } from "@mcma/core";
 import { AuthProvider, ResourceManager } from "@mcma/client";
 import { AwsS3FileLocator, AwsS3FolderLocator } from "@mcma/aws-s3";
 import "@mcma/aws-client";
+import { awsV4Auth } from "@mcma/aws-client";
 
 const AWS_CREDENTIALS = "../../deployment/aws-credentials.json";
 const TERRAFORM_OUTPUT = "../../deployment/terraform.output.json";
@@ -39,13 +40,13 @@ async function uploadFileToBucket(bucket, prefix, filename) {
 }
 
 async function createBenchmarkSttJob(resourceManager: ResourceManager, inputFile: AwsS3FileLocator, referenceFile: AwsS3FileLocator, outputLocation: AwsS3FolderLocator) {
-    const [jobProfileId] = await resourceManager.query(JobProfile, { name: "BenchmarkSTT" });
-    if (!jobProfileId) {
-        throw new Exception("JobProfile 'BenchmarkSTT' not found");
+    const [jobProfile] = await resourceManager.query(JobProfile, { name: "BenchmarkSTT" });
+    if (!jobProfile) {
+        throw new McmaException("JobProfile 'BenchmarkSTT' not found");
     }
 
     const transformJob = new QAJob({
-        jobProfile: jobProfileId,
+        jobProfile: jobProfile.id,
         jobInput: new JobParameterBag({
             inputFile,
             referenceFile,
@@ -116,13 +117,13 @@ async function main() {
         servicesAuthContext
     };
 
-    let resourceManager = new ResourceManager(resourceManagerConfig, new AuthProvider().addAwsV4Auth(config));
+    let resourceManager = new ResourceManager(resourceManagerConfig, new AuthProvider().add(awsV4Auth(config)));
 
     const keyPrefix = "test-benchmarkstt/" + new Date().toISOString() + "/";
 
     const tempBucket = terraformOutput["temp_bucket"]?.value;
     if (!tempBucket) {
-        throw new Exception("Failed to get temp bucket from terraform output");
+        throw new McmaException("Failed to get temp bucket from terraform output");
     }
 
     console.log("Uploading test files to temp bucket");
@@ -149,14 +150,12 @@ async function main() {
 
     console.log(JSON.stringify(job, null, 2));
 
-    // @ts-ignore
     if (job.jobProcess) {
-        // @ts-ignore
-        const jobProcess = await resourceManager.get(job.jobProcess);
+        const jobProcess = await resourceManager.get<JobProcess>(job.jobProcess);
         console.log(JSON.stringify(jobProcess, null, 2));
 
         if (jobProcess.jobAssignment) {
-            const jobAssignment = await resourceManager.get(jobProcess.jobAssignment);
+            const jobAssignment = await resourceManager.get<JobAssignment>(jobProcess.jobAssignment);
             console.log(JSON.stringify(jobAssignment, null, 2));
         }
     }

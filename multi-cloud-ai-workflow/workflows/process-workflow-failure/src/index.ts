@@ -1,7 +1,7 @@
-//"use strict";
 import * as AWS from "aws-sdk";
-import { Context } from "aws-lambda";import { EnvironmentVariableProvider, JobStatus, McmaTrackerProperties, JobBaseProperties } from "@mcma/core";
-import { ResourceManager, AuthProvider, getResourceManagerConfig } from "@mcma/client";
+import { Context } from "aws-lambda";
+import { EnvironmentVariableProvider, JobBaseProperties, JobStatus } from "@mcma/core";
+import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { awsV4Auth } from "@mcma/aws-client";
 
@@ -16,8 +16,7 @@ type InputEvent = {
 } & JobBaseProperties;
 
 export async function handler(event: InputEvent, context: Context) {
-    const tracker = typeof event.tracker === "string" ? JSON.parse(event.tracker) as McmaTrackerProperties : event.tracker;
-    const logger = loggerProvider.get(tracker);
+    const logger = loggerProvider.get(context.awsRequestId, event.tracker);
 
     try {
         logger.functionStart(context.awsRequestId);
@@ -41,4 +40,4 @@ export async function handler(event: InputEvent, context: Context) {
         logger.functionEnd(context.awsRequestId);
         await loggerProvider.flush();
     }
-};
+}

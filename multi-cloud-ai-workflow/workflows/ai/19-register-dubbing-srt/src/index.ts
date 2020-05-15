@@ -1,14 +1,13 @@
-//"use strict";
 import * as AWS from "aws-sdk";
 import { Context } from "aws-lambda";
-const S3 = new AWS.S3();
-
-import { McmaException, EnvironmentVariableProvider, JobBaseProperties, McmaTrackerProperties, Job, JobParameterBag } from "@mcma/core";
-import { ResourceManager, AuthProvider, getResourceManagerConfig } from "@mcma/client";
+import { EnvironmentVariableProvider, Job, JobBaseProperties, JobParameterBag, McmaException } from "@mcma/core";
+import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { AwsS3FileLocator, AwsS3FileLocatorProperties, getS3Url } from "@mcma/aws-s3";
 import { awsV4Auth } from "@mcma/aws-client";
 import { BMContent, BMEssence } from "@local/common";
+
+const S3 = new AWS.S3();
 
 const environmentVariableProvider = new EnvironmentVariableProvider();
 const resourceManager = new ResourceManager(getResourceManagerConfig(environmentVariableProvider), new AuthProvider().add(awsV4Auth(AWS)));
@@ -48,8 +47,7 @@ function createBMEssence(bmContent, location, title, description) {
  * @param {*} context context
  */
 export async function handler(event: InputEvent, context: Context) {
-    const tracker = typeof event.tracker === "string" ? JSON.parse(event.tracker) as McmaTrackerProperties : event.tracker;
-    const logger = loggerProvider.get(tracker);
+    const logger = loggerProvider.get(context.awsRequestId, event.tracker);
     try {
         logger.functionStart(context.awsRequestId);
         logger.debug(event);
@@ -73,7 +71,7 @@ export async function handler(event: InputEvent, context: Context) {
         // get result of ai job
         let job = await resourceManager.get<Job>(jobId);
         logger.info(JSON.stringify(job, null, 2));
-        
+
         let jobOutput = new JobParameterBag(job.jobOutput);
 
         let outputFile = jobOutput.get<AwsS3FileLocatorProperties>("outputFile");
@@ -116,4 +114,4 @@ export async function handler(event: InputEvent, context: Context) {
         logger.functionEnd(context.awsRequestId);
         await loggerProvider.flush();
     }
-};
+}

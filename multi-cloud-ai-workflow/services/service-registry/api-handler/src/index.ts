@@ -1,7 +1,6 @@
-//"use strict";
 import { APIGatewayEvent, Context } from "aws-lambda";
-import { Service, JobProfile } from "@mcma/core";
-import { McmaApiRouteCollection, DefaultRouteCollectionBuilder } from "@mcma/api";
+import { JobProfile, Service } from "@mcma/core";
+import { DefaultRouteCollectionBuilder, McmaApiRouteCollection } from "@mcma/api";
 import { DynamoDbTableProvider } from "@mcma/aws-dynamodb";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { ApiGatewayApiController } from "@mcma/aws-api-gateway";
@@ -13,10 +12,10 @@ const restController =
     new ApiGatewayApiController(
         new McmaApiRouteCollection()
             .addRoutes(new DefaultRouteCollectionBuilder(dbTableProvider, Service).addAll().build())
-            .addRoutes(new DefaultRouteCollectionBuilder(dbTableProvider, JobProfile).addAll().build()));
+            .addRoutes(new DefaultRouteCollectionBuilder(dbTableProvider, JobProfile).addAll().build()), loggerProvider);
 
 export async function handler(event: APIGatewayEvent, context: Context) {
-    const logger = loggerProvider.get();
+    const logger = loggerProvider.get(context.awsRequestId);
     try {
         logger.functionStart(context.awsRequestId);
         logger.debug(event);
@@ -27,4 +26,4 @@ export async function handler(event: APIGatewayEvent, context: Context) {
         logger.functionEnd(context.awsRequestId);
         await loggerProvider.flush();
     }
-};
+}

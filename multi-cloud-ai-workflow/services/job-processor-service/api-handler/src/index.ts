@@ -1,9 +1,8 @@
-//"use strict";
-import { uuid } from "uuidv4";
+import { v4 as uuidv4 } from "uuid";
 import { APIGatewayEvent, Context } from "aws-lambda";
-import { JobProcess, McmaTracker, getTableName } from "@mcma/core";
-import { McmaApiRouteCollection, HttpStatusCode, DefaultRouteCollectionBuilder, McmaApiRequestContext, getPublicUrl, getWorkerFunctionId } from "@mcma/api";
-import { DynamoDbTableProvider, DynamoDbTable } from "@mcma/aws-dynamodb";
+import { getTableName, JobProcess, McmaTracker } from "@mcma/core";
+import { DefaultRouteCollectionBuilder, getPublicUrl, getWorkerFunctionId, HttpStatusCode, McmaApiRequestContext, McmaApiRouteCollection } from "@mcma/api";
+import { DynamoDbTable, DynamoDbTableProvider } from "@mcma/aws-dynamodb";
 import { LambdaWorkerInvoker } from "@mcma/aws-lambda-worker-invoker";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { ApiGatewayApiController } from "@mcma/aws-api-gateway";
@@ -15,7 +14,7 @@ const workerInvoker = new LambdaWorkerInvoker();
 async function validateJobProcess(requestContext: McmaApiRequestContext): Promise<boolean> {
     let body = requestContext.getRequestBody();
     if (!body.tracker) {
-        body.tracker = new McmaTracker({ id: uuid(), label: body["@type"] });
+        body.tracker = new McmaTracker({ id: uuidv4(), label: body["@type"] });
     }
     return true;
 }
@@ -95,10 +94,10 @@ const jobProcessRoutes = jobProcessRouteBuilder.build();
 routeCollection.addRoutes(jobProcessRoutes);
 routeCollection.addRoute("POST", "/job-processes/{id}/notifications", processNotification);
 
-const restController = new ApiGatewayApiController(routeCollection);
+const restController = new ApiGatewayApiController(routeCollection, loggerProvider);
 
 export async function handler(event: APIGatewayEvent, context: Context) {
-    const logger = loggerProvider.get();
+    const logger = loggerProvider.get(context.awsRequestId);
     try {
         logger.functionStart(context.awsRequestId);
         logger.debug(event);
@@ -109,4 +108,4 @@ export async function handler(event: APIGatewayEvent, context: Context) {
         logger.functionEnd(context.awsRequestId);
         await loggerProvider.flush();
     }
-};
+}

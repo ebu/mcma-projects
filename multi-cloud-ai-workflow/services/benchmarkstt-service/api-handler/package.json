@@ -9,18 +9,19 @@
     "main": "src/index.js",
     "license": "Apache-2.0",
     "dependencies": {
-        "@mcma/api": "0.8.7",
-        "@mcma/aws-api-gateway": "0.8.7",
-        "@mcma/aws-client": "0.8.7",
-        "@mcma/aws-dynamodb": "0.8.7",
-        "@mcma/aws-lambda-worker-invoker": "0.8.7",
-        "@mcma/aws-logger": "0.8.7",
-        "@mcma/client": "0.8.7",
-        "@mcma/core": "0.8.7",
-        "@mcma/data": "0.8.7",
-        "aws-sdk": "^2.580.0"
+        "@mcma/api": "0.9.1",
+        "@mcma/aws-api-gateway": "0.9.1",
+        "@mcma/aws-client": "0.9.1",
+        "@mcma/aws-dynamodb": "0.9.1",
+        "@mcma/aws-lambda-worker-invoker": "0.9.1",
+        "@mcma/aws-logger": "0.9.1",
+        "@mcma/client": "0.9.1",
+        "@mcma/core": "0.9.1",
+        "@mcma/data": "0.9.1",
+        "aws-sdk": "^2.631.0"
     },
     "devDependencies": {
+        "@types/aws-lambda": "^8.10.44",
         "@types/node": "^13.7.6"
     }
 }

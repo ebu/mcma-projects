@@ -1,9 +1,8 @@
-import * as util from "util";
 import * as AWS from "aws-sdk";
 import { Client as RpcClient } from "node-json-rpc2";
-import { McmaException, AIJob } from "@mcma/core";
+import { AIJob, McmaException } from "@mcma/core";
 import { AwsS3FileLocator, AwsS3FileLocatorProperties, AwsS3FolderLocatorProperties } from "@mcma/aws-s3";
-import { ProviderCollection, ProcessJobAssignmentHelper } from "@mcma/worker";
+import { ProcessJobAssignmentHelper, ProviderCollection } from "@mcma/worker";
 
 const S3 = new AWS.S3();
 

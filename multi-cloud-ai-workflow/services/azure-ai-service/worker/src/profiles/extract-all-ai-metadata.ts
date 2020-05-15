@@ -1,11 +1,11 @@
 import { URL } from "url";
 import * as querystring from "querystring";
-import { uuid } from "uuidv4";
+import { v4 as uuidv4 } from "uuid";
 import * as AWS from "aws-sdk";
 import { ProcessJobAssignmentHelper, ProviderCollection, WorkerRequest } from "@mcma/worker";
 import { HttpClient } from "@mcma/client";
-import { AwsS3FileLocator, getS3Url, AwsS3FileLocatorProperties, AwsS3FolderLocatorProperties } from "@mcma/aws-s3";
-import { AIJob, JobAssignment, getTableName, JobParameterBag } from "@mcma/core";
+import { AwsS3FileLocator, AwsS3FileLocatorProperties, AwsS3FolderLocatorProperties, getS3Url } from "@mcma/aws-s3";
+import { AIJob, getTableName, JobAssignment } from "@mcma/core";
 
 const S3 = new AWS.S3();
 const httpClient = new HttpClient();
@@ -26,7 +26,7 @@ export async function extractAllAiMetadata(providers: ProviderCollection, jobAss
 
     const jobAssignmentId = jobAssignmentHelper.jobAssignmentId;
     const azure = getAzureConfig(jobAssignmentHelper);
-    
+
     let inputFile = jobInput.get<AwsS3FileLocatorProperties>("inputFile");
     let mediaFileUri = await getS3Url(inputFile, S3);
 
@@ -107,7 +107,6 @@ export async function processNotification(providers: ProviderCollection, workerR
     const jobAssignmentHelper = new ProcessJobAssignmentHelper(
         providers.dbTableProvider.get(getTableName(workerRequest), JobAssignment),
         providers.resourceManagerProvider.get(workerRequest),
-        providers.loggerProvider.get(workerRequest.tracker),
         workerRequest
     );
 
@@ -179,7 +178,7 @@ export async function processNotification(providers: ProviderCollection, workerR
         // get the info about the destination bucket to store the result of the job
         const s3Params = {
             Bucket: jobOutputBucket,
-            Key: jobOutputKeyPrefix + azureVideoId + "-" + uuid() + ".json",
+            Key: jobOutputKeyPrefix + azureVideoId + "-" + uuidv4() + ".json",
             Body: JSON.stringify(videoMetadata, null, 2)
         };
 
@@ -201,4 +200,4 @@ export async function processNotification(providers: ProviderCollection, workerR
             logger.error(error);
         }
     }
-};
+}

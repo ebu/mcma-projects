@@ -6,8 +6,7 @@
             "Principal": {
                 "Service": "states.${aws_region}.amazonaws.com"
             },
-            "Effect": "Allow",
-            "Sid": ""
+            "Effect": "Allow"
         }
     ]
 }

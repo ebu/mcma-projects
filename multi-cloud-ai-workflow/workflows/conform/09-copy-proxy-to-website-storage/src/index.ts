@@ -1,16 +1,15 @@
-//"use strict";
-import { uuid } from "uuidv4";
+import { v4 as uuidv4 } from "uuid";
 
 import * as AWS from "aws-sdk";
 import { Context } from "aws-lambda";
-const S3 = new AWS.S3();
-
-import { McmaException, EnvironmentVariableProvider, JobBaseProperties, McmaTrackerProperties, Job, JobParameterBag } from "@mcma/core";
-import { ResourceManager, AuthProvider, getResourceManagerConfig } from "@mcma/client";
+import { EnvironmentVariableProvider, Job, JobBaseProperties, JobParameterBag, McmaException } from "@mcma/core";
+import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { AwsS3FileLocator, AwsS3FileLocatorProperties, getS3Url } from "@mcma/aws-s3";
 import { awsV4Auth } from "@mcma/aws-client";
 import { BMEssence } from "@local/common";
+
+const S3 = new AWS.S3();
 
 const environmentVariableProvider = new EnvironmentVariableProvider();
 const resourceManager = new ResourceManager(getResourceManagerConfig(environmentVariableProvider), new AuthProvider().add(awsV4Auth(AWS)));
@@ -51,8 +50,7 @@ function getTransformJobId(event) {
  * @param {*} context context
  */
 export async function handler(event: InputEvent, context: Context) {
-    const tracker = typeof event.tracker === "string" ? JSON.parse(event.tracker) as McmaTrackerProperties : event.tracker;
-    const logger = loggerProvider.get(tracker);
+    const logger = loggerProvider.get(context.awsRequestId, event.tracker);
     try {
         logger.functionStart(context.awsRequestId);
         logger.debug(event);
@@ -88,8 +86,8 @@ export async function handler(event: InputEvent, context: Context) {
         }
 
         let s3Bucket = WebsiteBucket;
-        let s3Key = "media/" + uuid();
-//    let s3Key = "media/proxycopy_" + uuid();
+        let s3Key = "media/" + uuidv4();
+//    let s3Key = "media/proxycopy_" + uuidv4();
 
         // addin file extension
         let idxLastDot = outputFile.awsS3Key.lastIndexOf(".");
@@ -164,4 +162,4 @@ export async function handler(event: InputEvent, context: Context) {
         logger.functionEnd(context.awsRequestId);
         await loggerProvider.flush();
     }
-};
+}

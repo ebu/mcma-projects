@@ -10,7 +10,7 @@ export async function ffmpeg(params) {
         return {
             stdout: stdout,
             stderr: stderr
-        }
+        };
     } catch (error) {
         console.log("ERROR FFMPEG", error);
     }

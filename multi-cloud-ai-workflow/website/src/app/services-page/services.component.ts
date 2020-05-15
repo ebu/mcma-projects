@@ -96,7 +96,7 @@ export class ServicesComponent implements OnInit, OnDestroy {
         console.log("[ServicesComponent] processed job profiles", this.jobProfiles);
 
         this.selectService(this.services[0]);
-    }
+    };
 
     selectService(row) {
         this.selectedService = row;
@@ -143,7 +143,7 @@ export class ServicesComponent implements OnInit, OnDestroy {
         } else {
             this.resources.length = 0;
         }
-    }
+    };
 
     selectResource(row) {
         this.selectedResource = row;

@@ -5,6 +5,14 @@
             "Effect": "Allow",
             "Action": "logs:*",
             "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "xray:PutTraceSegments",
+                "xray:PutTelemetryRecords"
+            ],
+            "Resource": "*"
         }
     ]
 }

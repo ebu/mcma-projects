@@ -4,6 +4,6 @@
         "outDir": "build/staging"
     },
     "include": [
-        "src/**/*.ts"
+        "src"
     ]
 }

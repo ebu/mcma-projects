@@ -2,7 +2,7 @@ import { Injectable } from "@angular/core";
 import { BehaviorSubject, from, Observable, Subject, timer } from "rxjs";
 import { map, switchMap, takeWhile, zip } from "rxjs/operators";
 
-import { uuid } from "uuidv4";
+import { v4 as uuidv4 } from "uuid";
 
 import { JobParameterBag, JobProfile, McmaTracker, WorkflowJob } from "@mcma/core";
 import { ResourceManager } from "@mcma/client";
@@ -118,8 +118,13 @@ export class WorkflowService {
                 })
             }),
             tracker: new McmaTracker({
-                id: uuid(),
+                id: uuidv4(),
                 label: "Workflow '" + metadata.name + "' with file '" + objectKey + "'",
+                custom: {
+                    "ingestName": metadata.name,
+                    "ingestDescription": metadata.description,
+                    "fileName": objectKey
+                }
             })
         });
 

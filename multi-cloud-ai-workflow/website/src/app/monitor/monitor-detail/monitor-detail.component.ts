@@ -46,23 +46,23 @@ export class MonitorDetailComponent {
                         switchMap(enablePolling =>
                             conformJobVm.isCompleted && conformJobVm.aiJobUrl
                                 ? enablePolling
-                                    ? this.workflowService.pollForCompletion(conformJobVm.aiJobUrl)
-                                    : this.workflowService.getWorkflowJobVm(conformJobVm.aiJobUrl)
+                                ? this.workflowService.pollForCompletion(conformJobVm.aiJobUrl)
+                                : this.workflowService.getWorkflowJobVm(conformJobVm.aiJobUrl)
                                 : of(null)
                         )
                     )
                 )
             );
-            
+
             this.content$ = val.pipe(
                 switchMap(conformJobVm =>
                     this.configService.get<boolean>("enablePolling").pipe(
                         switchMap(enablePolling =>
                             conformJobVm.isCompleted && conformJobVm.contentUrl
                                 ? enablePolling
-                                    ? this.contentService.pollUntil(conformJobVm.contentUrl, this.aiJobVm$.pipe(map(aiJobVm => aiJobVm && aiJobVm.isFinished)))
-                                    : this.contentService.getContent(conformJobVm.contentUrl).pipe(map(c => new ContentViewModel(c, this.mcmaClientService)))
-                                : of (null)
+                                ? this.contentService.pollUntil(conformJobVm.contentUrl, this.aiJobVm$.pipe(map(aiJobVm => aiJobVm && aiJobVm.isFinished)))
+                                : this.contentService.getContent(conformJobVm.contentUrl).pipe(map(c => new ContentViewModel(c, this.mcmaClientService)))
+                                : of(null)
                         )
                     )
                 ),

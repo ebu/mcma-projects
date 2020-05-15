@@ -1,8 +1,8 @@
 import * as util from "util";
 import * as fs from "fs";
 import * as AWS from "aws-sdk";
-import { AIJob, JobParameterBag } from "@mcma/core";
-import { ProviderCollection, ProcessJobAssignmentHelper } from "@mcma/worker";
+import { AIJob } from "@mcma/core";
+import { ProcessJobAssignmentHelper, ProviderCollection } from "@mcma/worker";
 import { AwsS3FileLocator, AwsS3FileLocatorProperties, AwsS3FolderLocatorProperties } from "@mcma/aws-s3";
 
 import { ffmpeg } from "../ffmpeg";

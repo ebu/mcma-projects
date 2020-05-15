@@ -1,3 +1,5 @@
+apply from: "${project.rootDir}/gradle-tasks-for-lambda.gradle"
+
 npmInstall {
     dependsOn ":libraries:common:npmPack"
     inputs.file "${project.rootDir}/libraries/common/build/dist/local-common-0.0.0.tgz"

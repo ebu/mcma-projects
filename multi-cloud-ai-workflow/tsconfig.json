@@ -6,7 +6,6 @@
         "types": [
             "node"
         ],
-        "declaration": true,
         "lib": [
             "DOM",
             "DOM.Iterable",

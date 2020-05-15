@@ -1,49 +1,59 @@
-//"use strict";
-
-import { Job, JobProcess, JobStatus, NotificationEndpoint, getTableName } from "@mcma/core";
+import { DynamoDbMutex } from "@mcma/aws-dynamodb";
+import { getTableName, Job, JobProcess, JobStatus, McmaException, NotificationEndpoint } from "@mcma/core";
 import { ProviderCollection, WorkerRequest } from "@mcma/worker";
-import { DynamoDbTable } from "@mcma/aws-dynamodb";
 
 import { logJobEvent } from "../utils";
 
-export async function createJobProcess(providers: ProviderCollection, workerRequest: WorkerRequest) {
+export async function createJobProcess(providers: ProviderCollection, workerRequest: WorkerRequest, context: any) {
     const jobId = workerRequest.input.jobId;
 
-    const table = new DynamoDbTable(getTableName(workerRequest), Job);
+    const logger = workerRequest.logger;
     const resourceManager = providers.resourceManagerProvider.get(workerRequest);
-    const logger = providers.loggerProvider.get(workerRequest.tracker);
 
-    const job = await table.get(jobId);
+    const tableName = getTableName(workerRequest);
+    const table = providers.dbTableProvider.get(tableName, Job);
+    const mutex = new DynamoDbMutex(jobId, context.awsRequestId, tableName, logger);
 
+    let job: Job;
+
+    await mutex.lock();
     try {
-        logger.info("Creating Job Process");
+        job = await table.get(jobId);
+        if (!job) {
+            throw new McmaException("Job with id '" + jobId + "' not found");
+        }
 
-        let jobProcess = new JobProcess({
-            job: jobId,
-            notificationEndpoint: new NotificationEndpoint({
-                httpEndpoint: jobId + "/notifications"
-            }),
-            tracker: job.tracker,
-        });
-        jobProcess = await resourceManager.create(jobProcess);
+        try {
+            logger.info("Creating Job Process");
 
-        job.status = JobStatus.Queued;
-        // @ts-ignore TODO remove ignore when library supports it.
-        job.jobProcess = jobProcess.id;
+            let jobProcess = new JobProcess({
+                job: jobId,
+                notificationEndpoint: new NotificationEndpoint({
+                    httpEndpoint: jobId + "/notifications"
+                }),
+                tracker: job.tracker,
+            });
+            jobProcess = await resourceManager.create(jobProcess);
 
-        logger.info("Created Job Process: " + jobProcess.id);
+            job.status = JobStatus.Queued;
+            job.jobProcess = jobProcess.id;
 
-        await logJobEvent(logger, resourceManager, job);
-    } catch (error) {
-        logger.error("Failed to create JobProcess", error);
-        job.status = JobStatus.Failed;
-        job.statusMessage = "Failed to create JobProcess due to error '" + error.message + "'";
+            logger.info("Created Job Process: " + jobProcess.id);
+
+            await logJobEvent(logger, resourceManager, job);
+        } catch (error) {
+            logger.error("Failed to create JobProcess due to error '" + error?.message + "'");
+            logger.error(error?.toString());
+            job.status = JobStatus.Failed;
+            job.statusMessage = "Failed to create JobProcess due to error '" + error?.message + "'";
+        }
+
+        job.dateModified = new Date();
+
+        await table.put(jobId, job);
+    } finally {
+        await mutex.unlock();
     }
-
-    job.dateModified = new Date();
-
-    await table.put(jobId, job);
 
     await resourceManager.sendNotification(job);
 }
-

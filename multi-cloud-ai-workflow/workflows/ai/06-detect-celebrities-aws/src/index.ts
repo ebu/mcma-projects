@@ -1,13 +1,12 @@
-//"use strict";
 import * as AWS from "aws-sdk";
 import { Context } from "aws-lambda";
-const StepFunctions = new AWS.StepFunctions();
-
-import { McmaException, EnvironmentVariableProvider, NotificationEndpoint, JobParameterBag, AIJob, JobProfile, JobBaseProperties, McmaTrackerProperties, Locator } from "@mcma/core";
-import { ResourceManager, AuthProvider, getResourceManagerConfig } from "@mcma/client";
+import { AIJob, EnvironmentVariableProvider, JobBaseProperties, JobParameterBag, JobProfile, McmaException, NotificationEndpoint } from "@mcma/core";
+import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
-import { AwsS3FolderLocator, AwsS3FileLocator } from "@mcma/aws-s3";
+import { AwsS3FileLocator, AwsS3FolderLocator } from "@mcma/aws-s3";
 import { awsV4Auth } from "@mcma/aws-client";
+
+const StepFunctions = new AWS.StepFunctions();
 
 const environmentVariableProvider = new EnvironmentVariableProvider();
 const resourceManager = new ResourceManager(getResourceManagerConfig(environmentVariableProvider), new AuthProvider().add(awsV4Auth(AWS)));
@@ -34,8 +33,7 @@ type InputEvent = {
  * @param {*} context context
  */
 export async function handler(event: InputEvent, context: Context) {
-    const tracker = typeof event.tracker === "string" ? JSON.parse(event.tracker) as McmaTrackerProperties : event.tracker;
-    const logger = loggerProvider.get(tracker);
+    const logger = loggerProvider.get(context.awsRequestId, event.tracker);
     try {
         logger.functionStart(context.awsRequestId);
         logger.debug(event);
@@ -101,4 +99,4 @@ export async function handler(event: InputEvent, context: Context) {
         logger.functionEnd(context.awsRequestId);
         await loggerProvider.flush();
     }
-};
+}

@@ -43,29 +43,3 @@ task build {
     dependsOn "process-workflow-failure:build"
     dependsOn "workflow-activity-callback-handler:build"
 }
-
-subprojects {
-    task copyNodeModules (type: Copy) {
-        enabled file("package.json").exists()
-        dependsOn npmInstall
-        from "node_modules"
-        into "build/staging/node_modules"
-        exclude awsAvailableLibraries
-    }
-
-    task copySource (type: Copy) {
-        enabled file("package.json").exists()
-        from "src"
-        into "build/staging/"
-    }
-
-    task build (type: Zip) {
-        enabled file("package.json").exists()
-        dependsOn copySource, copyNodeModules, tsc
-        archiveName "lambda.zip"
-        destinationDir file("build/dist")
-        from "build/staging"
-        preserveFileTimestamps = false
-        reproducibleFileOrder = true
-    }
-}

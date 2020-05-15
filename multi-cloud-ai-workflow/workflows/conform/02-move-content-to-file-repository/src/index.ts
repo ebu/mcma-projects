@@ -1,14 +1,13 @@
-//"use strict";
-import { uuid } from "uuidv4";
+import { v4 as uuidv4 } from "uuid";
 import * as AWS from "aws-sdk";
 import { Context } from "aws-lambda";
-const S3 = new AWS.S3();
-
-import { McmaException, EnvironmentVariableProvider, JobBaseProperties, McmaTrackerProperties } from "@mcma/core";
-import { ResourceManager, AuthProvider, getResourceManagerConfig } from "@mcma/client";
+import { EnvironmentVariableProvider, JobBaseProperties, McmaException } from "@mcma/core";
+import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { AwsS3FileLocator } from "@mcma/aws-s3";
 import { awsV4Auth } from "@mcma/aws-client";
+
+const S3 = new AWS.S3();
 
 const environmentVariableProvider = new EnvironmentVariableProvider();
 const resourceManager = new ResourceManager(getResourceManagerConfig(environmentVariableProvider), new AuthProvider().add(awsV4Auth(AWS)));
@@ -36,8 +35,7 @@ type InputEvent = {
 } & JobBaseProperties;
 
 export async function handler(event: InputEvent, context: Context) {
-    const tracker = typeof event.tracker === "string" ? JSON.parse(event.tracker) as McmaTrackerProperties : event.tracker;
-    const logger = loggerProvider.get(tracker);
+    const logger = loggerProvider.get(context.awsRequestId, event.tracker);
     try {
         logger.functionStart(context.awsRequestId);
         logger.debug(event);
@@ -57,7 +55,7 @@ export async function handler(event: InputEvent, context: Context) {
         let copySource = encodeURI(inputFile.awsS3Bucket + "/" + inputFile.awsS3Key);
 
         let s3Bucket = RepositoryBucket;
-        let s3Key = yyyymmdd() + "/" + uuid();
+        let s3Key = yyyymmdd() + "/" + uuidv4();
 
         // adding file extension
         let idxLastDot = inputFile.awsS3Key.lastIndexOf(".");

@@ -15,7 +15,7 @@ export class BMEssence extends McmaResource implements BMEssenceProperties {
     description?: string;
     locations?: AwsS3FileLocator[];
     technicalMetadata?: any;
-    
+
     constructor(properties: BMEssenceProperties) {
         super("BMEssence", properties);
     }

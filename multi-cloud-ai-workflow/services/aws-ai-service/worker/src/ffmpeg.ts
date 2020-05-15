@@ -2,6 +2,7 @@ import * as path from "path";
 import * as util from "util";
 
 import * as childProcess from "child_process";
+
 const execFile = util.promisify(childProcess.execFile);
 
 // adding bin folder to process path
@@ -14,8 +15,8 @@ export async function ffmpeg(params: string[]) {
         return {
             stdout: stdout,
             stderr: stderr
-        }
+        };
     } catch (error) {
         console.log("ERROR FFMPEG", error);
     }
-};
+}

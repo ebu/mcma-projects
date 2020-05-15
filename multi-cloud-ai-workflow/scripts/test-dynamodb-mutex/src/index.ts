@@ -1,18 +1,18 @@
-import { config, DynamoDB } from "aws-sdk";
-import { DynamoDBMutex } from "./dynamodb-mutex";
+import { config } from "aws-sdk";
+import { DynamoDbMutex } from "@mcma/aws-dynamodb";
 
 const AWS_CREDENTIALS = "../../deployment/aws-credentials.json";
 
 config.loadFromPath(AWS_CREDENTIALS);
 
-const TABLE_NAME = "pt-rovers-mcma-dev-ame-service";
+const TABLE_NAME = "pt.rovers.mcma.module-repository.dev-service";
 
 async function sleep(timeout: number) {
     return new Promise((resolve => setTimeout(() => resolve(), timeout)));
 }
 
 async function main() {
-    const mutex = new DynamoDBMutex("myMutex", process.pid + "", TABLE_NAME);
+    const mutex = new DynamoDbMutex("myMutex", process.pid + "", TABLE_NAME);
 
     for (; ;) {
         console.log(new Date().toISOString() + ": Requesting lock");

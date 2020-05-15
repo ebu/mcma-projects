@@ -1,27 +1,25 @@
 import { ECS, S3 } from "aws-sdk";
-
 import { Client as RpcClient } from "node-json-rpc2";
-
 import { v4 as uuidv4 } from "uuid";
 
-import { EnvironmentVariableProvider, Exception, ILogger, QAJob } from "@mcma/core";
+import { ContextVariableProvider, EnvironmentVariableProvider, Logger, McmaException, QAJob } from "@mcma/core";
 import { ProcessJobAssignmentHelper, ProviderCollection } from "@mcma/worker";
 import { AwsS3FileLocator } from "@mcma/aws-s3";
 
 export async function benchmarkstt(providers: ProviderCollection, jobAssignmentHelper: ProcessJobAssignmentHelper<QAJob>) {
-    const logger = jobAssignmentHelper.getLogger();
-    const environmentVariableProvider = providers.getEnvironmentVariableProvider();
+    const logger = jobAssignmentHelper.logger;
+    const contextVariableProvider = providers.contextVariableProvider;
 
-    const jobInput = jobAssignmentHelper.getJobInput();
+    const jobInput = jobAssignmentHelper.jobInput;
     const inputFile = <AwsS3FileLocator>jobInput.inputFile;
     const referenceFile = <AwsS3FileLocator>jobInput.referenceFile;
     const outputLocation = jobInput.outputLocation;
 
     if (!inputFile.awsS3Bucket || !inputFile.awsS3Key) {
-        throw new Exception("Failed to find awsS3Bucket and/or awsS3Key properties on inputFile:\n" + JSON.stringify(inputFile, null, 2));
+        throw new McmaException("Failed to find awsS3Bucket and/or awsS3Key properties on inputFile:\n" + JSON.stringify(inputFile, null, 2));
     }
     if (!referenceFile.awsS3Bucket || !referenceFile.awsS3Key) {
-        throw new Exception("Failed to find awsS3Bucket and/or awsS3Key properties on referenceFile:\n" + JSON.stringify(referenceFile, null, 2));
+        throw new McmaException("Failed to find awsS3Bucket and/or awsS3Key properties on referenceFile:\n" + JSON.stringify(referenceFile, null, 2));
     }
 
     const s3 = new S3();
@@ -38,11 +36,11 @@ export async function benchmarkstt(providers: ProviderCollection, jobAssignmentH
     const referenceText = referenceFileObject.Body.toString();
 
     logger.info("Obtaining service ip address");
-    const ipAddress = await getServiceIpAddress(environmentVariableProvider, logger);
+    const ipAddress = await getServiceIpAddress(contextVariableProvider, logger);
     logger.info("IP Address: " + ipAddress);
 
     logger.info("Sending request to benchmarkstt service");
-    const result = await invokeBenchmarksttService(ipAddress, inputText, referenceText, environmentVariableProvider, logger);
+    const result = await invokeBenchmarksttService(ipAddress, inputText, referenceText, contextVariableProvider, logger);
     logger.info(result);
 
     const putObjectParams = {
@@ -53,16 +51,16 @@ export async function benchmarkstt(providers: ProviderCollection, jobAssignmentH
     await s3.putObject(putObjectParams).promise();
 
     logger.info("Updating jobAssignment with job output");
-    jobAssignmentHelper.getJobOutput().outputFile = new AwsS3FileLocator({
+    jobAssignmentHelper.jobOutput.outputFile = new AwsS3FileLocator({
         awsS3Bucket: putObjectParams.Bucket,
         awsS3Key: putObjectParams.Key
     });
-    logger.info(jobAssignmentHelper.getJobOutput().outputFile);
+    logger.info(jobAssignmentHelper.jobOutput.outputFile);
 
     await jobAssignmentHelper.complete();
 }
 
-async function invokeBenchmarksttService(ipAddress: string, inputText: string, referenceText: string, environmentVariableProvider: EnvironmentVariableProvider, logger: ILogger): Promise<any> {
+async function invokeBenchmarksttService(ipAddress: string, inputText: string, referenceText: string, environmentVariableProvider: EnvironmentVariableProvider, logger: Logger): Promise<any> {
 
     let client = new RpcClient({
         host: ipAddress,
@@ -91,9 +89,9 @@ async function invokeBenchmarksttService(ipAddress: string, inputText: string, r
     });
 }
 
-async function getServiceIpAddress(environmentVariableProvider: EnvironmentVariableProvider, logger: ILogger): Promise<string> {
-    const clusterName = environmentVariableProvider.getRequiredContextVariable("EcsClusterName");
-    const benchmarksttServiceName = environmentVariableProvider.getRequiredContextVariable("EcsBenchmarksttServiceName");
+async function getServiceIpAddress(contextVariableProvider: ContextVariableProvider, logger: Logger): Promise<string> {
+    const clusterName = contextVariableProvider.getRequiredContextVariable<string>("EcsClusterName");
+    const benchmarksttServiceName = contextVariableProvider.getRequiredContextVariable<string>("EcsBenchmarksttServiceName");
 
     const ecs = new ECS();
 
@@ -105,7 +103,7 @@ async function getServiceIpAddress(environmentVariableProvider: EnvironmentVaria
     logger.info(listTaskData);
 
     if (listTaskData.taskArns.length === 0) {
-        throw new Exception("Failed to find a running task for service '" + benchmarksttServiceName + "'");
+        throw new McmaException("Failed to find a running task for service '" + benchmarksttServiceName + "'");
     }
 
     logger.info("Describing tasks");
@@ -148,7 +146,7 @@ async function getServiceIpAddress(environmentVariableProvider: EnvironmentVaria
     }
 
     if (!selectedTask) {
-        throw new Exception("Failed to find a running task for service '" + benchmarksttServiceName + "'");
+        throw new McmaException("Failed to find a running task for service '" + benchmarksttServiceName + "'");
     }
 
     return privateIPv4Address;

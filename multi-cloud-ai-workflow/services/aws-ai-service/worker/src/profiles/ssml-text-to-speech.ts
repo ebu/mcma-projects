@@ -1,5 +1,5 @@
 import * as AWS from "aws-sdk";
-import { McmaException, AIJob, JobAssignment, getTableName, JobParameterBag } from "@mcma/core";
+import { AIJob, getTableName, JobAssignment, McmaException } from "@mcma/core";
 import { ProcessJobAssignmentHelper, ProviderCollection, WorkerRequest } from "@mcma/worker";
 import { AwsS3FileLocator, AwsS3FileLocatorProperties, AwsS3FolderLocatorProperties } from "@mcma/aws-s3";
 
@@ -60,7 +60,6 @@ export async function processSsmlTextToSpeechJobResult(providers: ProviderCollec
     const jobAssignmentHelper = new ProcessJobAssignmentHelper(
         providers.dbTableProvider.get(getTableName(workerRequest), JobAssignment),
         providers.resourceManagerProvider.get(workerRequest),
-        providers.loggerProvider.get(workerRequest.tracker),
         workerRequest
     );
 

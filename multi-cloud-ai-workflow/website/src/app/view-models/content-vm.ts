@@ -39,7 +39,7 @@ export class ContentViewModel {
 
     get noData(): boolean {
         return !this.awsTranscription && !this.awsTranslation && this.awsCelebrities.data.length === 0 &&
-            !this.azureTranscription && this.azureCelebrities.data.length === 0;
+               !this.azureTranscription && this.azureCelebrities.data.length === 0;
     }
 
     constructor(
@@ -114,19 +114,19 @@ export class ContentViewModel {
                 }
             }
 
-            const celebritiesAppearences = Object.keys(celebsByName).map(
+            const celebritiesAppearances = Object.keys(celebsByName).map(
                 k => celebsByName[k]
             );
 
             if (celebritiesEmotions !== undefined) {
-                for (const celebrityAppearences of celebritiesAppearences) {
-                    if (celebritiesEmotions[celebrityAppearences.name]) {
-                        celebrityAppearences.emotions = celebritiesEmotions[celebrityAppearences.name];
+                for (const celebrityAppearances of celebritiesAppearances) {
+                    if (celebritiesEmotions[celebrityAppearances.name]) {
+                        celebrityAppearances.emotions = celebritiesEmotions[celebrityAppearances.name];
                     }
                 }
             }
 
-            for (const celebritiesAppearencesItem of celebritiesAppearences) {
+            for (const celebritiesAppearencesItem of celebritiesAppearances) {
                 if (celebritiesAppearencesItem.emotions !== undefined) {
                     const contentVmAwsCelebritiesItemEmotions = celebritiesAppearencesItem.emotions;
                     const celebritiesEmotionsKeys = Object.keys(contentVmAwsCelebritiesItemEmotions);
@@ -146,7 +146,7 @@ export class ContentViewModel {
 
             }
 
-            this.awsCelebrities.data = celebritiesAppearences;
+            this.awsCelebrities.data = celebritiesAppearances;
             this.awsCelebrities.selected = this.awsCelebrities.data[0];
         }
     }
@@ -197,7 +197,7 @@ export class ContentViewModel {
                 }
             }
 
-            if (this.bmContent.azureAiMetadata.azureTranscription) {
+            if (this.bmContent.azureAiMetadata.azureTranscription?.worddiffs) {
                 this.azureWorddiffs = JSON.parse(this.bmContent.azureAiMetadata.azureTranscription.worddiffs).result;
             }
         }

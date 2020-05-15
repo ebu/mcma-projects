@@ -1,9 +1,10 @@
 {
     "extends": "../../tsconfig.json",
     "compilerOptions": {
-        "outDir": "build/staging"
+        "outDir": "build/staging",
+        "declaration": true
     },
     "include": [
-        "src/**/*.ts"
+        "src"
     ]
 }

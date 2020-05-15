@@ -1,5 +1,6 @@
 import * as util from "util";
 import * as childProcess from "child_process";
+
 const execFile = util.promisify(childProcess.execFile);
 
 export async function mediaInfo(params: string[]) {

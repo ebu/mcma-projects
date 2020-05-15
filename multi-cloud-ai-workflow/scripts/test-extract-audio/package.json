@@ -3,19 +3,19 @@
     "version": "0.0.0",
     "private": true,
     "scripts": {
-        "start": "tsc && node build/index.js"
+        "start": "node build/index.js"
     },
     "license": "Apache-2.0",
     "dependencies": {
-        "@mcma/aws-client": "0.9.0",
-        "@mcma/aws-s3": "0.9.0",
-        "@mcma/client": "0.9.0",
-        "@mcma/core": "0.9.0",
-        "aws-sdk": "^2.542.0",
-        "uuidv4": "^6.0.7"
+        "@mcma/aws-client": "0.9.1",
+        "@mcma/aws-s3": "0.9.1",
+        "@mcma/client": "0.9.1",
+        "@mcma/core": "0.9.1",
+        "aws-sdk": "^2.631.0",
+        "uuid": "^7.0.3"
     },
     "devDependencies": {
         "@types/node": "^13.7.7",
-        "typescript": "^3.8.3"
+        "@types/uuid": "^7.0.3"
     }
 }

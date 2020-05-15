@@ -1,4 +1,3 @@
-//"use strict";
 import { APIGatewayEvent, Context } from "aws-lambda";
 import { defaultRoutesForJobs } from "@mcma/api";
 import { DynamoDbTableProvider } from "@mcma/aws-dynamodb";
@@ -10,18 +9,21 @@ const loggerProvider = new AwsCloudWatchLoggerProvider("aws-ai-service-api-handl
 const dbTableProvider = new DynamoDbTableProvider();
 
 const restController =
-    new ApiGatewayApiController(defaultRoutesForJobs(dbTableProvider, invokeLambdaWorker).build());
+    new ApiGatewayApiController(defaultRoutesForJobs(dbTableProvider, invokeLambdaWorker).build(), loggerProvider);
 
 export async function handler(event: APIGatewayEvent, context: Context) {
-    const logger = loggerProvider.get();
+    const logger = loggerProvider.get(context.awsRequestId);
     try {
         logger.functionStart(context.awsRequestId);
         logger.debug(event);
         logger.debug(context);
 
         return await restController.handleRequest(event, context);
+    } catch (error) {
+        logger.error(error);
+        throw error;
     } finally {
         logger.functionEnd(context.awsRequestId);
         await loggerProvider.flush();
     }
-};
+}

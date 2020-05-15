@@ -1,6 +1,6 @@
 import * as AWS from "aws-sdk";
 import { Context } from "aws-lambda";
-import { AIJob, EnvironmentVariableProvider, JobAssignment } from "@mcma/core";
+import { AIJob, EnvironmentVariableProvider } from "@mcma/core";
 import { AuthProvider, ResourceManagerProvider } from "@mcma/client";
 import { ProcessJobAssignmentOperation, ProviderCollection, Worker, WorkerRequest, WorkerRequestProperties } from "@mcma/worker";
 import { DynamoDbTableProvider } from "@mcma/aws-dynamodb";
@@ -32,14 +32,14 @@ const worker =
         .addOperation(processJobAssignmentOperation);
 
 export async function handler(event: WorkerRequestProperties, context: Context) {
-    const logger = loggerProvider.get(event.tracker);
+    const logger = loggerProvider.get(context.awsRequestId, event.tracker);
 
     try {
         logger.functionStart(context.awsRequestId);
         logger.debug(event);
         logger.debug(context);
 
-        await worker.doWork(new WorkerRequest(event));
+        await worker.doWork(new WorkerRequest(event, logger));
     } catch (error) {
         logger.error("Error occurred when handling operation '" + event.operationName + "'");
         logger.error(error.toString());
@@ -47,4 +47,4 @@ export async function handler(event: WorkerRequestProperties, context: Context) 
         logger.functionEnd(context.awsRequestId);
         await loggerProvider.flush();
     }
-};
+}

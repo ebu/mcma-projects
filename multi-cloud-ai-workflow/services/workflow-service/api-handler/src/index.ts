@@ -1,9 +1,8 @@
-//"use strict";
 import { APIGatewayEvent, Context } from "aws-lambda";
-import { JobAssignment, getTableName } from "@mcma/core";
-import { defaultRoutesForJobs, McmaApiRequestContext, getPublicUrl, getWorkerFunctionId } from "@mcma/api";
+import { getTableName, JobAssignment } from "@mcma/core";
+import { defaultRoutesForJobs, getPublicUrl, getWorkerFunctionId, McmaApiRequestContext } from "@mcma/api";
 import { DynamoDbTableProvider } from "@mcma/aws-dynamodb";
-import { LambdaWorkerInvoker, invokeLambdaWorker } from "@mcma/aws-lambda-worker-invoker";
+import { invokeLambdaWorker, LambdaWorkerInvoker } from "@mcma/aws-lambda-worker-invoker";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { ApiGatewayApiController } from "@mcma/aws-api-gateway";
 
@@ -46,10 +45,10 @@ const restController =
     new ApiGatewayApiController(
         defaultRoutesForJobs(dbTableProvider, invokeLambdaWorker)
             .build()
-            .addRoute("POST", "/job-assignments/{id}/notifications", processNotification));
+            .addRoute("POST", "/job-assignments/{id}/notifications", processNotification), loggerProvider);
 
 export async function handler(event: APIGatewayEvent, context: Context) {
-    const logger = loggerProvider.get();
+    const logger = loggerProvider.get(context.awsRequestId);
     try {
         logger.functionStart(context.awsRequestId);
         logger.debug(event);
@@ -60,4 +59,4 @@ export async function handler(event: APIGatewayEvent, context: Context) {
         logger.functionEnd(context.awsRequestId);
         await loggerProvider.flush();
     }
-};
+}

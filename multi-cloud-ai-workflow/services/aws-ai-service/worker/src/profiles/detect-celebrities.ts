@@ -26,8 +26,8 @@ export async function detectCelebrities(providers: ProviderCollection, jobAssign
         ClientRequestToken: clientToken,
         JobTag: base64JobId,
         NotificationChannel: {
-            RoleArn: providers.environmentVariableProvider.getRequiredContextVariable<string>("RekoSnsRoleArn"),
-            SNSTopicArn: providers.environmentVariableProvider.getRequiredContextVariable<string>("SnsTopicArn")
+            RoleArn: providers.contextVariableProvider.getRequiredContextVariable<string>("RekoSnsRoleArn"),
+            SNSTopicArn: providers.contextVariableProvider.getRequiredContextVariable<string>("SnsTopicArn")
         }
     };
 

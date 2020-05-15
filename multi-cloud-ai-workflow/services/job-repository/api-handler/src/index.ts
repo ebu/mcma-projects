@@ -1,15 +1,14 @@
-//"use strict";
 import { APIGatewayEvent, Context } from "aws-lambda";
 import * as AWS from "aws-sdk";
-import { uuid } from "uuidv4";
+import { v4 as uuidv4 } from "uuid";
 
-import { Job, McmaTracker, JobStatus, getTableName, JobProfile } from "@mcma/core";
-import { McmaApiRouteCollection, HttpStatusCode, DefaultRouteCollectionBuilder, McmaApiRequestContext, getWorkerFunctionId, getPublicUrl } from "@mcma/api";
+import { getTableName, Job, JobProfile, JobStatus, McmaTracker } from "@mcma/core";
+import { DefaultRouteCollectionBuilder, getPublicUrl, getWorkerFunctionId, HttpStatusCode, McmaApiRequestContext, McmaApiRouteCollection } from "@mcma/api";
 import { DynamoDbTableProvider } from "@mcma/aws-dynamodb";
 import { LambdaWorkerInvoker } from "@mcma/aws-lambda-worker-invoker";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { ApiGatewayApiController } from "@mcma/aws-api-gateway";
-import { ResourceManagerProvider, AuthProvider } from "@mcma/client";
+import { AuthProvider, ResourceManagerProvider } from "@mcma/client";
 import { awsV4Auth } from "@mcma/aws-client";
 
 const authProvider = new AuthProvider().add(awsV4Auth(AWS));
@@ -29,11 +28,11 @@ async function validateJob(requestContext: McmaApiRequestContext): Promise<boole
             const jobProfile = await resourceManager.get<JobProfile>(body.jobProfile);
             label += " with JobProfile " + jobProfile.name;
         } catch (error) {
-            loggerProvider.get().error(error);
+            requestContext.getLogger().error(error);
             label += " with unknown JobProfile";
         }
 
-        body.tracker = new McmaTracker({ id: uuid(), label });
+        body.tracker = new McmaTracker({ id: uuidv4(), label });
     }
     return true;
 }
@@ -105,7 +104,7 @@ async function processNotification(requestContext: McmaApiRequestContext) {
         },
         job.tracker,
     );
-};
+}
 
 const routeCollection = new McmaApiRouteCollection();
 
@@ -121,10 +120,10 @@ routeCollection.addRoutes(jobRoutes)
                .addRoute("POST", "/jobs/{id}/cancel", cancelJob)
                .addRoute("POST", "/jobs/{id}/notifications", processNotification);
 
-const restController = new ApiGatewayApiController(routeCollection);
+const restController = new ApiGatewayApiController(routeCollection, loggerProvider);
 
 export async function handler(event: APIGatewayEvent, context: Context) {
-    const logger = loggerProvider.get();
+    const logger = loggerProvider.get(context.awsRequestId);
     try {
         logger.functionStart(context.awsRequestId);
         logger.debug(event);
@@ -135,4 +134,4 @@ export async function handler(event: APIGatewayEvent, context: Context) {
         logger.functionEnd(context.awsRequestId);
         await loggerProvider.flush();
     }
-};
+}

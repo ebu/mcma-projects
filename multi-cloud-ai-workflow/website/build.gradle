@@ -1,5 +1,7 @@
 import groovy.json.JsonSlurper
 
+apply from: "../gradle-tasks-for-npm.gradle"
+
 def packageJsonFile = file('package.json')
 def packageJson = new JsonSlurper().parseText(packageJsonFile.text)
 

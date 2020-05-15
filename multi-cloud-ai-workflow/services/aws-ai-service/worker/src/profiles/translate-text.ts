@@ -1,8 +1,8 @@
-import { uuid } from "uuidv4";
+import { v4 as uuidv4 } from "uuid";
 import * as AWS from "aws-sdk";
-import { McmaException, AIJob, JobParameterBag } from "@mcma/core";
+import { AIJob, McmaException } from "@mcma/core";
 import { AwsS3FileLocator, AwsS3FileLocatorProperties, AwsS3FolderLocatorProperties } from "@mcma/aws-s3";
-import { ProviderCollection, ProcessJobAssignmentHelper } from "@mcma/worker";
+import { ProcessJobAssignmentHelper, ProviderCollection } from "@mcma/worker";
 
 const S3 = new AWS.S3();
 const Translate = new AWS.Translate({ apiVersion: "2017-07-01" });
@@ -63,7 +63,7 @@ export async function translateText(providers: ProviderCollection, jobAssignment
     logger.debug("12.5. save translation result into file on output location");
     let s3Params = {
         Bucket: outputLocation.awsS3Bucket,
-        Key: (outputLocation.awsS3KeyPrefix ? outputLocation.awsS3KeyPrefix : "") + uuid() + ".txt",
+        Key: (outputLocation.awsS3KeyPrefix ? outputLocation.awsS3KeyPrefix : "") + uuidv4() + ".txt",
         Body: translatedText
     };
     await S3.putObject(s3Params).promise();

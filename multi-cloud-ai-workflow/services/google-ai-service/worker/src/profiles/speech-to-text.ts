@@ -2,12 +2,12 @@ import * as util from "util";
 import * as fs from "fs";
 
 import * as AWS from "aws-sdk";
-import { uuid } from "uuidv4";
+import { v4 as uuidv4 } from "uuid";
 
 import { Storage } from "@google-cloud/storage";
 import speech from "@google-cloud/speech";
 
-import { EnvironmentVariableProvider, McmaException, AIJob, JobParameterBag } from "@mcma/core";
+import { AIJob, EnvironmentVariableProvider, McmaException } from "@mcma/core";
 import { AwsS3FileLocator, AwsS3FileLocatorProperties, AwsS3FolderLocatorProperties } from "@mcma/aws-s3";
 import { google } from "@google-cloud/speech/build/protos/protos";
 import { ProcessJobAssignmentHelper, ProviderCollection } from "@mcma/worker";
@@ -98,7 +98,7 @@ export async function speechToText(providers: ProviderCollection, jobAssignmentH
     }).promise();
 
     const fileExtension = inputFile.awsS3Key.substring(inputFile.awsS3Key.lastIndexOf(".") + 1);
-    const tempFileName = uuid() + "." + fileExtension;
+    const tempFileName = uuidv4() + "." + fileExtension;
 
     logger.info("Write file to local tmp storage");
     const localFilename = "/tmp/" + tempFileName;
@@ -161,7 +161,7 @@ export async function speechToText(providers: ProviderCollection, jobAssignmentH
 
         let s3Params = {
             Bucket: outputLocation.awsS3Bucket,
-            Key: (outputLocation.awsS3KeyPrefix ?? "") + uuid() + ".txt",
+            Key: (outputLocation.awsS3KeyPrefix ?? "") + uuidv4() + ".txt",
             Body: transcription
         };
         await S3.putObject(s3Params).promise();

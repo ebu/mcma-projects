@@ -1,5 +1,5 @@
 import { Injectable } from "@angular/core";
-import { BehaviorSubject, zip, Observable } from "rxjs";
+import { BehaviorSubject, Observable, zip } from "rxjs";
 import { filter, map } from "rxjs/operators";
 
 import { AuthProvider, ResourceManager } from "@mcma/client";

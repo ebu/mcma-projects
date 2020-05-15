@@ -1,8 +1,7 @@
-//"use strict";
 import * as AWS from "aws-sdk";
-import { S3Event, Context } from "aws-lambda";
+import { Context, S3Event } from "aws-lambda";
 import { DynamoDbTableProvider } from "@mcma/aws-dynamodb";
-import { McmaException, EnvironmentVariableProvider, getTableName, JobAssignment } from "@mcma/core";
+import { EnvironmentVariableProvider, getTableName, JobAssignment, McmaException } from "@mcma/core";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { AwsS3FileLocator } from "@mcma/aws-s3";
 
@@ -12,8 +11,8 @@ const dbTableProvider = new DynamoDbTableProvider();
 const environmentVariableProvider = new EnvironmentVariableProvider();
 const loggerProvider = new AwsCloudWatchLoggerProvider("aws-ai-service-s3-trigger", process.env.LogGroupName);
 
-export const handler = async (event: S3Event, context: Context) => {
-    const logger = loggerProvider.get();
+export async function handler(event: S3Event, context: Context) {
+    const logger = loggerProvider.get(context.awsRequestId);
     try {
         logger.functionStart(context.awsRequestId);
         logger.debug(event);
@@ -81,4 +80,4 @@ export const handler = async (event: S3Event, context: Context) => {
         logger.functionEnd(context.awsRequestId);
         await loggerProvider.flush();
     }
-};
+}

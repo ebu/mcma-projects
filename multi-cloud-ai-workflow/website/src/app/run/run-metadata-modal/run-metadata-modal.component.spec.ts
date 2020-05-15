@@ -10,7 +10,7 @@ describe("RunMetadataModalComponent", () => {
         TestBed.configureTestingModule({
             declarations: [RunMetadataModalComponent]
         })
-            .compileComponents();
+               .compileComponents();
     }));
 
     beforeEach(() => {

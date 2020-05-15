@@ -1,8 +1,8 @@
 import * as util from "util";
 import * as fs from "fs";
-import { uuid } from "uuidv4";
+import { v4 as uuidv4 } from "uuid";
 
-import { McmaException, TransformJob, JobParameterBag } from "@mcma/core";
+import { McmaException, TransformJob } from "@mcma/core";
 import { ProcessJobAssignmentHelper, ProviderCollection } from "@mcma/worker";
 import { AwsS3FileLocator, AwsS3FileLocatorProperties, AwsS3FolderLocatorProperties } from "@mcma/aws-s3";
 
@@ -44,7 +44,7 @@ export async function extractAudio(providers: ProviderCollection, jobAssignmentH
 
         const s3Params = {
             Bucket: outputLocation.awsS3Bucket,
-            Key: (outputLocation.awsS3KeyPrefix ? outputLocation.awsS3KeyPrefix : "") + uuid() + ".flac",
+            Key: (outputLocation.awsS3KeyPrefix ? outputLocation.awsS3KeyPrefix : "") + uuidv4() + ".flac",
             Body: await fs.createReadStream(tempAudioFile)
         };
 

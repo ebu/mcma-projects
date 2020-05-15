@@ -99,11 +99,11 @@ export class RunComponent implements OnInit {
                 if (m && !m.componentType && m.data) {
                     this.runningWorkflowSubject.next(true);
                     const sub2 = this.workflowService.runWorkflow(this.selectedKey, m.data).pipe(filter(job => !!job))
-                        .subscribe(job => {
-                            this.runningWorkflowSubject.next(false);
-                            this.modalService.showModal(RunCompleteModalComponent, { job });
-                            sub2.unsubscribe();
-                        });
+                                     .subscribe(job => {
+                                         this.runningWorkflowSubject.next(false);
+                                         this.modalService.showModal(RunCompleteModalComponent, { job });
+                                         sub2.unsubscribe();
+                                     });
 
                     sub1.unsubscribe();
                 }

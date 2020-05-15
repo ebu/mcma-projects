@@ -1,0 +1,89 @@
+import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
+
+def McmaVersion = "0.9.1"
+
+task setMcmaVersion {
+    def packageJson = file("package.json")
+
+    enabled packageJson.exists()
+    inputs.file(packageJson)
+    inputs.property("VERSION", McmaVersion)
+    outputs.file(packageJson)
+
+    doLast {
+        def jsonSlurper = new JsonSlurper()
+        def object = jsonSlurper.parse(file("package.json"))
+
+        if (object.dependencies != null) {
+            object.dependencies.keySet().each {
+                object.dependencies[it] = it.startsWith("@mcma/") ? McmaVersion : object.dependencies[it]
+            }
+        }
+        if (object.peerDependencies != null) {
+            object.peerDependencies.keySet().each {
+                object.peerDependencies[it] = it.startsWith("@mcma/") ? McmaVersion : object.peerDependencies[it]
+            }
+        }
+        if (object.devDependencies != null) {
+            object.devDependencies.keySet().each {
+                object.devDependencies[it] = it.startsWith("@mcma/") ? McmaVersion : object.devDependencies[it]
+            }
+        }
+
+        def json = JsonOutput.toJson(object)
+        def jsonPretty = JsonOutput.prettyPrint(json) + "\n"
+
+        packageJson.write(jsonPretty)
+    }
+}
+
+task npmInstall(type: Exec) {
+    dependsOn ":verifyNodeJS"
+    inputs.file("package.json")
+    outputs.file("package-lock.json")
+    outputs.dir("node_modules")
+    commandLine npmExecutable
+    args "install"
+}
+
+task npmUpdate(type: Exec) {
+    dependsOn ":verifyNodeJS"
+    inputs.file "package.json"
+    inputs.property("todaysDate", new Date().clearTime())
+    outputs.upToDateWhen { true }
+    commandLine npmExecutable
+    args "update"
+}
+
+task npmDedup(type: Exec) {
+    dependsOn ":verifyNodeJS"
+    inputs.file("package.json")
+    outputs.file("package-lock.json")
+    outputs.dir("node_modules")
+    commandLine npmExecutable
+    args "dedup"
+}
+
+task tsc(type: Exec) {
+    dependsOn ":verifyNodeJS"
+    dependsOn ":verifyTsc"
+    dependsOn npmInstall
+    inputs.dir("src")
+    inputs.file("package.json")
+    inputs.file("tsconfig.json")
+    inputs.file "${project.rootDir}/tsconfig.json"
+    outputs.dir("build/staging")
+    commandLine tscExecutable
+
+    doFirst {
+        delete "build/staging"
+    }
+}
+
+task clean(type: Delete) {
+    delete "build"
+    delete "dist"
+    delete "node_modules"
+}
+

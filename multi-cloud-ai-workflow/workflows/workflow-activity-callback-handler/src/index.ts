@@ -1,12 +1,11 @@
-//"use strict";
 import * as AWS from "aws-sdk";
-import { Context, APIGatewayProxyEvent } from "aws-lambda";
-const StepFunctions = new AWS.StepFunctions();
-
+import { APIGatewayProxyEvent, Context } from "aws-lambda";
 import { JobStatus } from "@mcma/core";
-import { HttpStatusCode, McmaApiRouteCollection, McmaApiRequestContext } from "@mcma/api";
+import { HttpStatusCode, McmaApiRequestContext, McmaApiRouteCollection } from "@mcma/api";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { ApiGatewayApiController } from "@mcma/aws-api-gateway";
+
+const StepFunctions = new AWS.StepFunctions();
 
 const loggerProvider = new AwsCloudWatchLoggerProvider("workflow-activity-callback-handler", process.env.LogGroupName);
 
@@ -34,7 +33,7 @@ async function processNotification(requestContext: McmaApiRequestContext) {
         return;
     }
 
-    const logger = loggerProvider.get(notification.content.tracker);
+    const logger = requestContext.getLogger();
     logger.info("Received update with status " + notification.content.status + " for job id: " + notification.source);
 
     switch (notification.content.status) {
@@ -55,16 +54,16 @@ async function processNotification(requestContext: McmaApiRequestContext) {
             }).promise();
             break;
     }
-};
+}
 
 // Initializing rest controller for API Gateway Endpoint
 const restController =
     new ApiGatewayApiController(
         new McmaApiRouteCollection()
-            .addRoute("POST", "/notifications", processNotification));
+            .addRoute("POST", "/notifications", processNotification), loggerProvider);
 
 export async function handler(event: APIGatewayProxyEvent, context: Context) {
-    const logger = loggerProvider.get();
+    const logger = loggerProvider.get(context.awsRequestId);
     try {
         logger.functionStart(context.awsRequestId);
         logger.debug(event);
@@ -75,4 +74,4 @@ export async function handler(event: APIGatewayProxyEvent, context: Context) {
         logger.functionEnd(context.awsRequestId);
         await loggerProvider.flush();
     }
-};
+}

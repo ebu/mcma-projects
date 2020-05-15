@@ -1,8 +1,8 @@
-import { uuid } from "uuidv4";
+import { v4 as uuidv4 } from "uuid";
 import * as AWS from "aws-sdk";
-import { getTableName, JobAssignment, McmaException, JobParameterBag } from "@mcma/core";
-import { ProviderCollection, WorkerRequest, ProcessJobAssignmentHelper } from "@mcma/worker";
-import { AwsS3FileLocator, AwsS3FolderLocatorProperties, AwsS3FileLocatorProperties } from "@mcma/aws-s3";
+import { getTableName, JobAssignment, McmaException } from "@mcma/core";
+import { ProcessJobAssignmentHelper, ProviderCollection, WorkerRequest } from "@mcma/worker";
+import { AwsS3FileLocator, AwsS3FileLocatorProperties, AwsS3FolderLocatorProperties } from "@mcma/aws-s3";
 import { PromiseResult } from "aws-sdk/lib/request";
 
 const S3 = new AWS.S3();
@@ -12,7 +12,6 @@ export async function processRekognitionResult(providers: ProviderCollection, wo
     const jobAssignmentHelper = new ProcessJobAssignmentHelper(
         providers.dbTableProvider.get(getTableName(workerRequest), JobAssignment),
         providers.resourceManagerProvider.get(workerRequest),
-        providers.loggerProvider.get(workerRequest.tracker),
         workerRequest
     );
 
@@ -99,7 +98,7 @@ export async function processRekognitionResult(providers: ProviderCollection, wo
 
         let videoFileName = jobInput.get<AwsS3FileLocatorProperties>("inputFile").awsS3Key;
         videoFileName = videoFileName.replace(".mp4", "").replace("media/", "");
-        const newS3Key = "reko_" + "media_" + videoFileName + "_" + rekoJobType + "_" + uuid() + ".json";
+        const newS3Key = "reko_" + "media_" + videoFileName + "_" + rekoJobType + "_" + uuidv4() + ".json";
 
         const s3Params = {
             Bucket: s3Bucket,

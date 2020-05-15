@@ -3,13 +3,52 @@ locals {
 }
 
 #################################
+#  aws_iam_role : google_ai_service_lambda_execution
+#################################
+
+resource "aws_iam_role" "google_ai_service_lambda_execution" {
+  name               = format("%.64s", "${var.global_prefix}.${var.aws_region}.services.google_ai.lambda-exec-role")
+  assume_role_policy = file("policies/assume-role-lambda.json")
+}
+
+resource "aws_iam_role_policy_attachment" "google_ai_service_allow_full_logs" {
+  role       = aws_iam_role.google_ai_service_lambda_execution.id
+  policy_arn = aws_iam_policy.allow_full_logs.arn
+}
+
+resource "aws_iam_role_policy_attachment" "google_ai_service_allow_full_dynamodb" {
+  role       = aws_iam_role.google_ai_service_lambda_execution.id
+  policy_arn = aws_iam_policy.allow_full_dynamodb.arn
+}
+
+resource "aws_iam_role_policy_attachment" "google_ai_service_allow_full_s3" {
+  role       = aws_iam_role.google_ai_service_lambda_execution.id
+  policy_arn = aws_iam_policy.allow_full_s3.arn
+}
+
+resource "aws_iam_role_policy_attachment" "google_ai_service_allow_invoke_lambda" {
+  role       = aws_iam_role.google_ai_service_lambda_execution.id
+  policy_arn = aws_iam_policy.allow_invoke_lambda.arn
+}
+
+resource "aws_iam_role_policy_attachment" "google_ai_service_allow_invoke_api_gateway" {
+  role       = aws_iam_role.google_ai_service_lambda_execution.id
+  policy_arn = aws_iam_policy.allow_invoke_api_gateway.arn
+}
+
+resource "aws_iam_role_policy_attachment" "google_ai_service_allow_read_only_ecs" {
+  role       = aws_iam_role.google_ai_service_lambda_execution.id
+  policy_arn = aws_iam_policy.allow_kms_decrypt.arn
+}
+
+#################################
 #  aws_lambda_function : google-ai-service-api-handler
 #################################
 
 resource "aws_lambda_function" "google_ai_service_api_handler" {
   filename         = "../services/google-ai-service/api-handler/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-google-ai-service-api-handler")
-  role             = aws_iam_role.iam_for_exec_lambda.arn
+  role             = aws_iam_role.google_ai_service_lambda_execution.arn
   handler          = "index.handler"
   source_code_hash = filebase64sha256("../services/google-ai-service/api-handler/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
@@ -30,7 +69,7 @@ resource "aws_lambda_function" "google_ai_service_api_handler" {
 resource "aws_lambda_function" "google_ai_service_worker" {
   filename         = "../services/google-ai-service/worker/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-google-ai-service-worker")
-  role             = aws_iam_role.iam_for_exec_lambda.arn
+  role             = aws_iam_role.google_ai_service_lambda_execution.arn
   handler          = "index.handler"
   source_code_hash = filebase64sha256("../services/google-ai-service/worker/build/dist/lambda.zip")
   runtime          = "nodejs10.x"

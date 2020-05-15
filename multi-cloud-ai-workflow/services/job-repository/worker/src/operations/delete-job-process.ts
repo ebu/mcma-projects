@@ -1,11 +1,9 @@
-//"use strict";
-
 import { ProviderCollection, WorkerRequest } from "@mcma/worker";
 
 export async function deleteJobProcess(providers: ProviderCollection, workerRequest: WorkerRequest) {
     const jobProcessId = workerRequest.input.jobProcessId;
 
-    const logger = providers.loggerProvider.get(workerRequest.tracker);
+    const logger = workerRequest.logger;
     const resourceManager = providers.resourceManagerProvider.get(workerRequest);
 
     try {
@@ -13,6 +11,6 @@ export async function deleteJobProcess(providers: ProviderCollection, workerRequ
         await resourceEndpoint.delete(jobProcessId);
     } catch (error) {
         logger.warn("Failed to delete JobProcess: " + jobProcessId);
-        logger.warn(error.toString());
+        logger.warn(error?.toString());
     }
 }

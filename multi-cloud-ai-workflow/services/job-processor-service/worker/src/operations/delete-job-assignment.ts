@@ -1,10 +1,9 @@
-//"use strict";
 import { ProviderCollection, WorkerRequest } from "@mcma/worker";
 
 export async function deleteJobAssignment(providers: ProviderCollection, workerRequest: WorkerRequest) {
     const jobAssignmentId = workerRequest.input.jobAssignmentId;
 
-    const logger = providers.loggerProvider.get(workerRequest.tracker);
+    const logger = workerRequest.logger;
     const resourceManager = providers.resourceManagerProvider.get(workerRequest);
 
     try {
@@ -12,6 +11,6 @@ export async function deleteJobAssignment(providers: ProviderCollection, workerR
         await resourceEndpoint.delete(jobAssignmentId);
     } catch (error) {
         logger.warn("Failed to delete JobAssignment: " + jobAssignmentId);
-        logger.warn(error.toString());
+        logger.warn(error?.toString());
     }
 }

@@ -1,19 +1,17 @@
-//"use strict";
-import { Context } from "aws-lambda";
 import * as fs from "fs";
 import * as util from "util";
-import { uuid } from "uuidv4";
+import { v4 as uuidv4 } from "uuid";
 
-import { McmaException, AmeJob } from "@mcma/core";
-import { ProviderCollection, ProcessJobAssignmentHelper } from "@mcma/worker";
+import { AmeJob, McmaException } from "@mcma/core";
+import { ProcessJobAssignmentHelper, ProviderCollection } from "@mcma/worker";
 import { AwsS3FileLocator, AwsS3FileLocatorProperties, AwsS3FolderLocatorProperties } from "@mcma/aws-s3";
 
 import { mediaInfo } from "../media-info";
+import * as AWS from "aws-sdk";
 
 const fsWriteFile = util.promisify(fs.writeFile);
 const fsUnlink = util.promisify(fs.unlink);
 
-import * as AWS from "aws-sdk";
 const S3 = new AWS.S3();
 
 export async function extractTechnicalMetadata(providers: ProviderCollection, jobAssignmentHelper: ProcessJobAssignmentHelper<AmeJob>) {
@@ -35,7 +33,7 @@ export async function extractTechnicalMetadata(providers: ProviderCollection, jo
         let data = await S3.getObject({ Bucket: inputFile.awsS3Bucket, Key: inputFile.awsS3Key }).promise();
 
         logger.info("write data to local tmp storage");
-        let localFilename = "/tmp/" + uuid();
+        let localFilename = "/tmp/" + uuidv4();
         await fsWriteFile(localFilename, data.Body);
 
         logger.info("obtain mediainfo output");
@@ -55,7 +53,7 @@ export async function extractTechnicalMetadata(providers: ProviderCollection, jo
     logger.info("Writing mediaInfo output to output location");
     let s3Params = {
         Bucket: outputLocation.awsS3Bucket,
-        Key: (outputLocation.awsS3KeyPrefix ? outputLocation.awsS3KeyPrefix : "") + uuid() + ".json",
+        Key: (outputLocation.awsS3KeyPrefix ? outputLocation.awsS3KeyPrefix : "") + uuidv4() + ".json",
         Body: output.stdout
     };
 

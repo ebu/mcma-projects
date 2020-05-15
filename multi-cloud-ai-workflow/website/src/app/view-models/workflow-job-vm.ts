@@ -1,5 +1,5 @@
 import { ThemePalette } from "@angular/material/core";
-import { WorkflowJob, JobStatus } from "@mcma/core";
+import { JobStatus, WorkflowJob } from "@mcma/core";
 
 import { isCompleted, isFinished } from "../models/job-statuses";
 

@@ -1,6 +1,6 @@
 import { LocatorProperties } from "@mcma/core";
 
-import { BMEssenceProperties, BMEssence } from "./bm-essence";
+import { BMEssence, BMEssenceProperties } from "./bm-essence";
 import { AwsS3FileLocatorProperties, AwsS3FolderLocatorProperties, isAwsS3FileLocator, isAwsS3FolderLocator } from "@mcma/aws-s3";
 
 export function getLocationsOfType<T extends LocatorProperties>(essence: BMEssenceProperties, typeFilter: (x: LocatorProperties) => x is T): T[] {

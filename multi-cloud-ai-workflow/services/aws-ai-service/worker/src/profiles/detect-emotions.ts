@@ -1,7 +1,7 @@
 import * as crypto from "crypto";
 import * as AWS from "aws-sdk";
-import { AIJob, JobParameterBag } from "@mcma/core";
-import { ProviderCollection, ProcessJobAssignmentHelper } from "@mcma/worker";
+import { AIJob } from "@mcma/core";
+import { ProcessJobAssignmentHelper, ProviderCollection } from "@mcma/worker";
 import { AwsS3FileLocatorProperties } from "@mcma/aws-s3";
 
 const Rekognition = new AWS.Rekognition();
@@ -25,8 +25,8 @@ export async function detectEmotions(providers: ProviderCollection, jobAssignmen
         FaceAttributes: "ALL",
         JobTag: base64JobId,
         NotificationChannel: {
-            RoleArn: providers.environmentVariableProvider.getRequiredContextVariable<string>("RekoSnsRoleArn"),
-            SNSTopicArn: providers.environmentVariableProvider.getRequiredContextVariable<string>("SnsTopicArn")
+            RoleArn: providers.contextVariableProvider.getRequiredContextVariable<string>("RekoSnsRoleArn"),
+            SNSTopicArn: providers.contextVariableProvider.getRequiredContextVariable<string>("SnsTopicArn")
         }
     };
 
