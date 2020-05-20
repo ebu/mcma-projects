@@ -7,7 +7,7 @@ def packageJson = new JsonSlurper().parseText(packageJsonFile.text)
 
 def requiredVersionAngularCLI = packageJson.devDependencies["@angular/cli"]
 
-def getVersionAngularCLI = { ->
+def getVersionAngularCLI() {
     def stdout = new ByteArrayOutputStream()
     def stderr = new ByteArrayOutputStream()
     try {
@@ -49,11 +49,4 @@ task build(type: Exec) {
 
 npmInstall {
     dependsOn ":libraries:common:npmPack"
-    inputs.file "${project.rootDir}/libraries/common/build/dist/local-common-0.0.0.tgz"
-    doLast {
-        exec {
-            commandLine npmExecutable
-            args "install", "${project.rootDir}/libraries/common/build/dist/local-common-0.0.0.tgz", "--no-save"
-        }
-    }
 }

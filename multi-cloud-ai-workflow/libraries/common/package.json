@@ -4,16 +4,17 @@
     "description": "Local common lib for MCMA Sample App",
     "private": true,
     "engines": {
-        "node": "~8.10.0"
+        "node": "~10.16.3"
     },
     "main": "index.js",
+    "types": "index.d.ts",
     "license": "Apache-2.0",
     "dependencies": {
-        "@mcma/aws-s3": "0.9.1",
-        "@mcma/core": "0.9.1",
+        "@mcma/aws-s3": "0.9.3",
+        "@mcma/core": "0.9.3",
         "aws-sdk": "^2.631.0"
     },
     "devDependencies": {
-        "@types/node": "^13.7.7"
+        "@types/node": "^10.17.21"
     }
 }

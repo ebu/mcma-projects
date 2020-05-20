@@ -1,6 +1,6 @@
-def requiredVersionTerraform = "0.12.19"
+def requiredVersionTerraform = "~0.12.19"
 def requiredVersionNodeJS = "10.16.3"
-def requiredVersionTsc = "3.7.2"
+def requiredVersionTsc = "^3.7.2"
 
 if (!hasProperty("AzureLocation")) {
     ext.AzureLocation = "trial"
@@ -28,19 +28,6 @@ if (!hasProperty("EnableECS")) {
 
 def googleServiceCredentialsFile = file(ext.GoogleServiceCredentialsFile).path
 
-static def isVersionGreaterThanOrEqualTo(expected, actual) {
-    def expectedParts = expected.split(/\./);   
-    def actualParts = actual.split(/\./);
-
-    for (int i = 0; i < actualParts.length; i++) {
-        if (i >= expectedParts.length || expectedParts[i].toInteger() < actualParts[i].toInteger()) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
 allprojects {
     ext.GoogleServiceCredentialsFile = googleServiceCredentialsFile
 
@@ -63,7 +50,44 @@ allprojects {
     }
 }
 
-def getVersionNodeJS = { ->
+static def isSemVerMatching(String actual, String expected) {
+    def beginIndex
+    def equalParts
+
+    if (expected.startsWith("^")) {
+        beginIndex = 1
+        equalParts = 1
+    } else if (expected.startsWith("~")) {
+        beginIndex = 1
+        equalParts = 2
+    } else {
+        beginIndex = 0
+        equalParts = 3
+    }
+
+    def expectedParts = expected.substring(beginIndex).split(/\./).collect { it as int }
+    def actualParts = actual.split(/\./).collect { it as int }
+
+    for (def i = 0; i < expectedParts.size(); i++) {
+
+        if (i < equalParts) {
+            if (actualParts[i] != expectedParts[i]) {
+                return false
+            }
+        } else {
+            if (actualParts[i] > expectedParts[i]) {
+                return true
+            }
+            if (actualParts[i] < expectedParts[i]) {
+                return false
+            }
+        }
+    }
+
+    return true
+}
+
+def getVersionNodeJS() {
     def stdout = new ByteArrayOutputStream()
     def stderr = new ByteArrayOutputStream()
     try {
@@ -79,17 +103,7 @@ def getVersionNodeJS = { ->
     return stdout.toString().trim().replace("v", "")
 }
 
-task verifyNodeJS {
-    inputs.property("VERSION_NODE_JS", requiredVersionNodeJS)
-    outputs.upToDateWhen { getVersionNodeJS() == requiredVersionNodeJS }
-    doLast {
-        if (getVersionNodeJS() != requiredVersionNodeJS) {
-            throw new Exception("Required Node version " + requiredVersionNodeJS + " not installed")
-        }
-    }
-}
-
-def getVersionTerraform = { ->
+def getVersionTerraform() {
     def stdout = new ByteArrayOutputStream()
     def stderr = new ByteArrayOutputStream()
     try {
@@ -105,23 +119,13 @@ def getVersionTerraform = { ->
     return stdout.toString().split("\n")[0].trim().replace("Terraform v", "")
 }
 
-task verifyTerraform {
-    inputs.property("VERSION_TERRAFORM", requiredVersionTerraform)
-    outputs.upToDateWhen { getVersionTerraform() == requiredVersionTerraform }
-    doLast {
-        if (getVersionTerraform() != requiredVersionTerraform) {
-            throw new Exception("Required Terraform version " + requiredVersionTerraform + " not available")
-        }
-    }
-}
-
-def getVersionTsc = { ->
+def getVersionTsc() {
     def stdout = new ByteArrayOutputStream()
     def stderr = new ByteArrayOutputStream()
     try {
         exec {
             commandLine tscExecutable
-            args "-v"
+            args "--v"
             standardOutput stdout
             errorOutput stderr
         }
@@ -131,13 +135,38 @@ def getVersionTsc = { ->
     return stdout.toString().trim().replace("Version ", "")
 }
 
-task verifyTsc {
-    inputs.property("VERSION_TSC", requiredVersionTsc)
-    outputs.upToDateWhen { isVersionGreaterThanOrEqualTo(getVersionTsc(), requiredVersionTsc) }
+task verifyNodeJS {
+    def actualVersion = getVersionNodeJS()
+
+    inputs.property("VERSION_NODE_JS", requiredVersionNodeJS)
+    outputs.upToDateWhen { isSemVerMatching(actualVersion, requiredVersionNodeJS) }
     doLast {
-        def versionTsc = getVersionTsc()
-        if (!isVersionGreaterThanOrEqualTo(versionTsc, requiredVersionTsc)) {
-            throw new Exception("tsc version must be at least " + requiredVersionTsc + ". Detected version " + versionTsc)
+        if (!isSemVerMatching(actualVersion, requiredVersionNodeJS)) {
+            throw new Exception("Required Node version " + requiredVersionNodeJS + " not found. Detected version " + actualVersion)
+        }
+    }
+}
+
+task verifyTerraform {
+    def actualVersion = getVersionTerraform()
+
+    inputs.property("VERSION_TERRAFORM", requiredVersionTerraform)
+    outputs.upToDateWhen { isSemVerMatching(actualVersion, requiredVersionTerraform) }
+    doLast {
+        if (!isSemVerMatching(actualVersion, requiredVersionTerraform)) {
+            throw new Exception("Required Terraform version " + requiredVersionTerraform + " not found. Detected version " + actualVersion)
+        }
+    }
+}
+
+task verifyTsc {
+    def actualVersion = getVersionTsc()
+
+    inputs.property("VERSION_TSC", requiredVersionTsc)
+    outputs.upToDateWhen { isSemVerMatching(actualVersion, requiredVersionTsc) }
+    doLast {
+        if (!isSemVerMatching(actualVersion, requiredVersionTsc)) {
+            throw new Exception("Required tsc version " + requiredVersionTsc + " not found. Detected version " + actualVersion)
         }
     }
 }

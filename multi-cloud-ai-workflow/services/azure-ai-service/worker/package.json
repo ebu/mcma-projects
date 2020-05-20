@@ -6,23 +6,22 @@
     "engines": {
         "node": "~10.16.3"
     },
-    "main": "src/index.js",
     "license": "Apache-2.0",
     "dependencies": {
-        "@mcma/aws-client": "0.9.1",
-        "@mcma/aws-dynamodb": "0.9.1",
-        "@mcma/aws-logger": "0.9.1",
-        "@mcma/aws-s3": "0.9.1",
-        "@mcma/client": "0.9.1",
-        "@mcma/core": "0.9.1",
-        "@mcma/data": "0.9.1",
-        "@mcma/worker": "0.9.1",
+        "@mcma/aws-client": "0.9.3",
+        "@mcma/aws-dynamodb": "0.9.3",
+        "@mcma/aws-logger": "0.9.3",
+        "@mcma/aws-s3": "0.9.3",
+        "@mcma/client": "0.9.3",
+        "@mcma/core": "0.9.3",
+        "@mcma/data": "0.9.3",
+        "@mcma/worker": "0.9.3",
         "axios": "0.19.0",
         "aws-sdk": "^2.631.0",
         "node-json-rpc2": "1.1.0"
     },
     "devDependencies": {
-        "@types/aws-lambda": "^8.10.44",
-        "@types/node": "^13.7.7"
+        "@types/aws-lambda": "^8.10.51",
+        "@types/node": "^10.17.21"
     }
 }

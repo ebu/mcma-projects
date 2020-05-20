@@ -7,12 +7,12 @@
     },
     "license": "Apache-2.0",
     "dependencies": {
-        "@mcma/core": "0.9.1",
-        "@mcma/data": "0.9.1",
-        "@mcma/aws-dynamodb": "0.9.1",
+        "@mcma/core": "0.9.3",
+        "@mcma/data": "0.9.3",
+        "@mcma/aws-dynamodb": "0.9.3",
         "aws-sdk": "^2.631.0"
     },
     "devDependencies": {
-        "@types/node": "^13.7.7"
+        "@types/node": "^10.17.21"
     }
 }

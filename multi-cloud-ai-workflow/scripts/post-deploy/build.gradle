@@ -2,12 +2,5 @@ apply from: "${project.rootDir}/gradle-tasks-for-scripts.gradle"
 
 npmInstall {
     dependsOn ":libraries:common:npmPack"
-    inputs.file "${project.rootDir}/libraries/common/build/dist/local-common-0.0.0.tgz"
-    doLast {
-        exec {
-            commandLine npmExecutable
-            args "install", "${project.rootDir}/libraries/common/build/dist/local-common-0.0.0.tgz", "--no-save"
-        }
-    }
 }
 

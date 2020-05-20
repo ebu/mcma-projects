@@ -4,25 +4,24 @@
     "description": "API gateway request handler for Job Processor Service",
     "private": true,
     "engines": {
-        "node": "~8.10.0"
+        "node": "~10.16.3"
     },
-    "main": "src/index.js",
     "license": "Apache-2.0",
     "dependencies": {
-        "@mcma/api": "0.9.1",
-        "@mcma/aws-api-gateway": "0.9.1",
-        "@mcma/aws-client": "0.9.1",
-        "@mcma/aws-dynamodb": "0.9.1",
-        "@mcma/aws-lambda-worker-invoker": "0.9.1",
-        "@mcma/aws-logger": "0.9.1",
-        "@mcma/client": "0.9.1",
-        "@mcma/core": "0.9.1",
-        "@mcma/data": "0.9.1",
+        "@mcma/api": "0.9.3",
+        "@mcma/aws-api-gateway": "0.9.3",
+        "@mcma/aws-client": "0.9.3",
+        "@mcma/aws-dynamodb": "0.9.3",
+        "@mcma/aws-lambda-worker-invoker": "0.9.3",
+        "@mcma/aws-logger": "0.9.3",
+        "@mcma/client": "0.9.3",
+        "@mcma/core": "0.9.3",
+        "@mcma/data": "0.9.3",
         "aws-sdk": "^2.631.0",
         "uuid": "^7.0.3"
     },
     "devDependencies": {
-        "@types/aws-lambda": "^8.10.44",
-        "@types/node": "^13.7.7"
+        "@types/aws-lambda": "^8.10.51",
+        "@types/node": "^10.17.21"
     }
 }
