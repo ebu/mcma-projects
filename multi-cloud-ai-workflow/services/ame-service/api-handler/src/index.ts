@@ -23,6 +23,6 @@ export async function handler(event: APIGatewayEvent, context: Context) {
         throw error;
     } finally {
         logger.functionEnd(context.awsRequestId);
-        await loggerProvider.flush();
+        await loggerProvider.flush(Date.now() + context.getRemainingTimeInMillis() - 5000);
     }
 }

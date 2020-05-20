@@ -9,7 +9,7 @@ resource "aws_lambda_function" "transform_service_api_handler" {
   handler          = "index.handler"
   source_code_hash = filebase64sha256("../services/transform-service/api-handler/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
-  timeout          = "900"
+  timeout          = "30"
   memory_size      = "3008"
 
   environment {

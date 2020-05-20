@@ -21,6 +21,6 @@ export async function handler(event: APIGatewayEvent, context: Context) {
         return await restController.handleRequest(event, context);
     } finally {
         logger.functionEnd(context.awsRequestId);
-        await loggerProvider.flush();
+        await loggerProvider.flush(Date.now() + context.getRemainingTimeInMillis() - 5000);
     }
 }

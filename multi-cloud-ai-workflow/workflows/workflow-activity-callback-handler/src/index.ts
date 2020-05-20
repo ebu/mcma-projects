@@ -67,11 +67,11 @@ export async function handler(event: APIGatewayProxyEvent, context: Context) {
     try {
         logger.functionStart(context.awsRequestId);
         logger.debug(event);
-        logger.debug(event);
+        logger.debug(context);
 
         return await restController.handleRequest(event, context);
     } finally {
         logger.functionEnd(context.awsRequestId);
-        await loggerProvider.flush();
+        await loggerProvider.flush(Date.now() + context.getRemainingTimeInMillis() - 5000);
     }
 }

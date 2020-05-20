@@ -130,7 +130,7 @@ resource "aws_lambda_function" "workflow_activity_callback_handler" {
   handler          = "index.handler"
   source_code_hash = filebase64sha256("../workflows/workflow-activity-callback-handler/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
-  timeout          = "900"
+  timeout          = "30"
   memory_size      = "3008"
 
   environment {
