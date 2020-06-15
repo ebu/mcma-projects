@@ -35,15 +35,14 @@ async function uploadFileToBucket(bucket, prefix, filename) {
 }
 
 async function createTransformJob(resourceManager: ResourceManager, inputFile: AwsS3FileLocator, outputLocation: AwsS3FolderLocator) {
-    const jobProfiles = await resourceManager.query(JobProfile, { name: "ExtractAudio" });
+    const [ jobProfile ] = await resourceManager.query(JobProfile, { name: "ExtractAudio" });
 
-    const jobProfileId = jobProfiles.shift()?.id;
-    if (!jobProfileId) {
+    if (!jobProfile) {
         throw new McmaException("JobProfile 'ExtractAudio' not found");
     }
 
     const transformJob = new TransformJob({
-        jobProfile: jobProfileId,
+        jobProfile: jobProfile.id,
         jobInput: new JobParameterBag({
             inputFile,
             outputLocation,

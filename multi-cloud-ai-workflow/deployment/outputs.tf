@@ -22,6 +22,10 @@ output "upload_bucket" {
   value = module.storage.upload_bucket.id
 }
 
+output "repository_bucket" {
+  value = module.storage.repository_bucket.id
+}
+
 output "website_bucket" {
   value = module.storage.website_bucket.id
 }

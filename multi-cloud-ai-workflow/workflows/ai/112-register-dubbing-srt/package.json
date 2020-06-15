@@ -1,0 +1,22 @@
+{
+    "name": "register-proxy-essence",
+    "version": "0.0.0",
+    "description": "Move generated proxy to file repository and register asset as a new BMEssence in media repository",
+    "private": true,
+    "engines": {
+        "node": "~10.16.3"
+    },
+    "license": "Apache-2.0",
+    "dependencies": {
+        "@mcma/aws-client": "0.9.7",
+        "@mcma/aws-logger": "0.9.7",
+        "@mcma/aws-s3": "0.9.7",
+        "@mcma/client": "0.9.7",
+        "@mcma/core": "0.9.7",
+        "aws-sdk": "^2.631.0"
+    },
+    "devDependencies": {
+        "@types/aws-lambda": "^8.10.51",
+        "@types/node": "^10.17.21"
+    }
+}

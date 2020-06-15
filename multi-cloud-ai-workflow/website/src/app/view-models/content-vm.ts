@@ -211,7 +211,7 @@ export class ContentViewModel {
             }
 
             if (this.bmContent.googleAiMetadata.worddiffs) {
-                this.googleWorddiffs = JSON.parse(this.bmContent.googleAiMetadata.worddiffs).result;
+                this.googleWorddiffs = this.bmContent.googleAiMetadata.worddiffs;
                 console.log(this.googleWorddiffs);
             }
         }

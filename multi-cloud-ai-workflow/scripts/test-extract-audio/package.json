@@ -3,7 +3,7 @@
     "version": "0.0.0",
     "private": true,
     "scripts": {
-        "start": "node build/index.js"
+        "start": "node build/staging/index.js"
     },
     "license": "Apache-2.0",
     "dependencies": {

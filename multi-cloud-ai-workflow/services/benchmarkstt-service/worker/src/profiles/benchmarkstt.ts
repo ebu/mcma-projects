@@ -46,7 +46,7 @@ export async function benchmarkstt(providers: ProviderCollection, jobAssignmentH
     const putObjectParams = {
         Bucket: outputLocation.awsS3Bucket,
         Key: (outputLocation.awsS3KeyPrefix ? outputLocation.awsS3KeyPrefix : "") + uuidv4() + ".json",
-        Body: JSON.stringify(result)
+        Body: result
     };
     await s3.putObject(putObjectParams).promise();
 
@@ -60,7 +60,7 @@ export async function benchmarkstt(providers: ProviderCollection, jobAssignmentH
     await jobAssignmentHelper.complete();
 }
 
-async function invokeBenchmarksttService(ipAddress: string, inputText: string, referenceText: string, environmentVariableProvider: EnvironmentVariableProvider, logger: Logger): Promise<any> {
+async function invokeBenchmarksttService(ipAddress: string, inputText: string, referenceText: string, environmentVariableProvider: EnvironmentVariableProvider, logger: Logger): Promise<string> {
 
     let client = new RpcClient({
         host: ipAddress,
@@ -79,12 +79,12 @@ async function invokeBenchmarksttService(ipAddress: string, inputText: string, r
 
     logger.info(request);
 
-    return new Promise<any>((resolve, reject) => {
-        client.call(request, (error, result) => {
+    return new Promise<string>((resolve, reject) => {
+        client.call(request, (error, response: { result: string }) => {
             if (error) {
                 return reject(error);
             }
-            resolve(result);
+            resolve(response.result);
         });
     });
 }
