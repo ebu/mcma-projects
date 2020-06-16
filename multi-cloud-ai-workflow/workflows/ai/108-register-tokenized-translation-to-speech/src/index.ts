@@ -14,7 +14,6 @@ const resourceManager = new ResourceManager(getResourceManagerConfig(environment
 const loggerProvider = new AwsCloudWatchLoggerProvider("ai-workflow-108-register-tokenized-translation-to-speech", process.env.LogGroupName);
 
 type InputEvent = {
-    parallelProgress?: { [key: string]: number };
     input: {
         bmContent: string;
     };
@@ -37,7 +36,6 @@ export async function handler(event: InputEvent, context: Context) {
 
         // send update notification
         try {
-            event.parallelProgress = { "tokenized-text-to-speech": 80 };
             await resourceManager.sendNotification(event);
         } catch (error) {
             logger.warn("Failed to send notification");

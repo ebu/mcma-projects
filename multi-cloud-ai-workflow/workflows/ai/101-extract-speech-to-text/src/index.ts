@@ -26,7 +26,6 @@ type InputEvent = {
     data: {
         mediaFileLocator: AwsS3FileLocator
     },
-    parallelProgress?: { [key: string]: number }
 } & JobBaseProperties;
 
 /**
@@ -44,7 +43,6 @@ export async function handler(event: InputEvent, context: Context) {
 
         // send update notification
         try {
-            event.parallelProgress = { "speech-text-translate": 20 };
             await resourceManager.sendNotification(event);
         } catch (error) {
             logger.warn("Failed to send notification");

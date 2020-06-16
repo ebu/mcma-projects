@@ -26,7 +26,6 @@ const JOB_PROFILE_NAME = "BenchmarkSTT";
 const JOB_RESULTS_PREFIX = "BenchmarkSTTResults/";
 
 type InputEvent = {
-    parallelProgress?: { [key: string]: number };
     input: {
         bmContent: string;
     }

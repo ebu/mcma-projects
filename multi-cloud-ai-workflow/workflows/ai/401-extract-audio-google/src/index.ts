@@ -23,7 +23,6 @@ const JOB_PROFILE_NAME = "ExtractAudio";
 const JOB_RESULTS_PREFIX = "ExtractAudioJobResults/";
 
 type InputEvent = {
-    parallelProgress?: { [key: string]: number };
     input: {
         bmContent: string;
     };

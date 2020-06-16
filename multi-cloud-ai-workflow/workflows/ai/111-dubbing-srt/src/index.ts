@@ -24,7 +24,6 @@ const JOB_PROFILE_NAME = "CreateDubbingSrt";
 const JOB_RESULTS_PREFIX = "DubbingSrtJobResults/";
 
 type InputEvent = {
-    parallelProgress?: { [key: string]: number };
 } & JobBaseProperties;
 
 /**
@@ -42,7 +41,6 @@ export async function handler(event: InputEvent, context: Context) {
 
         // send update notification
         try {
-            event.progress = 54;
             await resourceManager.sendNotification(event);
         } catch (error) {
             logger.warn("Failed to send notification");

@@ -38,7 +38,6 @@ function createBMEssence(bmContent: BMContent, location: AwsS3FileLocator, title
 }
 
 type InputEvent = {
-    parallelProgress?: { [key: string]: number }
     input: {
         bmContent: string
     },
@@ -61,7 +60,6 @@ export async function handler(event: InputEvent, context: Context) {
 
         // send update notification
         try {
-            event.parallelProgress = { "speech-text-translate": 40 };
             await resourceManager.sendNotification(event);
         } catch (error) {
             logger.warn("Failed to send notification");

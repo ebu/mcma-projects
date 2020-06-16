@@ -25,7 +25,6 @@ const JOB_PROFILE_NAME = "ValidateSpeechToText";
 const JOB_RESULTS_PREFIX = "AIResults/";
 
 type InputEvent = {
-    parallelProgress?: { [key: string]: number };
     input: {
         bmContent: string;
     };
@@ -46,7 +45,6 @@ export async function handler(event: InputEvent, context: Context) {
 
         // send update notification
         try {
-            event.parallelProgress = { "speech-text-translate": 60 };
             await resourceManager.sendNotification(event);
         } catch (error) {
             logger.warn("Failed to send notification");

@@ -24,7 +24,6 @@ const JOB_PROFILE_NAME = "GoogleSpeechToText";
 const JOB_RESULTS_PREFIX = "GoogleSpeechToTextResults/";
 
 type InputEvent = {
-    parallelProgress?: { [key: string]: number };
     input: {
         bmContent: string;
     };

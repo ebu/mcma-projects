@@ -21,7 +21,6 @@ const JOB_PROFILE_NAME = "AzureExtractAllAIMetadata";
 const JOB_RESULTS_PREFIX = "AIResults/";
 
 type InputEvent = {
-    parallelProgress?: { [key: string]: number },
     data: {
         mediaFileLocator: AwsS3FileLocator
     }
@@ -42,7 +41,6 @@ export async function handler(event: InputEvent, context: Context) {
 
         // send update notification
         try {
-            event.parallelProgress = { "detect-celebrities-azure": 20 };
             await resourceManager.sendNotification(event);
         } catch (error) {
             logger.warn("Failed to send notification");

@@ -14,7 +14,6 @@ const resourceManager = new ResourceManager(getResourceManagerConfig(environment
 const loggerProvider = new AwsCloudWatchLoggerProvider("ai-workflow-104-register-validate-speech-to-text", process.env.LogGroupName);
 
 type InputEvent = {
-    parallelProgress?: { [key: string]: number };
     input: {
         bmContent: string;
     };
@@ -37,7 +36,6 @@ export async function handler(event: InputEvent, context: Context) {
 
         // send update notification
         try {
-            event.parallelProgress = { "speech-text-translate": 80 };
             await resourceManager.sendNotification(event);
         } catch (error) {
             logger.warn("Failed to send notification");
@@ -85,14 +83,6 @@ export async function handler(event: InputEvent, context: Context) {
 
         // update bmContent
         await resourceManager.update(bmContent);
-
-        try {
-            event.parallelProgress = { "speech-text-translate": 100 };
-            await resourceManager.sendNotification(event);
-        } catch (error) {
-            logger.warn("Failed to send notification");
-            logger.warn(error.toString());
-        }
     } catch (error) {
         logger.error("Failed to register dubbing SRT");
         logger.error(error.toString());

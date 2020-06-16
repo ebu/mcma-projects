@@ -14,7 +14,6 @@ const resourceManager = new ResourceManager(getResourceManagerConfig(environment
 const loggerProvider = new AwsCloudWatchLoggerProvider("ai-workflow-112-register-dubbing-srt", process.env.LogGroupName);
 
 type InputEvent = {
-    parallelProgress?: { [key: string]: number };
     input: {
         bmContent: string;
     };
@@ -55,7 +54,6 @@ export async function handler(event: InputEvent, context: Context) {
 
         // send update notification
         try {
-            event.progress = 63;
             await resourceManager.sendNotification(event);
         } catch (error) {
             logger.warn("Failed to send notification");

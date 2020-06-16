@@ -19,7 +19,6 @@ const RepositoryBucket = process.env.RepositoryBucket;
 const TempBucket = process.env.TempBucket;
 
 type InputEvent = {
-    parallelProgress?: { [key: string]: number };
     input: {
         bmContent: string;
     };
@@ -60,7 +59,6 @@ export async function handler(event: InputEvent, context: Context) {
 
         // send update notification
         try {
-            event.parallelProgress = { "ssml-translation-to-speech": 80 };
             await resourceManager.sendNotification(event);
         } catch (error) {
             logger.warn("Failed to send notification");

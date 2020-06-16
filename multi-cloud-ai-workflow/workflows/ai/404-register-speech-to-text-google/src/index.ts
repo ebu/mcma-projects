@@ -17,7 +17,6 @@ const loggerProvider = new AwsCloudWatchLoggerProvider("ai-workflow-404-register
 
 
 type InputEvent = {
-    parallelProgress?: { [key: string]: number };
     input: {
         bmContent: string;
     };

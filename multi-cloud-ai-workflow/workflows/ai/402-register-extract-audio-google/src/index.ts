@@ -19,7 +19,6 @@ const resourceManager = new ResourceManager(getResourceManagerConfig(environment
 const loggerProvider = new AwsCloudWatchLoggerProvider("ai-workflow-402-register-extract-audio-google", process.env.LogGroupName);
 
 type InputEvent = {
-    parallelProgress?: { [key: string]: number };
     input: {
         bmContent: string;
     };
