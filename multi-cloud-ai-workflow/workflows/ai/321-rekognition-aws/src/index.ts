@@ -40,7 +40,6 @@ type InputEvent = {
  * @param {*} context context
  */
 export async function handler(event: InputEvent, context: Context) {
-    throw new McmaException("Disabled");
     const logger = loggerProvider.get(context.awsRequestId, event.tracker);
     try {
         logger.functionStart(context.awsRequestId);
