@@ -106,7 +106,7 @@ async function main() {
     console.log("Uploading test video file to s3 bucket");
     const transformInputFile = await uploadFileToBucket(bucketName, keyPrefix, TEST_FILE);
 
-    console.log("Create TransformJob with Extract Audio job profile");
+    console.log("Create WorkflowJob with AiWorkflow job profile");
     let job = await createWorkflowJob(resourceManager, transformInputFile);
     const jobId = job.id;
     console.log("job.status = " + job.status);

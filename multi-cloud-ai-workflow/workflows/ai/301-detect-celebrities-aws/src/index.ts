@@ -91,6 +91,8 @@ export async function handler(event: InputEvent, context: Context) {
 
         // posting the job to the job repository
         job = await resourceManager.create(job);
+
+        return job.id;
     } catch (error) {
         logger.error("Failed to detect celebrities on AWS");
         logger.error(error.toString());

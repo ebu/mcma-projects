@@ -72,23 +72,7 @@ resource "aws_iam_policy" "aws_ai_service_allow_reko_to_sns" {
       {
         Effect: "Allow",
         Action: "sns:Publish",
-        Resource: "arn:aws:sns:*:*:AmazonRekognition*"
-      },
-      {
-        Effect: "Allow",
-        Action: [
-          "kinesis:PutRecord",
-          "kinesis:PutRecords"
-        ],
-        Resource: "arn:aws:kinesis:*:*:stream/AmazonRekognition*"
-      },
-      {
-        Effect: "Allow",
-        Action: [
-          "kinesisvideo:GetDataEndpoint",
-          "kinesisvideo:GetMedia"
-        ],
-        Resource: "*"
+        Resource: aws_sns_topic.sns_topic_reko_output.arn
       }
     ]
   })
