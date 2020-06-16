@@ -23,7 +23,7 @@ const ActivityCallbackUrl = process.env.ActivityCallbackUrl;
 const ActivityArn = process.env.ActivityArn;
 
 const JOB_PROFILE_NAME = "BenchmarkSTT";
-const JOB_RESULTS_PREFIX = "BenchmarkSTTResults/";
+const JOB_RESULTS_PREFIX = "BenchmarkSTT/";
 
 type InputEvent = {
     input: {
@@ -85,7 +85,7 @@ export async function handler(event: InputEvent, context: Context) {
 
         let s3Params = {
             Bucket: TempBucket,
-            Key: uuidv4() + ".txt",
+            Key: JOB_RESULTS_PREFIX + "/input_" + uuidv4() + ".txt",
             Body: bmContent.googleAiMetadata.transcription
         };
 
@@ -101,7 +101,7 @@ export async function handler(event: InputEvent, context: Context) {
                 }),
                 referenceFile: new AwsS3FileLocator({
                     awsS3Bucket: WebsiteBucket,
-                    awsS3Key: "assets/stt/stt_output_clean.txt",
+                    awsS3Key: "assets/stt/clean_transcript_2015_GF_ORF_00_18_09_conv.txt",
                 }),
                 outputLocation: new AwsS3FolderLocator({
                     awsS3Bucket: TempBucket,

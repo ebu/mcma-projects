@@ -96,20 +96,15 @@ export async function handler(event: InputEvent, context: Context) {
 ////////////////////////////////////////////////////////////////////////////
         // get transcription results returned by STT service
         let transcriptionResult = JSON.parse(s3Object.Body.toString());
-//    logger.info(transcriptionResult);
-//    same as
-//    logger.info(JSON.parse(JSON.stringify(transcriptionResult, null, 2)));
 
         // Edit timed words in transcript into one single transcription text
         let transcripts = transcriptionResult.results.transcripts;
-//    logger.info(JSON.stringify(transcripts, null, 2));
-//    logger.info(transcripts);
 
         let transcript = "";
         for (const ts of transcripts) {
             transcript += ts.transcript;
         }
-//    logger.info(transcript);
+        logger.info(transcript);
 
         // put stt output to file in website bucket under directory ./stt
         try {

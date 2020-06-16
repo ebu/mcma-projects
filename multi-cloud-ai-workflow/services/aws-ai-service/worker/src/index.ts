@@ -13,7 +13,6 @@ import { processSsmlTextToSpeechJobResult, ssmlTextToSpeech } from "./profiles/s
 import { processTextToSpeechJobResult, textToSpeech } from "./profiles/text-to-speech";
 import { processTokenizedTextToSpeechJobResult, tokenizedTextToSpeech } from "./profiles/tokenized-text-to-speech";
 import { createDubbingSrt } from "./profiles/create-dubbing-srt";
-import { validateSpeechToText } from "./profiles/validate-speech-to-text";
 
 import { detectCelebrities } from "./profiles/detect-celebrities";
 import { detectEmotions } from "./profiles/detect-emotions";
@@ -42,8 +41,7 @@ const processJobAssignmentOperation =
         .addProfile("AWSTextToSpeech", textToSpeech)
         .addProfile("AWSTokenizedTextToSpeech", tokenizedTextToSpeech)
         .addProfile("AWSDetectEmotions", detectEmotions)
-        .addProfile("CreateDubbingSrt", createDubbingSrt)
-        .addProfile("ValidateSpeechToText", validateSpeechToText);
+        .addProfile("CreateDubbingSrt", createDubbingSrt);
 
 const worker =
     new Worker(providerCollection)

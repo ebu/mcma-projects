@@ -183,12 +183,19 @@ resource "aws_api_gateway_deployment" "azure_ai_service_deployment" {
   depends_on = [
     aws_api_gateway_integration.azure_ai_service_api_method_integration,
     aws_api_gateway_integration.azure_ai_service_options_integration,
+    aws_api_gateway_integration_response.azure_ai_service_options_integration_response,
   ]
 
   rest_api_id = aws_api_gateway_rest_api.azure_ai_service_api.id
 }
 
 resource "aws_api_gateway_stage" "azure_ai_service_gateway_stage" {
+  depends_on = [
+    aws_api_gateway_integration.azure_ai_service_api_method_integration,
+    aws_api_gateway_integration.azure_ai_service_options_integration,
+    aws_api_gateway_integration_response.azure_ai_service_options_integration_response,
+  ]
+
   stage_name    = var.environment_type
   deployment_id = aws_api_gateway_deployment.azure_ai_service_deployment.id
   rest_api_id   = aws_api_gateway_rest_api.azure_ai_service_api.id
@@ -251,12 +258,14 @@ resource "aws_lambda_permission" "apigw_azure_ai_service_api_handler_non_secure"
 }
 
 resource "aws_api_gateway_deployment" "azure_ai_service_deployment_non_secure" {
-  depends_on = [aws_api_gateway_integration.azure_ai_service_api_method_integration_non_secure]
+  depends_on = [aws_api_gateway_integration.azure_ai_service_api_method_integration_non_secure,]
 
   rest_api_id = aws_api_gateway_rest_api.azure_ai_service_api_non_secure.id
 }
 
 resource "aws_api_gateway_stage" "azure_ai_service_gateway_stage_non_secure" {
+  depends_on = [aws_api_gateway_integration.azure_ai_service_api_method_integration_non_secure,]
+
   stage_name    = var.environment_type
   deployment_id = aws_api_gateway_deployment.azure_ai_service_deployment_non_secure.id
   rest_api_id   = aws_api_gateway_rest_api.azure_ai_service_api_non_secure.id

@@ -88,7 +88,7 @@ export class ContentViewModel {
             if (this.bmContent.awsAiMetadata.transcription) {
                 this.awsTranscription = this.bmContent.awsAiMetadata.transcription.original;
                 this.awsTranslation = this.bmContent.awsAiMetadata.transcription.translation;
-                this.awsWorddiffs = JSON.parse(this.bmContent.awsAiMetadata.transcription.worddiffs).result;
+                this.awsWorddiffs = this.bmContent.awsAiMetadata.transcription.worddiffs;
             }
 
             const celebsByName: { [key: string]: any } = {};
@@ -198,7 +198,7 @@ export class ContentViewModel {
             }
 
             if (this.bmContent.azureAiMetadata.azureTranscription?.worddiffs) {
-                this.azureWorddiffs = JSON.parse(this.bmContent.azureAiMetadata.azureTranscription.worddiffs).result;
+                this.azureWorddiffs = this.bmContent.azureAiMetadata.azureTranscription.worddiffs;
             }
         }
     }

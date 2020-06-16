@@ -13,10 +13,12 @@
         "@mcma/aws-s3": "0.9.7",
         "@mcma/client": "0.9.7",
         "@mcma/core": "0.9.7",
-        "aws-sdk": "^2.631.0"
+        "aws-sdk": "^2.631.0",
+        "uuid": "^7.0.3"
     },
     "devDependencies": {
         "@types/aws-lambda": "^8.10.51",
-        "@types/node": "^10.17.21"
+        "@types/node": "^10.17.21",
+        "@types/uuid": "^7.0.3"
     }
 }

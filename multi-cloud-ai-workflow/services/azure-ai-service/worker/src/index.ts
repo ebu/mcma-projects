@@ -8,7 +8,6 @@ import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { awsV4Auth } from "@mcma/aws-client";
 
 import { extractAllAiMetadata, processNotification } from "./profiles/extract-all-ai-metadata";
-import { validateSpeechToTextAzure } from "./profiles/validate-speech-to-text-azure";
 
 const authProvider = new AuthProvider().add(awsV4Auth(AWS));
 const dbTableProvider = new DynamoDbTableProvider();
@@ -26,8 +25,7 @@ const providerCollection = new ProviderCollection({
 
 const processJobAssignmentOperation =
     new ProcessJobAssignmentOperation(AIJob)
-        .addProfile("AzureExtractAllAIMetadata", extractAllAiMetadata)
-        .addProfile("ValidateSpeechToTextAzure", validateSpeechToTextAzure);
+        .addProfile("AzureExtractAllAIMetadata", extractAllAiMetadata);
 
 const worker =
     new Worker(providerCollection)

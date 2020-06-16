@@ -42,7 +42,6 @@ export async function updateServiceRegistry(AWS: any, terraformOutput: any): Pro
         }
     }
 
-
     if (!serviceRegistry.id) {
         console.log("Inserting Service Registry");
         serviceRegistry = await resourceManager.create(serviceRegistry);
@@ -134,7 +133,7 @@ function createServices(terraformOutput) {
                             authType: "AWS4",
                             jobType: "AmeJob",
                             jobProfiles: [
-                                JobProfiles.ExtractTechnicalMetadata.id ? JobProfiles.ExtractTechnicalMetadata.id : JobProfiles.ExtractTechnicalMetadata
+                                JobProfiles.ExtractTechnicalMetadata.id
                             ]
                         })
                     );
@@ -152,15 +151,14 @@ function createServices(terraformOutput) {
                             authType: "AWS4",
                             jobType: "AIJob",
                             jobProfiles: [
-                                JobProfiles.AWSTextToSpeech.id ? JobProfiles.AWSTextToSpeech.id : JobProfiles.AWSTextToSpeech,
-                                JobProfiles.AWSSsmlTextToSpeech.id ? JobProfiles.AWSSsmlTextToSpeech.id : JobProfiles.AWSSsmlTextToSpeech,
-                                JobProfiles.AWSTokenizedTextToSpeech.id ? JobProfiles.AWSTokenizedTextToSpeech.id : JobProfiles.AWSTokenizedTextToSpeech,
-                                JobProfiles.AWSTranscribeAudio.id ? JobProfiles.AWSTranscribeAudio.id : JobProfiles.AWSTranscribeAudio,
-                                JobProfiles.AWSTranslateText.id ? JobProfiles.AWSTranslateText.id : JobProfiles.AWSTranslateText,
-                                JobProfiles.AWSDetectCelebrities.id ? JobProfiles.AWSDetectCelebrities.id : JobProfiles.AWSDetectCelebrities,
-                                JobProfiles.AWSDetectEmotions.id ? JobProfiles.AWSDetectEmotions.id : JobProfiles.AWSDetectEmotions,
-                                JobProfiles.ValidateSpeechToText.id ? JobProfiles.ValidateSpeechToText.id : JobProfiles.ValidateSpeechToText,
-                                JobProfiles.CreateDubbingSrt.id ? JobProfiles.CreateDubbingSrt.id : JobProfiles.CreateDubbingSrt
+                                JobProfiles.AWSTextToSpeech.id,
+                                JobProfiles.AWSSsmlTextToSpeech.id,
+                                JobProfiles.AWSTokenizedTextToSpeech.id,
+                                JobProfiles.AWSTranscribeAudio.id,
+                                JobProfiles.AWSTranslateText.id,
+                                JobProfiles.AWSDetectCelebrities.id,
+                                JobProfiles.AWSDetectEmotions.id,
+                                JobProfiles.CreateDubbingSrt.id
                             ]
                         })
                     );
@@ -178,8 +176,7 @@ function createServices(terraformOutput) {
                             authType: "AWS4",
                             jobType: "AIJob",
                             jobProfiles: [
-                                JobProfiles.AzureExtractAllAIMetadata.id ? JobProfiles.AzureExtractAllAIMetadata.id : JobProfiles.AzureExtractAllAIMetadata,
-                                JobProfiles.ValidateSpeechToTextAzure.id ? JobProfiles.ValidateSpeechToTextAzure.id : JobProfiles.ValidateSpeechToTextAzure,
+                                JobProfiles.AzureExtractAllAIMetadata.id,
                             ]
                         })
                     );
@@ -297,9 +294,9 @@ function createServices(terraformOutput) {
                             authType: "AWS4",
                             jobType: "TransformJob",
                             jobProfiles: [
-                                JobProfiles.CreateProxyLambda.id ? JobProfiles.CreateProxyLambda.id : JobProfiles.CreateProxyLambda,
-                                JobProfiles.CreateProxyEC2.id ? JobProfiles.CreateProxyEC2.id : JobProfiles.CreateProxyEC2,
-                                JobProfiles.ExtractAudio.id ? JobProfiles.ExtractAudio.id : JobProfiles.ExtractAudio,
+                                JobProfiles.CreateProxyLambda.id,
+                                JobProfiles.CreateProxyEC2.id,
+                                JobProfiles.ExtractAudio.id,
                             ],
                         })
                     );
@@ -321,8 +318,8 @@ function createServices(terraformOutput) {
                             authType: "AWS4",
                             jobType: "WorkflowJob",
                             jobProfiles: [
-                                JobProfiles.ConformWorkflow.id ? JobProfiles.ConformWorkflow.id : JobProfiles.ConformWorkflow,
-                                JobProfiles.AiWorkflow.id ? JobProfiles.AiWorkflow.id : JobProfiles.AiWorkflow
+                                JobProfiles.ConformWorkflow.id,
+                                JobProfiles.AiWorkflow.id
                             ]
                         })
                     );
@@ -474,26 +471,6 @@ const JobProfiles = {
     }),
     CreateDubbingSrt: new JobProfile({
         name: "CreateDubbingSrt",
-        inputParameters: [
-            new JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
-            new JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
-        ],
-        outputParameters: [
-            new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
-        ]
-    }),
-    ValidateSpeechToText: new JobProfile({
-        name: "ValidateSpeechToText",
-        inputParameters: [
-            new JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
-            new JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })
-        ],
-        outputParameters: [
-            new JobParameter({ parameterName: "outputFile", parameterType: "Locator" })
-        ]
-    }),
-    ValidateSpeechToTextAzure: new JobProfile({
-        name: "ValidateSpeechToTextAzure",
         inputParameters: [
             new JobParameter({ parameterName: "inputFile", parameterType: "Locator" }),
             new JobParameter({ parameterName: "outputLocation", parameterType: "Locator" })

@@ -1,10 +1,13 @@
 import * as AWS from "aws-sdk";
 import { Context } from "aws-lambda";
-import { AIJob, EnvironmentVariableProvider, JobBaseProperties, JobParameterBag, JobProfile, McmaException, NotificationEndpoint } from "@mcma/core";
+import { v4 as uuidv4 } from "uuid";
+
+import { EnvironmentVariableProvider, JobBaseProperties, JobParameterBag, JobProfile, McmaException, NotificationEndpoint, QAJob } from "@mcma/core";
 import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { AwsS3FileLocator, AwsS3FolderLocator } from "@mcma/aws-s3";
 import { awsV4Auth } from "@mcma/aws-client";
+
 import { BMContent } from "@local/common";
 
 const StepFunctions = new AWS.StepFunctions();
@@ -20,8 +23,8 @@ const WebsiteBucket = process.env.WebsiteBucket;
 const ActivityCallbackUrl = process.env.ActivityCallbackUrl;
 const ActivityArn = process.env.ActivityArn;
 
-const JOB_PROFILE_NAME = "ValidateSpeechToTextAzure";
-const JOB_RESULTS_PREFIX = "AIResults/";
+const JOB_PROFILE_NAME = "BenchmarkSTT";
+const JOB_RESULTS_PREFIX = "BenchmarkSTT/";
 
 type InputEvent = {
     input: {
@@ -62,18 +65,12 @@ export async function handler(event: InputEvent, context: Context) {
         event = JSON.parse(data.input);
 
         // get job profiles filtered by name
-        let jobProfiles = await resourceManager.query(JobProfile, { name: JOB_PROFILE_NAME });
-
-        logger.info("jobProfiles:", jobProfiles);
-
-        let jobProfileId = jobProfiles.length ? jobProfiles[0].id : null;
+        const [ jobProfile ] = await resourceManager.query(JobProfile, { name: JOB_PROFILE_NAME });
 
         // if not found bail out
-        if (!jobProfileId) {
+        if (!jobProfile) {
             throw new McmaException("JobProfile '" + JOB_PROFILE_NAME + "' not found");
         }
-
-        logger.info("jobProfileId:", jobProfileId);
 
         // manage notification
         let notificationUrl = ActivityCallbackUrl + "?taskToken=" + encodeURIComponent(taskToken);
@@ -95,19 +92,23 @@ export async function handler(event: InputEvent, context: Context) {
 
         let s3Params = {
             Bucket: TempBucket,
-            Key: "temp/stt_output_azure.txt",
+            Key: JOB_RESULTS_PREFIX + "/input_" + uuidv4() + ".txt",
             Body: bmContent.azureAiMetadata.azureTranscription.transcription
         };
 
         await S3.putObject(s3Params).promise();
 
         // creating stt benchmarking job
-        let job = new AIJob({
-            jobProfile: jobProfileId,
+        let job = new QAJob({
+            jobProfile: jobProfile.id,
             jobInput: new JobParameterBag({
                 inputFile: new AwsS3FileLocator({
                     awsS3Bucket: s3Params.Bucket,
                     awsS3Key: s3Params.Key
+                }),
+                referenceFile: new AwsS3FileLocator({
+                    awsS3Bucket: WebsiteBucket,
+                    awsS3Key: "assets/stt/clean_transcript_2015_GF_ORF_00_18_09_conv.txt",
                 }),
                 outputLocation: new AwsS3FolderLocator({
                     awsS3Bucket: TempBucket,

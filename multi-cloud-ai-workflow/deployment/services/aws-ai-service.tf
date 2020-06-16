@@ -353,12 +353,19 @@ resource "aws_api_gateway_deployment" "aws_ai_service_deployment" {
   depends_on = [
     aws_api_gateway_integration.aws_ai_service_api_method_integration,
     aws_api_gateway_integration.aws_ai_service_options_integration,
+    aws_api_gateway_integration_response.aws_ai_service_options_integration_response,
   ]
 
   rest_api_id = aws_api_gateway_rest_api.aws_ai_service_api.id
 }
 
 resource "aws_api_gateway_stage" "aws_ai_service_gateway_stage" {
+  depends_on = [
+    aws_api_gateway_integration.aws_ai_service_api_method_integration,
+    aws_api_gateway_integration.aws_ai_service_options_integration,
+    aws_api_gateway_integration_response.aws_ai_service_options_integration_response,
+  ]
+
   stage_name    = var.environment_type
   deployment_id = aws_api_gateway_deployment.aws_ai_service_deployment.id
   rest_api_id   = aws_api_gateway_rest_api.aws_ai_service_api.id

@@ -162,12 +162,19 @@ resource "aws_api_gateway_deployment" "job_repository_deployment" {
   depends_on = [
     aws_api_gateway_integration.job_repository_api_method_integration,
     aws_api_gateway_integration.job_repository_options_integration,
+    aws_api_gateway_integration_response.job_repository_options_integration_response,
   ]
 
   rest_api_id = aws_api_gateway_rest_api.job_repository_api.id
 }
 
 resource "aws_api_gateway_stage" "job_repository_gateway_stage" {
+  depends_on = [
+    aws_api_gateway_integration.job_repository_api_method_integration,
+    aws_api_gateway_integration.job_repository_options_integration,
+    aws_api_gateway_integration_response.job_repository_options_integration_response,
+  ]
+
   stage_name    = var.environment_type
   deployment_id = aws_api_gateway_deployment.job_repository_deployment.id
   rest_api_id   = aws_api_gateway_rest_api.job_repository_api.id

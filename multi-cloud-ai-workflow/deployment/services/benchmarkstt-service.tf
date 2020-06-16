@@ -208,12 +208,19 @@ resource "aws_api_gateway_deployment" "benchmarkstt_service_deployment" {
   depends_on = [
     aws_api_gateway_integration.benchmarkstt_service_api_method_integration,
     aws_api_gateway_integration.benchmarkstt_service_options_integration,
+    aws_api_gateway_integration_response.benchmarkstt_service_options_integration_response,
   ]
 
   rest_api_id = aws_api_gateway_rest_api.benchmarkstt_service_api.id
 }
 
 resource "aws_api_gateway_stage" "benchmarkstt_service_gateway_stage" {
+  depends_on = [
+    aws_api_gateway_integration.benchmarkstt_service_api_method_integration,
+    aws_api_gateway_integration.benchmarkstt_service_options_integration,
+    aws_api_gateway_integration_response.benchmarkstt_service_options_integration_response,
+  ]
+
   stage_name    = var.environment_type
   deployment_id = aws_api_gateway_deployment.benchmarkstt_service_deployment.id
   rest_api_id   = aws_api_gateway_rest_api.benchmarkstt_service_api.id
