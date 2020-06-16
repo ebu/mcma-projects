@@ -1,0 +1,26 @@
+[
+    {
+        "name": "benchmarkstt",
+        "cpu": 0,
+        "environment":  [],
+        "essential": true,
+        "image": "joostrovers/benchmarkstt:2020.4.1",
+        "logConfiguration": {
+            "logDriver": "awslogs",
+            "options": {
+                "awslogs-group": "${log_group_name}",
+                "awslogs-region": "${aws_region}",
+                "awslogs-stream-prefix": "ecs-benchmarkstt"
+            }
+        },
+        "mountPoints": [],
+        "portMappings": [
+            {
+                "containerPort": 8080,
+                "hostPort": 8080,
+                "protocol": "tcp"
+            }
+        ],
+        "volumesFrom": []
+    }
+]

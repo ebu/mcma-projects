@@ -1,0 +1,18 @@
+apply from: "${project.rootDir}/gradle-tasks-for-npm.gradle"
+
+task copyNodeModules(type: Copy) {
+    dependsOn npmInstall
+    mustRunAfter tsc
+    from "node_modules"
+    into "build/staging/node_modules"
+    exclude awsAvailableLibraries
+}
+
+task build(type: Zip) {
+    dependsOn copyNodeModules, tsc
+    from "build/staging"
+    archiveFileName = "lambda.zip"
+    destinationDirectory = file("build/dist")
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+}

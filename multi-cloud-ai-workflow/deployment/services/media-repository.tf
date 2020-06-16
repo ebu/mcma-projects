@@ -9,7 +9,7 @@ resource "aws_lambda_function" "media_repository_api_handler" {
   handler          = "index.handler"
   source_code_hash = filebase64sha256("../services/media-repository/api-handler/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
-  timeout          = "900"
+  timeout          = "30"
   memory_size      = "3008"
 
   environment {
@@ -141,12 +141,19 @@ resource "aws_api_gateway_deployment" "media_repository_deployment" {
   depends_on = [
     aws_api_gateway_integration.media_repository_api_method_integration,
     aws_api_gateway_integration.media_repository_options_integration,
+    aws_api_gateway_integration_response.media_repository_options_integration_response,
   ]
 
   rest_api_id = aws_api_gateway_rest_api.media_repository_api.id
 }
 
 resource "aws_api_gateway_stage" "media_repository_gateway_stage" {
+  depends_on = [
+    aws_api_gateway_integration.media_repository_api_method_integration,
+    aws_api_gateway_integration.media_repository_options_integration,
+    aws_api_gateway_integration_response.media_repository_options_integration_response,
+  ]
+
   stage_name    = var.environment_type
   deployment_id = aws_api_gateway_deployment.media_repository_deployment.id
   rest_api_id   = aws_api_gateway_rest_api.media_repository_api.id

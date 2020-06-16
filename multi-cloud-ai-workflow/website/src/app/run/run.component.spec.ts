@@ -10,7 +10,7 @@ describe("RunComponent", () => {
         TestBed.configureTestingModule({
             declarations: [RunComponent]
         })
-            .compileComponents();
+               .compileComponents();
     }));
 
     beforeEach(() => {

@@ -1,5 +1,6 @@
 import { Component, OnInit } from "@angular/core";
-import { MatSelectionListChange } from "@angular/material";
+import { FormControl } from '@angular/forms';
+import { MatSelectionListChange } from "@angular/material/list";
 import { BehaviorSubject, Observable } from "rxjs";
 import { debounceTime, filter, map, share, startWith, tap, withLatestFrom } from "rxjs/operators";
 
@@ -9,7 +10,6 @@ import { S3BucketService } from "../services/s3bucket.service";
 import { WorkflowService } from "../services/workflow.service";
 import { ModalService } from "../services/modal.service";
 import { RunCompleteModalComponent } from "./run-complete-modal/run-complete-modal.component";
-import { FormControl } from "@angular/forms";
 import { S3Object } from "../models/s3-object";
 import { RunMetadataModalComponent } from "./run-metadata-modal/run-metadata-modal.component";
 
@@ -99,11 +99,11 @@ export class RunComponent implements OnInit {
                 if (m && !m.componentType && m.data) {
                     this.runningWorkflowSubject.next(true);
                     const sub2 = this.workflowService.runWorkflow(this.selectedKey, m.data).pipe(filter(job => !!job))
-                        .subscribe(job => {
-                            this.runningWorkflowSubject.next(false);
-                            this.modalService.showModal(RunCompleteModalComponent, { job });
-                            sub2.unsubscribe();
-                        });
+                                     .subscribe(job => {
+                                         this.runningWorkflowSubject.next(false);
+                                         this.modalService.showModal(RunCompleteModalComponent, { job });
+                                         sub2.unsubscribe();
+                                     });
 
                     sub1.unsubscribe();
                 }

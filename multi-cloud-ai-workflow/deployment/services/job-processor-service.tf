@@ -9,7 +9,7 @@ resource "aws_lambda_function" "job_processor_service_api_handler" {
   handler          = "index.handler"
   source_code_hash = filebase64sha256("../services/job-processor-service/api-handler/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
-  timeout          = "900"
+  timeout          = "30"
   memory_size      = "3008"
 
   environment {
@@ -162,12 +162,19 @@ resource "aws_api_gateway_deployment" "job_processor_service_deployment" {
   depends_on = [
     aws_api_gateway_integration.job_processor_service_api_method_integration,
     aws_api_gateway_integration.job_processor_service_options_integration,
+    aws_api_gateway_integration_response.job_processor_service_options_integration_response,
   ]
 
   rest_api_id = aws_api_gateway_rest_api.job_processor_service_api.id
 }
 
 resource "aws_api_gateway_stage" "job_processor_service_gateway_stage" {
+  depends_on = [
+    aws_api_gateway_integration.job_processor_service_api_method_integration,
+    aws_api_gateway_integration.job_processor_service_options_integration,
+    aws_api_gateway_integration_response.job_processor_service_options_integration_response,
+  ]
+
   stage_name    = var.environment_type
   deployment_id = aws_api_gateway_deployment.job_processor_service_deployment.id
   rest_api_id   = aws_api_gateway_rest_api.job_processor_service_api.id

@@ -1,9 +1,9 @@
 import { Injectable } from "@angular/core";
-import { BehaviorSubject, zip } from "rxjs";
+import { BehaviorSubject, Observable, zip } from "rxjs";
 import { filter, map } from "rxjs/operators";
 
 import { AuthProvider, ResourceManager } from "@mcma/client";
-import "@mcma/aws-client";
+import { awsV4Auth } from '@mcma/aws-client';
 
 import { ConfigService } from "./config.service";
 import { CognitoAuthService } from "./cognito-auth.service";
@@ -12,7 +12,7 @@ import { CognitoAuthService } from "./cognito-auth.service";
 export class McmaClientService {
 
     private resourceManagerSubject = new BehaviorSubject<ResourceManager>(null);
-    resourceManager$ = this.resourceManagerSubject.asObservable().pipe(filter(x => !!x));
+    resourceManager$: Observable<ResourceManager> = this.resourceManagerSubject.asObservable().pipe(filter(x => !!x));
 
     constructor(private configService: ConfigService, private cognitoAuthService: CognitoAuthService) {
         zip(
@@ -33,7 +33,7 @@ export class McmaClientService {
                     region: region
                 };
 
-                const authProvider = new AuthProvider().addAwsV4Auth(authOptions);
+                const authProvider = new AuthProvider().add(awsV4Auth(authOptions));
 
                 console.log("creating resource manager", authOptions);
                 return { config: { servicesUrl, servicesAuthType, servicesAuthContext }, authProvider: authProvider };

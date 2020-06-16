@@ -96,7 +96,7 @@ export class ServicesComponent implements OnInit, OnDestroy {
         console.log("[ServicesComponent] processed job profiles", this.jobProfiles);
 
         this.selectService(this.services[0]);
-    }
+    };
 
     selectService(row) {
         this.selectedService = row;
@@ -138,12 +138,12 @@ export class ServicesComponent implements OnInit, OnDestroy {
         const resourceEndpoint = await this.resourceManager.getResourceEndpointClient(httpEndpoint);
 
         if (resourceEndpoint) {
-            const response = await resourceEndpoint.get(httpEndpoint);
+            const response = await resourceEndpoint.get<any[]>(httpEndpoint);
             this.resources = response.data.sort((a, b) => new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime());
         } else {
             this.resources.length = 0;
         }
-    }
+    };
 
     selectResource(row) {
         this.selectedResource = row;

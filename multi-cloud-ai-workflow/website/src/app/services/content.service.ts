@@ -1,11 +1,12 @@
 import { Injectable } from "@angular/core";
+import { HttpClient } from "@angular/common/http";
 import { BehaviorSubject, from, Observable, timer } from "rxjs";
-import { switchMap, takeWhile, tap } from "rxjs/operators";
+import { map, switchMap, takeWhile, tap } from "rxjs/operators";
 
-import { BMContent } from "@mcma/core";
 import { McmaClientService } from "./mcma-client.service";
 import { ContentViewModel } from "../view-models/content-vm";
-import { HttpClient } from "@angular/common/http";
+
+import { BMContent, BMEssence } from "@local/common";
 
 @Injectable()
 export class ContentService {
@@ -21,14 +22,14 @@ export class ContentService {
             switchMap(resourceManager => {
                 console.log("using auth http to get content at " + contentUrl);
                 return from(resourceManager.get<BMContent>(contentUrl)).pipe(
+                    map(data => data as BMContent),
                     tap(data => {
                         console.log("got content (tap 1)", data);
-                        if (data && data.bmEssences) {
-                            console.log(data.bmEssences);
-                            const bmEssences = data.bmEssences;
-                            for (const bmEssencesItem of bmEssences) {
-                                console.log(bmEssencesItem);
-                                const test1 = from(resourceManager.get<any>(bmEssencesItem)).pipe(
+                        if (data && data.essences) {
+                            console.log(data.essences);
+                            for (const essence of data.essences) {
+                                console.log(essence);
+                                const test1 = from(resourceManager.get<BMEssence>(essence)).pipe(
                                     tap(data => {
                                         console.log("data", data);
                                     })

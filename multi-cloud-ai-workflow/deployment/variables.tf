@@ -17,15 +17,6 @@ variable "aws_secret_key" {}
 variable "aws_region" {}
 
 #########################
-# Storage Variables
-#########################
-
-variable "upload_bucket_name" {}
-variable "temp_bucket_name" {}
-variable "repository_bucket_name" {}
-variable "website_bucket_name" {}
-
-#########################
 # Azure Variables
 #########################
 
@@ -38,7 +29,12 @@ variable "azure_api_url" {}
 # Google Variables
 #########################
 
-variable "google_project_id" {}
+variable "google_service_credentials_file" {}
 variable "google_bucket_name" {}
-variable "google_client_email" {}
-variable "google_private_key" {}
+
+#########################
+# Enable/Disable ECS
+#########################
+variable "ecs_enabled" {
+  type = bool
+}

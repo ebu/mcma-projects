@@ -1,0 +1,25 @@
+{
+    "name": "post-deploy",
+    "version": "0.0.0",
+    "description": "Script to run post deployment actions",
+    "private": true,
+    "scripts": {
+        "start": "node build/staging/index.js"
+    },
+    "engines": {
+        "node": "~10.16.3"
+    },
+    "main": "build/staging/index.js",
+    "license": "Apache-2.0",
+    "dependencies": {
+        "@mcma/aws-client": "0.9.7",
+        "@mcma/client": "0.9.7",
+        "@mcma/core": "0.9.7",
+        "amazon-cognito-identity-js": "^2.0.30",
+        "aws-sdk": "^2.631.0",
+        "node-fetch": "^2.6.0"
+    },
+    "devDependencies": {
+        "@types/node": "^10.17.21"
+    }
+}

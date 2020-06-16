@@ -1,30 +1,93 @@
-import groovy.json.JsonOutput
-import groovy.json.JsonSlurper
-
-def McmaVersion = "0.8.5"
-
-def requiredVersionTerraform = "0.12.19"
+def requiredVersionTerraform = "~0.12.19"
 def requiredVersionNodeJS = "10.16.3"
+def requiredVersionTsc = "^3.7.2"
+
+if (!hasProperty("AzureLocation")) {
+    ext.AzureLocation = "trial"
+}
+if (!hasProperty("AzureAccountID")) {
+    ext.AzureAccountID = "undefined"
+}
+if (!hasProperty("AzureSubscriptionKey")) {
+    ext.AzureSubscriptionKey = "undefined"
+}
+if (!hasProperty("AzureApiUrl")) {
+    ext.AzureApiUrl = "https://api.videoindexer.ai"
+}
+
+if (!hasProperty("GoogleServiceCredentialsFile")) {
+    ext.GoogleServiceCredentialsFile = "undefined"
+}
+if (!hasProperty("GoogleBucketName")) {
+    ext.GoogleBucketName = "undefined"
+}
+
+if (!hasProperty("EnableECS")) {
+    ext.EnableECS = "true"
+}
+
+def googleServiceCredentialsFile = file(ext.GoogleServiceCredentialsFile).path
 
 allprojects {
+    ext.GoogleServiceCredentialsFile = googleServiceCredentialsFile
+
     ext {
         if (org.gradle.internal.os.OperatingSystem.current().isWindows()) {
             nodeExecutable = ["node"]
             ngExecutable = ["cmd", "/c", "ng"]
             npmExecutable = ["cmd", "/c", "npm"]
             terraformExecutable = ["cmd", "/c", "terraform"]
+            tscExecutable = ["cmd", "/c", "tsc"]
         } else {
             nodeExecutable = ["node"]
             ngExecutable = ["ng"]
             npmExecutable = ["npm"]
             terraformExecutable = ["terraform"]
+            tscExecutable = ["tsc"]
         }
 
-        awsAvailableLibraries = [".bin", "aws-sdk", "buffer", "dynamodb-doc", "events", "ieee754", "jmespath", "lodash", "punycode", "querystring", "url" ]
+        awsAvailableLibraries = [".bin", "aws-sdk", "buffer", "dynamodb-doc", "events", "ieee754", "jmespath", "lodash", "punycode", "querystring", "url"]
     }
 }
 
-def getVersionNodeJS = { ->
+static def isSemVerMatching(String actual, String expected) {
+    def beginIndex
+    def equalParts
+
+    if (expected.startsWith("^")) {
+        beginIndex = 1
+        equalParts = 1
+    } else if (expected.startsWith("~")) {
+        beginIndex = 1
+        equalParts = 2
+    } else {
+        beginIndex = 0
+        equalParts = 3
+    }
+
+    def expectedParts = expected.substring(beginIndex).split(/\./).collect { it as int }
+    def actualParts = actual.split(/\./).collect { it as int }
+
+    for (def i = 0; i < expectedParts.size(); i++) {
+
+        if (i < equalParts) {
+            if (actualParts[i] != expectedParts[i]) {
+                return false
+            }
+        } else {
+            if (actualParts[i] > expectedParts[i]) {
+                return true
+            }
+            if (actualParts[i] < expectedParts[i]) {
+                return false
+            }
+        }
+    }
+
+    return true
+}
+
+def getVersionNodeJS() {
     def stdout = new ByteArrayOutputStream()
     def stderr = new ByteArrayOutputStream()
     try {
@@ -40,17 +103,7 @@ def getVersionNodeJS = { ->
     return stdout.toString().trim().replace("v", "")
 }
 
-task verifyNodeJS {
-    inputs.property("VERSION_NODE_JS", requiredVersionNodeJS)
-    outputs.upToDateWhen { getVersionNodeJS() == requiredVersionNodeJS }
-    doLast {
-        if (getVersionNodeJS() != requiredVersionNodeJS) {
-            throw new Exception("Required Node version " + requiredVersionNodeJS + " not installed")
-        }
-    }
-}
-
-def getVersionTerraform = { ->
+def getVersionTerraform() {
     def stdout = new ByteArrayOutputStream()
     def stderr = new ByteArrayOutputStream()
     try {
@@ -66,12 +119,54 @@ def getVersionTerraform = { ->
     return stdout.toString().split("\n")[0].trim().replace("Terraform v", "")
 }
 
-task verifyTerraform {
-    inputs.property("VERSION_TERRAFORM", requiredVersionTerraform)
-    outputs.upToDateWhen { getVersionTerraform() == requiredVersionTerraform }
+def getVersionTsc() {
+    def stdout = new ByteArrayOutputStream()
+    def stderr = new ByteArrayOutputStream()
+    try {
+        exec {
+            commandLine tscExecutable
+            args "--v"
+            standardOutput stdout
+            errorOutput stderr
+        }
+    } catch (Exception ignored) {
+    }
+
+    return stdout.toString().trim().replace("Version ", "")
+}
+
+task verifyNodeJS {
+    def actualVersion = getVersionNodeJS()
+
+    inputs.property("VERSION_NODE_JS", requiredVersionNodeJS)
+    outputs.upToDateWhen { isSemVerMatching(actualVersion, requiredVersionNodeJS) }
     doLast {
-        if (getVersionTerraform() != requiredVersionTerraform) {
-            throw new Exception("Required Terraform version " + requiredVersionTerraform + " not available")
+        if (!isSemVerMatching(actualVersion, requiredVersionNodeJS)) {
+            throw new Exception("Required Node version " + requiredVersionNodeJS + " not found. Detected version " + actualVersion)
+        }
+    }
+}
+
+task verifyTerraform {
+    def actualVersion = getVersionTerraform()
+
+    inputs.property("VERSION_TERRAFORM", requiredVersionTerraform)
+    outputs.upToDateWhen { isSemVerMatching(actualVersion, requiredVersionTerraform) }
+    doLast {
+        if (!isSemVerMatching(actualVersion, requiredVersionTerraform)) {
+            throw new Exception("Required Terraform version " + requiredVersionTerraform + " not found. Detected version " + actualVersion)
+        }
+    }
+}
+
+task verifyTsc {
+    def actualVersion = getVersionTsc()
+
+    inputs.property("VERSION_TSC", requiredVersionTsc)
+    outputs.upToDateWhen { isSemVerMatching(actualVersion, requiredVersionTsc) }
+    doLast {
+        if (!isSemVerMatching(actualVersion, requiredVersionTsc)) {
+            throw new Exception("Required tsc version " + requiredVersionTsc + " not found. Detected version " + actualVersion)
         }
     }
 }
@@ -84,81 +179,8 @@ task build {
 
 task clean {}
 
-subprojects {
-    task setMcmaVersion {
-        def packageJson = file("package.json")
-
-        enabled packageJson.exists()
-        inputs.file(packageJson)
-        inputs.property("VERSION", McmaVersion)
-        outputs.file(packageJson)
-
-        doLast {
-            def jsonSlurper = new JsonSlurper()
-            def object = jsonSlurper.parse(file("package.json"))
-
-            if (object.dependencies != null) {
-                object.dependencies.keySet().each {
-                    object.dependencies[it] = it.startsWith("@mcma/") ? McmaVersion : object.dependencies[it]
-                }
-            }
-            if (object.peerDependencies != null) {
-                object.peerDependencies.keySet().each {
-                    object.peerDependencies[it] = it.startsWith("@mcma/") ? McmaVersion : object.peerDependencies[it]
-                }
-            }
-            if (object.devDependencies != null) {
-                object.devDependencies.keySet().each {
-                    object.devDependencies[it] = it.startsWith("@mcma/") ? McmaVersion : object.devDependencies[it]
-                }
-            }
-
-            def json = JsonOutput.toJson(object)
-            def jsonPretty = JsonOutput.prettyPrint(json) + "\n"
-
-            packageJson.write(jsonPretty)
-        }
-    }
-
-    task npmInstall(type: Exec) {
-        dependsOn verifyNodeJS
-        enabled file("package.json").exists()
-        inputs.file("package.json")
-        outputs.file("package-lock.json")
-        outputs.dir("node_modules")
-        commandLine npmExecutable
-        args "install"
-    }
-
-    task npmUpdate(type: Exec) {
-        dependsOn verifyNodeJS
-        enabled file("package.json").exists()
-        inputs.file "package.json"
-        inputs.property("todaysDate", new Date().clearTime())
-        outputs.upToDateWhen { true }
-        commandLine npmExecutable
-        args "update"
-    }
-
-    task npmDedup(type: Exec) {
-        dependsOn verifyNodeJS
-        enabled file("package.json").exists()
-        inputs.file("package.json")
-        outputs.file("package-lock.json")
-        outputs.dir("node_modules")
-        commandLine npmExecutable
-        args "dedup"
-    }
-
-    task clean(type: Delete) {
-        delete "build"
-        delete "dist"
-        delete "node_modules"
-    }
-}
-
 afterEvaluate {
-    // avoiding simultanous connections to npmjs.com
+    // avoiding simultaneous connections to npmjs.com
     def prevTask = null
     project.subprojects.each {
         def task = it.tasks.find { task -> task.name.contains('npmUpdate') }
@@ -182,28 +204,3 @@ afterEvaluate {
     }
 }
 
-if (!hasProperty("AzureLocation")) {
-    ext.AzureLocation = "trial"
-}
-if (!hasProperty("AzureAccountID")) {
-    ext.AzureAccountID = "undefined"
-}
-if (!hasProperty("AzureSubscriptionKey")) {
-    ext.AzureSubscriptionKey = "undefined"
-}
-if (!hasProperty("AzureApiUrl")) {
-    ext.AzureApiUrl = "https://api.videoindexer.ai"
-}
-
-if (!hasProperty("googleProjectId")) {
-    ext.googleProjectId = "undefined"
-}
-if (!hasProperty("googleBucketName")) {
-    ext.googleBucketName = "undefined"
-}
-if (!hasProperty("googleClientEmail")) {
-    ext.googleClientEmail = "undefined"
-}
-if (!hasProperty("googlePrivateKey")) {
-    ext.googlePrivateKey = "undefined"
-}

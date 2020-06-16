@@ -1,0 +1,26 @@
+{
+    "name": "benchmarkstt-service-api-handler",
+    "version": "0.0.0",
+    "description": "AWS Lambda based service leveraging EBU benchmarkstt docker image to do STT benchmarking",
+    "private": true,
+    "engines": {
+        "node": "~10.16.3"
+    },
+    "license": "Apache-2.0",
+    "dependencies": {
+        "@mcma/api": "0.9.7",
+        "@mcma/aws-api-gateway": "0.9.7",
+        "@mcma/aws-client": "0.9.7",
+        "@mcma/aws-dynamodb": "0.9.7",
+        "@mcma/aws-lambda-worker-invoker": "0.9.7",
+        "@mcma/aws-logger": "0.9.7",
+        "@mcma/client": "0.9.7",
+        "@mcma/core": "0.9.7",
+        "@mcma/data": "0.9.7",
+        "aws-sdk": "^2.631.0"
+    },
+    "devDependencies": {
+        "@types/aws-lambda": "^8.10.51",
+        "@types/node": "^10.17.21"
+    }
+}

@@ -9,7 +9,7 @@ resource "aws_lambda_function" "transform_service_api_handler" {
   handler          = "index.handler"
   source_code_hash = filebase64sha256("../services/transform-service/api-handler/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
-  timeout          = "900"
+  timeout          = "30"
   memory_size      = "3008"
 
   environment {
@@ -23,6 +23,12 @@ resource "aws_lambda_function" "transform_service_api_handler" {
 #  aws_lambda_function : ame-service-worker
 #################################
 
+resource "aws_lambda_layer_version" "ffmpeg" {
+  filename         = "../services/transform-service/ffmpeg/ffmpeg.zip"
+  layer_name       = "${var.global_prefix}-transform-service-ffmpeg"
+  source_code_hash = filebase64sha256("../services/transform-service/ffmpeg/ffmpeg.zip")
+}
+
 resource "aws_lambda_function" "transform_service_worker" {
   filename         = "../services/transform-service/worker/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-transform-service-worker")
@@ -32,6 +38,8 @@ resource "aws_lambda_function" "transform_service_worker" {
   runtime          = "nodejs10.x"
   timeout          = "900"
   memory_size      = "3008"
+
+  layers = [aws_lambda_layer_version.ffmpeg.arn]
 
   environment {
     variables = {
@@ -162,12 +170,19 @@ resource "aws_api_gateway_deployment" "transform_service_deployment" {
   depends_on = [
     aws_api_gateway_integration.transform_service_api_method_integration,
     aws_api_gateway_integration.transform_service_options_integration,
+    aws_api_gateway_integration_response.transform_service_options_integration_response,
   ]
 
   rest_api_id = aws_api_gateway_rest_api.transform_service_api.id
 }
 
 resource "aws_api_gateway_stage" "transform_service_gateway_stage" {
+  depends_on = [
+    aws_api_gateway_integration.transform_service_api_method_integration,
+    aws_api_gateway_integration.transform_service_options_integration,
+    aws_api_gateway_integration_response.transform_service_options_integration_response,
+  ]
+
   stage_name    = var.environment_type
   deployment_id = aws_api_gateway_deployment.transform_service_deployment.id
   rest_api_id   = aws_api_gateway_rest_api.transform_service_api.id

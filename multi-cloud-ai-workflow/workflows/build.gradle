@@ -1,32 +1,37 @@
 task build {
-    dependsOn "ai:01-validate-workflow-input:build"
-    dependsOn "ai:02-extract-speech-to-text:build"
-    dependsOn "ai:03-register-speech-to-text-output:build"
-    dependsOn "ai:04-translate-speech-transcription:build"
-    dependsOn "ai:05-register-speech-translation:build"
-    dependsOn "ai:06-detect-celebrities-aws:build"
-    dependsOn "ai:07-register-celebrities-info-aws:build"
-    dependsOn "ai:08-detect-celebrities-azure:build"
-    dependsOn "ai:09-register-celebrities-info-azure:build"
-    dependsOn "ai:10-detect-emotions-aws:build"
-    dependsOn "ai:11-register-emotions-info-aws:build"
-    dependsOn "ai:12-translation-to-speech:build"
-    dependsOn "ai:13-register-translation-to-speech:build"
-    dependsOn "ai:14-tokenized-translation-to-speech:build"
-    dependsOn "ai:15-register-tokenized-translation-to-speech:build"
-    dependsOn "ai:16-ssml-translation-to-speech:build"
-    dependsOn "ai:17-register-ssml-translation-to-speech:build"
-    dependsOn "ai:18-dubbing-srt:build"
-    dependsOn "ai:19-register-dubbing-srt:build"
-    dependsOn "ai:31-validate-speech-to-text:build"
-    dependsOn "ai:32-register-validate-speech-to-text:build"
-    dependsOn "ai:41-validate-speech-to-text-azure:build"
-    dependsOn "ai:42-register-validate-speech-to-text-azure:build"
-    dependsOn "ai:61-extract-audio-google:build"
-    dependsOn "ai:62-register-extract-audio-google:build"
-    dependsOn "ai:20-rekognition-aws:build"
-    dependsOn "ai:63-validate-speech-to-text-google:build"
-    dependsOn "ai:64-register-validate-speech-to-text-google:build"
+    dependsOn "ai:001-validate-workflow-input:build"
+
+    dependsOn "ai:101-extract-speech-to-text:build"
+    dependsOn "ai:102-register-speech-to-text-output:build"
+    dependsOn "ai:103-validate-speech-to-text:build"
+    dependsOn "ai:104-register-validate-speech-to-text:build"
+    dependsOn "ai:105-translate-speech-transcription:build"
+    dependsOn "ai:106-register-speech-translation:build"
+    dependsOn "ai:107-tokenized-translation-to-speech:build"
+    dependsOn "ai:108-register-tokenized-translation-to-speech:build"
+    dependsOn "ai:109-ssml-translation-to-speech:build"
+    dependsOn "ai:110-register-ssml-translation-to-speech:build"
+    dependsOn "ai:111-dubbing-srt:build"
+    dependsOn "ai:112-register-dubbing-srt:build"
+
+    dependsOn "ai:201-detect-celebrities-azure:build"
+    dependsOn "ai:202-register-celebrities-info-azure:build"
+    dependsOn "ai:203-validate-speech-to-text-azure:build"
+    dependsOn "ai:204-register-validate-speech-to-text-azure:build"
+
+    dependsOn "ai:301-detect-celebrities-aws:build"
+    dependsOn "ai:302-register-celebrities-info-aws:build"
+    dependsOn "ai:311-detect-emotions-aws:build"
+    dependsOn "ai:312-register-emotions-info-aws:build"
+    dependsOn "ai:321-rekognition-aws:build"
+
+    dependsOn "ai:401-extract-audio-google:build"
+    dependsOn "ai:402-register-extract-audio-google:build"
+    dependsOn "ai:403-speech-to-text-google:build"
+    dependsOn "ai:404-register-speech-to-text-google:build"
+    dependsOn "ai:405-validate-speech-to-text-google:build"
+    dependsOn "ai:406-register-validate-speech-to-text-google:build"
+
     dependsOn "conform:01-validate-workflow-input:build"
     dependsOn "conform:02-move-content-to-file-repository:build"
     dependsOn "conform:03-create-media-asset:build"
@@ -39,33 +44,8 @@ task build {
     dependsOn "conform:09-copy-proxy-to-website-storage:build"
     dependsOn "conform:10-register-proxy-website-locator:build"
     dependsOn "conform:11-start-ai-workflow:build"
+
     dependsOn "process-workflow-completion:build"
     dependsOn "process-workflow-failure:build"
     dependsOn "workflow-activity-callback-handler:build"
-}
-
-subprojects {
-    task copyNodeModules (type: Copy) {
-        enabled file("package.json").exists()
-        dependsOn npmInstall
-        from "node_modules"
-        into "build/staging/node_modules"
-        exclude awsAvailableLibraries
-    }
-
-    task copySource (type: Copy) {
-        enabled file("package.json").exists()
-        from "src"
-        into "build/staging/"
-    }
-
-    task build (type: Zip) {
-        enabled file("package.json").exists()
-        dependsOn copySource, copyNodeModules
-        archiveName "lambda.zip"
-        destinationDir file("build/dist")
-        from "build/staging"
-        preserveFileTimestamps = false
-        reproducibleFileOrder = true
-    }
 }

@@ -1,12 +1,12 @@
 {
     "Comment": "AI Workflow",
-    "StartAt": "01-validate-workflow-input",
+    "StartAt": "001-validate-workflow-input",
     "States": {
-        "01-validate-workflow-input": {
+        "001-validate-workflow-input": {
             "Type": "Task",
-            "Resource": "${lambda-01-validate-workflow-input}",
+            "Resource": "${lambda-001-validate-workflow-input}",
             "ResultPath": "$.data.mediaFileLocator",
-            "Next": "02-ai-extraction-parent",
+            "Next": "002-ai-extraction-parent",
             "Catch": [
                 {
                     "ErrorEquals": [
@@ -17,592 +17,582 @@
                 }
             ]
         },
-        "02-ai-extraction-parent": {
+        "002-ai-extraction-parent": {
             "Type": "Parallel",
             "Branches": [
                 {
-                    "StartAt": "02-extract-speech-to-text-parent",
+                    "StartAt": "101-extract-speech-to-text-parent",
                     "States": {
-                        "02-extract-speech-to-text-parent": {
+                        "101-extract-speech-to-text-parent": {
                             "Type": "Parallel",
                             "Branches": [
                                 {
-                                    "StartAt": "02-extract-speech-to-text",
+                                    "StartAt": "101-extract-speech-to-text",
                                     "States": {
-                                        "02-extract-speech-to-text": {
+                                        "101-extract-speech-to-text": {
                                             "Type": "Task",
-                                            "Resource": "${lambda-02-extract-speech-to-text}",
+                                            "Resource": "${lambda-101-extract-speech-to-text}",
                                             "End": true
                                         }
                                     }
                                 },
                                 {
-                                    "StartAt": "02-wait-for-job-completion",
+                                    "StartAt": "101-wait-for-job-completion",
                                     "States": {
-                                        "02-wait-for-job-completion": {
+                                        "101-wait-for-job-completion": {
                                             "Type": "Task",
-                                            "Resource": "${activity-02-extract-speech-to-text}",
-                                            "TimeoutSeconds": 3600,
-                                            "HeartbeatSeconds": 1800,
+                                            "Resource": "${activity-101-extract-speech-to-text}",
+                                            "TimeoutSeconds": 1800,
                                             "End": true
                                         }
                                     }
                                 }
                             ],
                             "ResultPath": "$.data.transcribeJobId",
-                            "Next": "03-register-speech-to-text-output",
+                            "Next": "102-register-speech-to-text-output",
                             "Catch": [
                                 {
                                     "ErrorEquals": [
                                         "States.ALL"
                                     ],
                                     "ResultPath": "$.error",
-                                    "Next": "process-failure-branch-1"
+                                    "Next": "100-process-failure"
                                 }
                             ]
                         },
-                        "03-register-speech-to-text-output": {
+                        "102-register-speech-to-text-output": {
                             "Type": "Task",
-                            "Resource": "${lambda-03-register-speech-to-text-output}",
+                            "Resource": "${lambda-102-register-speech-to-text-output}",
                             "ResultPath": null,
-                            "Next": "31-validate-speech-to-text-parent",
+                            "Next": "103-validate-speech-to-text-parent",
                             "Catch": [
                                 {
                                     "ErrorEquals": [
                                         "States.ALL"
                                     ],
                                     "ResultPath": "$.error",
-                                    "Next": "process-failure-branch-1"
+                                    "Next": "100-process-failure"
                                 }
                             ]
                         },
-                        "31-validate-speech-to-text-parent": {
+                        "103-validate-speech-to-text-parent": {
                             "Type": "Parallel",
                             "Branches": [
                                 {
-                                    "StartAt": "31-validate-speech-to-text",
+                                    "StartAt": "103-validate-speech-to-text",
                                     "States": {
-                                        "31-validate-speech-to-text": {
+                                        "103-validate-speech-to-text": {
                                             "Type": "Task",
-                                            "Resource": "${lambda-31-validate-speech-to-text}",
+                                            "Resource": "${lambda-103-validate-speech-to-text}",
                                             "End": true
                                         }
                                     }
                                 },
                                 {
-                                    "StartAt": "31-wait-for-job-completion",
+                                    "StartAt": "103-wait-for-job-completion",
                                     "States": {
-                                        "31-wait-for-job-completion": {
+                                        "103-wait-for-job-completion": {
                                             "Type": "Task",
-                                            "Resource": "${activity-31-validate-speech-to-text}",
-                                            "TimeoutSeconds": 3600,
-                                            "HeartbeatSeconds": 1800,
+                                            "Resource": "${activity-103-validate-speech-to-text}",
+                                            "TimeoutSeconds": 900,
                                             "End": true
                                         }
                                     }
                                 }
                             ],
                             "ResultPath": "$.data.validateSpeechToTextJobId",
-                            "Next": "32-register-validate-speech-to-text",
+                            "Next": "104-register-validate-speech-to-text",
                             "Catch": [
                                 {
                                     "ErrorEquals": [
                                         "States.ALL"
                                     ],
                                     "ResultPath": "$.error",
-                                    "Next": "process-failure-branch-1"
+                                    "Next": "100-process-failure"
                                 }
                             ]
                         },
-                        "32-register-validate-speech-to-text": {
+                        "104-register-validate-speech-to-text": {
                             "Type": "Task",
-                            "Resource": "${lambda-32-register-validate-speech-to-text}",
+                            "Resource": "${lambda-104-register-validate-speech-to-text}",
                             "ResultPath": null,
-                            "Next": "04-translate-speech-transcription-parent",
+                            "Next": "105-translate-speech-transcription-parent",
                             "Catch": [
                                 {
                                     "ErrorEquals": [
                                         "States.ALL"
                                     ],
                                     "ResultPath": "$.error",
-                                    "Next": "process-failure-branch-1"
+                                    "Next": "100-process-failure"
                                 }
                             ]
                         },
-                        "04-translate-speech-transcription-parent": {
+                        "105-translate-speech-transcription-parent": {
                             "Type": "Parallel",
                             "Branches": [
                                 {
-                                    "StartAt": "04-translate-speech-transcription",
+                                    "StartAt": "105-translate-speech-transcription",
                                     "States": {
-                                        "04-translate-speech-transcription": {
+                                        "105-translate-speech-transcription": {
                                             "Type": "Task",
-                                            "Resource": "${lambda-04-translate-speech-transcription}",
+                                            "Resource": "${lambda-105-translate-speech-transcription}",
                                             "End": true
                                         }
                                     }
                                 },
                                 {
-                                    "StartAt": "04-wait-for-job-completion",
+                                    "StartAt": "105-wait-for-job-completion",
                                     "States": {
-                                        "04-wait-for-job-completion": {
+                                        "105-wait-for-job-completion": {
                                             "Type": "Task",
-                                            "Resource": "${activity-04-translate-speech-transcription}",
-                                            "TimeoutSeconds": 3600,
-                                            "HeartbeatSeconds": 1800,
+                                            "Resource": "${activity-105-translate-speech-transcription}",
+                                            "TimeoutSeconds": 900,
                                             "End": true
                                         }
                                     }
                                 }
                             ],
                             "ResultPath": "$.data.translateJobId",
-                            "Next": "05-register-speech-translation",
+                            "Next": "106-register-speech-translation",
                             "Catch": [
                                 {
                                     "ErrorEquals": [
                                         "States.ALL"
                                     ],
                                     "ResultPath": "$.error",
-                                    "Next": "process-failure-branch-1"
+                                    "Next": "100-process-failure"
                                 }
                             ]
                         },
-                        "05-register-speech-translation": {
+                        "106-register-speech-translation": {
                             "Type": "Task",
-                            "Resource": "${lambda-05-register-speech-translation}",
+                            "Resource": "${lambda-106-register-speech-translation}",
                             "ResultPath": null,
-                            "Next": "14-tokenized-translation-to-speech-parent",
+                            "Next": "107-tokenized-translation-to-speech-parent",
                             "Catch": [
                                 {
                                     "ErrorEquals": [
                                         "States.ALL"
                                     ],
                                     "ResultPath": "$.error",
-                                    "Next": "process-failure-branch-1"
+                                    "Next": "100-process-failure"
                                 }
                             ]
                         },
-                        "14-tokenized-translation-to-speech-parent": {
+                        "107-tokenized-translation-to-speech-parent": {
                             "Type": "Parallel",
                             "Branches": [
                                 {
-                                    "StartAt": "14-tokenized-translation-to-speech",
+                                    "StartAt": "107-tokenized-translation-to-speech",
                                     "States": {
-                                        "14-tokenized-translation-to-speech": {
+                                        "107-tokenized-translation-to-speech": {
                                             "Type": "Task",
-                                            "Resource": "${lambda-14-tokenized-translation-to-speech}",
+                                            "Resource": "${lambda-107-tokenized-translation-to-speech}",
                                             "End": true
                                         }
                                     }
                                 },
                                 {
-                                    "StartAt": "14-wait-for-job-completion",
+                                    "StartAt": "107-wait-for-job-completion",
                                     "States": {
-                                        "14-wait-for-job-completion": {
+                                        "107-wait-for-job-completion": {
                                             "Type": "Task",
-                                            "Resource": "${activity-14-tokenized-translation-to-speech}",
-                                            "TimeoutSeconds": 3600,
-                                            "HeartbeatSeconds": 1800,
+                                            "Resource": "${activity-107-tokenized-translation-to-speech}",
+                                            "TimeoutSeconds": 900,
                                             "End": true
                                         }
                                     }
                                 }
                             ],
                             "ResultPath": "$.data.tokenizedTextToSpeechJobId",
-                            "Next": "15-register-tokenized-translation-to-speech",
+                            "Next": "108-register-tokenized-translation-to-speech",
                             "Catch": [
                                 {
                                     "ErrorEquals": [
                                         "States.ALL"
                                     ],
                                     "ResultPath": "$.error",
-                                    "Next": "process-failure-branch-1"
+                                    "Next": "100-process-failure"
                                 }
                             ]
                         },
-                        "15-register-tokenized-translation-to-speech": {
+                        "108-register-tokenized-translation-to-speech": {
                             "Type": "Task",
-                            "Resource": "${lambda-15-register-tokenized-translation-to-speech}",
+                            "Resource": "${lambda-108-register-tokenized-translation-to-speech}",
                             "ResultPath": null,
-                            "Next": "16-ssml-translation-to-speech-parent",
+                            "Next": "109-ssml-translation-to-speech-parent",
                             "Catch": [
                                 {
                                     "ErrorEquals": [
                                         "States.ALL"
                                     ],
                                     "ResultPath": "$.error",
-                                    "Next": "process-failure-branch-1"
+                                    "Next": "100-process-failure"
                                 }
                             ]
                         },
-                        "16-ssml-translation-to-speech-parent": {
+                        "109-ssml-translation-to-speech-parent": {
                             "Type": "Parallel",
                             "Branches": [
                                 {
-                                    "StartAt": "16-ssml-translation-to-speech",
+                                    "StartAt": "109-ssml-translation-to-speech",
                                     "States": {
-                                        "16-ssml-translation-to-speech": {
+                                        "109-ssml-translation-to-speech": {
                                             "Type": "Task",
-                                            "Resource": "${lambda-16-ssml-translation-to-speech}",
+                                            "Resource": "${lambda-109-ssml-translation-to-speech}",
                                             "End": true
                                         }
                                     }
                                 },
                                 {
-                                    "StartAt": "16-wait-for-job-completion",
+                                    "StartAt": "109-wait-for-job-completion",
                                     "States": {
-                                        "16-wait-for-job-completion": {
+                                        "109-wait-for-job-completion": {
                                             "Type": "Task",
-                                            "Resource": "${activity-16-ssml-translation-to-speech}",
-                                            "TimeoutSeconds": 3600,
-                                            "HeartbeatSeconds": 1800,
+                                            "Resource": "${activity-109-ssml-translation-to-speech}",
+                                            "TimeoutSeconds": 900,
                                             "End": true
                                         }
                                     }
                                 }
                             ],
                             "ResultPath": "$.data.ssmlTextToSpeechJobId",
-                            "Next": "17-register-ssml-translation-to-speech",
+                            "Next": "110-register-ssml-translation-to-speech",
                             "Catch": [
                                 {
                                     "ErrorEquals": [
                                         "States.ALL"
                                     ],
                                     "ResultPath": "$.error",
-                                    "Next": "process-failure-branch-1"
+                                    "Next": "100-process-failure"
                                 }
                             ]
                         },
-                        "17-register-ssml-translation-to-speech": {
+                        "110-register-ssml-translation-to-speech": {
                             "Type": "Task",
-                            "Resource": "${lambda-17-register-ssml-translation-to-speech}",
+                            "Resource": "${lambda-110-register-ssml-translation-to-speech}",
                             "ResultPath": null,
-                            "Next": "18-dubbing-srt-parent",
+                            "Next": "111-dubbing-srt-parent",
                             "Catch": [
                                 {
                                     "ErrorEquals": [
                                         "States.ALL"
                                     ],
                                     "ResultPath": "$.error",
-                                    "Next": "process-failure-branch-1"
+                                    "Next": "100-process-failure"
                                 }
                             ]
                         },
-                        "18-dubbing-srt-parent": {
+                        "111-dubbing-srt-parent": {
                             "Type": "Parallel",
                             "Branches": [
                                 {
-                                    "StartAt": "18-dubbing-srt",
+                                    "StartAt": "111-dubbing-srt",
                                     "States": {
-                                        "18-dubbing-srt": {
+                                        "111-dubbing-srt": {
                                             "Type": "Task",
-                                            "Resource": "${lambda-18-dubbing-srt}",
+                                            "Resource": "${lambda-111-dubbing-srt}",
                                             "End": true
                                         }
                                     }
                                 },
                                 {
-                                    "StartAt": "18-wait-for-job-completion",
+                                    "StartAt": "111-wait-for-job-completion",
                                     "States": {
-                                        "18-wait-for-job-completion": {
+                                        "111-wait-for-job-completion": {
                                             "Type": "Task",
-                                            "Resource": "${activity-18-dubbing-srt}",
-                                            "TimeoutSeconds": 3600,
-                                            "HeartbeatSeconds": 1800,
+                                            "Resource": "${activity-111-dubbing-srt}",
+                                            "TimeoutSeconds": 900,
                                             "End": true
                                         }
                                     }
                                 }
                             ],
                             "ResultPath": "$.data.dubbingSrtJobId",
-                            "Next": "19-register-dubbing-srt",
+                            "Next": "112-register-dubbing-srt",
                             "Catch": [
                                 {
                                     "ErrorEquals": [
                                         "States.ALL"
                                     ],
                                     "ResultPath": "$.error",
-                                    "Next": "process-failure-branch-1"
+                                    "Next": "100-process-failure"
                                 }
                             ]
                         },
-                        "19-register-dubbing-srt": {
+                        "112-register-dubbing-srt": {
                             "Type": "Task",
-                            "Resource": "${lambda-19-register-dubbing-srt}",
+                            "Resource": "${lambda-112-register-dubbing-srt}",
                             "ResultPath": null,
-                            "Next": "process-completion-branch-1",
+                            "Next": "100-process-completion",
                             "Catch": [
                                 {
                                     "ErrorEquals": [
                                         "States.ALL"
                                     ],
                                     "ResultPath": "$.error",
-                                    "Next": "process-failure-branch-1"
+                                    "Next": "100-process-failure"
                                 }
                             ]
                         },
-                        "process-failure-branch-1": {
+                        "100-process-failure": {
                             "Type": "Pass",
                             "End": true
                         },
-                        "process-completion-branch-1": {
+                        "100-process-completion": {
                             "Type": "Pass",
                             "End": true
                         }
                     }
                 },
                 {
-                    "StartAt": "08-detect-celebrities-azure-parent",
+                    "StartAt": "201-detect-celebrities-azure-parent",
                     "States": {
-                        "08-detect-celebrities-azure-parent": {
+                        "201-detect-celebrities-azure-parent": {
                             "Type": "Parallel",
                             "Branches": [
                                 {
-                                    "StartAt": "08-detect-celebrities-azure",
+                                    "StartAt": "201-detect-celebrities-azure",
                                     "States": {
-                                        "08-detect-celebrities-azure": {
+                                        "201-detect-celebrities-azure": {
                                             "Type": "Task",
-                                            "Resource": "${lambda-08-detect-celebrities-azure}",
+                                            "Resource": "${lambda-201-detect-celebrities-azure}",
                                             "End": true
                                         }
                                     }
                                 },
                                 {
-                                    "StartAt": "08-wait-for-job-completion",
+                                    "StartAt": "201-wait-for-job-completion",
                                     "States": {
-                                        "08-wait-for-job-completion": {
+                                        "201-wait-for-job-completion": {
                                             "Type": "Task",
-                                            "Resource": "${activity-08-detect-celebrities-azure}",
-                                            "TimeoutSeconds": 3600,
-                                            "HeartbeatSeconds": 1800,
+                                            "Resource": "${activity-201-detect-celebrities-azure}",
+                                            "TimeoutSeconds": 1800,
                                             "End": true
                                         }
                                     }
                                 }
                             ],
                             "ResultPath": "$.data.azureCelebritiesJobId",
-                            "Next": "09-register-celebrities-info-azure",
+                            "Next": "202-register-celebrities-info-azure",
                             "Catch": [
                                 {
                                     "ErrorEquals": [
                                         "States.ALL"
                                     ],
                                     "ResultPath": "$.error",
-                                    "Next": "process-failure-branch-3"
+                                    "Next": "200-process-failure"
                                 }
                             ]
                         },
-                        "09-register-celebrities-info-azure": {
+                        "202-register-celebrities-info-azure": {
                             "Type": "Task",
-                            "Resource": "${lambda-09-register-celebrities-info-azure}",
+                            "Resource": "${lambda-202-register-celebrities-info-azure}",
                             "ResultPath": null,
-                            "Next": "41-validate-speech-to-text-parent-azure",
+                            "Next": "203-validate-speech-to-text-parent-azure",
                             "Catch": [
                                 {
                                     "ErrorEquals": [
                                         "States.ALL"
                                     ],
                                     "ResultPath": "$.error",
-                                    "Next": "process-failure-branch-3"
+                                    "Next": "200-process-failure"
                                 }
                             ]
                         },
-                        "41-validate-speech-to-text-parent-azure": {
+                        "203-validate-speech-to-text-parent-azure": {
                             "Type": "Parallel",
                             "Branches": [
                                 {
-                                    "StartAt": "41-validate-speech-to-text-azure",
+                                    "StartAt": "203-validate-speech-to-text-azure",
                                     "States": {
-                                        "41-validate-speech-to-text-azure": {
+                                        "203-validate-speech-to-text-azure": {
                                             "Type": "Task",
-                                            "Resource": "${lambda-41-validate-speech-to-text-azure}",
+                                            "Resource": "${lambda-203-validate-speech-to-text-azure}",
                                             "End": true
                                         }
                                     }
                                 },
                                 {
-                                    "StartAt": "41-wait-for-job-completion",
+                                    "StartAt": "203-wait-for-job-completion",
                                     "States": {
-                                        "41-wait-for-job-completion": {
+                                        "203-wait-for-job-completion": {
                                             "Type": "Task",
-                                            "Resource": "${activity-41-validate-speech-to-text-azure}",
-                                            "TimeoutSeconds": 3600,
-                                            "HeartbeatSeconds": 1800,
+                                            "Resource": "${activity-203-validate-speech-to-text-azure}",
+                                            "TimeoutSeconds": 900,
                                             "End": true
                                         }
                                     }
                                 }
                             ],
                             "ResultPath": "$.data.validateSpeechToTextAzureJobId",
-                            "Next": "42-register-validate-speech-to-text-azure",
+                            "Next": "204-register-validate-speech-to-text-azure",
                             "Catch": [
                                 {
                                     "ErrorEquals": [
                                         "States.ALL"
                                     ],
                                     "ResultPath": "$.error",
-                                    "Next": "process-failure-branch-3"
+                                    "Next": "200-process-failure"
                                 }
                             ]
                         },
-                        "42-register-validate-speech-to-text-azure": {
+                        "204-register-validate-speech-to-text-azure": {
                             "Type": "Task",
-                            "Resource": "${lambda-42-register-validate-speech-to-text-azure}",
+                            "Resource": "${lambda-204-register-validate-speech-to-text-azure}",
                             "ResultPath": null,
-                            "Next": "process-completion-branch-3",
+                            "Next": "200-process-completion",
                             "Catch": [
                                 {
                                     "ErrorEquals": [
                                         "States.ALL"
                                     ],
                                     "ResultPath": "$.error",
-                                    "Next": "process-failure-branch-3"
+                                    "Next": "200-process-failure"
                                 }
                             ]
                         },
-                        "process-failure-branch-3": {
+                        "200-process-failure": {
                             "Type": "Pass",
                             "End": true
                         },
-                        "process-completion-branch-3": {
+                        "200-process-completion": {
                             "Type": "Pass",
                             "End": true
                         }
                     }
                 },
                 {
-                    "StartAt": "20-rekognition-aws",
+                    "StartAt": "300-rekognition-aws",
                     "States": {
-                        "20-rekognition-aws": {
+                        "300-rekognition-aws": {
                             "Type": "Parallel",
                             "Branches": [
                                 {
-                                    "StartAt": "06-detect-celebrities-aws-parent",
+                                    "StartAt": "301-detect-celebrities-aws-parent",
                                     "States": {
-                                        "06-detect-celebrities-aws-parent": {
+                                        "301-detect-celebrities-aws-parent": {
                                             "Type": "Parallel",
                                             "Branches": [
                                                 {
-                                                    "StartAt": "06-detect-celebrities-aws",
+                                                    "StartAt": "301-detect-celebrities-aws",
                                                     "States": {
-                                                        "06-detect-celebrities-aws": {
+                                                        "301-detect-celebrities-aws": {
                                                             "Type": "Task",
-                                                            "Resource": "${lambda-06-detect-celebrities-aws}",
+                                                            "Resource": "${lambda-301-detect-celebrities-aws}",
                                                             "End": true
                                                         }
                                                     }
                                                 },
                                                 {
-                                                    "StartAt": "06-wait-for-job-completion",
+                                                    "StartAt": "301-wait-for-job-completion",
                                                     "States": {
-                                                        "06-wait-for-job-completion": {
+                                                        "301-wait-for-job-completion": {
                                                             "Type": "Task",
-                                                            "Resource": "${activity-06-detect-celebrities-aws}",
-                                                            "TimeoutSeconds": 3600,
-                                                            "HeartbeatSeconds": 1800,
+                                                            "Resource": "${activity-301-detect-celebrities-aws}",
+                                                            "TimeoutSeconds": 1800,
                                                             "End": true
                                                         }
                                                     }
                                                 }
                                             ],
                                             "ResultPath": "$.data.awsCelebritiesJobId",
-                                            "Next": "07-register-celebrities-info-aws",
+                                            "Next": "302-register-celebrities-info-aws",
                                             "Catch": [
                                                 {
                                                     "ErrorEquals": [
                                                         "States.ALL"
                                                     ],
                                                     "ResultPath": "$.error",
-                                                    "Next": "process-failure-branch-2"
+                                                    "Next": "301-process-failure"
                                                 }
                                             ]
                                         },
-                                        "07-register-celebrities-info-aws": {
+                                        "302-register-celebrities-info-aws": {
                                             "Type": "Task",
-                                            "Resource": "${lambda-07-register-celebrities-info-aws}",
+                                            "Resource": "${lambda-302-register-celebrities-info-aws}",
                                             "ResultPath": null,
-                                            "Next": "process-completion-branch-2",
+                                            "Next": "301-process-completion",
                                             "Catch": [
                                                 {
                                                     "ErrorEquals": [
                                                         "States.ALL"
                                                     ],
                                                     "ResultPath": "$.error",
-                                                    "Next": "process-failure-branch-2"
+                                                    "Next": "301-process-failure"
                                                 }
                                             ]
                                         },
-                                        "process-failure-branch-2": {
+                                        "301-process-failure": {
                                             "Type": "Pass",
                                             "End": true
                                         },
-                                        "process-completion-branch-2": {
+                                        "301-process-completion": {
                                             "Type": "Pass",
                                             "End": true
                                         }
                                     }
                                 },
                                 {
-                                    "StartAt": "10-detect-emotions-aws-parent",
+                                    "StartAt": "311-detect-emotions-aws-parent",
                                     "States": {
-                                        "10-detect-emotions-aws-parent": {
+                                        "311-detect-emotions-aws-parent": {
                                             "Type": "Parallel",
                                             "Branches": [
                                                 {
-                                                    "StartAt": "10-detect-emotions-aws",
+                                                    "StartAt": "311-detect-emotions-aws",
                                                     "States": {
-                                                        "10-detect-emotions-aws": {
+                                                        "311-detect-emotions-aws": {
                                                             "Type": "Task",
-                                                            "Resource": "${lambda-10-detect-emotions-aws}",
+                                                            "Resource": "${lambda-311-detect-emotions-aws}",
                                                             "End": true
                                                         }
                                                     }
                                                 },
                                                 {
-                                                    "StartAt": "10-wait-for-job-completion",
+                                                    "StartAt": "311-wait-for-job-completion",
                                                     "States": {
-                                                        "10-wait-for-job-completion": {
+                                                        "311-wait-for-job-completion": {
                                                             "Type": "Task",
-                                                            "Resource": "${activity-10-detect-emotions-aws}",
-                                                            "TimeoutSeconds": 3600,
-                                                            "HeartbeatSeconds": 1800,
+                                                            "Resource": "${activity-311-detect-emotions-aws}",
+                                                            "TimeoutSeconds": 1800,
                                                             "End": true
                                                         }
                                                     }
                                                 }
                                             ],
                                             "ResultPath": "$.data.awsEmotionsJobId",
-                                            "Next": "11-register-emotions-info-aws",
+                                            "Next": "312-register-emotions-info-aws",
                                             "Catch": [
                                                 {
                                                     "ErrorEquals": [
                                                         "States.ALL"
                                                     ],
                                                     "ResultPath": "$.error",
-                                                    "Next": "process-failure-branch-4"
+                                                    "Next": "311-process-failure"
                                                 }
                                             ]
                                         },
-                                        "11-register-emotions-info-aws": {
+                                        "312-register-emotions-info-aws": {
                                             "Type": "Task",
-                                            "Resource": "${lambda-11-register-emotions-info-aws}",
+                                            "Resource": "${lambda-312-register-emotions-info-aws}",
                                             "ResultPath": null,
-                                            "Next": "process-completion-branch-4",
+                                            "Next": "311-process-completion",
                                             "Catch": [
                                                 {
                                                     "ErrorEquals": [
                                                         "States.ALL"
                                                     ],
                                                     "ResultPath": "$.error",
-                                                    "Next": "process-failure-branch-4"
+                                                    "Next": "311-process-failure"
                                                 }
                                             ]
                                         },
-                                        "process-failure-branch-4": {
+                                        "311-process-failure": {
                                             "Type": "Pass",
                                             "End": true
                                         },
-                                        "process-completion-branch-4": {
+                                        "311-process-completion": {
                                             "Type": "Pass",
                                             "End": true
                                         }
@@ -610,160 +600,206 @@
                                 }
                             ],
                             "ResultPath": "$.data.awsRekognition",
-                            "Next": "rekognition-aws-completion",
+                            "Next": "321-process-rekognition-aws",
                             "Catch": [
                                 {
                                     "ErrorEquals": [
                                         "States.ALL"
                                     ],
                                     "ResultPath": "$.error",
-                                    "Next": "rekognition-aws-failure"
+                                    "Next": "300-rekognition-aws-failure"
                                 }
                             ]
                         },
-                        "rekognition-aws-failure": {
+                        "321-process-rekognition-aws": {
+                            "Type": "Task",
+                            "Resource": "${lambda-321-rekognition-aws}",
+                            "ResultPath": null,
+                            "Next": "300-rekognition-aws-completion",
+                            "Catch": [
+                                {
+                                    "ErrorEquals": [
+                                        "States.ALL"
+                                    ],
+                                    "ResultPath": "$.error",
+                                    "Next": "300-rekognition-aws-failure"
+                                }
+                            ]
+                        },
+                        "300-rekognition-aws-failure": {
                             "Type": "Pass",
                             "End": true
                         },
-                        "process-rekognition-aws": {
-                            "Type": "Task",
-                            "Resource": "${lambda-20-rekognition-aws}",
-                            "ResultPath": null,
-                            "Next": "rekognition-aws-completion-2",
-                            "Catch": [
-                                {
-                                    "ErrorEquals": [
-                                        "States.ALL"
-                                    ],
-                                    "ResultPath": "$.error",
-                                    "Next": "rekognition-aws-failure"
-                                }
-                            ]
-                        },
-                        "rekognition-aws-completion": {
-                            "Type": "Pass",
-                            "Next": "process-rekognition-aws"
-                        },
-                        "rekognition-aws-completion-2": {
+                        "300-rekognition-aws-completion": {
                             "Type": "Pass",
                             "End": true
                         }
                     }
                 },
                 {
-                    "StartAt": "60-google",
+                    "StartAt": "401-extract-audio-google-parent",
                     "States": {
-                        "60-google": {
+                        "401-extract-audio-google-parent": {
                             "Type": "Parallel",
                             "Branches": [
                                 {
-                                    "StartAt": "61-extract-audio-google",
+                                    "StartAt": "401-extract-audio-google",
                                     "States": {
-                                        "61-extract-audio-google": {
+                                        "401-extract-audio-google": {
                                             "Type": "Task",
-                                            "Resource": "${lambda-61-extract-audio-google}",
+                                            "Resource": "${lambda-401-extract-audio-google}",
                                             "End": true
                                         }
                                     }
                                 },
                                 {
-                                    "StartAt": "61-wait-for-job-completion",
+                                    "StartAt": "401-wait-for-job-completion",
                                     "States": {
-                                        "61-wait-for-job-completion": {
+                                        "401-wait-for-job-completion": {
                                             "Type": "Task",
-                                            "Resource": "${activity-61-extract-audio-google}",
-                                            "TimeoutSeconds": 3600,
-                                            "HeartbeatSeconds": 1800,
+                                            "Resource": "${activity-401-extract-audio-google}",
+                                            "TimeoutSeconds": 900,
                                             "End": true
                                         }
                                     }
                                 }
                             ],
                             "ResultPath": "$.data.extractAudioJobId",
-                            "Next": "62-register-extract-audio-google",
+                            "Next": "402-register-extract-audio-google",
                             "Catch": [
                                 {
                                     "ErrorEquals": [
                                         "States.ALL"
                                     ],
                                     "ResultPath": "$.error",
-                                    "Next": "process-failure-branch-5"
+                                    "Next": "400-process-failure"
                                 }
                             ]
                         },
-                        "62-register-extract-audio-google": {
+                        "402-register-extract-audio-google": {
                             "Type": "Task",
-                            "Resource": "${lambda-62-register-extract-audio-google}",
-                            "ResultPath": null,
-                            "Next": "63-validate-speech-to-text-parent-google",
+                            "Resource": "${lambda-402-register-extract-audio-google}",
+                            "ResultPath": "$.data.audioFileLocator",
+                            "Next": "403-speech-to-text-parent-google",
                             "Catch": [
                                 {
                                     "ErrorEquals": [
                                         "States.ALL"
                                     ],
                                     "ResultPath": "$.error",
-                                    "Next": "process-failure-branch-5"
+                                    "Next": "400-process-failure"
                                 }
                             ]
                         },
-                        "63-validate-speech-to-text-parent-google": {
+                        "403-speech-to-text-parent-google": {
                             "Type": "Parallel",
                             "Branches": [
                                 {
-                                    "StartAt": "63-validate-speech-to-text-google",
+                                    "StartAt": "403-speech-to-text-google",
                                     "States": {
-                                        "63-validate-speech-to-text-google": {
+                                        "403-speech-to-text-google": {
                                             "Type": "Task",
-                                            "Resource": "${lambda-63-validate-speech-to-text-google}",
+                                            "Resource": "${lambda-403-speech-to-text-google}",
                                             "End": true
                                         }
                                     }
                                 },
                                 {
-                                    "StartAt": "63-wait-for-job-completion",
+                                    "StartAt": "403-wait-for-job-completion",
                                     "States": {
-                                        "63-wait-for-job-completion": {
+                                        "403-wait-for-job-completion": {
                                             "Type": "Task",
-                                            "Resource": "${activity-63-validate-speech-to-text-google}",
-                                            "TimeoutSeconds": 3600,
-                                            "HeartbeatSeconds": 1800,
+                                            "Resource": "${activity-403-speech-to-text-google}",
+                                            "TimeoutSeconds": 900,
+                                            "End": true
+                                        }
+                                    }
+                                }
+                            ],
+                            "ResultPath": "$.data.speechToTextGoogleJobId",
+                            "Next": "404-register-speech-to-text-google",
+                            "Catch": [
+                                {
+                                    "ErrorEquals": [
+                                        "States.ALL"
+                                    ],
+                                    "ResultPath": "$.error",
+                                    "Next": "400-process-failure"
+                                }
+                            ]
+                        },
+                        "404-register-speech-to-text-google": {
+                            "Type": "Task",
+                            "Resource": "${lambda-404-register-speech-to-text-google}",
+                            "ResultPath": null,
+                            "Next": "405-validate-speech-to-text-parent-google",
+                            "Catch": [
+                                {
+                                    "ErrorEquals": [
+                                        "States.ALL"
+                                    ],
+                                    "ResultPath": "$.error",
+                                    "Next": "400-process-failure"
+                                }
+                            ]
+                        },
+                        "405-validate-speech-to-text-parent-google": {
+                            "Type": "Parallel",
+                            "Branches": [
+                                {
+                                    "StartAt": "405-validate-speech-to-text-google",
+                                    "States": {
+                                        "405-validate-speech-to-text-google": {
+                                            "Type": "Task",
+                                            "Resource": "${lambda-405-validate-speech-to-text-google}",
+                                            "End": true
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt": "405-wait-for-job-completion",
+                                    "States": {
+                                        "405-wait-for-job-completion": {
+                                            "Type": "Task",
+                                            "Resource": "${activity-405-validate-speech-to-text-google}",
+                                            "TimeoutSeconds": 900,
                                             "End": true
                                         }
                                     }
                                 }
                             ],
                             "ResultPath": "$.data.validateSpeechToTextGoogleJobId",
-                            "Next": "64-register-validate-speech-to-text-google",
+                            "Next": "406-register-validate-speech-to-text-google",
                             "Catch": [
                                 {
                                     "ErrorEquals": [
                                         "States.ALL"
                                     ],
                                     "ResultPath": "$.error",
-                                    "Next": "process-failure-branch-5"
+                                    "Next": "400-process-failure"
                                 }
                             ]
                         },
-                        "64-register-validate-speech-to-text-google": {
+                        "406-register-validate-speech-to-text-google": {
                             "Type": "Task",
-                            "Resource": "${lambda-64-register-validate-speech-to-text-google}",
+                            "Resource": "${lambda-406-register-validate-speech-to-text-google}",
                             "ResultPath": null,
-                            "Next": "process-completion-branch-5",
+                            "Next": "400-process-completion",
                             "Catch": [
                                 {
                                     "ErrorEquals": [
                                         "States.ALL"
                                     ],
                                     "ResultPath": "$.error",
-                                    "Next": "process-failure-branch-5"
+                                    "Next": "400-process-failure"
                                 }
                             ]
                         },
-                        "process-failure-branch-5": {
+                        "400-process-failure": {
                             "Type": "Pass",
                             "End": true
                         },
-                        "process-completion-branch-5": {
+                        "400-process-completion": {
                             "Type": "Pass",
                             "End": true
                         }

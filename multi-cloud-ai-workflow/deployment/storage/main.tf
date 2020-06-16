@@ -1,24 +1,51 @@
-#########################
-# Provider registration 
-#########################
-
-provider "template" {
-    version = "~> 2.1"
+locals {
+  config_bucket_name     = "${var.environment_name}.${var.aws_region}.${var.environment_type}.config"
+  upload_bucket_name     = "${var.environment_name}.${var.aws_region}.${var.environment_type}.upload"
+  temp_bucket_name       = "${var.environment_name}.${var.aws_region}.${var.environment_type}.temp"
+  repository_bucket_name = "${var.environment_name}.${var.aws_region}.${var.environment_type}.repository"
+  website_bucket_name    = "${var.environment_name}.${var.aws_region}.${var.environment_type}.website"
 }
 
-data "template_file" "s3_authenticated_read_write_policy_upload" {
-  template = file("policies/s3-authenticated-read-write.json")
+resource "aws_kms_key" "config" {
+  description = "Key used for encrypting/decrypting files in the config bucket"
+}
 
-  vars = {
-    bucket_name = var.upload_bucket_name
-    aws_account_id = var.aws_account_id
+resource "aws_s3_bucket" "config" {
+  bucket        = local.config_bucket_name
+  acl           = "private"
+  force_destroy = true
+
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        kms_master_key_id = aws_kms_key.config.arn
+        sse_algorithm     = "aws:kms"
+      }
+    }
   }
 }
 
+resource "aws_s3_bucket_public_access_block" "config" {
+  bucket = aws_s3_bucket.config.id
+
+  block_public_acls = true
+  block_public_policy = true
+  ignore_public_acls = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_metric" "config" {
+  name   = "${local.config_bucket_name}-metrics"
+  bucket = aws_s3_bucket.config.bucket
+}
+
 resource "aws_s3_bucket" "upload" {
-  bucket = var.upload_bucket_name
-  acl    = "private"
-  policy = data.template_file.s3_authenticated_read_write_policy_upload.rendered
+  bucket        = local.upload_bucket_name
+  acl           = "private"
+  policy        = templatefile("policies/s3-authenticated-read-write.json", {
+    bucket_name    = local.upload_bucket_name
+    aws_account_id = var.aws_account_id
+  })
   force_destroy = true
   cors_rule {
     allowed_headers = ["*"]
@@ -29,30 +56,33 @@ resource "aws_s3_bucket" "upload" {
   }
 }
 
-resource "aws_s3_bucket" "media_repo" {
-  bucket = var.repository_bucket_name
-  acl    = "private"
-  force_destroy = true
-}
-
 resource "aws_s3_bucket" "temp" {
-  bucket = var.temp_bucket_name
-  acl    = "private"
+  bucket        = local.temp_bucket_name
+  acl           = "private"
   force_destroy = true
-}
 
-data "template_file" "s3_public_read_policy_website" {
-  template = file("policies/s3-public-read.json")
+  lifecycle_rule {
+    id      = "Delete after 1 week"
+    enabled = true
 
-  vars = {
-    bucket_name = var.website_bucket_name
+    expiration {
+      days = 7
+    }
   }
 }
 
+resource "aws_s3_bucket" "media_repo" {
+  bucket        = local.repository_bucket_name
+  acl           = "private"
+  force_destroy = true
+}
+
 resource "aws_s3_bucket" "website" {
-  bucket = var.website_bucket_name
-  acl    = "public-read"
-  policy = data.template_file.s3_public_read_policy_website.rendered
+  bucket        = local.website_bucket_name
+  acl           = "public-read"
+  policy        = templatefile("policies/s3-public-read.json", {
+    bucket_name = local.website_bucket_name
+  })
   force_destroy = true
 
   website {

@@ -1,6 +1,5 @@
-variable "upload_bucket_name" {}
-variable "temp_bucket_name" {}
-variable "repository_bucket_name" {}
-variable "website_bucket_name" {}
+variable "environment_name" {}
+variable "environment_type" {}
+
 variable "aws_account_id" {}
 variable "aws_region" {}

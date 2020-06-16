@@ -1,15 +1,105 @@
 #################################
+#  aws_iam_role : aws_ai_service_lambda_execution
+#################################
+
+resource "aws_iam_role" "aws_ai_service_lambda_execution" {
+  name               = format("%.64s", "${var.global_prefix}.${var.aws_region}.services.aws_ai.lambda-exec-role")
+  assume_role_policy = file("policies/assume-role-lambda.json")
+}
+
+resource "aws_iam_role_policy_attachment" "aws_ai_service_allow_full_logs" {
+  role       = aws_iam_role.aws_ai_service_lambda_execution.id
+  policy_arn = aws_iam_policy.allow_full_logs.arn
+}
+
+resource "aws_iam_role_policy_attachment" "aws_ai_service_allow_full_dynamodb" {
+  role       = aws_iam_role.aws_ai_service_lambda_execution.id
+  policy_arn = aws_iam_policy.allow_full_dynamodb.arn
+}
+
+resource "aws_iam_role_policy_attachment" "aws_ai_service_allow_full_s3" {
+  role       = aws_iam_role.aws_ai_service_lambda_execution.id
+  policy_arn = aws_iam_policy.allow_full_s3.arn
+}
+
+resource "aws_iam_role_policy_attachment" "aws_ai_service_allow_invoke_lambda" {
+  role       = aws_iam_role.aws_ai_service_lambda_execution.id
+  policy_arn = "arn:aws:iam::aws:policy/AWSLambdaFullAccess"
+}
+
+resource "aws_iam_role_policy_attachment" "aws_ai_service_allow_invoke_api_gateway" {
+  role       = aws_iam_role.aws_ai_service_lambda_execution.id
+  policy_arn = aws_iam_policy.allow_invoke_api_gateway.arn
+}
+
+resource "aws_iam_role_policy_attachment" "aws_ai_service_allow_full_rekognition" {
+  role       = aws_iam_role.aws_ai_service_lambda_execution.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonRekognitionFullAccess"
+}
+
+resource "aws_iam_role_policy_attachment" "aws_ai_service_allow_full_transcribe" {
+  role       = aws_iam_role.aws_ai_service_lambda_execution.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonTranscribeFullAccess"
+}
+
+resource "aws_iam_role_policy_attachment" "aws_ai_service_allow_translate_only" {
+  role       = aws_iam_role.aws_ai_service_lambda_execution.name
+  policy_arn = "arn:aws:iam::aws:policy/TranslateReadOnly"
+}
+
+resource "aws_iam_role_policy_attachment" "aws_ai_service_allow_full_amazon_polly" {
+  role       = aws_iam_role.aws_ai_service_lambda_execution.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonPollyFullAccess"
+}
+
+##################################
+#  aws_iam_role : aws_ai_service_reko_to_sns_execution
+##################################
+
+resource "aws_iam_role" "aws_ai_service_reko_to_sns_execution" {
+  name = format("%.64s", "${var.global_prefix}.${var.aws_region}.services.aws_ai.reko_to_sns_role")
+
+  assume_role_policy = file("policies/assume-role-rekognition.json")
+}
+
+resource "aws_iam_policy" "aws_ai_service_allow_reko_to_sns" {
+  name        = format("%.64s", "${var.global_prefix}.${var.aws_region}.reko_to_sns_policy")
+  description = "Policy for Reko to access SNS"
+
+  policy = jsonencode({
+    Version: "2012-10-17",
+    Statement: [
+      {
+        Effect: "Allow",
+        Action: "sns:Publish",
+        Resource: aws_sns_topic.sns_topic_reko_output.arn
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "aws_ai_service_allow_reko_to_sns" {
+  role       = aws_iam_role.aws_ai_service_reko_to_sns_execution.name
+  policy_arn = aws_iam_policy.aws_ai_service_allow_reko_to_sns.arn
+}
+
+resource "aws_iam_role_policy_attachment" "aws_ai_service_allow_reko_full_logs" {
+  role       = aws_iam_role.aws_ai_service_reko_to_sns_execution.name
+  policy_arn = aws_iam_policy.allow_full_logs.arn
+}
+
+#################################
 #  aws_lambda_function : aws-ai-service-api-handler
 #################################
 
 resource "aws_lambda_function" "aws_ai_service_api_handler" {
   filename         = "../services/aws-ai-service/api-handler/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-aws-ai-service-api-handler")
-  role             = aws_iam_role.iam_for_exec_lambda.arn
+  role             = aws_iam_role.aws_ai_service_lambda_execution.arn
   handler          = "index.handler"
   source_code_hash = filebase64sha256("../services/aws-ai-service/api-handler/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
-  timeout          = "900"
+  timeout          = "30"
   memory_size      = "3008"
 
   environment {
@@ -26,7 +116,7 @@ resource "aws_lambda_function" "aws_ai_service_api_handler" {
 resource "aws_lambda_function" "aws_ai_service_s3_trigger" {
   filename         = "../services/aws-ai-service/s3-trigger/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-aws-ai-service-s3-trigger")
-  role             = aws_iam_role.iam_for_exec_lambda.arn
+  role             = aws_iam_role.aws_ai_service_lambda_execution.arn
   handler          = "index.handler"
   source_code_hash = filebase64sha256("../services/aws-ai-service/s3-trigger/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
@@ -66,7 +156,6 @@ resource "aws_s3_bucket_notification" "aws_ai_service_output_bucket_notification
   lambda_function {
     lambda_function_arn = aws_lambda_function.aws_ai_service_s3_trigger.arn
     events              = ["s3:ObjectCreated:*"]
-    #filter_suffix       = "json"
   }
 }
 
@@ -77,7 +166,7 @@ resource "aws_s3_bucket_notification" "aws_ai_service_output_bucket_notification
 resource "aws_lambda_function" "aws_ai_service_sns_trigger" {
   filename         = "../services/aws-ai-service/sns-trigger/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-aws-ai-service-sns-trigger")
-  role             = aws_iam_role.iam_for_exec_lambda.arn
+  role             = aws_iam_role.aws_ai_service_lambda_execution.arn
   handler          = "index.handler"
   source_code_hash = filebase64sha256("../services/aws-ai-service/sns-trigger/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
@@ -104,7 +193,7 @@ resource "aws_lambda_function" "aws_ai_service_sns_trigger" {
 resource "aws_lambda_function" "aws_ai_service_worker" {
   filename         = "../services/aws-ai-service/worker/build/dist/lambda.zip"
   function_name    = format("%.64s", "${var.global_prefix}-aws-ai-service-worker")
-  role             = aws_iam_role.iam_for_exec_lambda.arn
+  role             = aws_iam_role.aws_ai_service_lambda_execution.arn
   handler          = "index.handler"
   source_code_hash = filebase64sha256("../services/aws-ai-service/worker/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
@@ -114,119 +203,19 @@ resource "aws_lambda_function" "aws_ai_service_worker" {
   environment {
     variables = {
       LogGroupName   = var.global_prefix
-      RekoSnsRoleArn = aws_iam_role.iam_role_Reko_to_SNS.arn
+      RekoSnsRoleArn = aws_iam_role.aws_ai_service_reko_to_sns_execution.arn
       SnsTopicArn    = aws_sns_topic.sns_topic_reko_output.arn
     }
   }
 }
 
 ##################################
-# AI Rekognition  - Roles
-##################################
-
-# Allows Rekognition to call AWS services on your behalf
-resource "aws_iam_role" "iam_role_Reko_to_SNS" {
-  name = format("%.64s", "${var.global_prefix}.${var.aws_region}.services.reko_to_sns_role")
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "rekognition.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole",
-      "Condition": {}
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_policy" "aws_iam_policy_Reko_to_SNS" {
-  name        = format("%.64s", "${var.global_prefix}.${var.aws_region}.reko_to_sns_policy")
-  description = "Policy for Reko to access SNS"
-
-  policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "sns:Publish"
-            ],
-            "Resource": "arn:aws:sns:*:*:AmazonRekognition*"
-        },
-        {
-            "Effect": "Allow",
-            "Action": [
-                "kinesis:PutRecord",
-                "kinesis:PutRecords"
-            ],
-            "Resource": "arn:aws:kinesis:*:*:stream/AmazonRekognition*"
-        },
-        {
-            "Effect": "Allow",
-            "Action": [
-                "kinesisvideo:GetDataEndpoint",
-                "kinesisvideo:GetMedia"
-            ],
-            "Resource": "*"
-        }
-    ]
-}
-EOF
-}
-
-resource "aws_iam_policy" "rekognition_policy" {
-  name        = format("%.64s", "${var.global_prefix}.${var.aws_region}.reko_policy")
-  description = "Policy to Access rekognition"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": "rekognition:*",
-      "Resource": "*"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy_attachment" "role_policy_rekognition" {
-  role       = aws_iam_role.iam_for_exec_lambda.name
-  policy_arn = aws_iam_policy.rekognition_policy.arn
-}
-
-resource "aws_iam_role_policy_attachment" "role_policy_reko_to_SNS" {
-  role       = aws_iam_role.iam_role_Reko_to_SNS.name
-  policy_arn = aws_iam_policy.aws_iam_policy_Reko_to_SNS.arn
-}
-
-resource "aws_iam_role_policy_attachment" "role_policy_log_reko_to_SNS" {
-  role       = aws_iam_role.iam_role_Reko_to_SNS.name
-  policy_arn = aws_iam_policy.log_policy.arn
-}
-
-resource "aws_iam_role_policy_attachment" "role_policy_rekognition_reko_to_SNS" {
-  role       = aws_iam_role.iam_role_Reko_to_SNS.name
-  policy_arn = aws_iam_policy.rekognition_policy.arn
-}
-
-resource "aws_iam_role_policy_attachment" "role_policy_lambda_full_access_reko_to_SNS" {
-  role       = aws_iam_role.iam_role_Reko_to_SNS.name
-  policy_arn = "arn:aws:iam::aws:policy/AWSLambdaFullAccess"
-}
-
-##################################
 # AI Rekognition  - SNS
 ##################################
+
+resource "aws_sns_topic" "sns_topic_reko_output" {
+  name = format("%.256s", "${var.global_prefix}-aws-ai-service")
+}
 
 resource "aws_lambda_permission" "aws_lambda_permission_with_sns" {
   statement_id  = "AllowExecutionFromSNS"
@@ -236,59 +225,10 @@ resource "aws_lambda_permission" "aws_lambda_permission_with_sns" {
   source_arn    = aws_sns_topic.sns_topic_reko_output.arn
 }
 
-resource "aws_sns_topic" "sns_topic_reko_output" {
-  name = format("%.256s", "AmazonRekognition_${var.global_prefix}_${var.aws_region}")
-}
-
 resource "aws_sns_topic_subscription" "aws_sns_topic_sub_lambda" {
   topic_arn = aws_sns_topic.sns_topic_reko_output.arn
   protocol  = "lambda"
   endpoint  = aws_lambda_function.aws_ai_service_sns_trigger.arn
-}
-
-resource "aws_iam_role" "aws_iam_role_sns_to_lambda" {
-  name = format("%.64s", "${var.global_prefix}.${var.aws_region}.services.sns_to_lambda_role")
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy_attachment" "role_policy_SNS_to_Lambda" {
-  role       = aws_iam_role.aws_iam_role_sns_to_lambda.name
-  policy_arn = aws_iam_policy.aws_iam_policy_Reko_to_SNS.arn
-}
-
-resource "aws_iam_role_policy_attachment" "role_policy_log_SNS_to_Lambda" {
-  role       = aws_iam_role.aws_iam_role_sns_to_lambda.name
-  policy_arn = aws_iam_policy.log_policy.arn
-}
-
-resource "aws_iam_role_policy_attachment" "role_policy_rekognition_SNS_to_Lambda" {
-  role       = aws_iam_role.aws_iam_role_sns_to_lambda.name
-  policy_arn = aws_iam_policy.rekognition_policy.arn
-}
-
-resource "aws_iam_role_policy_attachment" "role_policy_DynamoDB_SNS_to_Lambda" {
-  role       = aws_iam_role.aws_iam_role_sns_to_lambda.name
-  policy_arn = aws_iam_policy.DynamoDB_policy.arn
-}
-
-resource "aws_iam_role_policy_attachment" "role_policy_lambda_full_access_SNS_to_Lambda" {
-  role       = aws_iam_role.aws_iam_role_sns_to_lambda.name
-  policy_arn = "arn:aws:iam::aws:policy/AWSLambdaFullAccess"
 }
 
 ##################################
@@ -413,12 +353,19 @@ resource "aws_api_gateway_deployment" "aws_ai_service_deployment" {
   depends_on = [
     aws_api_gateway_integration.aws_ai_service_api_method_integration,
     aws_api_gateway_integration.aws_ai_service_options_integration,
+    aws_api_gateway_integration_response.aws_ai_service_options_integration_response,
   ]
 
   rest_api_id = aws_api_gateway_rest_api.aws_ai_service_api.id
 }
 
 resource "aws_api_gateway_stage" "aws_ai_service_gateway_stage" {
+  depends_on = [
+    aws_api_gateway_integration.aws_ai_service_api_method_integration,
+    aws_api_gateway_integration.aws_ai_service_options_integration,
+    aws_api_gateway_integration_response.aws_ai_service_options_integration_response,
+  ]
+
   stage_name    = var.environment_type
   deployment_id = aws_api_gateway_deployment.aws_ai_service_deployment.id
   rest_api_id   = aws_api_gateway_rest_api.aws_ai_service_api.id

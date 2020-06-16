@@ -9,7 +9,7 @@ resource "aws_lambda_function" "service_registry_api_handler" {
   handler          = "index.handler"
   source_code_hash = filebase64sha256("../services/service-registry/api-handler/build/dist/lambda.zip")
   runtime          = "nodejs10.x"
-  timeout          = "900"
+  timeout          = "30"
   memory_size      = "3008"
 
   environment {
@@ -141,12 +141,19 @@ resource "aws_api_gateway_deployment" "service_registry_deployment" {
   depends_on = [
     aws_api_gateway_integration.service_registry_api_method_integration,
     aws_api_gateway_integration.service_registry_options_integration,
+    aws_api_gateway_integration_response.service_registry_options_integration_response,
   ]
 
   rest_api_id = aws_api_gateway_rest_api.service_registry_api.id
 }
 
 resource "aws_api_gateway_stage" "service_registry_gateway_stage" {
+  depends_on = [
+    aws_api_gateway_integration.service_registry_api_method_integration,
+    aws_api_gateway_integration.service_registry_options_integration,
+    aws_api_gateway_integration_response.service_registry_options_integration_response,
+  ]
+
   stage_name    = var.environment_type
   deployment_id = aws_api_gateway_deployment.service_registry_deployment.id
   rest_api_id   = aws_api_gateway_rest_api.service_registry_api.id

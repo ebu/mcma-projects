@@ -4,8 +4,10 @@ import { map, switchMap, tap } from "rxjs/operators";
 
 import { WorkflowService } from "../../services/workflow.service";
 import { ContentService } from "../../services/content.service";
+import { ConfigService } from "../../services/config.service";
 import { WorkflowJobViewModel } from "../../view-models/workflow-job-vm";
 import { ContentViewModel } from "../../view-models/content-vm";
+import { McmaClientService } from 'src/app/services/mcma-client.service';
 
 @Component({
     selector: "mcma-monitor-detail",
@@ -24,6 +26,8 @@ export class MonitorDetailComponent {
     constructor(
         private workflowService: WorkflowService,
         private contentService: ContentService,
+        private configService: ConfigService,
+        private mcmaClientService: McmaClientService
     ) {
 
     }
@@ -38,29 +42,31 @@ export class MonitorDetailComponent {
         if (val) {
             this.aiJobVm$ = val.pipe(
                 switchMap(conformJobVm =>
-                    conformJobVm.isCompleted && conformJobVm.aiJobUrl
-                        ? this.workflowService.pollForCompletion(conformJobVm.aiJobUrl)
-                        : of(null)
+                    this.configService.get<boolean>("enablePolling").pipe(
+                        switchMap(enablePolling =>
+                            conformJobVm.isCompleted && conformJobVm.aiJobUrl
+                                ? enablePolling
+                                ? this.workflowService.pollForCompletion(conformJobVm.aiJobUrl)
+                                : this.workflowService.getWorkflowJobVm(conformJobVm.aiJobUrl)
+                                : of(null)
+                        )
+                    )
                 )
             );
 
             this.content$ = val.pipe(
                 switchMap(conformJobVm =>
-                    conformJobVm.isCompleted && conformJobVm.contentUrl
-                        ? this.contentService.pollUntil(
-                        conformJobVm.contentUrl, this.aiJobVm$.pipe(
-                            map(
-                                aiJobVm => aiJobVm && aiJobVm.isFinished)
+                    this.configService.get<boolean>("enablePolling").pipe(
+                        switchMap(enablePolling =>
+                            conformJobVm.isCompleted && conformJobVm.contentUrl
+                                ? enablePolling
+                                ? this.contentService.pollUntil(conformJobVm.contentUrl, this.aiJobVm$.pipe(map(aiJobVm => aiJobVm && aiJobVm.isFinished)))
+                                : this.contentService.getContent(conformJobVm.contentUrl).pipe(map(c => new ContentViewModel(c, this.mcmaClientService)))
+                                : of(null)
                         )
-                        )
-                        : of(null)
+                    )
                 ),
-                tap(contentVm => {
-                        if (contentVm) {
-                            console.log("contentVm", contentVm);
-                        }
-                    }
-                )
+                tap(contentVm => console.log("got content vm", contentVm))
             );
         }
     }

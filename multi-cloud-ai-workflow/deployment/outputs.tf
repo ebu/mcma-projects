@@ -14,8 +14,16 @@ output "cognito_identity_pool_id" {
   value = module.cognito.identity_pool_id
 }
 
+output "temp_bucket" {
+  value = module.storage.temp_bucket.id
+}
+
 output "upload_bucket" {
   value = module.storage.upload_bucket.id
+}
+
+output "repository_bucket" {
+  value = module.storage.repository_bucket.id
 }
 
 output "website_bucket" {
@@ -72,4 +80,8 @@ output "azure_ai_service_url" {
 
 output "google_ai_service_url" {
   value = module.services.google_ai_service_url
+}
+
+output "benchmarkstt_service_url" {
+  value = module.services.benchmarkstt_service_url
 }

@@ -8,6 +8,8 @@ task build {
     dependsOn "azure-ai-service:api-handler:build"
     dependsOn "azure-ai-service:api-handler-non-secure:build"
     dependsOn "azure-ai-service:worker:build"
+    dependsOn "benchmarkstt-service:api-handler:build"
+    dependsOn "benchmarkstt-service:worker:build"
     dependsOn "google-ai-service:api-handler:build"
     dependsOn "google-ai-service:worker:build"
     dependsOn "job-processor-service:api-handler:build"
@@ -20,30 +22,4 @@ task build {
     dependsOn "transform-service:worker:build"
     dependsOn "workflow-service:api-handler:build"
     dependsOn "workflow-service:worker:build"
-}
-
-subprojects {
-    task copyNodeModules(type: Copy) {
-        enabled file("package.json").exists()
-        dependsOn npmInstall
-        from "node_modules"
-        into "build/staging/node_modules"
-        exclude awsAvailableLibraries
-    }
-
-    task copySource(type: Copy) {
-        enabled file("package.json").exists()
-        from "src"
-        into "build/staging/"
-    }
-
-    task build(type: Zip) {
-        enabled file("package.json").exists()
-        dependsOn copySource, copyNodeModules
-        archiveName "lambda.zip"
-        destinationDir file("build/dist")
-        from "build/staging"
-        preserveFileTimestamps = false
-        reproducibleFileOrder = true
-    }
 }
