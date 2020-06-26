@@ -32,5 +32,5 @@ variable "job_processor_default_job_timeout_in_minutes" {
 }
 variable "job_processor_job_retention_period_in_days" {
   type = number
-  default = 1//90
+  default = 90
 }
