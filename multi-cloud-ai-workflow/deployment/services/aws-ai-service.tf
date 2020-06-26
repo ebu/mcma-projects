@@ -200,6 +200,8 @@ resource "aws_lambda_function" "aws_ai_service_worker" {
   timeout          = "900"
   memory_size      = "3008"
 
+  layers = [aws_lambda_layer_version.ffmpeg.arn]
+
   environment {
     variables = {
       LogGroupName   = var.global_prefix
@@ -250,9 +252,6 @@ resource "aws_dynamodb_table" "aws_ai_service_table" {
     name = "resource_id"
     type = "S"
   }
-
-  stream_enabled   = true
-  stream_view_type = "NEW_IMAGE"
 }
 
 ##############################

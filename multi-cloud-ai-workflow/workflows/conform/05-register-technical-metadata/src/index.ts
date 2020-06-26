@@ -29,24 +29,6 @@ type InputEvent = {
 } & JobBaseProperties;
 
 /**
- * get amejob id
- * @param {*} event
- */
-function getAmeJobId(event: InputEvent) {
-    let id;
-
-    event.data.ameJobId.forEach(element => {
-        if (element) {
-            id = element;
-            return true;
-        }
-    });
-
-    return id;
-}
-
-
-/**
  * Create New BMEssence Object
  * @param {*} bmContent the URL to the BMContent
  * @param {*} location point to copies of the media file
@@ -84,7 +66,7 @@ export async function handler(event: InputEvent, context: Context) {
         }
 
         // get ame job id
-        let ameJobId = getAmeJobId(event);
+        let ameJobId = event.data.ameJobId.find(id => id);
         if (!ameJobId) {
             throw new McmaException("Failed to obtain AmeJob ID");
         }

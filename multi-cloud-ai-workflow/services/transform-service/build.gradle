@@ -1,0 +1,4 @@
+task build {
+    dependsOn "api-handler:build"
+    dependsOn "worker:build"
+}

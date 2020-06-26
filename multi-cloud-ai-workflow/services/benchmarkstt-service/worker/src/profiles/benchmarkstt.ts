@@ -1,4 +1,5 @@
 import { ECS, S3 } from "aws-sdk";
+// @ts-ignore
 import { Client as RpcClient } from "node-json-rpc2";
 import { v4 as uuidv4 } from "uuid";
 
@@ -80,7 +81,7 @@ async function invokeBenchmarksttService(ipAddress: string, inputText: string, r
     logger.info(request);
 
     return new Promise<string>((resolve, reject) => {
-        client.call(request, (error, response: { result: string }) => {
+        client.call(request, (error: any, response: { result: string }) => {
             if (error) {
                 return reject(error);
             }

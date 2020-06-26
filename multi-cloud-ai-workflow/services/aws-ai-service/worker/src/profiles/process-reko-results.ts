@@ -32,7 +32,7 @@ export async function processRekognitionResult(providers: ProviderCollection, wo
         }
 
         // 3. Get the result from the Rekognition service
-        let data = [];
+        let data: any[] = [];
         let dataCelebrity: PromiseResult<AWS.Rekognition.GetCelebrityRecognitionResponse, AWS.AWSError>;
         let dataFace: PromiseResult<AWS.Rekognition.GetFaceDetectionResponse, AWS.AWSError>;
         let dataNextToken;
@@ -130,7 +130,7 @@ export async function processRekognitionResult(providers: ProviderCollection, wo
     }
 }
 
-function walkclean(x) {
+function walkclean(x: any) {
     let type: string = typeof x;
     if (x instanceof Array) {
         type = "array";

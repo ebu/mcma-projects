@@ -40,7 +40,7 @@ export async function processNotification(providers: ProviderCollection, workerR
 
     if (notification.content.status !== undefined) {
         jobAssignment.status = notification.content.status;
-        jobAssignment.statusMessage = notification.content.statusMessage;
+        jobAssignment.error = notification.content.error;
     }
     if (notification.content.progress !== undefined) {
         jobAssignment.progress = notification.content.progress;

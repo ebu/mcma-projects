@@ -25,7 +25,7 @@ const ThresholdSeconds = parseInt(process.env.ThresholdSeconds);
  * @param {*} minute minute
  * @param {*} seconds seconds
  */
-function calcSeconds(hour, minute, seconds) {
+function calcSeconds(hour: number, minute: number, seconds: number) {
     var sec = (hour * 60 * 60) + (minute * 60) + seconds;
     return sec;
 }

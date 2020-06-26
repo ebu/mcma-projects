@@ -1,0 +1,5 @@
+apply from: "${project.rootDir}/gradle-tasks-for-lambda.gradle"
+
+npmInstall {
+    dependsOn ":services:job-processor:lib-common:npmPack"
+}

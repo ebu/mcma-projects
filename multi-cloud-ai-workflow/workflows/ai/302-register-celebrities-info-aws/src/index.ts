@@ -67,7 +67,7 @@ export async function handler(event: InputEvent, context: Context) {
 
         let celebritiesResult = JSON.parse(s3Object.Body.toString());
 
-        let celebritiesMap = {};
+        let celebritiesMap: any = {};
         const timestampTolerance = 3000;
         const confidenceTolerance = 75;
         for (let j = 0; j < celebritiesResult.length;) {

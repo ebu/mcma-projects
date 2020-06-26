@@ -23,35 +23,35 @@ function msToTime(duration: string | number) {
     return hoursString + ":" + minutesString + ":" + secondsString + "." + millisecondsString;
 }
 
-function fromSrt(data) {
+function fromSrt(data: string) {
 
     data = data.replace(/\r/g, "");
 
     var regex = /(\d+)\n(\d{2}:\d{2}:\d{2},\d{3}) --> (\d{2}:\d{2}:\d{2},\d{3})/g;
-    data = data.split(regex);
+    const data2 = data.split(regex);
 //        logger.debug(data);
-    data.shift();
+    data2.shift();
 //        logger.debug(data);
 
     var items = "";
 
-    for (var i = 0; i < data.length; i += 4) {
+    for (var i = 0; i < data2.length; i += 4) {
 
-        if (i < (data.length - 4)) {
+        if (i < (data2.length - 4)) {
             items = items +
                     "{" +
-                    "\"id\": \"" + data[i].trim() + "\"," +
-                    "\"startTime\": \"" + data[i + 1].trim() + "\"," +
-                    "\"endTime\": \"" + data[i + 2].trim() + "\"," +
-                    "\"text\": \"" + data[i + 3].trim() + "\"" +
+                    "\"id\": \"" + data2[i].trim() + "\"," +
+                    "\"startTime\": \"" + data2[i + 1].trim() + "\"," +
+                    "\"endTime\": \"" + data2[i + 2].trim() + "\"," +
+                    "\"text\": \"" + data2[i + 3].trim() + "\"" +
                     "},";
-        } else if (i === (data.length - 4)) {
+        } else if (i === (data2.length - 4)) {
             items = items +
                     "{" +
-                    "\"id\": \"" + data[i].trim() + "\"," +
-                    "\"startTime\": \"" + data[i + 1].trim() + "\"," +
-                    "\"endTime\": \"" + data[i + 2].trim() + "\"," +
-                    "\"text\": \"" + data[i + 3].trim() + "\"" +
+                    "\"id\": \"" + data2[i].trim() + "\"," +
+                    "\"startTime\": \"" + data2[i + 1].trim() + "\"," +
+                    "\"endTime\": \"" + data2[i + 2].trim() + "\"," +
+                    "\"text\": \"" + data2[i + 3].trim() + "\"" +
                     "}";
         }
     }

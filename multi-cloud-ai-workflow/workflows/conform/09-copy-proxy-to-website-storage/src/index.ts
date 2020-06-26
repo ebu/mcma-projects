@@ -22,27 +22,9 @@ const TempBucket = process.env.TempBucket;
 type InputEvent = {
     data: {
         bmEssence: string;
+        transformJob: string[]
     };
 } & JobBaseProperties;
-
-/**
- * get amejob id
- * @param {*} event
- */
-function getTransformJobId(event) {
-    let id;
-
-    if (event.data.transformJob) {
-        event.data.transformJob.forEach(element => {
-            if (element) {
-                id = element;
-                return true;
-            }
-        });
-    }
-
-    return id;
-}
 
 /**
  * Lambda function handler
@@ -66,7 +48,7 @@ export async function handler(event: InputEvent, context: Context) {
         }
 
         // get transform job id
-        let transformJobId = getTransformJobId(event);
+        let transformJobId = event.data.transformJob?.find(id => id);
         // in case we did note do a transcode
         let outputFile;
         let copySource;

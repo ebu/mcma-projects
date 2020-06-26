@@ -58,23 +58,23 @@ export async function createCognitoUser(AWS: any, terraformOutput: any) {
 
     return new Promise<void>((resolve, reject) => {
         cognitoUser.authenticateUser(authenticationDetails, {
-            onSuccess: function (result) {
+            onSuccess: function (result: any) {
                 resolve();
             },
 
-            onFailure: function (err) {
+            onFailure: function (err: any) {
                 console.log("Unexpected error:", err);
                 reject(err);
             },
 
-            newPasswordRequired: (userAttributes, requiredAttributes) => {
+            newPasswordRequired: (userAttributes: any, requiredAttributes: any) => {
                 console.log("Changing temporary password to final password");
                 cognitoUser.completeNewPasswordChallenge(password, requiredAttributes, {
-                    onSuccess: (ignored) => {
+                    onSuccess: (ignored: any) => {
                         console.log("User '" + username + "' is ready with password '" + password + "'");
                         resolve();
                     },
-                    onFailure: (err) => {
+                    onFailure: (err: any) => {
                         console.log("Unexpected error:", err);
                         reject(err);
                     }

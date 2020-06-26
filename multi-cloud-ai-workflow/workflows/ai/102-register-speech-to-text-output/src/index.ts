@@ -1,5 +1,6 @@
 import * as AWS from "aws-sdk";
 import { Context } from "aws-lambda";
+// @ts-ignore
 import * as srtConvert from "aws-transcription-to-srt";
 
 import { EnvironmentVariableProvider, Job, JobBaseProperties, JobParameterBag, McmaException } from "@mcma/core";

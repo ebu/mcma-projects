@@ -12,6 +12,8 @@
             "es6",
             "es7"
         ],
-        "downlevelIteration": true
+        "downlevelIteration": true,
+        "noImplicitAny": true,
+        "noImplicitReturns": true
     }
 }

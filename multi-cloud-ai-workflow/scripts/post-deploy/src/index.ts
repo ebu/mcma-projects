@@ -11,6 +11,7 @@ const TERRAFORM_OUTPUT = "../../deployment/terraform.output.json";
 
 AWS.config.loadFromPath(AWS_CREDENTIALS);
 
+// @ts-ignore
 global["fetch"] = node_fetch;
 
 async function main() {

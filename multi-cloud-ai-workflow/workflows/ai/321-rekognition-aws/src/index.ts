@@ -110,7 +110,7 @@ export async function handler(event: InputEvent, context: Context) {
 }
 
 
-function createCelebritiesEmotionsScores(celebrityRecognitionJSON, faceRecognitionJSON) {
+function createCelebritiesEmotionsScores(celebrityRecognitionJSON: any, faceRecognitionJSON: any) {
     if ((celebrityRecognitionJSON !== undefined) && (faceRecognitionJSON !== undefined)) {
         let celebritiesAndFacesList = flattenFiles(celebrityRecognitionJSON, faceRecognitionJSON);
         let celebritiesList = createCelebritiesList(celebritiesAndFacesList);
@@ -119,10 +119,10 @@ function createCelebritiesEmotionsScores(celebrityRecognitionJSON, faceRecogniti
     }
 }
 
-function genScoreCelebrity(celebrities_faces_list, celebritiesList, emotionsList) {
-    let celebrityScore = {};
+function genScoreCelebrity(celebrities_faces_list: any[], celebritiesList: any[], emotionsList: any[]) {
+    let celebrityScore: any = {};
     for (let celebrityItem of celebritiesList) {
-        let celebrityEmotions = {};
+        let celebrityEmotions: any = {};
         for (let emotionItem of emotionsList) {
             celebrityEmotions[emotionItem] = 0;
             celebrityEmotions["counter"] = 0;
@@ -160,8 +160,8 @@ function genScoreCelebrity(celebrities_faces_list, celebritiesList, emotionsList
     return celebrityScore;
 }
 
-function createCelebritiesList(celebritiesAndFacesList) {
-    let celebritiesList = [];
+function createCelebritiesList(celebritiesAndFacesList: any[]) {
+    let celebritiesList: any[] = [];
     for (let celebritiesAndFacesItem of celebritiesAndFacesList) {
         let celebrityName = celebritiesAndFacesItem.Celebrity.Name;
         if (!celebritiesList.includes(celebrityName)) {
@@ -171,8 +171,8 @@ function createCelebritiesList(celebritiesAndFacesList) {
     return celebritiesList;
 }
 
-function createFacesList(celebritiesAndFacesList) {
-    let emotionsList = [];
+function createFacesList(celebritiesAndFacesList: any[]) {
+    let emotionsList: any[] = [];
     for (let celebritiesAndFacesItem of celebritiesAndFacesList) {
         let faceReko = celebritiesAndFacesItem.FaceReko;
         if (faceReko.Emotions) {
@@ -187,20 +187,20 @@ function createFacesList(celebritiesAndFacesList) {
     return emotionsList;
 }
 
-function flattenFiles(celebrityRecognitionJSON, faceRecognitionJSON) {
+function flattenFiles(celebrityRecognitionJSON: any, faceRecognitionJSON: any) {
     let celebritiesList = [];
     let facesList = [];
     for (let i = 0; i < celebrityRecognitionJSON.length; i++) {
         console.log(celebrityRecognitionJSON[i]);
         let celebrity = celebrityRecognitionJSON[i];
-        let celebrityTemp = [];
+        let celebrityTemp: any = {};
         celebrityTemp["Timestamp"] = celebrity.Timestamp;
         celebrityTemp["Celebrity"] = celebrity.Celebrity;
         celebritiesList.push(celebrityTemp);
     }
     for (let i = 0; i < faceRecognitionJSON.length; i++) {
         let face = faceRecognitionJSON[i];
-        let faceTemp = [];
+        let faceTemp: any = {};
         faceTemp["Timestamp"] = face.Timestamp;
         let faceTempFace = face.Face;
         delete faceTempFace["Pose"];
@@ -211,7 +211,7 @@ function flattenFiles(celebrityRecognitionJSON, faceRecognitionJSON) {
     return mergeFacesAndCelebrities(celebritiesList, facesList);
 }
 
-function mergeFacesAndCelebrities(celebritiesList, facesList, threshold = 5) {
+function mergeFacesAndCelebrities(celebritiesList: any[], facesList: any[], threshold = 5) {
     let facesIndexes = [];
     let facesScores = [];
     for (const [celebrityIndex, celebrityValue] of celebritiesList.entries()) {
@@ -304,11 +304,11 @@ function mergeFacesAndCelebrities(celebritiesList, facesList, threshold = 5) {
     return (celebritiesAndFacesList);
 }
 
-function argMax(array) {
+function argMax(array: any[]) {
     return array.map((x, i) => [x, i]).reduce((r, a) => (a[0] > r[0] ? a : r))[1];
 }
 
-function getIntersectionRatio(a, b, epsilon = 1e-5) {
+function getIntersectionRatio(a: number[], b: number[], epsilon = 1e-5) {
     let x1 = Math.max(a[0], b[0]);
     let y1 = Math.max(a[1], b[1]);
     let x2 = Math.min(a[2], b[2]);
@@ -325,7 +325,7 @@ function getIntersectionRatio(a, b, epsilon = 1e-5) {
     return Math.abs(areaOverlapped / (areaCombined + epsilon));
 }
 
-function getLeftEyeCoordinates(celebrityLandmarks) {
+function getLeftEyeCoordinates(celebrityLandmarks: any[]) {
     let xCoord;
     let yCoord;
     for (let celebrityLandmark of celebrityLandmarks) {

@@ -1,0 +1,6 @@
+task build {
+    dependsOn "api-handler:build"
+    dependsOn "s3-trigger:build"
+    dependsOn "sns-trigger:build"
+    dependsOn "worker:build"
+}

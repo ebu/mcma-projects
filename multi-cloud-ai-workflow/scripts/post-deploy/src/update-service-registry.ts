@@ -4,7 +4,7 @@ import { awsV4Auth } from "@mcma/aws-client";
 
 export async function updateServiceRegistry(AWS: any, terraformOutput: any): Promise<ResourceManager> {
     const servicesAuthType = terraformOutput.service_registry_auth_type.value;
-    const servicesAuthContext = undefined;
+    const servicesAuthContext: any = undefined;
     const servicesUrl = terraformOutput.service_registry_url.value + "/services";
     const jobProfilesUrl = terraformOutput.service_registry_url.value + "/job-profiles";
 
@@ -114,7 +114,7 @@ export async function updateServiceRegistry(AWS: any, terraformOutput: any): Pro
     return resourceManager;
 }
 
-function createServices(terraformOutput) {
+function createServices(terraformOutput: any) {
     const serviceList = [];
 
     for (const prop in terraformOutput) {
@@ -166,7 +166,7 @@ function createServices(terraformOutput) {
                 case "azure_ai_service_url":
                     serviceList.push(
                         new Service({
-                            name: "AZURE AI Service",
+                            name: "Azure AI Service",
                             resources: [
                                 new ResourceEndpoint({
                                     resourceType: "JobAssignment",
@@ -217,21 +217,9 @@ function createServices(terraformOutput) {
                         })
                     );
                     break;
-                case "job_processor_service_url":
+                case "job_processor_url":
                     serviceList.push(new Service({
-                        name: "Job Processor Service",
-                        resources: [
-                            new ResourceEndpoint({
-                                resourceType: "JobProcess",
-                                httpEndpoint: terraformOutput[prop].value + "/job-processes"
-                            })
-                        ],
-                        authType: "AWS4"
-                    }));
-                    break;
-                case "job_repository_url":
-                    serviceList.push(new Service({
-                        name: "Job Repository",
+                        name: "Job Processor",
                         resources: [
                             new ResourceEndpoint({
                                 resourceType: "AmeJob",
@@ -243,6 +231,10 @@ function createServices(terraformOutput) {
                             }),
                             new ResourceEndpoint({
                                 resourceType: "CaptureJob",
+                                httpEndpoint: terraformOutput[prop].value + "/jobs"
+                            }),
+                            new ResourceEndpoint({
+                                resourceType: "DistributionJob",
                                 httpEndpoint: terraformOutput[prop].value + "/jobs"
                             }),
                             new ResourceEndpoint({
@@ -328,7 +320,7 @@ function createServices(terraformOutput) {
         }
     }
 
-    let services = {};
+    let services: { [key: string]: Service } = {};
 
     for (const service of serviceList) {
         services[service.name] = service;
@@ -338,7 +330,7 @@ function createServices(terraformOutput) {
 }
 
 
-const JobProfiles = {
+const JobProfiles: { [key: string]: JobProfile } = {
     ConformWorkflow: new JobProfile({
         name: "ConformWorkflow",
         inputParameters: [
