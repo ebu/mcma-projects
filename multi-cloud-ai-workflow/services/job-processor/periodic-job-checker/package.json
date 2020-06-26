@@ -1,0 +1,29 @@
+{
+    "name": "job-processor-periodic-job-checker",
+    "version": "0.0.0",
+    "description": "Periodic Job Checker for Job Processor",
+    "private": true,
+    "engines": {
+        "node": "~10.16.3"
+    },
+    "license": "Apache-2.0",
+    "dependencies": {
+        "@mcma/api": "0.10.0",
+        "@mcma/aws-client": "0.10.0",
+        "@mcma/aws-dynamodb": "0.10.0",
+        "@mcma/aws-lambda-worker-invoker": "0.10.0",
+        "@mcma/aws-logger": "0.10.0",
+        "@mcma/core": "0.10.0",
+        "@mcma/client": "0.10.0",
+        "@mcma/data": "0.10.0",
+        "@mcma/worker": "0.10.0",
+        "aws-sdk": "^2.631.0",
+        "aws-xray-sdk": "^3.0.0",
+        "uuid": "^7.0.3"
+    },
+    "devDependencies": {
+        "@types/aws-lambda": "^8.10.51",
+        "@types/node": "^10.17.21",
+        "@types/uuid": "^7.0.3"
+    }
+}

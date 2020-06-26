@@ -46,12 +46,8 @@ output "media_repository_url" {
   value = module.services.media_repository_url
 }
 
-output "job_repository_url" {
-  value = module.services.job_repository_url
-}
-
-output "job_processor_service_url" {
-  value = module.services.job_processor_service_url
+output "job_processor_url" {
+  value = module.services.job_processor_url
 }
 
 output "ame_service_url" {

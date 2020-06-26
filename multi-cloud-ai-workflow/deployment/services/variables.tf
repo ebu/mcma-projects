@@ -25,3 +25,12 @@ variable "vpc_default_security_group_id" {}
 variable "ecs_enabled" {
   type = bool
 }
+
+variable "job_processor_default_job_timeout_in_minutes" {
+  type = number
+  default = 720
+}
+variable "job_processor_job_retention_period_in_days" {
+  type = number
+  default = 90
+}

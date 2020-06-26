@@ -1,11 +1,1 @@
 apply from: "${project.rootDir}/gradle-tasks-for-lambda.gradle"
-
-task copyFFmpegBin(type: Copy) {
-    from "externals/ffmpeg"
-    into "build/staging/bin"
-}
-
-build {
-    dependsOn copyFFmpegBin
-    fileMode 0755
-}

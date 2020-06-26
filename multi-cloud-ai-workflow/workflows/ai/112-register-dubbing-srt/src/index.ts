@@ -29,7 +29,7 @@ type InputEvent = {
  * @param {*} title of the media file
  * @param {*} description of the media file
  */
-function createBMEssence(bmContent, location, title, description) {
+function createBMEssence(bmContent: BMContent, location: AwsS3FileLocator, title: string, description: string) {
     // init bmcontent
     let bmEssence = new BMEssence({
         "bmContent": bmContent.id,

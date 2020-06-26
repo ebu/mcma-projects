@@ -11,24 +11,6 @@ const environmentVariableProvider = new EnvironmentVariableProvider();
 const resourceManager = new ResourceManager(getResourceManagerConfig(environmentVariableProvider), new AuthProvider().add(awsV4Auth(AWS)));
 const loggerProvider = new AwsCloudWatchLoggerProvider("conform-workflow-08-register-proxy-essence", process.env.LogGroupName);
 
-/**
- * get amejob id
- * @param {*} event
- */
-function getTransformJobId(event: InputEvent): string {
-    let id;
-
-    if (event.data.transformJob) {
-        event.data.transformJob.forEach(element => {
-            if (element) {
-                id = element;
-                return true;
-            }
-        });
-    }
-
-    return id;
-}
 
 type InputEvent = {
     data: {
@@ -78,7 +60,7 @@ export async function handler(event: InputEvent, context: Context) {
         }
 
         // get transform job id
-        let transformJobId = getTransformJobId(event);
+        let transformJobId = event.data.transformJob?.find(id => id);
 
         // in case we did note do a transcode
         if (!transformJobId) {

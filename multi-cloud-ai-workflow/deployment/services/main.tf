@@ -28,7 +28,6 @@ resource "aws_iam_policy" "allow_invoke_api_gateway" {
 
 resource "aws_iam_policy" "allow_invoke_lambda" {
   name        = "${var.global_prefix}.${var.aws_region}.services.allow-invoke-lambda"
-  path        = "/app/"
   description = "Policy to allow to invoke lambdas"
   policy      = file("policies/allow-invoke-lambda.json")
 }
@@ -49,6 +48,12 @@ resource "aws_iam_policy" "allow_kms_decrypt" {
   name        = "${var.global_prefix}.${var.aws_region}.services.allow-kms-decrypt"
   description = "Policy to decrypt KMS keys"
   policy      = file("policies/allow-kms-decrypt.json")
+}
+
+resource "aws_iam_policy" "allow_full_events" {
+  name        = "${var.global_prefix}.${var.aws_region}.services.allow-full-events"
+  description = "Policy to allow full access to Cloudwatch Events"
+  policy      = file("policies/allow-full-events.json")
 }
 
 ###################

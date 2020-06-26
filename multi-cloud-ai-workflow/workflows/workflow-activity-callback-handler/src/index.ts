@@ -37,22 +37,35 @@ async function processNotification(requestContext: McmaApiRequestContext) {
     logger.info("Received update with status " + notification.content.status + " for job id: " + notification.source);
 
     switch (notification.content.status) {
-        case JobStatus.Completed:
+        case JobStatus.Completed: {
             await StepFunctions.sendTaskSuccess({
                 taskToken: request.queryStringParameters.taskToken,
                 output: JSON.stringify(notification.source)
             }).promise();
             break;
-        case JobStatus.Failed:
-            const error = notification.content["@type"] + " failed execution";
-            const cause = notification.content["@type"] + " with id '" + notification.source + "' failed execution with statusMessage '" + notification.content.statusMessage + "'";
+        }
+        case JobStatus.Failed: {
+            const error = "JobFailed";
+            const cause = JSON.stringify(notification.content);
 
             await StepFunctions.sendTaskFailure({
                 taskToken: request.queryStringParameters.taskToken,
                 error: error,
-                cause: JSON.stringify(cause)
+                cause: cause
             }).promise();
             break;
+        }
+        case JobStatus.Canceled: {
+            const error = "JobCanceled";
+            const cause = JSON.stringify(notification.content);
+
+            await StepFunctions.sendTaskFailure({
+                taskToken: request.queryStringParameters.taskToken,
+                error: error,
+                cause: cause
+            }).promise();
+            break;
+        }
     }
 }
 

@@ -38,9 +38,6 @@ resource "aws_dynamodb_table" "service_registry_table" {
     name = "resource_id"
     type = "S"
   }
-
-  stream_enabled   = true
-  stream_view_type = "NEW_IMAGE"
 }
 
 ##############################
