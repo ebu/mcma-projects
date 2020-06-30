@@ -1,0 +1,136 @@
+import groovy.json.JsonOutput
+
+task generateTerraformTFVars {
+    inputs.property("ENVIRONMENT_NAME", environmentName)
+    inputs.property("ENVIRONMENT_TYPE", environmentType)
+    inputs.property("AWS_ACCOUNT_ID", awsAccountId)
+    inputs.property("AWS_ACCESS_KEY", awsAccessKey)
+    inputs.property("AWS_SECRET_KEY", awsSecretKey)
+    inputs.property("AWS_REGION", awsRegion)
+
+    def propertyFile = file("${projectDir}/terraform.tfvars.json")
+    outputs.file(propertyFile)
+
+    doLast {
+        def data = [
+                environment_name               : environmentName,
+                environment_type               : environmentType,
+                global_prefix                  : "${environmentName}.${environmentType}".replace(".", "-"),
+
+                aws_account_id                 : awsAccountId,
+                aws_access_key                 : awsAccessKey,
+                aws_secret_key                 : awsSecretKey,
+                aws_region                     : awsRegion
+        ]
+
+        def json = JsonOutput.toJson(data)
+        def jsonPretty = JsonOutput.prettyPrint(json)
+
+        propertyFile.write(jsonPretty)
+    }
+}
+
+task generateAwsCredentialsJson {
+    inputs.property("AWS_ACCESS_KEY", awsAccessKey)
+    inputs.property("AWS_SECRET_KEY", awsSecretKey)
+    inputs.property("AWS_REGION", awsRegion)
+
+    def awsCredentialsJson = file("aws-credentials.json")
+    outputs.file(awsCredentialsJson)
+
+    doLast {
+        def data = [
+                accessKeyId    : awsAccessKey,
+                secretAccessKey: awsSecretKey,
+                region         : awsRegion
+        ]
+
+        def json = JsonOutput.toJson(data)
+        def jsonPretty = JsonOutput.prettyPrint(json)
+
+        awsCredentialsJson.write(jsonPretty)
+    }
+}
+
+task terraformInit(type: Exec) {
+    dependsOn ":verifyTerraform"
+    inputs.file "main.tf"
+    outputs.upToDateWhen { file(".terraform").exists() }
+    commandLine terraformExecutable
+    args "init"
+}
+
+task terraformPlan(type: Exec) {
+    dependsOn ":verifyTerraform"
+    dependsOn ":build"
+    dependsOn terraformInit
+    dependsOn generateTerraformTFVars
+    commandLine terraformExecutable
+    args "plan"
+}
+
+task terraformApply(type: Exec) {
+    dependsOn ":verifyTerraform"
+    dependsOn ":build"
+    dependsOn terraformInit
+    dependsOn generateTerraformTFVars
+    commandLine terraformExecutable
+    args "apply", "-auto-approve"
+}
+
+task terraformDestroy(type: Exec) {
+    dependsOn ":verifyTerraform"
+    dependsOn terraformInit
+    dependsOn generateTerraformTFVars
+    commandLine terraformExecutable
+    args "destroy", "-force"
+}
+
+task terraformOutput(type: Exec) {
+    mustRunAfter terraformApply
+    inputs.file("terraform.tfstate")
+    outputs.file("terraform.output.json")
+    commandLine terraformExecutable
+    args "output", "-json"
+    doFirst {
+        standardOutput new FileOutputStream("${projectDir}/terraform.output.json")
+    }
+}
+
+task clean {
+    delete "${projectDir}/aws-credentials.json"
+    delete "${projectDir}/terraform.output"
+    delete "${projectDir}/terraform.output.json"
+    delete "${projectDir}/terraform.output"
+    delete "${projectDir}/terraform.output.json"
+    delete "${projectDir}/terraform.tfvars"
+    delete "${projectDir}/terraform.tfvars.json"
+}
+
+task plan {
+    dependsOn(terraformPlan)
+}
+
+task deploy {
+    dependsOn terraformApply
+    dependsOn ":scripts:post-deploy:run"
+}
+
+task destroy {
+    dependsOn(terraformDestroy)
+}
+
+task terraformTaintJobRepository(type: Exec) {
+    commandLine terraformExecutable
+    args "taint", "module.services.aws_api_gateway_deployment.job_repository_deployment"
+}
+
+task terraformTaintServiceRegistry(type: Exec) {
+    commandLine terraformExecutable
+    args "taint", "module.services.aws_api_gateway_deployment.service_registry_deployment"
+}
+
+task terraformTaint {
+    dependsOn terraformTaintJobRepository
+    dependsOn terraformTaintServiceRegistry
+}
