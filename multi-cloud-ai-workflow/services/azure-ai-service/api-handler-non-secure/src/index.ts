@@ -13,11 +13,11 @@ const workerInvoker = new LambdaWorkerInvoker();
 async function processNotification(requestContext: McmaApiRequestContext) {
     const request = requestContext.request;
 
-    const table = dbTableProvider.get(getTableName(requestContext), JobAssignment);
+    const table = await dbTableProvider.get(getTableName(requestContext));
 
     const jobAssignmentId = getPublicUrl(requestContext) + "/job-assignments/" + request.pathVariables.id;
 
-    const jobAssignment = await table.get(jobAssignmentId);
+    const jobAssignment = await table.get("JobAssignment", jobAssignmentId);
     if (!jobAssignment) {
         requestContext.setResponseResourceNotFound();
         return;

@@ -34,9 +34,9 @@ export async function processNotification(providers: ProviderCollection, workerR
     const jobAssignmentId = workerRequest.input.jobAssignmentId;
     const notification = workerRequest.input.notification;
 
-    const table = providers.dbTableProvider.get(getTableName(workerRequest), JobAssignment);
+    const table = await providers.dbTableProvider.get(getTableName(workerRequest));
 
-    const jobAssignment = await table.get(jobAssignmentId);
+    const jobAssignment = await table.get("JobAssignment", jobAssignmentId);
 
     if (notification.content.status !== undefined) {
         jobAssignment.status = notification.content.status;
@@ -48,7 +48,7 @@ export async function processNotification(providers: ProviderCollection, workerR
     jobAssignment.jobOutput = notification.content.output;
     jobAssignment.dateModified = new Date();
 
-    await table.put(jobAssignmentId, jobAssignment);
+    await table.put("JobAssignment", jobAssignmentId, jobAssignment);
 
     const resourceManager = providers.resourceManagerProvider.get(workerRequest);
 
