@@ -1,0 +1,11 @@
+apply from: "${project.rootDir}/gradle-tasks-for-npm.gradle"
+
+task run(type: Exec) {
+    dependsOn ":deployment:generateAwsCredentialsJson"
+    dependsOn ":deployment:terraformOutput"
+    dependsOn tsc
+    commandLine npmExecutable
+    args "start"
+    args "--"
+    args testFilePath
+}

@@ -10,7 +10,7 @@ const Rekognition = new AWS.Rekognition();
 
 export async function processRekognitionResult(providers: ProviderCollection, workerRequest: WorkerRequest) {
     const jobAssignmentHelper = new ProcessJobAssignmentHelper(
-        providers.dbTableProvider.get(getTableName(workerRequest), JobAssignment),
+        await providers.dbTableProvider.get(getTableName(workerRequest)),
         providers.resourceManagerProvider.get(workerRequest),
         workerRequest
     );

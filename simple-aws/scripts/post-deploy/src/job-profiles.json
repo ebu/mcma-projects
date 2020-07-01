@@ -1,0 +1,60 @@
+{
+    "ExtractTechnicalMetadata": {
+        "@type": "JobProfile",
+        "name": "ExtractTechnicalMetadata",
+        "inputParameters": [
+            {
+                "@type": "JobParameter",
+                "parameterName": "inputFile",
+                "parameterType": "Locator"
+            },
+            {
+                "@type": "JobParameter",
+                "parameterName": "outputLocation",
+                "parameterType": "Locator"
+            }
+        ],
+        "outputParameters": [
+            {
+                "@type": "JobParameter",
+                "parameterName": "outputFile",
+                "parameterType": "Locator"
+            }
+        ]
+    },
+    "ExtractThumbnail": {
+        "@type": "JobProfile",
+        "name": "ExtractThumbnail",
+        "inputParameters": [
+            {
+                "@type": "JobParameter",
+                "parameterName": "inputFile",
+                "parameterType": "Locator"
+            },
+            {
+                "@type": "JobParameter",
+                "parameterName": "outputLocation",
+                "parameterType": "Locator"
+            }
+        ],
+        "outputParameters": [
+            {
+                "@type": "JobParameter",
+                "parameterName": "outputFile",
+                "parameterType": "Locator"
+            }
+        ],
+        "optionalInputParameters": [
+            {
+                "@type": "JobParameter",
+                "parameterName": "ebucore:width",
+                "parameterType": "number"
+            },
+            {
+                "@type": "JobParameter",
+                "parameterName": "ebucore:height",
+                "parameterType": "number"
+            }
+        ]
+    }
+}
