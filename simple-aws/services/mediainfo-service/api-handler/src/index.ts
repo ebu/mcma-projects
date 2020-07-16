@@ -5,7 +5,7 @@ import { invokeLambdaWorker } from "@mcma/aws-lambda-worker-invoker";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { ApiGatewayApiController } from "@mcma/aws-api-gateway";
 
-const loggerProvider = new AwsCloudWatchLoggerProvider("ame-service-api-handler", process.env.LogGroupName);
+const loggerProvider = new AwsCloudWatchLoggerProvider("mediainfo-service-api-handler", process.env.LogGroupName);
 const dbTableProvider = new DynamoDbTableProvider();
 
 const restController = new ApiGatewayApiController(defaultRoutesForJobs(dbTableProvider, invokeLambdaWorker).build(), loggerProvider);

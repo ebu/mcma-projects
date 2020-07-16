@@ -12,7 +12,7 @@ import { extractTechnicalMetadata } from "./profiles/extract-technical-metadata"
 const authProvider = new AuthProvider().add(awsV4Auth(AWS));
 const dbTableProvider = new DynamoDbTableProvider();
 const contextVariableProvider = new EnvironmentVariableProvider();
-const loggerProvider = new AwsCloudWatchLoggerProvider("ame-service-worker", process.env.LogGroupName);
+const loggerProvider = new AwsCloudWatchLoggerProvider("mediainfo-service-worker", process.env.LogGroupName);
 const resourceManagerProvider = new ResourceManagerProvider(authProvider);
 
 const providerCollection = new ProviderCollection({
