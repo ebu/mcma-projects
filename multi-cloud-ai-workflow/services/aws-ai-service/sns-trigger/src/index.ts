@@ -47,8 +47,8 @@ export async function handler(event: SNSEvent, context: Context) {
                 logger.debug("status:", status);
                 logger.debug("jobAssignmentId:", jobAssignmentId);
 
-                const table = dbTableProvider.get<JobAssignment>(getTableName(environmentVariableProvider), JobAssignment);
-                const jobAssignment = await table.get(jobAssignmentId);
+                const table = await dbTableProvider.get(getTableName(environmentVariableProvider));
+                const jobAssignment = await table.get("JobAssignment", jobAssignmentId);
                 if (!jobAssignment) {
                     throw new McmaException("Failed to find JobAssignment with id: " + jobAssignmentId);
                 }
