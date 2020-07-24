@@ -40,17 +40,17 @@ export async function handler(event: SNSEvent, context: Context) {
                 let jt = message.JobTag.toString();
                 logger.debug("jt:", jt);
 
-                const jobAssignmentId = Buffer.from(jt, "hex").toString("ascii");
+                const jobAssignmentDatabaseId = Buffer.from(jt, "hex").toString("ascii");
 
                 logger.debug("rekoJobId:", rekoJobId);
                 logger.debug("rekoJobType:", rekoJobType);
                 logger.debug("status:", status);
-                logger.debug("jobAssignmentId:", jobAssignmentId);
+                logger.debug("jobAssignmentDatabaseId:", jobAssignmentDatabaseId);
 
                 const table = await dbTableProvider.get(getTableName(environmentVariableProvider));
-                const jobAssignment = await table.get("JobAssignment", jobAssignmentId);
+                const jobAssignment = await table.get(jobAssignmentDatabaseId);
                 if (!jobAssignment) {
-                    throw new McmaException("Failed to find JobAssignment with id: " + jobAssignmentId);
+                    throw new McmaException("Failed to find JobAssignment with id: " + jobAssignmentDatabaseId);
                 }
 
                 // invoking worker lambda function that will process the results of transcription job
@@ -62,7 +62,7 @@ export async function handler(event: SNSEvent, context: Context) {
                         operationName: "ProcessRekognitionResult",
                         contextVariables: environmentVariableProvider.getAllContextVariables(),
                         input: {
-                            jobAssignmentId,
+                            jobAssignmentId: jobAssignmentDatabaseId,
                             jobInfo: {
                                 rekoJobId,
                                 rekoJobType,

@@ -4,10 +4,9 @@ import { v4 as uuidv4 } from "uuid";
 import * as path from "path";
 
 import { config, EC2, ECS, S3 } from "aws-sdk";
-import { JobAssignment, JobParameterBag, JobProcess, JobProfile, JobStatus, McmaException, McmaTracker, QAJob, TransformJob } from "@mcma/core";
-import { AuthProvider, ResourceManager } from "@mcma/client";
+import { JobAssignment, JobParameterBag, JobExecution, JobProfile, JobStatus, McmaException, McmaTracker, QAJob, TransformJob } from "@mcma/core";
+import { AuthProvider, ResourceManager, ResourceManagerConfig } from "@mcma/client";
 import { AwsS3FileLocator, AwsS3FolderLocator } from "@mcma/aws-s3";
-import "@mcma/aws-client";
 import { awsV4Auth } from "@mcma/aws-client";
 
 const AWS_CREDENTIALS = "../../deployment/aws-credentials.json";
@@ -20,11 +19,11 @@ const s3 = new S3();
 const INPUT_FILE = "../benchmarkstt-hypothesis.txt";
 const REFERENCE_FILE = "../benchmarkstt-reference.txt";
 
-async function sleep(timeout) {
+async function sleep(timeout: number) {
     return new Promise((resolve) => setTimeout(() => resolve(), timeout));
 }
 
-async function uploadFileToBucket(bucket, prefix, filename) {
+async function uploadFileToBucket(bucket: string, prefix: string, filename: string) {
     const fileStream = fs.createReadStream(filename);
     fileStream.on("error", function (err) {
         console.log("File Error", err);
@@ -111,7 +110,7 @@ async function main() {
     let servicesAuthType = terraformOutput.service_registry_auth_type.value;
     let servicesAuthContext = undefined;
 
-    const resourceManagerConfig = {
+    const resourceManagerConfig: ResourceManagerConfig = {
         servicesUrl,
         servicesAuthType,
         servicesAuthContext
@@ -150,16 +149,13 @@ async function main() {
 
     console.log(JSON.stringify(job, null, 2));
 
-    if (job.jobProcess) {
-        const jobProcess = await resourceManager.get<JobProcess>(job.jobProcess);
-        console.log(JSON.stringify(jobProcess, null, 2));
+    const jobExecution = await resourceManager.get<JobExecution>(`${job.id}/executions/1`);
+    console.log(JSON.stringify(jobExecution, null, 2));
 
-        if (jobProcess.jobAssignment) {
-            const jobAssignment = await resourceManager.get<JobAssignment>(jobProcess.jobAssignment);
-            console.log(JSON.stringify(jobAssignment, null, 2));
-        }
+    if (jobExecution.jobAssignment) {
+        const jobAssignment = await resourceManager.get<JobAssignment>(jobExecution.jobAssignment);
+        console.log(JSON.stringify(jobAssignment, null, 2));
     }
-
 }
 
 main().then(ignored => console.log("Done")).catch(error => console.error(error));

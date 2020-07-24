@@ -4,8 +4,8 @@ import { v4 as uuidv4 } from "uuid";
 import * as path from "path";
 
 import { config, S3 } from "aws-sdk";
-import { AIJob, JobAssignment, JobParameterBag, JobProcess, JobProfile, JobStatus, McmaException, McmaTracker, TransformJob } from "@mcma/core";
-import { AuthProvider, ResourceManager } from "@mcma/client";
+import { AIJob, JobAssignment, JobExecution, JobParameterBag, JobProfile, JobStatus, McmaException, McmaTracker, TransformJob } from "@mcma/core";
+import { AuthProvider, ResourceManager, ResourceManagerConfig } from "@mcma/client";
 import { AwsS3FileLocator, AwsS3FolderLocator } from "@mcma/aws-s3";
 import { awsV4Auth } from "@mcma/aws-client";
 
@@ -15,11 +15,11 @@ const s3 = new S3();
 
 const TEST_FILE = "../2015_GF_ORF_00_18_09_conv.flac";
 
-async function sleep(timeout) {
+async function sleep(timeout: number) {
     return new Promise((resolve) => setTimeout(() => resolve(), timeout));
 }
 
-async function uploadFileToBucket(bucket, prefix, filename) {
+async function uploadFileToBucket(bucket: string, prefix: string, filename: string) {
     const fileStream = fs.createReadStream(filename);
     fileStream.on("error", function (err) {
         console.log("File Error", err);
@@ -66,7 +66,7 @@ async function main() {
     let servicesAuthType = terraformOutput["service_registry_auth_type"]?.value;
     let servicesAuthContext = undefined;
 
-    const resourceManagerConfig = {
+    const resourceManagerConfig: ResourceManagerConfig = {
         servicesUrl,
         servicesAuthType,
         servicesAuthContext
@@ -104,16 +104,13 @@ async function main() {
 
     console.log(JSON.stringify(job, null, 2));
 
-    if (job.jobProcess) {
-        const jobProcess = await resourceManager.get<JobProcess>(job.jobProcess);
-        console.log(JSON.stringify(jobProcess, null, 2));
+    const jobExecution = await resourceManager.get<JobExecution>(`${job.id}/executions/1`);
+    console.log(JSON.stringify(jobExecution, null, 2));
 
-        if (jobProcess.jobAssignment) {
-            const jobAssignment = await resourceManager.get<JobAssignment>(jobProcess.jobAssignment);
-            console.log(JSON.stringify(jobAssignment, null, 2));
-        }
+    if (jobExecution.jobAssignment) {
+        const jobAssignment = await resourceManager.get<JobAssignment>(jobExecution.jobAssignment);
+        console.log(JSON.stringify(jobAssignment, null, 2));
     }
-
 }
 
 main().then(ignored => console.log("Done")).catch(error => console.error(error));

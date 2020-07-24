@@ -15,9 +15,9 @@ async function processNotification(requestContext: McmaApiRequestContext) {
 
     const table = await dbTableProvider.get(getTableName(requestContext));
 
-    const jobAssignmentId = getPublicUrl(requestContext) + "/job-assignments/" + request.pathVariables.id;
+    const jobAssignmentDatabaseId = "/job-assignments/" + request.pathVariables.id;
 
-    const jobAssignment = await table.get("JobAssignment", jobAssignmentId);
+    const jobAssignment = await table.get(jobAssignmentDatabaseId);
     if (!jobAssignment) {
         requestContext.setResponseResourceNotFound();
         return;
@@ -34,7 +34,7 @@ async function processNotification(requestContext: McmaApiRequestContext) {
         "ProcessNotification",
         requestContext.getAllContextVariables(),
         {
-            jobAssignmentId,
+            jobAssignmentId: jobAssignmentDatabaseId,
             notification
         },
         jobAssignment.tracker,

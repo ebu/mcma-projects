@@ -13,13 +13,13 @@
         "uuid": "^7.0.3"
     },
     "devDependencies": {
-        "@mcma/core": "0.11.1",
+        "@mcma/core": "0.12.1",
         "@types/node": "^10.17.21",
         "@types/uuid": "^7.0.3",
         "aws-sdk": "^2.631.0"
     },
     "peerDependencies": {
-        "@mcma/core": "0.11.1",
+        "@mcma/core": "0.12.1",
         "aws-sdk": "^2.631.0"
     }
 }
