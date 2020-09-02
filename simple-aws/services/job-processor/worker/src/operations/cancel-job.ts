@@ -1,7 +1,6 @@
 import { ProviderCollection, WorkerRequest } from "@mcma/worker";
 
 import { DataController } from "@local/job-processor";
-import { DynamoDbMutex } from "@mcma/aws-dynamodb";
 import { Job, JobStatus, Logger, McmaException } from "@mcma/core";
 import { logJobEvent } from "../utils";
 import { AuthProvider, ResourceManager } from "@mcma/client";
@@ -13,7 +12,7 @@ export async function cancelJob(providers: ProviderCollection, workerRequest: Wo
     const resourceManager = providers.resourceManagerProvider.get(workerRequest);
 
     const dataController = context.dataController;
-    const mutex = new DynamoDbMutex(jobId, context.awsRequestId, dataController.tableName, logger);
+    const mutex = await dataController.createMutex(jobId, context.awsRequestId);
 
     let job: Job;
 
@@ -37,20 +36,21 @@ export async function cancelExecution(job: Job, dataController: DataController, 
         return job;
     }
 
-    const [jobExecution] = await dataController.getExecutions(job.id);
-
-    if (jobExecution.jobAssignment) {
-        try {
-            const client = await resourceManager.getResourceEndpointClient(jobExecution.jobAssignment);
-            await client.post(undefined, `${jobExecution.jobAssignment}/cancel`);
-        } catch (error) {
-            logger.warn(`Canceling job assignment '${jobExecution.jobAssignment} failed`);
-            logger.warn(error?.toString());
+    const [jobExecution] = (await dataController.getExecutions(job.id)).results;
+    if (jobExecution) {
+        if (jobExecution.jobAssignment) {
+            try {
+                const client = await resourceManager.getResourceEndpointClient(jobExecution.jobAssignment);
+                await client.post(undefined, `${jobExecution.jobAssignment}/cancel`);
+            } catch (error) {
+                logger.warn(`Canceling job assignment '${jobExecution.jobAssignment} failed`);
+                logger.warn(error?.toString());
+            }
         }
-    }
 
-    jobExecution.status = JobStatus.Canceled;
-    await dataController.updateExecution(jobExecution);
+        jobExecution.status = JobStatus.Canceled;
+        await dataController.updateExecution(jobExecution);
+    }
 
     job.status = JobStatus.Canceled;
     await dataController.updateJob(job);

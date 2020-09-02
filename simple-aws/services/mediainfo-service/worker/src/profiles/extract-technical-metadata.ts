@@ -29,9 +29,9 @@ export async function extractTechnicalMetadata(providers: ProviderCollection, jo
         logger.info("obtaining mediainfo output based on url " + inputFile.url);
         output = await mediaInfo(["--Output=EBUCore_JSON", inputFile.url]);
 
-    } else if (inputFile.awsS3Bucket && inputFile.awsS3Key) { // else we have to copy the file to internal storage (max 500mb) and analyze it directly
-        logger.info("obtain data from s3 object Bucket: " + inputFile.awsS3Bucket + " and Key: " + inputFile.awsS3Key);
-        let data = await S3.getObject({ Bucket: inputFile.awsS3Bucket, Key: inputFile.awsS3Key }).promise();
+    } else if (inputFile.bucket && inputFile.key) { // else we have to copy the file to internal storage (max 500mb) and analyze it directly
+        logger.info("obtain data from s3 object Bucket: " + inputFile.bucket + " and Key: " + inputFile.key);
+        let data = await S3.getObject({ Bucket: inputFile.bucket, Key: inputFile.key }).promise();
 
         logger.info("write data to local tmp storage");
         let localFilename = "/tmp/" + uuidv4();
@@ -53,8 +53,8 @@ export async function extractTechnicalMetadata(providers: ProviderCollection, jo
 
     logger.info("Writing mediaInfo output to output location");
     let s3Params: PutObjectRequest = {
-        Bucket: outputLocation.awsS3Bucket,
-        Key: (outputLocation.awsS3KeyPrefix ? outputLocation.awsS3KeyPrefix : "") + uuidv4() + ".json",
+        Bucket: outputLocation.bucket,
+        Key: (outputLocation.keyPrefix ? outputLocation.keyPrefix : "") + uuidv4() + ".json",
         ContentType: "application/json",
         Body: output.stdout
     };
@@ -63,8 +63,8 @@ export async function extractTechnicalMetadata(providers: ProviderCollection, jo
 
     logger.info("Adding Job Output");
     jobAssignmentHelper.jobOutput.set("outputFile", new AwsS3FileLocator({
-        awsS3Bucket: s3Params.Bucket,
-        awsS3Key: s3Params.Key
+        bucket: s3Params.Bucket,
+        key: s3Params.Key
     }));
 
     logger.info("Marking JobAssignment as completed");

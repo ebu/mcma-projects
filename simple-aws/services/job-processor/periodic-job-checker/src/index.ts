@@ -26,12 +26,16 @@ export async function handler(event: ScheduledEvent, context: Context) {
     try {
         await cloudWatchEvents.disableRule({ Name: CloudwatchEventRule }).promise();
 
-        const newJobs = await dataController.queryJobs(JobStatus.New);
-        const queuedJobs = await dataController.queryJobs(JobStatus.Queued);
-        const scheduledJobs = await dataController.queryJobs(JobStatus.Scheduled);
-        const runningJobs = await dataController.queryJobs(JobStatus.Running);
+        const newJobs = await dataController.queryJobs({ status: JobStatus.New });
+        const queuedJobs = await dataController.queryJobs({ status: JobStatus.Queued });
+        const scheduledJobs = await dataController.queryJobs({ status: JobStatus.Scheduled });
+        const runningJobs = await dataController.queryJobs({ status: JobStatus.Running });
 
-        const jobs: Job[] = [].concat.apply([], [newJobs, queuedJobs, scheduledJobs, runningJobs]);
+        const jobs =
+            newJobs.results
+                .concat(queuedJobs.results)
+                .concat(scheduledJobs.results)
+                .concat(runningJobs.results);
 
         logger.info(`Found ${jobs.length} active jobs`);
 
@@ -54,7 +58,7 @@ export async function handler(event: ScheduledEvent, context: Context) {
 
             const timeout = job.timeout ?? defaultTimeout;
             if (timeout) {
-                const [jobExecution] = await dataController.getExecutions(job.id);
+                const [jobExecution] = (await dataController.getExecutions(job.id)).results;
 
                 const startDate = jobExecution?.actualStartDate ?? jobExecution?.dateCreated ?? job.dateCreated;
 

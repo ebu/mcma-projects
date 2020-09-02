@@ -1,5 +1,4 @@
 import { ProviderCollection, WorkerRequest } from "@mcma/worker";
-import { DynamoDbMutex } from "@mcma/aws-dynamodb";
 import { Job, JobExecution, JobStatus, McmaException } from "@mcma/core";
 
 import { DataController } from "@local/job-processor";
@@ -13,7 +12,7 @@ export async function processNotification(providers: ProviderCollection, workerR
     const resourceManager = providers.resourceManagerProvider.get(workerRequest);
 
     const dataController = context.dataController;
-    const mutex = new DynamoDbMutex(jobId, context.awsRequestId, dataController.tableName, logger);
+    const mutex = await dataController.createMutex(jobId, context.awsRequestId);
 
     let job: Job;
     let jobExecution: JobExecution;

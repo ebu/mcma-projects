@@ -18,8 +18,8 @@ export async function runMediaInfoJob(resourceManager: ResourceManager, inputFil
         jobInput: new JobParameterBag({
             inputFile,
             outputLocation: new AwsS3FolderLocator({
-                awsS3Bucket: TerraformOutput.output_bucket.value,
-                awsS3KeyPrefix: uuid + "/metadata-"
+                bucket: TerraformOutput.output_bucket.value,
+                keyPrefix: uuid + "/metadata-"
             })
         })
     });

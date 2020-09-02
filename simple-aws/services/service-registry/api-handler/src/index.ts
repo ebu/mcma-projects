@@ -1,6 +1,6 @@
 import { APIGatewayEvent, Context } from "aws-lambda";
 import { JobProfile, Service } from "@mcma/core";
-import { DefaultRouteCollectionBuilder, McmaApiRouteCollection } from "@mcma/api";
+import { DefaultRouteCollection, McmaApiRouteCollection } from "@mcma/api";
 import { DynamoDbTableProvider } from "@mcma/aws-dynamodb";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { ApiGatewayApiController } from "@mcma/aws-api-gateway";
@@ -11,8 +11,9 @@ const dbTableProvider = new DynamoDbTableProvider();
 const restController =
     new ApiGatewayApiController(
         new McmaApiRouteCollection()
-            .addRoutes(new DefaultRouteCollectionBuilder(dbTableProvider, Service).addAll().build())
-            .addRoutes(new DefaultRouteCollectionBuilder(dbTableProvider, JobProfile).addAll().build()), loggerProvider);
+            .addRoutes(new DefaultRouteCollection(dbTableProvider, Service))
+            .addRoutes(new DefaultRouteCollection(dbTableProvider, JobProfile)),
+        loggerProvider);
 
 export async function handler(event: APIGatewayEvent, context: Context) {
     const logger = loggerProvider.get(context.awsRequestId);
