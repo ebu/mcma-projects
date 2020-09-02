@@ -11,7 +11,7 @@ export async function runWorkflow(providers: ProviderCollection, jobAssignmentHe
     const workflowInput = {
         input: jobAssignmentHelper.jobInput,
         notificationEndpoint: new NotificationEndpoint({
-            httpEndpoint: jobAssignmentHelper.jobAssignmentId + "/notifications"
+            httpEndpoint: jobAssignmentHelper.jobAssignment.id + "/notifications"
         }),
         tracker: jobAssignmentHelper.jobAssignment.tracker
     };
@@ -31,12 +31,12 @@ export async function runWorkflow(providers: ProviderCollection, jobAssignmentHe
 }
 
 export async function processNotification(providers: ProviderCollection, workerRequest: WorkerRequest) {
-    const jobAssignmentId = workerRequest.input.jobAssignmentId;
+    const jobAssignmentDatabaseId = workerRequest.input.jobAssignmentId;
     const notification = workerRequest.input.notification;
 
     const table = await providers.dbTableProvider.get(getTableName(workerRequest));
 
-    const jobAssignment = await table.get("JobAssignment", jobAssignmentId);
+    const jobAssignment = await table.get(jobAssignmentDatabaseId);
 
     if (notification.content.status !== undefined) {
         jobAssignment.status = notification.content.status;
@@ -48,7 +48,7 @@ export async function processNotification(providers: ProviderCollection, workerR
     jobAssignment.jobOutput = notification.content.output;
     jobAssignment.dateModified = new Date();
 
-    await table.put("JobAssignment", jobAssignmentId, jobAssignment);
+    await table.put(jobAssignmentDatabaseId, jobAssignment);
 
     const resourceManager = providers.resourceManagerProvider.get(workerRequest);
 

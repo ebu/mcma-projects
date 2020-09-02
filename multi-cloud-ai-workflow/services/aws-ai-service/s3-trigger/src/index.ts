@@ -48,12 +48,12 @@ export async function handler(event: S3Event, context: Context) {
                     throw new McmaException("S3 key '" + awsS3Key + "' is not an expected file name processing in this lambda function");
                 }
 
-                const jobAssignmentId = environmentVariableProvider.getRequiredContextVariable("PublicUrl") + "/job-assignments/" + jobAssignmentGuid;
+                const jobAssignmentDatabaseId = "/job-assignments/" + jobAssignmentGuid;
 
                 const table = await dbTableProvider.get(getTableName(environmentVariableProvider));
-                const jobAssignment = await table.get("JobAssignment", jobAssignmentId);
+                const jobAssignment = await table.get(jobAssignmentDatabaseId);
                 if (!jobAssignment) {
-                    throw new McmaException("Failed to find JobAssignment with id: " + jobAssignmentId);
+                    throw new McmaException("Failed to find JobAssignment with id: " + jobAssignmentDatabaseId);
                 }
 
                 const params = {
@@ -64,7 +64,7 @@ export async function handler(event: S3Event, context: Context) {
                         operationName,
                         contextVariables: environmentVariableProvider.getAllContextVariables(),
                         input: {
-                            jobAssignmentId,
+                            jobAssignmentId: jobAssignmentDatabaseId,
                             outputFile: new AwsS3FileLocator({ awsS3Bucket: awsS3Bucket, awsS3Key: awsS3Key })
                         },
                         tracker: jobAssignment.tracker
