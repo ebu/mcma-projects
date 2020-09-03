@@ -48,7 +48,7 @@ resource "aws_lambda_function" "job_processor_api_handler" {
 
   environment {
     variables = {
-      LogGroupName     = var.global_prefix
+      LogGroupName     = var.log_group.name
       TableName        = aws_dynamodb_table.job_processor_table.name
       PublicUrl        = local.job_processor_url
       WorkerFunctionId = aws_lambda_function.job_processor_worker.function_name
@@ -72,7 +72,7 @@ resource "aws_lambda_function" "job_processor_periodic_job_checker" {
 
   environment {
     variables = {
-      LogGroupName               = var.global_prefix
+      LogGroupName               = var.log_group.name
       TableName                  = aws_dynamodb_table.job_processor_table.name
       PublicUrl                  = local.job_processor_url
       ServicesUrl                = local.services_url
@@ -119,7 +119,7 @@ resource "aws_lambda_function" "job_processor_periodic_job_cleanup" {
 
   environment {
     variables = {
-      LogGroupName             = var.global_prefix
+      LogGroupName             = var.log_group.name
       TableName                = aws_dynamodb_table.job_processor_table.name
       PublicUrl                = local.job_processor_url
       ServicesUrl              = local.services_url
@@ -165,7 +165,7 @@ resource "aws_lambda_function" "job_processor_worker" {
 
   environment {
     variables = {
-      LogGroupName        = var.global_prefix
+      LogGroupName        = var.log_group.name
       TableName           = aws_dynamodb_table.job_processor_table.name
       PublicUrl           = local.job_processor_url
       CloudwatchEventRule = aws_cloudwatch_event_rule.job_processor_periodic_job_checker_trigger.name,

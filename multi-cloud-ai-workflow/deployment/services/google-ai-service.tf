@@ -57,7 +57,7 @@ resource "aws_lambda_function" "google_ai_service_api_handler" {
 
   environment {
     variables = {
-      LogGroupName = var.global_prefix
+      LogGroupName = var.log_group.name
     }
   }
 }
@@ -78,7 +78,7 @@ resource "aws_lambda_function" "google_ai_service_worker" {
 
   environment {
     variables = {
-      LogGroupName                     = var.global_prefix
+      LogGroupName                     = var.log_group.name
       GoogleServiceCredentialsS3Bucket = var.config_bucket.id
       GoogleServiceCredentialsS3Key    = local.google_service_credentials_file
       GoogleBucketName                 = var.google_bucket_name

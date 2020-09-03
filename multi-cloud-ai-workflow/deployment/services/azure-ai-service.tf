@@ -14,7 +14,7 @@ resource "aws_lambda_function" "azure_ai_service_api_handler" {
 
   environment {
     variables = {
-      LogGroupName = var.global_prefix
+      LogGroupName = var.log_group.name
     }
   }
 }
@@ -35,7 +35,7 @@ resource "aws_lambda_function" "azure_ai_service_api_handler_non_secure" {
 
   environment {
     variables = {
-      LogGroupName = var.global_prefix
+      LogGroupName = var.log_group.name
     }
   }
 }
@@ -56,7 +56,7 @@ resource "aws_lambda_function" "azure_ai_service_worker" {
 
   environment {
     variables = {
-      LogGroupName = var.global_prefix
+      LogGroupName = var.log_group.name
     }
   }
 }

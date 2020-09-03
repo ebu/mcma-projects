@@ -53,7 +53,7 @@ resource "aws_lambda_function" "benchmarkstt_service_api_handler" {
 
   environment {
     variables = {
-      LogGroupName = var.global_prefix
+      LogGroupName = var.log_group.name
     }
   }
 }
@@ -74,7 +74,7 @@ resource "aws_lambda_function" "benchmarkstt_service_worker" {
 
   environment {
     variables = {
-      LogGroupName               = var.global_prefix
+      LogGroupName               = var.log_group.name
       EcsClusterName             = var.ecs_cluster_name
       EcsBenchmarksttServiceName = var.ecs_benchmarkstt_service_name
     }

@@ -14,13 +14,13 @@ resource "aws_lambda_function" "transform_service_api_handler" {
 
   environment {
     variables = {
-      LogGroupName = var.global_prefix
+      LogGroupName = var.log_group.name
     }
   }
 }
 
 #################################
-#  aws_lambda_function : ame-service-worker
+#  aws_lambda_function : transform-service-worker
 #################################
 
 resource "aws_lambda_layer_version" "ffmpeg" {
@@ -43,7 +43,7 @@ resource "aws_lambda_function" "transform_service_worker" {
 
   environment {
     variables = {
-      LogGroupName = var.global_prefix
+      LogGroupName = var.log_group.name
     }
   }
 }

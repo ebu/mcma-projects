@@ -24,7 +24,7 @@ export async function extractAllAiMetadata(providers: ProviderCollection, jobAss
     const jobInput = jobAssignmentHelper.jobInput;
     const jobOutput = jobAssignmentHelper.jobOutput;
 
-    const jobAssignmentId = jobAssignmentHelper.jobAssignmentId;
+    const jobAssignmentId = jobAssignmentHelper.jobAssignment.id;
     const azure = getAzureConfig(jobAssignmentHelper);
 
     let inputFile = jobInput.get<AwsS3FileLocatorProperties>("inputFile");
