@@ -1,5 +1,5 @@
 resource "aws_cloudwatch_log_group" "main" {
-  name = var.global_prefix
+  name = "/mcma/${var.global_prefix}"
 }
 
 resource "aws_cloudwatch_log_metric_filter" "jobs_started" {
@@ -75,7 +75,8 @@ resource "aws_sns_topic" "jobs_failed" {
 resource "aws_cloudwatch_dashboard" "dashboard" {
   dashboard_name = var.global_prefix
   dashboard_body = templatefile("${path.module}/dashboard.json", {
-    global_prefix = var.global_prefix
     aws_region    = var.aws_region
+    global_prefix = var.global_prefix
+    log_group     = aws_cloudwatch_log_group.main.name
   })
 }

@@ -59,8 +59,8 @@ export async function handler(event: InputEvent, context: Context) {
         let awsCelebritiesJob = await resourceManager.get<Job>(awsCelebritiesJobId);
         let awsCelebritiesJobOutput = new JobParameterBag(awsCelebritiesJob.jobOutput);
         let awsCelebritiesOutputFile = awsCelebritiesJobOutput.get<AwsS3FileLocatorProperties>("outputFile");
-        let awsCelebritiesS3Bucket = awsCelebritiesOutputFile.awsS3Bucket;
-        let awsCelebritiesS3Key = awsCelebritiesOutputFile.awsS3Key;
+        let awsCelebritiesS3Bucket = awsCelebritiesOutputFile.bucket;
+        let awsCelebritiesS3Key = awsCelebritiesOutputFile.key;
         let awsCelebritiesJobS3Object;
         try {
             awsCelebritiesJobS3Object = await S3.getObject({
@@ -79,8 +79,8 @@ export async function handler(event: InputEvent, context: Context) {
         let awsEmotionsJob = await resourceManager.get<Job>(awsEmotionsJobId);
         let awsEmotionsJobOutput = new JobParameterBag(awsEmotionsJob.jobOutput);
         let awsEmotionsOutputFile = awsEmotionsJobOutput.get<AwsS3FileLocatorProperties>("outputFile");
-        let awsEmotionsS3Bucket = awsEmotionsOutputFile.awsS3Bucket;
-        let awsEmotionsS3Key = awsEmotionsOutputFile.awsS3Key;
+        let awsEmotionsS3Bucket = awsEmotionsOutputFile.bucket;
+        let awsEmotionsS3Key = awsEmotionsOutputFile.key;
         let awsEmotionsJobS3Object;
         try {
             awsEmotionsJobS3Object = await S3.getObject({

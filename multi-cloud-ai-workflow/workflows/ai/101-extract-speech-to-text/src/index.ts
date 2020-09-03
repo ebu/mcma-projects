@@ -73,14 +73,14 @@ export async function handler(event: InputEvent, context: Context) {
         logger.info("NotificationUrl:", notificationUrl);
 
         // creating job
-        // the awsS3KeyPrefix is a directory
+        // the keyPrefix is a directory
         let job = new AIJob({
             jobProfile: jobProfileId,
             jobInput: new JobParameterBag({
                 inputFile: event.data.mediaFileLocator,
                 outputLocation: new AwsS3FolderLocator({
-                    awsS3Bucket: TempBucket,
-                    awsS3KeyPrefix: JOB_RESULTS_PREFIX
+                    bucket: TempBucket,
+                    keyPrefix: JOB_RESULTS_PREFIX
                 })
             }),
             notificationEndpoint: new NotificationEndpoint({

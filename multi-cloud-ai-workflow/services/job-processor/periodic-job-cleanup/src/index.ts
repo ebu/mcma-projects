@@ -29,11 +29,15 @@ export async function handler(event: ScheduledEvent, context: Context) {
 
         const retentionDateLimit = new Date(Date.now() - Number.parseInt(JobRetentionPeriodInDays) * 24 * 3600 * 1000);
 
-        const completedJobs = await dataController.queryJobs(JobStatus.Completed, undefined, retentionDateLimit);
-        const failedJobs = await dataController.queryJobs(JobStatus.Failed, undefined, retentionDateLimit);
-        const canceledJobs = await dataController.queryJobs(JobStatus.Canceled, undefined, retentionDateLimit);
+        const completedJobs = await dataController.queryJobs({ status: JobStatus.Completed, to: retentionDateLimit });
+        const failedJobs = await dataController.queryJobs({ status: JobStatus.Failed, to: retentionDateLimit });
+        const canceledJobs = await dataController.queryJobs({ status: JobStatus.Canceled, to: retentionDateLimit });
 
-        const jobs: Job[] = [].concat.apply([], [completedJobs, failedJobs, canceledJobs]);
+
+        const jobs =
+            completedJobs.results
+                .concat(failedJobs.results)
+                .concat(canceledJobs.results);
 
         logger.info(`Deleting ${jobs.length} jobs older than ${retentionDateLimit.toISOString()}`);
 

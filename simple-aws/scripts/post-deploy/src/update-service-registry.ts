@@ -70,7 +70,7 @@ export async function updateServiceRegistry(AWS: any, terraformOutput: any): Pro
         }
     }
 
-    for (const jobProfileName in jobProfileData) {
+    for (const jobProfileName of Object.keys(jobProfileData)) {
         let jobProfile = jobProfileData[jobProfileName];
         if (!jobProfile.id) {
             console.log("Inserting JobProfile '" + jobProfile.name + "'");
@@ -101,13 +101,11 @@ export async function updateServiceRegistry(AWS: any, terraformOutput: any): Pro
         }
     }
 
-    for (const serviceName in services) {
-        if (services.hasOwnProperty(serviceName)) {
-            let service = services[serviceName];
-            if (!service.id) {
-                console.log("Inserting Service '" + service.name + "'");
-                services[serviceName] = await resourceManager.create(service);
-            }
+    for (const serviceName of Object.keys(services)) {
+        let service = services[serviceName];
+        if (!service.id) {
+            console.log("Inserting Service '" + service.name + "'");
+            services[serviceName] = await resourceManager.create(service);
         }
     }
 

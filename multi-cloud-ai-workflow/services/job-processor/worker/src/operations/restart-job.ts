@@ -1,7 +1,6 @@
 import { ProviderCollection, WorkerRequest } from "@mcma/worker";
 
 import { DataController } from "@local/job-processor";
-import { DynamoDbMutex } from "@mcma/aws-dynamodb";
 import { Job, McmaException } from "@mcma/core";
 import { startExecution } from "./start-job";
 import { cancelExecution } from "./cancel-job";
@@ -13,7 +12,7 @@ export async function restartJob(providers: ProviderCollection, workerRequest: W
     const resourceManager = providers.resourceManagerProvider.get(workerRequest);
 
     const dataController = context.dataController;
-    const mutex = new DynamoDbMutex(jobId, context.awsRequestId, dataController.tableName, logger);
+    const mutex = await dataController.createMutex(jobId, context.awsRequestId);
 
     let job: Job;
 

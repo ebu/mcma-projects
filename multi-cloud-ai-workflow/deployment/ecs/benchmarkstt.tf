@@ -22,8 +22,8 @@ resource "aws_ecs_service" "benchmarkstt" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets          = [aws_subnet.private.id]
-    security_groups  = [aws_default_security_group.default.id]
+    subnets         = [aws_subnet.private.id]
+    security_groups = [aws_default_security_group.default.id]
   }
 
   desired_count = var.enabled ? 1 : 0

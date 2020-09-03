@@ -73,19 +73,19 @@ export async function handler(event: InputEvent, context: Context) {
         logger.info("outputFile: " + outputFile);
 
         // destination bucket: AIJob outputlocation
-        let s3Bucket = outputFile.awsS3Bucket;
-        let s3Key = outputFile.awsS3Key;
+        let s3Bucket = outputFile.bucket;
+        let s3Key = outputFile.key;
         logger.info("s3Bucket:" + s3Bucket);
         logger.info("s3Key:" + s3Key);
 
         const target = new AwsS3FileLocator({
-            awsS3Bucket: RepositoryBucket,
-            awsS3Key: uuidv4() + s3Key.substring(s3Key.lastIndexOf(".")),
+            bucket: RepositoryBucket,
+            key: uuidv4() + s3Key.substring(s3Key.lastIndexOf(".")),
         });
 
         await s3.copyObject({
-            Bucket: target.awsS3Bucket,
-            Key: target.awsS3Key,
+            Bucket: target.bucket,
+            Key: target.key,
             CopySource: await getS3Url(outputFile, s3),
         }).promise();
 

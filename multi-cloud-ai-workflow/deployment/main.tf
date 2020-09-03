@@ -1,4 +1,12 @@
 #########################
+# Terraform configuration
+#########################
+
+terraform {
+  required_version = ">= 0.12"
+}
+
+#########################
 # Provider registration 
 #########################
 
@@ -47,6 +55,8 @@ module "services" {
   aws_account_id = var.aws_account_id
   aws_region     = var.aws_region
 
+  log_group = module.monitoring.log_group
+
   azure_location         = var.azure_location
   azure_account_id       = var.azure_account_id
   azure_subscription_key = var.azure_subscription_key
@@ -55,11 +65,11 @@ module "services" {
   google_bucket_name              = var.google_bucket_name
   google_service_credentials_file = var.google_service_credentials_file
 
-  ecs_cluster_name = module.ecs.cluster_name
+  ecs_cluster_name              = module.ecs.cluster_name
   ecs_benchmarkstt_service_name = module.ecs.benchmarkstt_service_name
-  vpc_private_subnet_id = module.ecs.private_subnet_id
+  vpc_private_subnet_id         = module.ecs.private_subnet_id
   vpc_default_security_group_id = module.ecs.default_security_group_id
-  ecs_enabled = var.ecs_enabled
+  ecs_enabled                   = var.ecs_enabled
 }
 
 module "workflows" {
@@ -70,6 +80,8 @@ module "workflows" {
 
   aws_account_id = var.aws_account_id
   aws_region     = var.aws_region
+
+  log_group = module.monitoring.log_group
 
   services_url               = module.services.services_url
   service_registry_auth_type = module.services.service_registry_auth_type

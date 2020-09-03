@@ -69,9 +69,9 @@ export async function processTranscribeJobResult(providers: ProviderCollection, 
         let jobInput = jobAssignmentHelper.jobInput;
 
         logger.debug("2.8. Copy transcribe output file to output location");
-        let copySource = encodeURI(workerRequest.input.outputFile.awsS3Bucket + "/" + workerRequest.input.outputFile.awsS3Key);
-        let s3Bucket = jobInput.get<AwsS3FolderLocatorProperties>("outputLocation").awsS3Bucket;
-        let s3Key = (jobInput.get<AwsS3FolderLocatorProperties>("outputLocation").awsS3KeyPrefix ? jobInput.get<AwsS3FolderLocatorProperties>("outputLocation").awsS3KeyPrefix : "") + workerRequest.input.outputFile.awsS3Key;
+        let copySource = encodeURI(workerRequest.input.outputFile.bucket + "/" + workerRequest.input.outputFile.key);
+        let s3Bucket = jobInput.get<AwsS3FolderLocatorProperties>("outputLocation").bucket;
+        let s3Key = (jobInput.get<AwsS3FolderLocatorProperties>("outputLocation").keyPrefix ? jobInput.get<AwsS3FolderLocatorProperties>("outputLocation").keyPrefix : "") + workerRequest.input.outputFile.key;
         try {
             await S3.copyObject({
                 CopySource: copySource,
@@ -84,8 +84,8 @@ export async function processTranscribeJobResult(providers: ProviderCollection, 
 
         logger.debug("2.9. updating JobAssignment with jobOutput");
         jobAssignmentHelper.jobOutput.set("outputFile", new AwsS3FileLocator({
-            awsS3Bucket: s3Bucket,
-            awsS3Key: s3Key
+            bucket: s3Bucket,
+            key: s3Key
         }));
 
         await jobAssignmentHelper.complete();
@@ -102,8 +102,8 @@ export async function processTranscribeJobResult(providers: ProviderCollection, 
     logger.debug("2.10. Cleanup: Deleting original output file from service");
     try {
         await S3.deleteObject({
-            Bucket: workerRequest.input.outputFile.awsS3Bucket,
-            Key: workerRequest.input.outputFile.awsS3Key,
+            Bucket: workerRequest.input.outputFile.bucket,
+            Key: workerRequest.input.outputFile.key,
         }).promise();
     } catch (error) {
         console.warn("Failed to cleanup transcribe output file");

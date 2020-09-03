@@ -31,8 +31,8 @@ async function uploadFileToBucket(bucket: string, prefix: string, filename: stri
     await s3.upload(uploadParams).promise();
 
     return new AwsS3FileLocator({
-        awsS3Bucket: uploadParams.Bucket,
-        awsS3Key: uploadParams.Key,
+        bucket: uploadParams.Bucket,
+        key: uploadParams.Key,
     });
 }
 

@@ -93,7 +93,7 @@ resource "aws_lambda_function" "process_workflow_completion" {
 
   environment {
     variables = {
-      LogGroupName     = var.global_prefix
+      LogGroupName     = var.log_group.name
       ServicesUrl      = var.services_url
       ServicesAuthType = var.service_registry_auth_type
     }
@@ -112,7 +112,7 @@ resource "aws_lambda_function" "process_workflow_failure" {
 
   environment {
     variables = {
-      LogGroupName     = var.global_prefix
+      LogGroupName     = var.log_group.name
       ServicesUrl      = var.services_url
       ServicesAuthType = var.service_registry_auth_type
     }
@@ -135,7 +135,7 @@ resource "aws_lambda_function" "workflow_activity_callback_handler" {
 
   environment {
     variables = {
-      LogGroupName = var.global_prefix
+      LogGroupName = var.log_group.name
     }
   }
 }

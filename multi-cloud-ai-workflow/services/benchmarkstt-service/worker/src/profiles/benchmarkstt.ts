@@ -16,23 +16,23 @@ export async function benchmarkstt(providers: ProviderCollection, jobAssignmentH
     const referenceFile = <AwsS3FileLocator>jobInput.referenceFile;
     const outputLocation = jobInput.outputLocation;
 
-    if (!inputFile.awsS3Bucket || !inputFile.awsS3Key) {
-        throw new McmaException("Failed to find awsS3Bucket and/or awsS3Key properties on inputFile:\n" + JSON.stringify(inputFile, null, 2));
+    if (!inputFile.bucket || !inputFile.key) {
+        throw new McmaException("Failed to find bucket and/or key properties on inputFile:\n" + JSON.stringify(inputFile, null, 2));
     }
-    if (!referenceFile.awsS3Bucket || !referenceFile.awsS3Key) {
-        throw new McmaException("Failed to find awsS3Bucket and/or awsS3Key properties on referenceFile:\n" + JSON.stringify(referenceFile, null, 2));
+    if (!referenceFile.bucket || !referenceFile.key) {
+        throw new McmaException("Failed to find bucket and/or key properties on referenceFile:\n" + JSON.stringify(referenceFile, null, 2));
     }
 
     const s3 = new S3();
     const inputFileObject = await s3.getObject({
-        Bucket: inputFile.awsS3Bucket,
-        Key: inputFile.awsS3Key,
+        Bucket: inputFile.bucket,
+        Key: inputFile.key,
     }).promise();
     const inputText = inputFileObject.Body.toString();
 
     const referenceFileObject = await s3.getObject({
-        Bucket: referenceFile.awsS3Bucket,
-        Key: referenceFile.awsS3Key,
+        Bucket: referenceFile.bucket,
+        Key: referenceFile.key,
     }).promise();
     const referenceText = referenceFileObject.Body.toString();
 
@@ -45,16 +45,16 @@ export async function benchmarkstt(providers: ProviderCollection, jobAssignmentH
     logger.info(result);
 
     const putObjectParams = {
-        Bucket: outputLocation.awsS3Bucket,
-        Key: (outputLocation.awsS3KeyPrefix ? outputLocation.awsS3KeyPrefix : "") + uuidv4() + ".json",
+        Bucket: outputLocation.bucket,
+        Key: (outputLocation.keyPrefix ? outputLocation.keyPrefix : "") + uuidv4() + ".json",
         Body: result
     };
     await s3.putObject(putObjectParams).promise();
 
     logger.info("Updating jobAssignment with job output");
     jobAssignmentHelper.jobOutput.outputFile = new AwsS3FileLocator({
-        awsS3Bucket: putObjectParams.Bucket,
-        awsS3Key: putObjectParams.Key
+        bucket: putObjectParams.Bucket,
+        key: putObjectParams.Key
     });
     logger.info(jobAssignmentHelper.jobOutput.outputFile);
 

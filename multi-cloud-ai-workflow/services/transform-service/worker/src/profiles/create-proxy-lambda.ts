@@ -25,11 +25,11 @@ export async function createProxyLambda(providers: ProviderCollection, jobAssign
     const outputLocation = jobInput.get<AwsS3FolderLocatorProperties>("outputLocation");
 
     let tempFilename;
-    if (inputFile.awsS3Bucket && inputFile.awsS3Key) {
+    if (inputFile.bucket && inputFile.key) {
 
         // 6.1. obtain data from s3 object
         logger.debug(" 6.1. obtain data from s3 object");
-        const data = await S3.getObject({ Bucket: inputFile.awsS3Bucket, Key: inputFile.awsS3Key }).promise();
+        const data = await S3.getObject({ Bucket: inputFile.bucket, Key: inputFile.key }).promise();
 
         // 6.2. write data to local tmp storage
         logger.debug("6.2. write data to local tmp storage");
@@ -54,8 +54,8 @@ export async function createProxyLambda(providers: ProviderCollection, jobAssign
     // Logger.debug("7. Writing ffmpeg output to output location");
 
     const s3Params = {
-        Bucket: outputLocation.awsS3Bucket,
-        Key: (outputLocation.awsS3KeyPrefix ? outputLocation.awsS3KeyPrefix : "") + uuidv4() + ".mp4",
+        Bucket: outputLocation.bucket,
+        Key: (outputLocation.keyPrefix ? outputLocation.keyPrefix : "") + uuidv4() + ".mp4",
         Body: await fsReadFile(tempFilename)
     };
 
@@ -67,8 +67,8 @@ export async function createProxyLambda(providers: ProviderCollection, jobAssign
 
     // 9. updating JobAssignment with jobOutput
     jobAssignmentHelper.jobOutput.set("outputFile", new AwsS3FileLocator({
-        awsS3Bucket: s3Params.Bucket,
-        awsS3Key: s3Params.Key
+        bucket: s3Params.Bucket,
+        key: s3Params.Key
     }));
 
     await jobAssignmentHelper.complete();

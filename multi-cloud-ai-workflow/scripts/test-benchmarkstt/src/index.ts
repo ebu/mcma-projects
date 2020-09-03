@@ -33,8 +33,8 @@ async function uploadFileToBucket(bucket: string, prefix: string, filename: stri
     await s3.upload(uploadParams).promise();
 
     return new AwsS3FileLocator({
-        awsS3Bucket: uploadParams.Bucket,
-        awsS3Key: uploadParams.Key,
+        bucket: uploadParams.Bucket,
+        key: uploadParams.Key,
     });
 }
 
@@ -130,8 +130,8 @@ async function main() {
     const benchmarksttReferenceFile = await uploadFileToBucket(tempBucket, keyPrefix, REFERENCE_FILE);
 
     const transformOutputLocation = new AwsS3FolderLocator({
-        awsS3Bucket: tempBucket,
-        awsS3KeyPrefix: keyPrefix,
+        bucket: tempBucket,
+        keyPrefix: keyPrefix,
     });
 
     console.log("Create QA job with BenchmarkSTT job profile");

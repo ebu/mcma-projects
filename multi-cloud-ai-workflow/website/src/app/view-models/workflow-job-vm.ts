@@ -13,7 +13,7 @@ export class WorkflowJobViewModel {
 
     get fileName(): string {
         return this.workflowJob?.jobInput?.inputFile
-            ? this.workflowJob.jobInput.inputFile.awsS3Key
+            ? this.workflowJob.jobInput.inputFile.key
             : null;
     }
 

@@ -14,13 +14,13 @@ export async function detectCelebrities(providers: ProviderCollection, jobAssign
     const clientToken = crypto.randomBytes(16).toString("hex");
     const base64JobId = Buffer.from(jobAssignmentHelper.jobAssignmentId).toString("hex");
 
-    logger.info("Starting celebrity detection on file '" + inputFile.awsS3Key + "' in bucket '" + inputFile.awsS3Bucket + "'");
+    logger.info("Starting celebrity detection on file '" + inputFile.key + "' in bucket '" + inputFile.bucket + "'");
 
     const params = {
         Video: {
             S3Object: {
-                Bucket: inputFile.awsS3Bucket,
-                Name: inputFile.awsS3Key
+                Bucket: inputFile.bucket,
+                Name: inputFile.key
             }
         },
         ClientRequestToken: clientToken,

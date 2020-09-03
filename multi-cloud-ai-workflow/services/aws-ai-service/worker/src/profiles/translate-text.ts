@@ -17,8 +17,8 @@ export async function translateText(providers: ProviderCollection, jobAssignment
     logger.debug("12. A service to translate the result of Speech to text");
 
     logger.debug("12.1. get input text file received from job initiator");
-    const s3Bucket = inputFile.awsS3Bucket;
-    const s3Key = inputFile.awsS3Key;
+    const s3Bucket = inputFile.bucket;
+    const s3Key = inputFile.key;
     let s3Object;
     try {
         s3Object = await S3.getObject({
@@ -62,16 +62,16 @@ export async function translateText(providers: ProviderCollection, jobAssignment
 
     logger.debug("12.5. save translation result into file on output location");
     let s3Params = {
-        Bucket: outputLocation.awsS3Bucket,
-        Key: (outputLocation.awsS3KeyPrefix ? outputLocation.awsS3KeyPrefix : "") + uuidv4() + ".txt",
+        Bucket: outputLocation.bucket,
+        Key: (outputLocation.keyPrefix ? outputLocation.keyPrefix : "") + uuidv4() + ".txt",
         Body: translatedText
     };
     await S3.putObject(s3Params).promise();
 
     logger.debug("12.6. updating JobAssignment with jobOutput");
     jobAssignmentHelper.jobOutput.set("outputFile", new AwsS3FileLocator({
-        awsS3Bucket: s3Params.Bucket,
-        awsS3Key: s3Params.Key
+        bucket: s3Params.Bucket,
+        key: s3Params.Key
     }));
 
     await jobAssignmentHelper.complete();

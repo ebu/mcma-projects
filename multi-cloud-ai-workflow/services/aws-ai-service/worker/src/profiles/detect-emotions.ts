@@ -17,8 +17,8 @@ export async function detectEmotions(providers: ProviderCollection, jobAssignmen
     const params = {
         Video: {
             S3Object: {
-                Bucket: inputFile.awsS3Bucket,
-                Name: inputFile.awsS3Key
+                Bucket: inputFile.bucket,
+                Name: inputFile.key
             }
         },
         ClientRequestToken: clientToken,

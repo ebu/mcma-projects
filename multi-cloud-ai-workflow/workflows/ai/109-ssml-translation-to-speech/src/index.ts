@@ -106,13 +106,13 @@ export async function handler(event: InputEvent, context: Context) {
             jobProfile: jobProfileId,
             jobInput: new JobParameterBag({
                 inputFile: new AwsS3FileLocator({
-                    awsS3Bucket: s3Bucket,
-                    awsS3Key: s3Key
+                    bucket: s3Bucket,
+                    key: s3Key
                 }),
                 voiceId: "Lea",
                 outputLocation: new AwsS3FolderLocator({
-                    awsS3Bucket: TempBucket,
-                    awsS3KeyPrefix: JOB_RESULTS_PREFIX
+                    bucket: TempBucket,
+                    keyPrefix: JOB_RESULTS_PREFIX
                 })
             }),
             notificationEndpoint: new NotificationEndpoint({

@@ -80,8 +80,8 @@ export async function handler(event: InputEvent, context: Context) {
 
         // get previous process output object
         let outputFile = jobOutput.get<AwsS3FileLocatorProperties>("outputFile");
-        let s3Bucket = outputFile.awsS3Bucket;
-        let s3Key = outputFile.awsS3Key;
+        let s3Bucket = outputFile.bucket;
+        let s3Key = outputFile.key;
         let s3Object;
         try {
             s3Object = await S3.getObject({
@@ -277,8 +277,8 @@ export async function handler(event: InputEvent, context: Context) {
 ////////////////////////////VTT CLEAN/CORRECTED//////////////////////////////
 
         let locator_vtt_clean = new AwsS3FileLocator({
-            awsS3Bucket: s3Bucket_vtt,
-            awsS3Key: s3Key_vtt
+            bucket: s3Bucket_vtt,
+            key: s3Key_vtt
         });
 
         // construct public https endpoint

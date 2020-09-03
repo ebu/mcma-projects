@@ -73,16 +73,16 @@ export async function handler(event: InputEvent, context: Context) {
 
         // get media info
         let outputFile = jobOutput.get<AwsS3FileLocator>("outputFile");
-        let s3Bucket = outputFile.awsS3Bucket;
-        let s3Key = outputFile.awsS3Key;
+        let s3Bucket = outputFile.bucket;
+        let s3Key = outputFile.key;
 
         // acquire the registered BMContent
         let bmc = await resourceManager.get<BMContent>(event.data.bmContent);
 
         // create BMEssence
         let locator = new AwsS3FileLocator({
-            awsS3Bucket: s3Bucket,
-            awsS3Key: s3Key
+            bucket: s3Bucket,
+            key: s3Key
         });
 
         let bme = createBMEssence(bmc, locator, "proxy-source", "proxy-source");

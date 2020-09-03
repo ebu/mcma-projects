@@ -22,8 +22,8 @@ export async function extractThumbnail(providers: ProviderCollection, jobAssignm
     const inputFile = jobInput.get<AwsS3FileLocatorProperties>("inputFile");
     const outputLocation = jobInput.get<AwsS3FolderLocatorProperties>("outputLocation");
 
-    if (!inputFile.awsS3Bucket || !inputFile.awsS3Key) {
-        throw new McmaException("Failed to find awsS3Bucket and/or awsS3Key properties on inputFile:\n" + JSON.stringify(inputFile, null, 2));
+    if (!inputFile.bucket || !inputFile.key) {
+        throw new McmaException("Failed to find bucket and/or key properties on inputFile:\n" + JSON.stringify(inputFile, null, 2));
     }
 
     let tempId = uuidv4();
@@ -31,11 +31,11 @@ export async function extractThumbnail(providers: ProviderCollection, jobAssignm
     let tempThumbFile = "/tmp/thumb_" + tempId + ".png";
 
     try {
-        logger.info("Get video from s3 location: " + inputFile.awsS3Bucket + " " + inputFile.awsS3Key);
+        logger.info("Get video from s3 location: " + inputFile.bucket + " " + inputFile.key);
         const data = await S3.getObject(
             {
-                Bucket: inputFile.awsS3Bucket,
-                Key: inputFile.awsS3Key
+                Bucket: inputFile.bucket,
+                Key: inputFile.key
             }).promise();
 
         logger.info("Write video to local storage");
@@ -44,8 +44,8 @@ export async function extractThumbnail(providers: ProviderCollection, jobAssignm
         await ffmpeg(["-i", tempVideoFile, "-vf", "scale=200:-1", tempThumbFile]);
 
         const s3Params = {
-            Bucket: outputLocation.awsS3Bucket,
-            Key: (outputLocation.awsS3KeyPrefix ? outputLocation.awsS3KeyPrefix : "") + tempId + ".png",
+            Bucket: outputLocation.bucket,
+            Key: (outputLocation.keyPrefix ? outputLocation.keyPrefix : "") + tempId + ".png",
             ContentType: "image/png",
             Body: await fs.createReadStream(tempThumbFile)
         };
@@ -54,8 +54,8 @@ export async function extractThumbnail(providers: ProviderCollection, jobAssignm
 
         // 9. updating JobAssignment with jobOutput
         jobAssignmentHelper.jobOutput.set("outputFile", new AwsS3FileLocator({
-            awsS3Bucket: s3Params.Bucket,
-            awsS3Key: s3Params.Key
+            bucket: s3Params.Bucket,
+            key: s3Params.Key
         }));
 
         await jobAssignmentHelper.complete();

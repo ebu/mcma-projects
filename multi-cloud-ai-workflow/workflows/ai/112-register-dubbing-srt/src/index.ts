@@ -75,16 +75,16 @@ export async function handler(event: InputEvent, context: Context) {
         let outputFile = jobOutput.get<AwsS3FileLocatorProperties>("outputFile");
 
         // destination bucket: AIJob outputlocation
-        let s3Bucket = outputFile.awsS3Bucket;
-        let s3Key = outputFile.awsS3Key;
+        let s3Bucket = outputFile.bucket;
+        let s3Key = outputFile.key;
 
         // acquire the registered BMContent
         let bmc = await resourceManager.get<BMContent>(event.input.bmContent);
 
         // create BMEssence
         let locator = new AwsS3FileLocator({
-            awsS3Bucket: s3Bucket,
-            awsS3Key: s3Key
+            bucket: s3Bucket,
+            key: s3Key
         });
         await getS3Url(locator, S3);
 

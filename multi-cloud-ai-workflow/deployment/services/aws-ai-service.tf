@@ -104,7 +104,7 @@ resource "aws_lambda_function" "aws_ai_service_api_handler" {
 
   environment {
     variables = {
-      LogGroupName = var.global_prefix
+      LogGroupName = var.log_group.name
     }
   }
 }
@@ -125,7 +125,7 @@ resource "aws_lambda_function" "aws_ai_service_s3_trigger" {
 
   environment {
     variables = {
-      LogGroupName        = var.global_prefix
+      LogGroupName        = var.log_group.name
       TableName           = aws_dynamodb_table.aws_ai_service_table.name
       PublicUrl           = local.aws_ai_service_url
       ServicesUrl         = local.services_url
@@ -175,7 +175,7 @@ resource "aws_lambda_function" "aws_ai_service_sns_trigger" {
 
   environment {
     variables = {
-      LogGroupName        = var.global_prefix
+      LogGroupName        = var.log_group.name
       TableName           = aws_dynamodb_table.aws_ai_service_table.name
       PublicUrl           = local.aws_ai_service_url
       ServicesUrl         = local.services_url
@@ -204,7 +204,7 @@ resource "aws_lambda_function" "aws_ai_service_worker" {
 
   environment {
     variables = {
-      LogGroupName   = var.global_prefix
+      LogGroupName   = var.log_group.name
       RekoSnsRoleArn = aws_iam_role.aws_ai_service_reko_to_sns_execution.arn
       SnsTopicArn    = aws_sns_topic.sns_topic_reko_output.arn
     }

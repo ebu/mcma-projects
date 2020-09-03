@@ -201,7 +201,7 @@ resource "aws_dynamodb_table" "job_processor_table" {
   attribute {
     name = "resource_created"
     type = "N"
-  }
+  } 
 
   global_secondary_index {
     name            = "ResourceCreatedIndex"

@@ -14,7 +14,7 @@ resource "aws_lambda_function" "service_registry_api_handler" {
 
   environment {
     variables = {
-      LogGroupName = var.global_prefix
+      LogGroupName = var.log_group.name
     }
   }
 }

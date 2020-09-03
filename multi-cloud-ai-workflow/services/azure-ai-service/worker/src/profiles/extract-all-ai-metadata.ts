@@ -24,7 +24,7 @@ export async function extractAllAiMetadata(providers: ProviderCollection, jobAss
     const jobInput = jobAssignmentHelper.jobInput;
     const jobOutput = jobAssignmentHelper.jobOutput;
 
-    const jobAssignmentId = jobAssignmentHelper.jobAssignmentId;
+    const jobAssignmentId = jobAssignmentHelper.jobAssignment.id;
     const azure = getAzureConfig(jobAssignmentHelper);
 
     let inputFile = jobInput.get<AwsS3FileLocatorProperties>("inputFile");
@@ -76,7 +76,7 @@ export async function extractAllAiMetadata(providers: ProviderCollection, jobAss
 
     logger.debug("Callback url for Video Indexer: " + callbackUrl);
 
-    let postVideoUrl = azure.apiUrl + "/" + azure.location + "/Accounts/" + azure.accountId + "/Videos?accessToken=" + apiToken + "&name=" + inputFile.awsS3Key + "&callbackUrl=" + callbackUrl + "&videoUrl=" + mediaFileUri + "&fileName=" + inputFile.awsS3Key;
+    let postVideoUrl = azure.apiUrl + "/" + azure.location + "/Accounts/" + azure.accountId + "/Videos?accessToken=" + apiToken + "&name=" + inputFile.key + "&callbackUrl=" + callbackUrl + "&videoUrl=" + mediaFileUri + "&fileName=" + inputFile.key;
 
     logger.debug("Call Azure Video Indexer Video API : Doing a POST on  : ", postVideoUrl);
 
@@ -172,8 +172,8 @@ export async function processNotification(providers: ProviderCollection, workerR
         logger.debug("Azure AI video metadata : ", JSON.stringify(videoMetadata, null, 2));
 
         const outputLocation = jobAssignmentHelper.jobInput.get<AwsS3FolderLocatorProperties>("outputLocation");
-        const jobOutputBucket = outputLocation.awsS3Bucket;
-        const jobOutputKeyPrefix = outputLocation.awsS3KeyPrefix ? outputLocation.awsS3KeyPrefix : "";
+        const jobOutputBucket = outputLocation.bucket;
+        const jobOutputKeyPrefix = outputLocation.keyPrefix ? outputLocation.keyPrefix : "";
 
         // get the info about the destination bucket to store the result of the job
         const s3Params = {
@@ -186,8 +186,8 @@ export async function processNotification(providers: ProviderCollection, workerR
 
         //updating JobAssignment with jobOutput
         jobAssignmentHelper.jobOutput.set("outputFile", new AwsS3FileLocator({
-            awsS3Bucket: s3Params.Bucket,
-            awsS3Key: s3Params.Key
+            bucket: s3Params.Bucket,
+            key: s3Params.Key
         }));
 
         await jobAssignmentHelper.complete();

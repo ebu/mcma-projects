@@ -86,7 +86,7 @@ export async function handler(event: InputEvent, context: Context) {
 
         // find the media locator in the website bucket with public httpEndpoint
         for (const locator of getAwsS3FileLocations(bmEssence)) {
-            if (locator.awsS3Bucket === WebsiteBucket) {
+            if (locator.bucket === WebsiteBucket) {
                 mediaFileLocator = locator;
             }
         }

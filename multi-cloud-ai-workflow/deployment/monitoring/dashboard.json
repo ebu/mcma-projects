@@ -40,7 +40,7 @@
             "width": 24,
             "height": 6,
             "properties": {
-                "query": "SOURCE '${global_prefix}' | ### Query Jobs\r\nfields @timestamp, message.jobType as jobType, message.jobProfileName as jobProfile, message.jobStatus as status, message.jobActualDuration / 1000 as duration, trackerLabel, trackerId, message.jobId as jobId\r\n| filter type = \"JOB_END\" and message.jobStatus = \"Completed\"\r\n| sort @timestamp desc\r\n| sort @timestamp desc\r\n\r\n",
+                "query": "SOURCE '${log_group}' | ### Query Jobs\r\nfields @timestamp, message.jobType as jobType, message.jobProfileName as jobProfile, message.jobStatus as status, message.jobActualDuration / 1000 as duration, trackerLabel, trackerId, message.jobId as jobId\r\n| filter type = \"JOB_END\" and message.jobStatus = \"Completed\"\r\n| sort @timestamp desc\r\n| sort @timestamp desc\r\n\r\n",
                 "region": "${aws_region}",
                 "stacked": false,
                 "title": "Completed Jobs",
@@ -54,7 +54,7 @@
             "width": 24,
             "height": 6,
             "properties": {
-                "query": "SOURCE '${global_prefix}' | ### Query Jobs\r\nfields @timestamp, message.jobType as jobType, message.jobProfileName as jobProfile, trackerLabel, trackerId, message.jobId as jobId\r\n| filter type = \"JOB_START\"\r\n| sort @timestamp desc\r\n\r\n",
+                "query": "SOURCE '${log_group}' | ### Query Jobs\r\nfields @timestamp, message.jobType as jobType, message.jobProfileName as jobProfile, trackerLabel, trackerId, message.jobId as jobId\r\n| filter type = \"JOB_START\"\r\n| sort @timestamp desc\r\n\r\n",
                 "region": "${aws_region}",
                 "stacked": false,
                 "title": "Started Jobs",
@@ -107,7 +107,7 @@
             "width": 24,
             "height": 6,
             "properties": {
-                "query": "SOURCE '${global_prefix}' | ### Query Jobs\r\nfields @timestamp, message.jobType as jobType, message.jobProfileName as jobProfile, message.jobStatus as status, message.jobError.title as errorTitle, message.jobError.detail as errorDetail, message.jobActualDuration / 1000 as duration, trackerLabel, trackerId, message.jobId as jobId\r\n| filter type = \"JOB_END\" and message.jobStatus != \"Completed\"\r\n| sort @timestamp desc\r\n\r\n",
+                "query": "SOURCE '${log_group}' | ### Query Jobs\r\nfields @timestamp, message.jobType as jobType, message.jobProfileName as jobProfile, message.jobStatus as status, message.jobError.title as errorTitle, message.jobError.detail as errorDetail, message.jobActualDuration / 1000 as duration, trackerLabel, trackerId, message.jobId as jobId\r\n| filter type = \"JOB_END\" and message.jobStatus != \"Completed\"\r\n| sort @timestamp desc\r\n\r\n",
                 "region": "${aws_region}",
                 "stacked": false,
                 "title": "Failed / Canceled Jobs",

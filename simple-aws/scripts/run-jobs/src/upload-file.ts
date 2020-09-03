@@ -26,7 +26,7 @@ export async function uploadFile(localFilePath: string): Promise<AwsS3FileLocato
     }).promise();
     
     return new AwsS3FileLocator({
-        awsS3Bucket: uploadResp.Bucket,
-        awsS3Key: uploadResp.Key
+        bucket: uploadResp.Bucket,
+        key: uploadResp.Key
     });
 }

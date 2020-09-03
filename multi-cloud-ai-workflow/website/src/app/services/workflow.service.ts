@@ -113,8 +113,8 @@ export class WorkflowService {
             jobInput: new JobParameterBag({
                 metadata: metadata,
                 inputFile: new AwsS3FileLocator({
-                    awsS3Bucket: uploadBucket,
-                    awsS3Key: objectKey
+                    bucket: uploadBucket,
+                    key: objectKey
                 })
             }),
             tracker: new McmaTracker({

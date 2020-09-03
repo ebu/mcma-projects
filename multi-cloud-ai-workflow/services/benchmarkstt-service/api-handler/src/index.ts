@@ -1,4 +1,4 @@
-import { defaultRoutesForJobs } from "@mcma/api";
+import { DefaultJobRouteCollection } from "@mcma/api";
 import { DynamoDbTableProvider } from "@mcma/aws-dynamodb";
 import { invokeLambdaWorker } from "@mcma/aws-lambda-worker-invoker";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
@@ -8,7 +8,7 @@ import { APIGatewayProxyEvent, Context } from "aws-lambda";
 const loggerProvider = new AwsCloudWatchLoggerProvider("benchmarkstt-service-api-handler", process.env.LogGroupName);
 const dbTableProvider = new DynamoDbTableProvider();
 
-const restController = new ApiGatewayApiController(defaultRoutesForJobs(dbTableProvider, invokeLambdaWorker).build(), loggerProvider);
+const restController = new ApiGatewayApiController(new DefaultJobRouteCollection(dbTableProvider, invokeLambdaWorker), loggerProvider);
 
 export async function handler(event: APIGatewayProxyEvent, context: Context) {
     const logger = loggerProvider.get(context.awsRequestId);
