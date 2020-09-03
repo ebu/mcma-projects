@@ -1,7 +1,6 @@
 import { ProviderCollection, WorkerRequest } from "@mcma/worker";
 
 import { DataController } from "@local/job-processor";
-import { DynamoDbMutex } from "@mcma/aws-dynamodb";
 import { McmaException } from "@mcma/core";
 
 export async function deleteJob(providers: ProviderCollection, workerRequest: WorkerRequest, context: { awsRequestId: string, dataController: DataController }) {
@@ -11,7 +10,7 @@ export async function deleteJob(providers: ProviderCollection, workerRequest: Wo
     const resourceManager = providers.resourceManagerProvider.get(workerRequest);
 
     const dataController = context.dataController;
-    const mutex = new DynamoDbMutex(jobId, context.awsRequestId, dataController.tableName, logger);
+    const mutex = await dataController.createMutex(jobId, context.awsRequestId);
 
     await mutex.lock();
     try {
@@ -22,7 +21,7 @@ export async function deleteJob(providers: ProviderCollection, workerRequest: Wo
 
         const executions = await dataController.getExecutions(jobId);
 
-        for (const execution of executions) {
+        for (const execution of executions.results) {
             if (execution.jobAssignment) {
                 try {
                     await resourceManager.delete(execution.jobAssignment);

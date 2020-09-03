@@ -84,8 +84,8 @@ export async function handler(event: InputEvent, context: Context) {
             jobInput: new JobParameterBag({
                 inputFile: event.data.repositoryFile,
                 outputLocation: new AwsS3FolderLocator({
-                    awsS3Bucket: TempBucket,
-                    awsS3KeyPrefix: "AmeJobResults/"
+                    bucket: TempBucket,
+                    keyPrefix: "AmeJobResults/"
                 })
             }),
             notificationEndpoint: new NotificationEndpoint({

@@ -96,13 +96,13 @@ export async function handler(event: InputEvent, context: Context) {
             jobProfile: jobProfileId,
             jobInput: new JobParameterBag({
                 inputFile: new AwsS3FileLocator({
-                    awsS3Bucket: s3Params.Bucket,
-                    awsS3Key: s3Params.Key
+                    bucket: s3Params.Bucket,
+                    key: s3Params.Key
                 }),
                 targetLanguageCode: "fr",
                 outputLocation: new AwsS3FolderLocator({
-                    awsS3Bucket: TempBucket,
-                    awsS3KeyPrefix: JOB_RESULTS_PREFIX
+                    bucket: TempBucket,
+                    keyPrefix: JOB_RESULTS_PREFIX
                 })
             }),
             notificationEndpoint: new NotificationEndpoint({

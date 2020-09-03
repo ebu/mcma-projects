@@ -1,1 +1,0 @@
-apply from: "${project.rootDir}/gradle-tasks-for-scripts.gradle"

@@ -26,10 +26,10 @@ export async function createDubbingSrt(providers: ProviderCollection, jobAssignm
 
     let output;
 
-    if (inputFile.awsS3Bucket && inputFile.awsS3Key) {
+    if (inputFile.bucket && inputFile.key) {
 
         logger.debug("18.1. obtain data from s3 object");
-        const data = await S3.getObject({ Bucket: inputFile.awsS3Bucket, Key: inputFile.awsS3Key }).promise();
+        const data = await S3.getObject({ Bucket: inputFile.bucket, Key: inputFile.key }).promise();
 
         logger.debug("18.2. write copy of proxy input file to local ffmpeg tmp storage");
         // the tmp directory is local to the ffmpeg running instance
@@ -38,7 +38,7 @@ export async function createDubbingSrt(providers: ProviderCollection, jobAssignm
 
         logger.debug("18.3. write dub to ffmpeg local tmp storage");
         const data_dub = await S3.getObject({
-            Bucket: inputFile.awsS3Bucket,
+            Bucket: inputFile.bucket,
             Key: "temp/ssmlTranslation.mp3"
         }).promise();
         const dub = "/tmp/" + "ssmlTranslation.mp3";
@@ -46,7 +46,7 @@ export async function createDubbingSrt(providers: ProviderCollection, jobAssignm
 
         logger.debug("18.4. write srt of original language track to ffmpeg local tmp storage");
         const data_srt = await S3.getObject({
-            Bucket: inputFile.awsS3Bucket,
+            Bucket: inputFile.bucket,
             Key: "temp/srt_output_clean.srt"
         }).promise();
         const srt = "/tmp/" + "srt_output_clean.srt";
@@ -84,8 +84,8 @@ export async function createDubbingSrt(providers: ProviderCollection, jobAssignm
     // 7. Writing ffmepg output to output location
     logger.debug("18.9. Writing ffmpeg output to output location");
     const s3Params = {
-        Bucket: outputLocation.awsS3Bucket,
-        Key: (outputLocation.awsS3KeyPrefix ? outputLocation.awsS3KeyPrefix : "") + "final.mp4",
+        Bucket: outputLocation.bucket,
+        Key: (outputLocation.keyPrefix ? outputLocation.keyPrefix : "") + "final.mp4",
         Body: await fsReadFile(output)
     };
     await S3.putObject(s3Params).promise();
@@ -93,8 +93,8 @@ export async function createDubbingSrt(providers: ProviderCollection, jobAssignm
     // 9. updating JobAssignment with jobOutput
     logger.debug("18.10. Associate output location with job output");
     jobAssignmentHelper.jobOutput.set("outputFile", new AwsS3FileLocator({
-        awsS3Bucket: s3Params.Bucket,
-        awsS3Key: s3Params.Key
+        bucket: s3Params.Bucket,
+        key: s3Params.Key
     }));
 
     await jobAssignmentHelper.complete();

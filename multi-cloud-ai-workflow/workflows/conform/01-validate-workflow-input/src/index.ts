@@ -22,8 +22,8 @@ const loggerProvider = new AwsCloudWatchLoggerProvider("conform-workflow-01-vali
 //         },
 //         "inputFile": {
 //             "@type": "Locator",
-//             "awsS3Bucket": "bucket_name",
-//             "awsS3Key": "key_name"
+//             "bucket": "bucket_name",
+//             "key": "key_name"
 //         }
 //     },
 //     "notificationEndpoint": {
@@ -83,8 +83,8 @@ export async function handler(event: InputEvent, context: Context) {
             throw new McmaException("Missing input.inputFile");
         }
 
-        let s3Bucket = input.inputFile.awsS3Bucket;
-        let s3Key = input.inputFile.awsS3Key;
+        let s3Bucket = input.inputFile.bucket;
+        let s3Key = input.inputFile.key;
 
         let data;
 

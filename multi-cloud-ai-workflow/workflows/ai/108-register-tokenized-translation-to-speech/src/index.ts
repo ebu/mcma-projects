@@ -59,8 +59,8 @@ export async function handler(event: InputEvent, context: Context) {
         let outputFile = jobOutput.get<AwsS3FileLocatorProperties>("outputFile");
 
         // get object from location bucket+key(prefix+filename)
-        let s3Bucket_ssml = outputFile.awsS3Bucket;
-        let s3Key_ssml = outputFile.awsS3Key;
+        let s3Bucket_ssml = outputFile.bucket;
+        let s3Key_ssml = outputFile.key;
         let s3Object_ssml;
         try {
             s3Object_ssml = await S3.getObject({

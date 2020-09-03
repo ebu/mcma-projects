@@ -77,8 +77,8 @@ export async function handler(event: InputEvent, context: Context) {
             jobInput: new JobParameterBag({
                 inputFile: event.data.mediaFileLocator,
                 outputLocation: new AwsS3FolderLocator({
-                    awsS3Bucket: TempBucket,
-                    awsS3KeyPrefix: JOB_RESULTS_PREFIX
+                    bucket: TempBucket,
+                    keyPrefix: JOB_RESULTS_PREFIX
                 })
             }),
             notificationEndpoint: new NotificationEndpoint({

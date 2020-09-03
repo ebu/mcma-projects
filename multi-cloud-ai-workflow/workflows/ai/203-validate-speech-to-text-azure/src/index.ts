@@ -103,16 +103,16 @@ export async function handler(event: InputEvent, context: Context) {
             jobProfile: jobProfile.id,
             jobInput: new JobParameterBag({
                 inputFile: new AwsS3FileLocator({
-                    awsS3Bucket: s3Params.Bucket,
-                    awsS3Key: s3Params.Key
+                    bucket: s3Params.Bucket,
+                    key: s3Params.Key
                 }),
                 referenceFile: new AwsS3FileLocator({
-                    awsS3Bucket: WebsiteBucket,
-                    awsS3Key: "assets/stt/clean_transcript_2015_GF_ORF_00_18_09_conv.txt",
+                    bucket: WebsiteBucket,
+                    key: "assets/stt/clean_transcript_2015_GF_ORF_00_18_09_conv.txt",
                 }),
                 outputLocation: new AwsS3FolderLocator({
-                    awsS3Bucket: TempBucket,
-                    awsS3KeyPrefix: JOB_RESULTS_PREFIX
+                    bucket: TempBucket,
+                    keyPrefix: JOB_RESULTS_PREFIX
                 })
             }),
             notificationEndpoint: new NotificationEndpoint({

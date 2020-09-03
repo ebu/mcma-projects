@@ -53,11 +53,11 @@ export async function handler(event: InputEvent, context: Context) {
         let s3Object;
         try {
             s3Object = await S3.getObject({
-                Bucket: outputFile.awsS3Bucket,
-                Key: outputFile.awsS3Key,
+                Bucket: outputFile.bucket,
+                Key: outputFile.key,
             }).promise();
         } catch (error) {
-            throw new McmaException("Unable to access file in bucket '" + outputFile.awsS3Bucket + "' with key '" + outputFile.awsS3Key + "' due to error: " + error.message);
+            throw new McmaException("Unable to access file in bucket '" + outputFile.bucket + "' with key '" + outputFile.key + "' due to error: " + error.message);
         }
 
         let transcription = s3Object.Body.toString();

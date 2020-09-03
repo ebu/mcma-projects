@@ -20,8 +20,8 @@ export async function handler(event: S3Event, context: Context) {
 
         for (const record of event.Records) {
             try {
-                let awsS3Bucket = record.s3.bucket.name;
-                let awsS3Key = record.s3.object.key;
+                let bucket = record.s3.bucket.name;
+                let key = record.s3.object.key;
 
                 let jobAssignmentGuid: string;
                 let operationName: string;
@@ -32,20 +32,20 @@ export async function handler(event: S3Event, context: Context) {
                 // "001-TokenizedTextToSpeechJob-c0cca2ea-4a23-45c1-bcf4-ab570638ed41.5a321518-b733-48b4-9c53-17a71894c56e.mp3" ->start at 25
                 //                               29                                  65
 
-                if (new RegExp(/^TextToSpeechJob-[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\..*\.mp3$/i).test(awsS3Key)) {
-                    jobAssignmentGuid = awsS3Key.substring(16, 52);
+                if (new RegExp(/^TextToSpeechJob-[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\..*\.mp3$/i).test(key)) {
+                    jobAssignmentGuid = key.substring(16, 52);
                     operationName = "ProcessTextToSpeechJobResult";
-                } else if (new RegExp(/^ssmlTextToSpeechJob-[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\..*\.mp3$/i).test(awsS3Key)) {
-                    jobAssignmentGuid = awsS3Key.substring(20, 56);
+                } else if (new RegExp(/^ssmlTextToSpeechJob-[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\..*\.mp3$/i).test(key)) {
+                    jobAssignmentGuid = key.substring(20, 56);
                     operationName = "ProcessSsmlTextToSpeechJobResult";
-                } else if (new RegExp(/^[0-9]{3}-TextTokensSpeechMarksJob-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\..*\.marks$/i).test(awsS3Key)) {
-                    jobAssignmentGuid = awsS3Key.substring(29, 65);
+                } else if (new RegExp(/^[0-9]{3}-TextTokensSpeechMarksJob-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\..*\.marks$/i).test(key)) {
+                    jobAssignmentGuid = key.substring(29, 65);
                     operationName = "ProcessTokenizedTextToSpeechJobResult";
-                } else if (new RegExp(/^TranscriptionJob-[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.json$/i).test(awsS3Key)) {
-                    jobAssignmentGuid = awsS3Key.substring(awsS3Key.indexOf("-") + 1, awsS3Key.lastIndexOf("."));
+                } else if (new RegExp(/^TranscriptionJob-[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.json$/i).test(key)) {
+                    jobAssignmentGuid = key.substring(key.indexOf("-") + 1, key.lastIndexOf("."));
                     operationName = "ProcessTranscribeJobResult";
                 } else {
-                    throw new McmaException("S3 key '" + awsS3Key + "' is not an expected file name processing in this lambda function");
+                    throw new McmaException("S3 key '" + key + "' is not an expected file name processing in this lambda function");
                 }
 
                 const jobAssignmentDatabaseId = "/job-assignments/" + jobAssignmentGuid;
@@ -65,7 +65,7 @@ export async function handler(event: S3Event, context: Context) {
                         contextVariables: environmentVariableProvider.getAllContextVariables(),
                         input: {
                             jobAssignmentId: jobAssignmentDatabaseId,
-                            outputFile: new AwsS3FileLocator({ awsS3Bucket: awsS3Bucket, awsS3Key: awsS3Key })
+                            outputFile: new AwsS3FileLocator({ bucket: bucket, key: key })
                         },
                         tracker: jobAssignment.tracker
                     })
