@@ -23,6 +23,16 @@ provider "aws" {
 # Run a terraform get on each module before executing this script
 #########################
 
+module "service_registry" {
+  source = "https://ch-ebu-mcma-module-repository.s3.eu-central-1.amazonaws.com/ebu/service-registry/aws/0.0.2/module.zip"
+
+  aws_account_id = var.aws_account_id
+  aws_region     = var.aws_region
+  log_group_name = module.monitoring.log_group.name
+  module_prefix  = "${var.global_prefix}-service-registry"
+  stage_name     = var.environment_type
+}
+
 module "cognito" {
   source = "./cognito"
 
@@ -55,7 +65,9 @@ module "services" {
   aws_account_id = var.aws_account_id
   aws_region     = var.aws_region
 
-  log_group = module.monitoring.log_group
+  log_group          = module.monitoring.log_group
+  services_url       = module.service_registry.services_url
+  services_auth_type = module.service_registry.auth_type
 
   azure_location         = var.azure_location
   azure_account_id       = var.azure_account_id
@@ -83,8 +95,8 @@ module "workflows" {
 
   log_group = module.monitoring.log_group
 
-  services_url               = module.services.services_url
-  service_registry_auth_type = module.services.service_registry_auth_type
+  services_url       = module.service_registry.services_url
+  services_auth_type = module.service_registry.auth_type
 
   repository_bucket_name = module.storage.repository_bucket.id
   temp_bucket_name       = module.storage.temp_bucket.id

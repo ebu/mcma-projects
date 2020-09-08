@@ -30,18 +30,6 @@ output "media_repository_url" {
   value = local.media_repository_url
 }
 
-output "service_registry_url" {
-  value = local.service_registry_url
-}
-
-output "service_registry_auth_type" {
-  value = local.service_registry_auth_type
-}
-
-output "services_url" {
-  value = local.services_url
-}
-
 output "transform_service_url" {
   value = local.transform_service_url
 }

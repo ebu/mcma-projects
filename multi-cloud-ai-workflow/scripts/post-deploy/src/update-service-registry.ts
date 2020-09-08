@@ -1,17 +1,15 @@
 import { JobParameter, JobProfile, ResourceEndpoint, Service } from "@mcma/core";
-import { AuthProvider, ResourceManager } from "@mcma/client";
+import { AuthProvider, ResourceManager, ResourceManagerConfig } from "@mcma/client";
 import { awsV4Auth } from "@mcma/aws-client";
 
 export async function updateServiceRegistry(AWS: any, terraformOutput: any): Promise<ResourceManager> {
-    const servicesAuthType = terraformOutput.service_registry_auth_type.value;
-    const servicesAuthContext: any = undefined;
-    const servicesUrl = terraformOutput.service_registry_url.value + "/services";
-    const jobProfilesUrl = terraformOutput.service_registry_url.value + "/job-profiles";
+    const servicesUrl = terraformOutput.service_registry.value.services_url;
+    const jobProfilesUrl = terraformOutput.service_registry.value.job_profiles_url;
+    const servicesAuthType = terraformOutput.service_registry.value.auth_type;
 
-    const resourceManagerConfig = {
+    const resourceManagerConfig: ResourceManagerConfig = {
         servicesUrl,
-        servicesAuthType,
-        servicesAuthContext
+        servicesAuthType
     };
 
     const resourceManager = new ResourceManager(resourceManagerConfig, new AuthProvider().add(awsV4Auth(AWS)));

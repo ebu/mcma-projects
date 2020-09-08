@@ -95,7 +95,7 @@ resource "aws_lambda_function" "process_workflow_completion" {
     variables = {
       LogGroupName     = var.log_group.name
       ServicesUrl      = var.services_url
-      ServicesAuthType = var.service_registry_auth_type
+      ServicesAuthType = var.services_auth_type
     }
   }
 }
@@ -114,7 +114,7 @@ resource "aws_lambda_function" "process_workflow_failure" {
     variables = {
       LogGroupName     = var.log_group.name
       ServicesUrl      = var.services_url
-      ServicesAuthType = var.service_registry_auth_type
+      ServicesAuthType = var.services_auth_type
     }
   }
 }

@@ -11,6 +11,12 @@ variable "aws_account_id" {}
 variable "aws_region" {}
 
 variable "log_group" {}
+variable "services_url" {
+  type = string
+}
+variable "services_auth_type" {
+  type = string
+}
 
 variable "azure_location" {}
 variable "azure_account_id" {}

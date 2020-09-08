@@ -225,8 +225,8 @@ resource "aws_api_gateway_stage" "benchmarkstt_service_gateway_stage" {
   variables = {
     TableName        = aws_dynamodb_table.benchmarkstt_service_table.name
     PublicUrl        = local.benchmarkstt_service_url
-    ServicesUrl      = local.services_url
-    ServicesAuthType = local.service_registry_auth_type
+    ServicesUrl      = var.services_url
+    ServicesAuthType = var.services_auth_type
     WorkerFunctionId = aws_lambda_function.benchmarkstt_service_worker.function_name
     DeploymentHash   = filesha256("./services/benchmarkstt-service.tf")
   }

@@ -34,12 +34,8 @@ output "website_url" {
   value = module.storage.website_url
 }
 
-output "service_registry_url" {
-  value = module.services.service_registry_url
-}
-
-output "service_registry_auth_type" {
-  value = module.services.service_registry_auth_type
+output "service_registry" {
+  value = module.service_registry
 }
 
 output "media_repository_url" {

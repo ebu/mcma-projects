@@ -75,8 +75,8 @@ resource "aws_lambda_function" "job_processor_periodic_job_checker" {
       LogGroupName               = var.log_group.name
       TableName                  = aws_dynamodb_table.job_processor_table.name
       PublicUrl                  = local.job_processor_url
-      ServicesUrl                = local.services_url
-      ServicesAuthType           = local.service_registry_auth_type
+      ServicesUrl                = var.services_url
+      ServicesAuthType           = var.services_auth_type
       CloudwatchEventRule        = aws_cloudwatch_event_rule.job_processor_periodic_job_checker_trigger.name,
       DefaultJobTimeoutInMinutes = var.job_processor_default_job_timeout_in_minutes
       WorkerFunctionId           = aws_lambda_function.job_processor_worker.function_name
@@ -122,8 +122,8 @@ resource "aws_lambda_function" "job_processor_periodic_job_cleanup" {
       LogGroupName             = var.log_group.name
       TableName                = aws_dynamodb_table.job_processor_table.name
       PublicUrl                = local.job_processor_url
-      ServicesUrl              = local.services_url
-      ServicesAuthType         = local.service_registry_auth_type
+      ServicesUrl              = var.services_url
+      ServicesAuthType         = var.services_auth_type
       JobRetentionPeriodInDays = var.job_processor_job_retention_period_in_days
       WorkerFunctionId         = aws_lambda_function.job_processor_worker.function_name
     }
@@ -336,8 +336,8 @@ resource "aws_api_gateway_stage" "job_processor_gateway_stage" {
   variables = {
     TableName        = aws_dynamodb_table.job_processor_table.name
     PublicUrl        = local.job_processor_url
-    ServicesUrl      = local.services_url
-    ServicesAuthType = local.service_registry_auth_type
+    ServicesUrl      = var.services_url
+    ServicesAuthType = var.services_auth_type
     WorkerFunctionId = aws_lambda_function.job_processor_worker.function_name
     DeploymentHash   = filesha256("./services/job-processor.tf")
   }
