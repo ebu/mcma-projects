@@ -1,7 +1,7 @@
 import * as AWS from "aws-sdk";
 import { Context, S3Event } from "aws-lambda";
 import { DynamoDbTableProvider } from "@mcma/aws-dynamodb";
-import { EnvironmentVariableProvider, getTableName, JobAssignment, McmaException } from "@mcma/core";
+import { EnvironmentVariableProvider, getTableName, McmaException } from "@mcma/core";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { AwsS3FileLocator } from "@mcma/aws-s3";
 

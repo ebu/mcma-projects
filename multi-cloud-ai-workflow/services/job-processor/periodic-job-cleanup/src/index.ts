@@ -36,8 +36,8 @@ export async function handler(event: ScheduledEvent, context: Context) {
 
         const jobs =
             completedJobs.results
-                .concat(failedJobs.results)
-                .concat(canceledJobs.results);
+                         .concat(failedJobs.results)
+                         .concat(canceledJobs.results);
 
         logger.info(`Deleting ${jobs.length} jobs older than ${retentionDateLimit.toISOString()}`);
 

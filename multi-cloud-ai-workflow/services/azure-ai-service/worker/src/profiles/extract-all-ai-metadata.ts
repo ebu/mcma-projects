@@ -5,7 +5,7 @@ import * as AWS from "aws-sdk";
 import { ProcessJobAssignmentHelper, ProviderCollection, WorkerRequest } from "@mcma/worker";
 import { HttpClient } from "@mcma/client";
 import { AwsS3FileLocator, AwsS3FileLocatorProperties, AwsS3FolderLocatorProperties, getS3Url } from "@mcma/aws-s3";
-import { AIJob, getTableName, JobAssignment } from "@mcma/core";
+import { AIJob, getTableName, ProblemDetail } from "@mcma/core";
 
 const S3 = new AWS.S3();
 const httpClient = new HttpClient();
@@ -195,7 +195,11 @@ export async function processNotification(providers: ProviderCollection, workerR
     } catch (error) {
         logger.error(error);
         try {
-            await jobAssignmentHelper.fail(error.message);
+            await jobAssignmentHelper.fail(new ProblemDetail({
+                type: "uri://mcma.ebu.ch/rfc7807/aws-ai-service/generic-failure",
+                title: "Generic failure",
+                detail: error.message
+            }));
         } catch (error) {
             logger.error(error);
         }

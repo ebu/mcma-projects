@@ -1,5 +1,5 @@
 import * as AWS from "aws-sdk";
-import { getTableName, JobAssignment, McmaException, NotificationEndpoint, WorkflowJob } from "@mcma/core";
+import { getTableName, McmaException, NotificationEndpoint, WorkflowJob } from "@mcma/core";
 import { ProcessJobAssignmentHelper, ProviderCollection, WorkerRequest } from "@mcma/worker";
 
 const StepFunctions = new AWS.StepFunctions();

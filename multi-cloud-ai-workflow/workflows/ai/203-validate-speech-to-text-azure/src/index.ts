@@ -65,7 +65,7 @@ export async function handler(event: InputEvent, context: Context) {
         event = JSON.parse(data.input);
 
         // get job profiles filtered by name
-        const [ jobProfile ] = await resourceManager.query(JobProfile, { name: JOB_PROFILE_NAME });
+        const [jobProfile] = await resourceManager.query(JobProfile, { name: JOB_PROFILE_NAME });
 
         // if not found bail out
         if (!jobProfile) {

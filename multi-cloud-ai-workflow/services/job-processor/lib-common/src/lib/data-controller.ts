@@ -27,11 +27,11 @@ function getDynamoDbOptions(consistentRead?: boolean): DynamoDbTableOptions {
 export class DataController {
     private dbTableProvider: DynamoDbTableProvider;
     private dbTable: DocumentDatabaseTable;
-    
+
     constructor(private tableName: string, private publicUrl: string, consistentRead?: boolean) {
         this.dbTableProvider = new DynamoDbTableProvider(getDynamoDbOptions(consistentRead));
     }
-    
+
     private async init() {
         if (!this.dbTable) {
             this.dbTable = await this.dbTableProvider.get(this.tableName);
@@ -101,7 +101,7 @@ export class DataController {
     async getExecution(jobExecutionId: string): Promise<JobExecution> {
         await this.init();
         const jobExecutionPath = extractPath(jobExecutionId);
-        
+
         return await this.dbTable.get(jobExecutionPath);
     }
 
@@ -135,7 +135,7 @@ export class DataController {
 
         return this.dbTable.delete(jobExecutionPath);
     }
-    
+
     async createMutex(mutexName: string, mutexHolder: string): Promise<DocumentDatabaseMutex> {
         await this.init();
         return this.dbTable.createMutex(mutexName, mutexHolder);

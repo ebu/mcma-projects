@@ -48,7 +48,7 @@ export async function startExecution(job: Job, dataController: DataController, r
     job.jobOutput = new JobParameterBag();
     job.progress = undefined;
     job = await dataController.updateJob(job);
-    
+
     async function failJob(error: Error) {
         jobExecution.status = JobStatus.Failed;
         jobExecution.error = new ProblemDetail({

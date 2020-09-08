@@ -33,9 +33,9 @@ export async function handler(event: ScheduledEvent, context: Context) {
 
         const jobs =
             newJobs.results
-                .concat(queuedJobs.results)
-                .concat(scheduledJobs.results)
-                .concat(runningJobs.results);
+                   .concat(queuedJobs.results)
+                   .concat(scheduledJobs.results)
+                   .concat(runningJobs.results);
 
         logger.info(`Found ${jobs.length} active jobs`);
 

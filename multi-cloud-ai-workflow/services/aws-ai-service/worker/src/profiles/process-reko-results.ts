@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import * as AWS from "aws-sdk";
-import { getTableName, JobAssignment, McmaException } from "@mcma/core";
+import { getTableName, McmaException, ProblemDetail } from "@mcma/core";
 import { ProcessJobAssignmentHelper, ProviderCollection, WorkerRequest } from "@mcma/worker";
 import { AwsS3FileLocator, AwsS3FileLocatorProperties, AwsS3FolderLocatorProperties } from "@mcma/aws-s3";
 import { PromiseResult } from "aws-sdk/lib/request";
@@ -123,7 +123,11 @@ export async function processRekognitionResult(providers: ProviderCollection, wo
     } catch (error) {
         logger.error(error.toString());
         try {
-            await jobAssignmentHelper.fail(error.message);
+            await jobAssignmentHelper.fail(new ProblemDetail({
+                type: "uri://mcma.ebu.ch/rfc7807/aws-ai-service/generic-failure",
+                title: "Generic failure",
+                detail: error.message
+            }));
         } catch (error) {
             logger.error(error.toString());
         }
