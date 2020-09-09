@@ -34,13 +34,14 @@ module "service_registry" {
 }
 
 module "job_processor" {
-  source = "https://ch-ebu-mcma-module-repository.s3.eu-central-1.amazonaws.com/ebu/job-processor/aws/0.0.3/module.zip"
+  source = "https://ch-ebu-mcma-module-repository.s3.eu-central-1.amazonaws.com/ebu/job-processor/aws/0.0.4/module.zip"
 
   aws_account_id = var.aws_account_id
   aws_region     = var.aws_region
   log_group_name = module.monitoring.log_group.name
   module_prefix  = "${var.global_prefix}-job-processor"
   stage_name     = var.environment_type
+  dashboard_name = var.global_prefix
 
   service_registry = module.service_registry
 }

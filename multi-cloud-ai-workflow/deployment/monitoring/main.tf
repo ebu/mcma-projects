@@ -2,58 +2,6 @@ resource "aws_cloudwatch_log_group" "main" {
   name = "/mcma/${var.global_prefix}"
 }
 
-resource "aws_cloudwatch_log_metric_filter" "jobs_started" {
-  name           = "${var.global_prefix}-type-JOB_START"
-  pattern        = "{ $.type = \"JOB_START\" }"
-  log_group_name = aws_cloudwatch_log_group.main.name
-
-  metric_transformation {
-    name          = "JobsStarted"
-    namespace     = var.global_prefix
-    value         = "1"
-    default_value = "0"
-  }
-}
-
-resource "aws_cloudwatch_log_metric_filter" "jobs_completed" {
-  name           = "${var.global_prefix}-message-jobStatus-Completed"
-  pattern        = "{ $.type = \"JOB_END\" && $.message.jobStatus = \"Completed\" }"
-  log_group_name = aws_cloudwatch_log_group.main.name
-
-  metric_transformation {
-    name          = "JobsCompleted"
-    namespace     = var.global_prefix
-    value         = "1"
-    default_value = "0"
-  }
-}
-
-resource "aws_cloudwatch_log_metric_filter" "jobs_failed" {
-  name           = "${var.global_prefix}-message-jobStatus-Failed"
-  pattern        = "{ $.type = \"JOB_END\" && $.message.jobStatus = \"Failed\" }"
-  log_group_name = aws_cloudwatch_log_group.main.name
-
-  metric_transformation {
-    name          = "JobsFailed"
-    namespace     = var.global_prefix
-    value         = "1"
-    default_value = "0"
-  }
-}
-
-resource "aws_cloudwatch_log_metric_filter" "jobs_canceled" {
-  name           = "${var.global_prefix}-message-jobStatus-Canceled"
-  pattern        = "{ $.type = \"JOB_END\" && $.message.jobStatus = \"Canceled\" }"
-  log_group_name = aws_cloudwatch_log_group.main.name
-
-  metric_transformation {
-    name          = "JobsCanceled"
-    namespace     = var.global_prefix
-    value         = "1"
-    default_value = "0"
-  }
-}
-
 resource "aws_cloudwatch_metric_alarm" "jobs_failed" {
   alarm_name          = "${var.global_prefix}-jobs-failed"
   comparison_operator = "GreaterThanOrEqualToThreshold"
@@ -72,11 +20,3 @@ resource "aws_sns_topic" "jobs_failed" {
   name = "${var.global_prefix}-jobs-failed"
 }
 
-resource "aws_cloudwatch_dashboard" "dashboard" {
-  dashboard_name = var.global_prefix
-  dashboard_body = templatefile("${path.module}/dashboard.json", {
-    aws_region    = var.aws_region
-    global_prefix = var.global_prefix
-    log_group     = aws_cloudwatch_log_group.main.name
-  })
-}
