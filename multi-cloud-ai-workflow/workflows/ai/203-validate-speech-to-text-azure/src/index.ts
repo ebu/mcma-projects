@@ -86,7 +86,7 @@ export async function handler(event: InputEvent, context: Context) {
 
         if (!bmContent.azureAiMetadata ||
             !bmContent.azureAiMetadata.azureTranscription ||
-            !bmContent.azureAiMetadata.azureTranscription.original) {
+            !bmContent.azureAiMetadata.azureTranscription.transcription) {
             throw new McmaException("Missing transcription on BMContent");
         }
 
