@@ -215,44 +215,44 @@ function createServices(terraformOutput: any) {
                         })
                     );
                     break;
-                case "job_processor_url":
+                case "job_processor":
                     serviceList.push(new Service({
                         name: "Job Processor",
                         resources: [
                             new ResourceEndpoint({
                                 resourceType: "AmeJob",
-                                httpEndpoint: terraformOutput[prop].value + "/jobs"
+                                httpEndpoint: terraformOutput[prop].value.jobs_url
                             }),
                             new ResourceEndpoint({
                                 resourceType: "AIJob",
-                                httpEndpoint: terraformOutput[prop].value + "/jobs"
+                                httpEndpoint: terraformOutput[prop].value.jobs_url
                             }),
                             new ResourceEndpoint({
                                 resourceType: "CaptureJob",
-                                httpEndpoint: terraformOutput[prop].value + "/jobs"
+                                httpEndpoint: terraformOutput[prop].value.jobs_url
                             }),
                             new ResourceEndpoint({
                                 resourceType: "DistributionJob",
-                                httpEndpoint: terraformOutput[prop].value + "/jobs"
+                                httpEndpoint: terraformOutput[prop].value.jobs_url
                             }),
                             new ResourceEndpoint({
                                 resourceType: "QAJob",
-                                httpEndpoint: terraformOutput[prop].value + "/jobs"
+                                httpEndpoint: terraformOutput[prop].value.jobs_url
                             }),
                             new ResourceEndpoint({
                                 resourceType: "TransferJob",
-                                httpEndpoint: terraformOutput[prop].value + "/jobs"
+                                httpEndpoint: terraformOutput[prop].value.jobs_url
                             }),
                             new ResourceEndpoint({
                                 resourceType: "TransformJob",
-                                httpEndpoint: terraformOutput[prop].value + "/jobs"
+                                httpEndpoint: terraformOutput[prop].value.jobs_url
                             }),
                             new ResourceEndpoint({
                                 resourceType: "WorkflowJob",
-                                httpEndpoint: terraformOutput[prop].value + "/jobs"
+                                httpEndpoint: terraformOutput[prop].value.jobs_url
                             })
                         ],
-                        authType: "AWS4"
+                        authType: terraformOutput[prop].value.auth_type
                     }));
                     break;
                 case "media_repository_url":
@@ -274,7 +274,7 @@ function createServices(terraformOutput: any) {
                 case "transform_service_url":
                     serviceList.push(
                         new Service({
-                            name: "FFmpeg TransformService",
+                            name: "FFmpeg Transform Service",
                             resources: [
                                 new ResourceEndpoint({
                                     resourceType: "JobAssignment",

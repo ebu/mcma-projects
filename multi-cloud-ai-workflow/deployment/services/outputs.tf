@@ -22,10 +22,6 @@ output "google_ai_service_url" {
   value = local.google_ai_service_url
 }
 
-output "job_processor_url" {
-  value = local.job_processor_url
-}
-
 output "media_repository_url" {
   value = local.media_repository_url
 }

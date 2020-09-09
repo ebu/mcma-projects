@@ -84,9 +84,9 @@ export async function handler(event: InputEvent, context: Context) {
         // writing CLEAN speech transcription to a textfile in temp bucket and provide via bmContent
         // Other option, SEE ALSO Bucket: TempBucket, Key: "stt/stt_output_clean" + ".txt", from step 3
 
-        if (!bmContent.awsAiMetadata ||
-            !bmContent.awsAiMetadata.transcription ||
-            !bmContent.awsAiMetadata.transcription.original) {
+        if (!bmContent.azureAiMetadata ||
+            !bmContent.azureAiMetadata.azureTranscription ||
+            !bmContent.azureAiMetadata.azureTranscription.original) {
             throw new McmaException("Missing transcription on BMContent");
         }
 

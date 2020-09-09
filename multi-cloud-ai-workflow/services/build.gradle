@@ -4,7 +4,6 @@ task build {
     dependsOn "azure-ai-service:build"
     dependsOn "benchmarkstt-service:build"
     dependsOn "google-ai-service:build"
-    dependsOn "job-processor:build"
     dependsOn "media-repository:build"
     dependsOn "transform-service:build"
     dependsOn "workflow-service:build"

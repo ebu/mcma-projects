@@ -38,12 +38,12 @@ output "service_registry" {
   value = module.service_registry
 }
 
-output "media_repository_url" {
-  value = module.services.media_repository_url
+output "job_processor" {
+  value = module.job_processor
 }
 
-output "job_processor_url" {
-  value = module.services.job_processor_url
+output "media_repository_url" {
+  value = module.services.media_repository_url
 }
 
 output "ame_service_url" {
