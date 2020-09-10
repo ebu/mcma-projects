@@ -1,6 +1,0 @@
-task build {
-    dependsOn "api-handler:build"
-    dependsOn "periodic-job-checker:build"
-    dependsOn "periodic-job-cleanup:build"
-    dependsOn "worker:build"
-}

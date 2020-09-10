@@ -1,5 +1,5 @@
 import * as AWS from "aws-sdk";
-import { AIJob, getTableName, JobAssignment, McmaException } from "@mcma/core";
+import { AIJob, getTableName, McmaException, ProblemDetail } from "@mcma/core";
 import { ProcessJobAssignmentHelper, ProviderCollection, WorkerRequest } from "@mcma/worker";
 import { AwsS3FileLocator, AwsS3FileLocatorProperties, AwsS3FolderLocatorProperties } from "@mcma/aws-s3";
 
@@ -101,7 +101,11 @@ export async function processSsmlTextToSpeechJobResult(providers: ProviderCollec
     } catch (error) {
         logger.error(error.toString());
         try {
-            await jobAssignmentHelper.fail(error.message);
+            await jobAssignmentHelper.fail(new ProblemDetail({
+                type: "uri://mcma.ebu.ch/rfc7807/aws-ai-service/generic-failure",
+                title: "Generic failure",
+                detail: error.message
+            }));
         } catch (error) {
             logger.error(error.toString());
         }

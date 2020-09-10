@@ -11,4 +11,4 @@ variable "aws_region" {}
 variable "log_group" {}
 
 variable "services_url" {}
-variable "service_registry_auth_type" {}
+variable "services_auth_type" {}

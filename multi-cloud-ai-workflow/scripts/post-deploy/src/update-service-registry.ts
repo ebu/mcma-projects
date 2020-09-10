@@ -1,17 +1,15 @@
 import { JobParameter, JobProfile, ResourceEndpoint, Service } from "@mcma/core";
-import { AuthProvider, ResourceManager } from "@mcma/client";
+import { AuthProvider, ResourceManager, ResourceManagerConfig } from "@mcma/client";
 import { awsV4Auth } from "@mcma/aws-client";
 
 export async function updateServiceRegistry(AWS: any, terraformOutput: any): Promise<ResourceManager> {
-    const servicesAuthType = terraformOutput.service_registry_auth_type.value;
-    const servicesAuthContext: any = undefined;
-    const servicesUrl = terraformOutput.service_registry_url.value + "/services";
-    const jobProfilesUrl = terraformOutput.service_registry_url.value + "/job-profiles";
+    const servicesUrl = terraformOutput.service_registry.value.services_url;
+    const jobProfilesUrl = terraformOutput.service_registry.value.job_profiles_url;
+    const servicesAuthType = terraformOutput.service_registry.value.auth_type;
 
-    const resourceManagerConfig = {
+    const resourceManagerConfig: ResourceManagerConfig = {
         servicesUrl,
-        servicesAuthType,
-        servicesAuthContext
+        servicesAuthType
     };
 
     const resourceManager = new ResourceManager(resourceManagerConfig, new AuthProvider().add(awsV4Auth(AWS)));
@@ -217,44 +215,44 @@ function createServices(terraformOutput: any) {
                         })
                     );
                     break;
-                case "job_processor_url":
+                case "job_processor":
                     serviceList.push(new Service({
                         name: "Job Processor",
                         resources: [
                             new ResourceEndpoint({
                                 resourceType: "AmeJob",
-                                httpEndpoint: terraformOutput[prop].value + "/jobs"
+                                httpEndpoint: terraformOutput[prop].value.jobs_url
                             }),
                             new ResourceEndpoint({
                                 resourceType: "AIJob",
-                                httpEndpoint: terraformOutput[prop].value + "/jobs"
+                                httpEndpoint: terraformOutput[prop].value.jobs_url
                             }),
                             new ResourceEndpoint({
                                 resourceType: "CaptureJob",
-                                httpEndpoint: terraformOutput[prop].value + "/jobs"
+                                httpEndpoint: terraformOutput[prop].value.jobs_url
                             }),
                             new ResourceEndpoint({
                                 resourceType: "DistributionJob",
-                                httpEndpoint: terraformOutput[prop].value + "/jobs"
+                                httpEndpoint: terraformOutput[prop].value.jobs_url
                             }),
                             new ResourceEndpoint({
                                 resourceType: "QAJob",
-                                httpEndpoint: terraformOutput[prop].value + "/jobs"
+                                httpEndpoint: terraformOutput[prop].value.jobs_url
                             }),
                             new ResourceEndpoint({
                                 resourceType: "TransferJob",
-                                httpEndpoint: terraformOutput[prop].value + "/jobs"
+                                httpEndpoint: terraformOutput[prop].value.jobs_url
                             }),
                             new ResourceEndpoint({
                                 resourceType: "TransformJob",
-                                httpEndpoint: terraformOutput[prop].value + "/jobs"
+                                httpEndpoint: terraformOutput[prop].value.jobs_url
                             }),
                             new ResourceEndpoint({
                                 resourceType: "WorkflowJob",
-                                httpEndpoint: terraformOutput[prop].value + "/jobs"
+                                httpEndpoint: terraformOutput[prop].value.jobs_url
                             })
                         ],
-                        authType: "AWS4"
+                        authType: terraformOutput[prop].value.auth_type
                     }));
                     break;
                 case "media_repository_url":
@@ -276,7 +274,7 @@ function createServices(terraformOutput: any) {
                 case "transform_service_url":
                     serviceList.push(
                         new Service({
-                            name: "FFmpeg TransformService",
+                            name: "FFmpeg Transform Service",
                             resources: [
                                 new ResourceEndpoint({
                                     resourceType: "JobAssignment",

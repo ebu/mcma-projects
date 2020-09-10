@@ -35,9 +35,9 @@ export async function handler(event: InputEvent, context: Context) {
                 let detail;
 
                 try {
-                    detail = JSON.parse(event.error?.Cause).errorMessage ?? event.error?.Cause ?? "Unknown error occurred"
+                    detail = JSON.parse(event.error?.Cause).errorMessage ?? event.error?.Cause ?? "Unknown error occurred";
                 } catch (e) {
-                    detail = event.error?.Cause ?? "Unknown error occurred"
+                    detail = event.error?.Cause ?? "Unknown error occurred";
                 }
 
                 error = new ProblemDetail({

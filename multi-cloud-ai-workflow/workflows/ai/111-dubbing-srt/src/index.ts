@@ -23,8 +23,7 @@ const TempBucket = process.env.TempBucket;
 const JOB_PROFILE_NAME = "CreateDubbingSrt";
 const JOB_RESULTS_PREFIX = "DubbingSrtJobResults/";
 
-type InputEvent = {
-} & JobBaseProperties;
+type InputEvent = {} & JobBaseProperties;
 
 /**
  * Lambda function handler

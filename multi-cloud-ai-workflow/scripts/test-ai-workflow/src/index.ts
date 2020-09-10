@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import * as path from "path";
 
 import { config, S3 } from "aws-sdk";
-import { JobAssignment, JobParameterBag, JobExecution, JobProfile, JobStatus, McmaException, McmaTracker, TransformJob, WorkflowJob } from "@mcma/core";
+import { JobAssignment, JobExecution, JobParameterBag, JobProfile, JobStatus, McmaException, McmaTracker, TransformJob, WorkflowJob } from "@mcma/core";
 import { AuthProvider, ResourceManager, ResourceManagerConfig } from "@mcma/client";
 import { AwsS3FileLocator } from "@mcma/aws-s3";
 import { awsV4Auth } from "@mcma/aws-client";
