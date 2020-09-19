@@ -1,7 +1,7 @@
 import * as AWS from "aws-sdk";
 import { Context } from "aws-lambda";
 
-import { EnvironmentVariableProvider, Job, JobBaseProperties, JobParameterBag, McmaException } from "@mcma/core";
+import { EnvironmentVariableProvider, Job, JobParameterBag, McmaException, McmaTracker } from "@mcma/core";
 import { AwsS3FileLocatorProperties } from "@mcma/aws-s3";
 import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
@@ -18,15 +18,16 @@ const loggerProvider = new AwsCloudWatchLoggerProvider("ai-workflow-404-register
 
 type InputEvent = {
     input: {
-        bmContent: string;
-    };
+        bmContent: string
+    }
     data: {
-        mediaFileLocator: AwsS3FileLocatorProperties;
-        extractAudioJobId: string[];
-        audioFileLocator: AwsS3FileLocatorProperties;
-        speechToTextGoogleJobId: string[];
-    };
-} & JobBaseProperties;
+        mediaFileLocator: AwsS3FileLocatorProperties
+        extractAudioJobId: string[]
+        audioFileLocator: AwsS3FileLocatorProperties
+        speechToTextGoogleJobId: string[]
+    }
+    tracker?: McmaTracker
+}
 
 export async function handler(event: InputEvent, context: Context) {
     const logger = loggerProvider.get(context.awsRequestId, event.tracker);

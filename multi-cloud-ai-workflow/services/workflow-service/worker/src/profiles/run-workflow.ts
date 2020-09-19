@@ -31,7 +31,7 @@ export async function runWorkflow(providers: ProviderCollection, jobAssignmentHe
 }
 
 export async function processNotification(providers: ProviderCollection, workerRequest: WorkerRequest) {
-    const jobAssignmentDatabaseId = workerRequest.input.jobAssignmentId;
+    const jobAssignmentDatabaseId = workerRequest.input.jobAssignmentDatabaseId;
     const notification = workerRequest.input.notification;
 
     const table = await providers.dbTableProvider.get(getTableName(workerRequest));

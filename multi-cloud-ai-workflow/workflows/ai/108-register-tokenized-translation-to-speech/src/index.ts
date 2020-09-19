@@ -1,6 +1,6 @@
 import * as AWS from "aws-sdk";
 import { Context } from "aws-lambda";
-import { EnvironmentVariableProvider, Job, JobBaseProperties, JobParameterBag, McmaException } from "@mcma/core";
+import { EnvironmentVariableProvider, Job, JobParameterBag, McmaException, McmaTracker } from "@mcma/core";
 import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { awsV4Auth } from "@mcma/aws-client";
@@ -15,12 +15,13 @@ const loggerProvider = new AwsCloudWatchLoggerProvider("ai-workflow-108-register
 
 type InputEvent = {
     input: {
-        bmContent: string;
-    };
+        bmContent: string
+    }
     data: {
         tokenizedTextToSpeechJobId: string[]
-    };
-} & JobBaseProperties;
+    }
+    tracker?: McmaTracker
+}
 
 /**
  * Lambda function handler
@@ -33,14 +34,6 @@ export async function handler(event: InputEvent, context: Context) {
         logger.functionStart(context.awsRequestId);
         logger.debug(event);
         logger.debug(context);
-
-        // send update notification
-        try {
-            await resourceManager.sendNotification(event);
-        } catch (error) {
-            logger.warn("Failed to send notification");
-            logger.warn(error.toString());
-        }
 
         // get ai job id (first non null entry in array)
         let jobId = event.data.tokenizedTextToSpeechJobId.find(id => id);

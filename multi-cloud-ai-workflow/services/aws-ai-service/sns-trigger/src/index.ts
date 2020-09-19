@@ -62,7 +62,7 @@ export async function handler(event: SNSEvent, context: Context) {
                         operationName: "ProcessRekognitionResult",
                         contextVariables: environmentVariableProvider.getAllContextVariables(),
                         input: {
-                            jobAssignmentId: jobAssignmentDatabaseId,
+                            jobAssignmentDatabaseId,
                             jobInfo: {
                                 rekoJobId,
                                 rekoJobType,

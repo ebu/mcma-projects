@@ -64,7 +64,7 @@ export async function handler(event: S3Event, context: Context) {
                         operationName,
                         contextVariables: environmentVariableProvider.getAllContextVariables(),
                         input: {
-                            jobAssignmentId: jobAssignmentDatabaseId,
+                            jobAssignmentDatabaseId,
                             outputFile: new AwsS3FileLocator({ bucket: bucket, key: key })
                         },
                         tracker: jobAssignment.tracker

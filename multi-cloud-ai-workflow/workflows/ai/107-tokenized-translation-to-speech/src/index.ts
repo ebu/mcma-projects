@@ -1,6 +1,6 @@
 import * as AWS from "aws-sdk";
 import { Context } from "aws-lambda";
-import { AIJob, EnvironmentVariableProvider, JobBaseProperties, JobParameterBag, JobProfile, McmaException, NotificationEndpoint } from "@mcma/core";
+import { AIJob, EnvironmentVariableProvider, JobParameterBag, JobProfile, McmaException, McmaTracker, NotificationEndpoint } from "@mcma/core";
 import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { AwsS3FileLocator, AwsS3FolderLocator } from "@mcma/aws-s3";
@@ -25,9 +25,10 @@ const JOB_RESULTS_PREFIX = "AIResults/ssml/";
 
 type InputEvent = {
     input: {
-        bmContent: string;
+        bmContent: string
     }
-} & JobBaseProperties;
+    tracker?: McmaTracker
+}
 
 // Calling text-to-speech Polly service to analyse translation text per sentence and generate SSML file for speech to text
 /**
@@ -42,14 +43,6 @@ export async function handler(event: InputEvent, context: Context) {
         logger.debug(event);
         logger.debug(context);
         logger.info(TempBucket, ActivityCallbackUrl, ActivityArn);
-
-        // send update notification
-        try {
-            await resourceManager.sendNotification(event);
-        } catch (error) {
-            logger.warn("Failed to send notification");
-            logger.warn(error.toString());
-        }
 
         // get activity task
         let data = await StepFunctions.getActivityTask({ activityArn: ActivityArn }).promise();
@@ -115,7 +108,7 @@ export async function handler(event: InputEvent, context: Context) {
 
         // creating job using file with (tokenized) translation text stored in temp bucket
         let job = new AIJob({
-            jobProfile: jobProfileId,
+            jobProfileId: jobProfileId,
             jobInput: new JobParameterBag({
                 inputFile: new AwsS3FileLocator({
                     bucket: s3Params.Bucket,

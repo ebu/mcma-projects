@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import * as AWS from "aws-sdk";
 import { Context } from "aws-lambda";
-import { EnvironmentVariableProvider, JobBaseProperties, McmaException } from "@mcma/core";
+import { EnvironmentVariableProvider, McmaException, McmaTracker, NotificationEndpointProperties } from "@mcma/core";
 import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { AwsS3FileLocator } from "@mcma/aws-s3";
@@ -27,12 +27,15 @@ const yyyymmdd = () => {
 type InputEvent = {
     input: {
         metadata: {
-            name: string;
-            description: string;
+            name: string
+            description: string
         };
-        inputFile: AwsS3FileLocator;
-    };
-} & JobBaseProperties;
+        inputFile: AwsS3FileLocator
+    }
+    progress?: number
+    tracker?: McmaTracker
+    notificationEndpoint?: NotificationEndpointProperties
+}
 
 export async function handler(event: InputEvent, context: Context) {
     const logger = loggerProvider.get(context.awsRequestId, event.tracker);

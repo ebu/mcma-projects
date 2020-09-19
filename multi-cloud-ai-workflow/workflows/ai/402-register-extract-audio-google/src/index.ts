@@ -3,7 +3,7 @@ import { Context } from "aws-lambda";
 
 import { v4 as uuidv4 } from "uuid";
 
-import { EnvironmentVariableProvider, Job, JobBaseProperties, JobParameterBag, McmaException } from "@mcma/core";
+import { EnvironmentVariableProvider, Job, JobParameterBag, McmaException, McmaTracker } from "@mcma/core";
 import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { awsV4Auth } from "@mcma/aws-client";
@@ -20,12 +20,13 @@ const loggerProvider = new AwsCloudWatchLoggerProvider("ai-workflow-402-register
 
 type InputEvent = {
     input: {
-        bmContent: string;
-    };
+        bmContent: string
+    }
     data: {
-        extractAudioJobId: string[];
-    };
-} & JobBaseProperties;
+        extractAudioJobId: string[]
+    }
+    tracker?: McmaTracker
+}
 
 /**
  * Create New BMEssence Object
