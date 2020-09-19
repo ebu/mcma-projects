@@ -25,6 +25,7 @@
         "@mcma/aws-s3": "0.13.8",
         "@mcma/client": "0.13.8",
         "@mcma/core": "0.13.8",
+        "@mcma/data": "0.13.8",
         "@swimlane/ngx-charts": "^13.0.4",
         "amazon-cognito-identity-js": "^3.3.3",
         "aws-sdk": "^2.755.0",
