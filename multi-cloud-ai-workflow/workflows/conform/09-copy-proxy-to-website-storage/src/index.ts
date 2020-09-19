@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import * as AWS from "aws-sdk";
 import { Context } from "aws-lambda";
-import { EnvironmentVariableProvider, Job, JobBaseProperties, JobParameterBag, McmaException } from "@mcma/core";
+import { EnvironmentVariableProvider, Job, JobParameterBag, McmaException, McmaTracker, NotificationEndpointProperties } from "@mcma/core";
 import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { AwsS3FileLocator, AwsS3FileLocatorProperties, getS3Url } from "@mcma/aws-s3";
@@ -21,10 +21,13 @@ const TempBucket = process.env.TempBucket;
 
 type InputEvent = {
     data: {
-        bmEssence: string;
+        bmEssence: string
         transformJob: string[]
-    };
-} & JobBaseProperties;
+    }
+    progress?: number
+    tracker?: McmaTracker
+    notificationEndpoint?: NotificationEndpointProperties
+}
 
 /**
  * Lambda function handler

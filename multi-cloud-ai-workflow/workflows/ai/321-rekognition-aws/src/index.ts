@@ -1,6 +1,6 @@
 import * as AWS from "aws-sdk";
 import { Context } from "aws-lambda";
-import { EnvironmentVariableProvider, Job, JobBaseProperties, JobParameterBag, McmaException } from "@mcma/core";
+import { EnvironmentVariableProvider, Job, JobParameterBag, McmaException, McmaTracker } from "@mcma/core";
 import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { awsV4Auth } from "@mcma/aws-client";
@@ -15,23 +15,24 @@ const loggerProvider = new AwsCloudWatchLoggerProvider("ai-workflow-321-rekognit
 
 type InputEvent = {
     input: {
-        bmContent: string;
-    },
+        bmContent: string
+    }
     data: {
         awsRekognition: {
             "0": {
                 data: {
-                    awsCelebritiesJobId: string[];
+                    awsCelebritiesJobId: string[]
                 };
             };
             "1": {
                 data: {
-                    awsEmotionsJobId: string[];
+                    awsEmotionsJobId: string[]
                 };
             };
         }
     }
-} & JobBaseProperties;
+    tracker?: McmaTracker
+}
 
 /**
  * Lambda function handler
@@ -44,13 +45,7 @@ export async function handler(event: InputEvent, context: Context) {
         logger.functionStart(context.awsRequestId);
         logger.debug(event);
         logger.debug(context);
-        // send update notification
-        try {
-            await resourceManager.sendNotification(event);
-        } catch (error) {
-            logger.warn("Failed to send notification");
-            logger.warn(error.toString());
-        }
+
         // awsCelebrities
         let awsCelebritiesJobId = event.data.awsRekognition["0"].data.awsCelebritiesJobId.find(id => id);
         if (!awsCelebritiesJobId) {

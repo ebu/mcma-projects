@@ -130,7 +130,7 @@ function createServices(terraformOutput: any) {
                             ],
                             authType: "AWS4",
                             jobType: "AmeJob",
-                            jobProfiles: [
+                            jobProfileIds: [
                                 JobProfiles.ExtractTechnicalMetadata.id
                             ]
                         })
@@ -148,7 +148,7 @@ function createServices(terraformOutput: any) {
                             ],
                             authType: "AWS4",
                             jobType: "AIJob",
-                            jobProfiles: [
+                            jobProfileIds: [
                                 JobProfiles.AWSTextToSpeech.id,
                                 JobProfiles.AWSSsmlTextToSpeech.id,
                                 JobProfiles.AWSTokenizedTextToSpeech.id,
@@ -173,7 +173,7 @@ function createServices(terraformOutput: any) {
                             ],
                             authType: "AWS4",
                             jobType: "AIJob",
-                            jobProfiles: [
+                            jobProfileIds: [
                                 JobProfiles.AzureExtractAllAIMetadata.id,
                             ]
                         })
@@ -191,7 +191,7 @@ function createServices(terraformOutput: any) {
                             ],
                             authType: "AWS4",
                             jobType: "QAJob",
-                            jobProfiles: [
+                            jobProfileIds: [
                                 JobProfiles.BenchmarkSTT.id,
                             ]
                         })
@@ -209,7 +209,7 @@ function createServices(terraformOutput: any) {
                             ],
                             authType: "AWS4",
                             jobType: "AIJob",
-                            jobProfiles: [
+                            jobProfileIds: [
                                 JobProfiles.GoogleSpeechToText.id,
                             ]
                         })
@@ -283,7 +283,7 @@ function createServices(terraformOutput: any) {
                             ],
                             authType: "AWS4",
                             jobType: "TransformJob",
-                            jobProfiles: [
+                            jobProfileIds: [
                                 JobProfiles.CreateProxyLambda.id,
                                 JobProfiles.CreateProxyEC2.id,
                                 JobProfiles.ExtractAudio.id,
@@ -307,7 +307,7 @@ function createServices(terraformOutput: any) {
                             ],
                             authType: "AWS4",
                             jobType: "WorkflowJob",
-                            jobProfiles: [
+                            jobProfileIds: [
                                 JobProfiles.ConformWorkflow.id,
                                 JobProfiles.AiWorkflow.id
                             ]

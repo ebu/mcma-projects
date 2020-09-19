@@ -1,6 +1,6 @@
 import * as AWS from "aws-sdk";
 import { Context } from "aws-lambda";
-import { EnvironmentVariableProvider, JobBaseProperties, JobParameterBag, JobProfile, McmaException, NotificationEndpoint, TransformJob } from "@mcma/core";
+import { EnvironmentVariableProvider, JobParameterBag, JobProfile, McmaException, McmaTracker, NotificationEndpoint, NotificationEndpointProperties, TransformJob } from "@mcma/core";
 import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { AwsS3FileLocator, AwsS3FolderLocator } from "@mcma/aws-s3";
@@ -22,9 +22,12 @@ const JOB_PROFILE_NAME = "CreateProxyEC2";
 
 type InputEvent = {
     data: {
-        repositoryFile: AwsS3FileLocator;
-    };
-} & JobBaseProperties;
+        repositoryFile: AwsS3FileLocator
+    }
+    progress?: number
+    tracker?: McmaTracker
+    notificationEndpoint?: NotificationEndpointProperties
+}
 
 /**
  * Lambda function handler
@@ -73,7 +76,7 @@ export async function handler(event: InputEvent, context: Context) {
 
         // creating the tranformjob(ec2)
         let createProxyJob = new TransformJob({
-            jobProfile: jobProfileId,
+            jobProfileId: jobProfileId,
             jobInput: new JobParameterBag({
                 inputFile: event.data.repositoryFile,
                 outputLocation: new AwsS3FolderLocator({

@@ -1,18 +1,8 @@
 #########################
-# Terraform configuration
-#########################
-
-terraform {
-  required_version = ">= 0.12"
-}
-
-#########################
 # Provider registration 
 #########################
 
 provider "aws" {
-  version = "~> 2.7"
-
   access_key = var.aws_access_key
   secret_key = var.aws_secret_key
   region     = var.aws_region
@@ -24,7 +14,7 @@ provider "aws" {
 #########################
 
 module "service_registry" {
-  source = "https://ch-ebu-mcma-module-repository.s3.eu-central-1.amazonaws.com/ebu/service-registry/aws/0.0.3/module.zip"
+  source = "https://ch-ebu-mcma-module-repository.s3.eu-central-1.amazonaws.com/ebu/service-registry/aws/0.13.8/module.zip"
 
   aws_account_id = var.aws_account_id
   aws_region     = var.aws_region
@@ -34,7 +24,7 @@ module "service_registry" {
 }
 
 module "job_processor" {
-  source = "https://ch-ebu-mcma-module-repository.s3.eu-central-1.amazonaws.com/ebu/job-processor/aws/0.0.4/module.zip"
+  source = "https://ch-ebu-mcma-module-repository.s3.eu-central-1.amazonaws.com/ebu/job-processor/aws/0.13.8/module.zip"
 
   aws_account_id = var.aws_account_id
   aws_region     = var.aws_region

@@ -14,7 +14,7 @@ export async function ssmlTextToSpeech(providers: ProviderCollection, jobAssignm
     const jobInput = jobAssignmentHelper.jobInput;
     const inputFile = jobInput.get<AwsS3FileLocatorProperties>("inputFile");
     const voiceId = jobInput.voiceId;
-    const jobAssignmentId = jobAssignmentHelper.jobAssignmentId;
+    const jobAssignmentDatabaseId = jobAssignmentHelper.jobAssignmentDatabaseId;
 
     logger.debug("16. generate text to speech using SSML and Polly");
 
@@ -40,7 +40,7 @@ export async function ssmlTextToSpeech(providers: ProviderCollection, jobAssignm
     const params_ssml = {
         OutputFormat: "mp3",
         OutputS3BucketName: jobAssignmentHelper.workerRequest.getRequiredContextVariable<string>("ServiceOutputBucket"),
-        OutputS3KeyPrefix: "ssmlTextToSpeechJob-" + jobAssignmentId.substring(jobAssignmentId.lastIndexOf("/") + 1),
+        OutputS3KeyPrefix: "ssmlTextToSpeechJob-" + jobAssignmentDatabaseId.substring(jobAssignmentDatabaseId.lastIndexOf("/") + 1),
         Text: inputText,
         VoiceId: voiceId,
         TextType: "ssml"

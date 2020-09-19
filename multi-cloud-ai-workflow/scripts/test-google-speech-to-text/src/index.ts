@@ -43,7 +43,7 @@ async function createAiJob(resourceManager: ResourceManager, inputFile: AwsS3Fil
     }
 
     const transformJob = new AIJob({
-        jobProfile: jobProfileId,
+        jobProfileId: jobProfileId,
         jobInput: new JobParameterBag({
             inputFile,
             outputLocation,
@@ -107,8 +107,8 @@ async function main() {
     const jobExecution = await resourceManager.get<JobExecution>(`${job.id}/executions/1`);
     console.log(JSON.stringify(jobExecution, null, 2));
 
-    if (jobExecution.jobAssignment) {
-        const jobAssignment = await resourceManager.get<JobAssignment>(jobExecution.jobAssignment);
+    if (jobExecution.jobAssignmentId) {
+        const jobAssignment = await resourceManager.get<JobAssignment>(jobExecution.jobAssignmentId);
         console.log(JSON.stringify(jobAssignment, null, 2));
     }
 }

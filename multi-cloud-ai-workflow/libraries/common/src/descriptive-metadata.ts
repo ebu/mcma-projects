@@ -1,6 +1,6 @@
-import { McmaObject } from "@mcma/core";
+import { McmaObject, McmaObjectProperties } from "@mcma/core";
 
-export interface DescriptiveMetadataProperties {
+export interface DescriptiveMetadataProperties extends McmaObjectProperties {
     name?: string;
     description?: string;
 }

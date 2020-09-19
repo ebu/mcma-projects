@@ -1,6 +1,6 @@
 import * as AWS from "aws-sdk";
 import { Context } from "aws-lambda";
-import { EnvironmentVariableProvider, JobBaseProperties, JobParameterBag, JobProfile, McmaException, WorkflowJob } from "@mcma/core";
+import { EnvironmentVariableProvider, JobParameterBag, JobProfile, McmaException, McmaTracker, NotificationEndpointProperties, WorkflowJob } from "@mcma/core";
 import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { awsV4Auth } from "@mcma/aws-client";
@@ -12,11 +12,14 @@ const loggerProvider = new AwsCloudWatchLoggerProvider("conform-workflow-11-star
 
 type InputEvent = {
     data: {
-        bmContent: string;
-        bmEssence: string;
-        websiteFile: AwsS3FileLocator;
-    };
-} & JobBaseProperties;
+        bmContent: string
+        bmEssence: string
+        websiteFile: AwsS3FileLocator
+    }
+    progress?: number
+    tracker?: McmaTracker
+    notificationEndpoint?: NotificationEndpointProperties
+}
 
 /**
  * Lambda function handler
@@ -51,7 +54,7 @@ export async function handler(event: InputEvent, context: Context) {
 
         // creating workflow job
         let workflowJob = new WorkflowJob({
-            jobProfile: jobProfileId,
+            jobProfileId: jobProfileId,
             jobInput: new JobParameterBag({
                 bmContent: event.data.bmContent,
                 bmEssence: event.data.bmEssence

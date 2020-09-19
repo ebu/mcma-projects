@@ -45,7 +45,7 @@ async function createBenchmarkSttJob(resourceManager: ResourceManager, inputFile
     }
 
     const transformJob = new QAJob({
-        jobProfile: jobProfile.id,
+        jobProfileId: jobProfile.id,
         jobInput: new JobParameterBag({
             inputFile,
             referenceFile,
@@ -152,8 +152,8 @@ async function main() {
     const jobExecution = await resourceManager.get<JobExecution>(`${job.id}/executions/1`);
     console.log(JSON.stringify(jobExecution, null, 2));
 
-    if (jobExecution.jobAssignment) {
-        const jobAssignment = await resourceManager.get<JobAssignment>(jobExecution.jobAssignment);
+    if (jobExecution.jobAssignmentId) {
+        const jobAssignment = await resourceManager.get<JobAssignment>(jobExecution.jobAssignmentId);
         console.log(JSON.stringify(jobAssignment, null, 2));
     }
 }

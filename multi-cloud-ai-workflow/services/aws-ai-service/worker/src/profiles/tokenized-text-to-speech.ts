@@ -66,7 +66,7 @@ export async function tokenizedTextToSpeech(providers: ProviderCollection, jobAs
     const jobInput = jobAssignmentHelper.jobInput;
     const inputFile = jobInput.get<AwsS3FileLocatorProperties>("inputFile");
     const voiceId = jobInput.voiceId;
-    const jobAssignmentId = jobAssignmentHelper.jobAssignmentId;
+    const jobAssignmentDatabaseId = jobAssignmentHelper.jobAssignmentDatabaseId;
 
     logger.debug("14. Generate SSML file for Polly from Tokenized translation");
 
@@ -91,7 +91,7 @@ export async function tokenizedTextToSpeech(providers: ProviderCollection, jobAs
     const params_sm = {
         OutputFormat: "json",
         OutputS3BucketName: jobAssignmentHelper.workerRequest.getRequiredContextVariable<string>("ServiceOutputBucket"),
-        OutputS3KeyPrefix: "000-TextTokensSpeechMarksJob-" + jobAssignmentId.substring(jobAssignmentId.lastIndexOf("/") + 1),
+        OutputS3KeyPrefix: "000-TextTokensSpeechMarksJob-" + jobAssignmentDatabaseId.substring(jobAssignmentDatabaseId.lastIndexOf("/") + 1),
         Text: inputText,
         SpeechMarkTypes: ["sentence"],
         VoiceId: voiceId,

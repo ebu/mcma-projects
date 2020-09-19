@@ -34,7 +34,7 @@ async function processNotification(requestContext: McmaApiRequestContext) {
         "ProcessNotification",
         requestContext.getAllContextVariables(),
         {
-            jobAssignmentId: jobAssignmentDatabaseId,
+            jobAssignmentDatabaseId,
             notification
         },
         jobAssignment.tracker,

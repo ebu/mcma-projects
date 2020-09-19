@@ -3,7 +3,7 @@ import { Context } from "aws-lambda";
 // @ts-ignore
 import * as srtConvert from "aws-transcription-to-srt";
 
-import { EnvironmentVariableProvider, Job, JobBaseProperties, JobParameterBag, McmaException } from "@mcma/core";
+import { EnvironmentVariableProvider, Job, JobParameterBag, McmaException, McmaTracker } from "@mcma/core";
 import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { AwsS3FileLocator, AwsS3FileLocatorProperties, getS3Url } from "@mcma/aws-s3";
@@ -41,11 +41,12 @@ function createBMEssence(bmContent: BMContent, location: AwsS3FileLocator, title
 type InputEvent = {
     input: {
         bmContent: string
-    },
+    }
     data: {
         transcribeJobId: string[]
     }
-} & JobBaseProperties;
+    tracker?: McmaTracker
+}
 
 /**
  * Lambda function handler
@@ -58,14 +59,6 @@ export async function handler(event: InputEvent, context: Context) {
         logger.functionStart(context.awsRequestId);
         logger.debug(event);
         logger.debug(context);
-
-        // send update notification
-        try {
-            await resourceManager.sendNotification(event);
-        } catch (error) {
-            logger.warn("Failed to send notification");
-            logger.warn(error.toString());
-        }
 
         // get ai job id (first non null entry in array)
         let jobId = event.data.transcribeJobId.find(id => id);

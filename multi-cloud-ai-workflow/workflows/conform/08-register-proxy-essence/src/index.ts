@@ -1,6 +1,6 @@
 import * as AWS from "aws-sdk";
 import { Context } from "aws-lambda";
-import { EnvironmentVariableProvider, Job, JobBaseProperties, JobParameterBag, McmaException } from "@mcma/core";
+import { EnvironmentVariableProvider, Job, JobParameterBag, McmaException, McmaTracker, NotificationEndpointProperties } from "@mcma/core";
 import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { awsV4Auth } from "@mcma/aws-client";
@@ -14,11 +14,14 @@ const loggerProvider = new AwsCloudWatchLoggerProvider("conform-workflow-08-regi
 
 type InputEvent = {
     data: {
-        bmContent: string;
-        bmEssence: string;
-        transformJob: string[];
-    };
-} & JobBaseProperties;
+        bmContent: string
+        bmEssence: string
+        transformJob: string[]
+    }
+    progress?: number
+    tracker?: McmaTracker
+    notificationEndpoint?: NotificationEndpointProperties
+}
 
 /**
  * Create New BMEssence Object

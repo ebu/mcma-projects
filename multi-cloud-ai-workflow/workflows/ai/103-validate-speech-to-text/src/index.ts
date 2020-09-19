@@ -2,7 +2,7 @@ import * as AWS from "aws-sdk";
 import { Context } from "aws-lambda";
 import { v4 as uuidv4 } from "uuid";
 
-import { EnvironmentVariableProvider, JobBaseProperties, JobParameterBag, JobProfile, McmaException, NotificationEndpoint, QAJob } from "@mcma/core";
+import { EnvironmentVariableProvider, JobParameterBag, JobProfile, McmaException, McmaTracker, NotificationEndpoint, QAJob } from "@mcma/core";
 import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { AwsS3FileLocator, AwsS3FolderLocator } from "@mcma/aws-s3";
@@ -29,9 +29,10 @@ const JOB_RESULTS_PREFIX = "BenchmarkSTT/";
 
 type InputEvent = {
     input: {
-        bmContent: string;
-    };
-} & JobBaseProperties;
+        bmContent: string
+    }
+    tracker?: McmaTracker
+}
 
 /**
  * Lambda function handler
@@ -45,14 +46,6 @@ export async function handler(event: InputEvent, context: Context) {
         logger.debug(event);
         logger.debug(context);
         logger.info(TempBucket, ActivityCallbackUrl, ActivityArn);
-
-        // send update notification
-        try {
-            await resourceManager.sendNotification(event);
-        } catch (error) {
-            logger.warn("Failed to send notification");
-            logger.warn(error.toString());
-        }
 
         // get activity task
         let data = await StepFunctions.getActivityTask({ activityArn: ActivityArn }).promise();
@@ -97,7 +90,7 @@ export async function handler(event: InputEvent, context: Context) {
 
         // creating stt benchmarking job
         let job = new QAJob({
-            jobProfile: jobProfile.id,
+            jobProfileId: jobProfile.id,
             jobInput: new JobParameterBag({
                 inputFile: new AwsS3FileLocator({
                     bucket: s3Params.Bucket,

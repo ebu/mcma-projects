@@ -11,7 +11,7 @@ export async function transcribeAudio(providers: ProviderCollection, jobAssignme
     const jobInput = jobAssignmentHelper.jobInput;
 
     const inputFile = jobInput.get<AwsS3FileLocatorProperties>("inputFile");
-    const jobAssignmentId = jobAssignmentHelper.jobAssignmentId;
+    const jobAssignmentDatabaseId = jobAssignmentHelper.jobAssignmentDatabaseId;
 
     logger.debug("2. Speech to text transcription service");
 
@@ -34,7 +34,7 @@ export async function transcribeAudio(providers: ProviderCollection, jobAssignme
 
     logger.debug("2.3 initialise and call transcription service");
     const params = {
-        TranscriptionJobName: "TranscriptionJob-" + jobAssignmentId.substring(jobAssignmentId.lastIndexOf("/") + 1),
+        TranscriptionJobName: "TranscriptionJob-" + jobAssignmentDatabaseId.substring(jobAssignmentDatabaseId.lastIndexOf("/") + 1),
         LanguageCode: "en-US",
         Media: {
             MediaFileUri: mediaFileUrl

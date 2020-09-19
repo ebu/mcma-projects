@@ -1,6 +1,6 @@
 import * as AWS from "aws-sdk";
 import { Context } from "aws-lambda";
-import { EnvironmentVariableProvider, JobBaseProperties, JobParameterBag, JobProfile, McmaException, NotificationEndpoint, TransformJob } from "@mcma/core";
+import { EnvironmentVariableProvider, JobParameterBag, JobProfile, McmaException, McmaTracker, NotificationEndpoint, TransformJob } from "@mcma/core";
 import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { AwsS3FileLocator, AwsS3FolderLocator } from "@mcma/aws-s3";
@@ -24,12 +24,13 @@ const JOB_RESULTS_PREFIX = "ExtractAudioJobResults/";
 
 type InputEvent = {
     input: {
-        bmContent: string;
-    };
+        bmContent: string
+    }
     data: {
-        mediaFileLocator: AwsS3FileLocator;
-    };
-} & JobBaseProperties;
+        mediaFileLocator: AwsS3FileLocator
+    }
+    tracker?: McmaTracker
+}
 
 /**
  * Lambda function handler
@@ -43,14 +44,6 @@ export async function handler(event: InputEvent, context: Context) {
         logger.debug(event);
         logger.debug(context);
         logger.info(TempBucket, ActivityCallbackUrl, ActivityArn);
-
-        // send update notification
-        try {
-            await resourceManager.sendNotification(event);
-        } catch (error) {
-            logger.warn("Failed to send notification");
-            logger.warn(error.toString());
-        }
 
         // get activity task
         let data = await StepFunctions.getActivityTask({ activityArn: ActivityArn }).promise();
@@ -76,7 +69,7 @@ export async function handler(event: InputEvent, context: Context) {
 
         // creating the extract audio and Google speech-to-text job giving the original mp4 file as input.
         let job = new TransformJob({
-            jobProfile: jobProfile.id,
+            jobProfileId: jobProfile.id,
             jobInput: new JobParameterBag({
                 inputFile: event.data.mediaFileLocator,
                 outputLocation: new AwsS3FolderLocator({
