@@ -1,0 +1,39 @@
+apply from: "${project.rootDir}/gradle-tasks-for-npm.gradle"
+
+task copyNodeModules(type: Copy) {
+    dependsOn npmInstall
+    mustRunAfter tsc
+    from "node_modules"
+    into "build/staging/node_modules"
+}
+
+task copyJson(type: Copy) {
+    mustRunAfter tsc
+    from "."
+    into "build/staging"
+    exclude "build"
+    exclude "node_modules"
+    exclude "src"
+    include "**/function.json"
+    include "host.json"
+    include "package.json"
+}
+
+task copyExe(type: Copy) {
+    mustRunAfter tsc
+    from "."
+    into "build/staging"
+    exclude "build"
+    exclude "node_modules"
+    exclude "src"
+    include "**/*.exe"
+}
+
+task build(type: Zip) {
+    dependsOn copyNodeModules, copyJson, copyExe, tsc
+    from "build/staging"
+    archiveFileName = "function.zip"
+    destinationDirectory = file("build/dist")
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+}

@@ -1,0 +1,24 @@
+apply from: "${project.rootDir}/gradle-tasks-for-npm.gradle"
+
+task copyPackageJson(type: Copy) {
+    mustRunAfter tsc
+    from "package.json"
+    into "build/staging"
+}
+
+task npmPack(type: Exec) {
+    dependsOn ":verifyNodeJS"
+    dependsOn tsc
+    dependsOn copyPackageJson
+    enabled file("package.json").exists()
+    inputs.file "package.json"
+    inputs.dir "build/staging"
+    outputs.dir "build/dist"
+    commandLine npmExecutable
+    args "pack", "../staging"
+    workingDir "build/dist"
+
+    doFirst {
+        mkdir "build/dist"
+    }
+}

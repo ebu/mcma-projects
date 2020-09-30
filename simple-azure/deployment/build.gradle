@@ -1,0 +1,106 @@
+import groovy.json.JsonOutput
+
+task generateTerraformTFVars {
+    inputs.property("ENVIRONMENT_NAME", environmentName)
+    inputs.property("ENVIRONMENT_TYPE", environmentType)
+    inputs.property("AZURE_CLIENT_ID", azureClientId)
+    inputs.property("AZURE_CLIENT_SECRET", azureClientSecret)
+    inputs.property("AZURE_TENANT_ID",azureTenantId)
+    inputs.property("AZURE_SUBSCRIPTION_ID", azureSubscriptionId)
+    inputs.property("AZURE_LOCATION", azureLocation)
+
+    def propertyFile = file("${projectDir}/terraform.tfvars.json")
+    outputs.file(propertyFile)
+
+    doLast {
+        def data = [
+                nodejs_version                 : nodeJsVersion,
+                environment_name               : environmentName,
+                environment_type               : environmentType,
+                global_prefix                  : "${environmentName}.${environmentType}".replaceAll("\\.", "-"),
+                global_prefix_lower_only       : "${environmentName}${environmentType}".replaceAll("-", "").toLowerCase(),
+
+                azure_client_id                : azureClientId,
+                azure_client_secret            : azureClientSecret,
+                azure_tenant_id                : azureTenantId,
+                azure_subscription_id          : azureSubscriptionId,
+                azure_location                 : azureLocation,
+
+                deploy_container               : "${environmentName}-${environmentType}-deploy",
+                upload_container               : "${environmentName}-${environmentType}-upload",
+                output_container               : "${environmentName}-${environmentType}-output"
+        ]
+
+        def json = JsonOutput.toJson(data)
+        def jsonPretty = JsonOutput.prettyPrint(json)
+
+        propertyFile.write(jsonPretty)
+    }
+}
+
+task terraformInit(type: Exec) {
+    dependsOn ":verifyTerraform"
+    inputs.file "main.tf"
+    outputs.upToDateWhen { file(".terraform").exists() }
+    commandLine terraformExecutable
+    args "init"
+}
+
+task terraformPlan(type: Exec) {
+    dependsOn ":verifyTerraform"
+    dependsOn ":build"
+    dependsOn terraformInit
+    dependsOn generateTerraformTFVars
+    commandLine terraformExecutable
+    args "plan"
+}
+
+task terraformApply(type: Exec) {
+    dependsOn ":verifyTerraform"
+    dependsOn ":build"
+    dependsOn terraformInit
+    dependsOn generateTerraformTFVars
+    commandLine terraformExecutable
+    args "apply", "-auto-approve"
+}
+
+task terraformDestroy(type: Exec) {
+    dependsOn ":verifyTerraform"
+    dependsOn terraformInit
+    dependsOn generateTerraformTFVars
+    commandLine terraformExecutable
+    args "destroy", "-force"
+}
+
+task terraformOutput(type: Exec) {
+    mustRunAfter terraformApply
+    inputs.file("terraform.tfstate")
+    outputs.file("terraform.output.json")
+    commandLine terraformExecutable
+    args "output", "-json"
+    doFirst {
+        standardOutput new FileOutputStream("${projectDir}/terraform.output.json")
+    }
+}
+
+task clean {
+    delete "${projectDir}/terraform.output"
+    delete "${projectDir}/terraform.output.json"
+    delete "${projectDir}/terraform.output"
+    delete "${projectDir}/terraform.output.json"
+    delete "${projectDir}/terraform.tfvars"
+    delete "${projectDir}/terraform.tfvars.json"
+}
+
+task plan {
+    dependsOn(terraformPlan)
+}
+
+task deploy {
+    dependsOn terraformApply
+    dependsOn ":scripts:post-deploy:run"
+}
+
+task destroy {
+    dependsOn(terraformDestroy)
+}

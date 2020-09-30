@@ -1,0 +1,26 @@
+{
+    "name": "mediainfo-service-api-handler",
+    "version": "0.0.0",
+    "description": "Azure Function App based AME service leveraging MediaInfo",
+    "private": true,
+    "engines": {
+        "node": "~10.16.3"
+    },
+    "license": "Apache-2.0",
+    "dependencies": {
+        "@mcma/api": "0.13.10-beta2",
+        "@mcma/azure-client": "0.13.10-beta2",
+        "@mcma/azure-cosmos-db": "0.13.10-beta2",
+        "@mcma/azure-functions-api": "0.13.10-beta2",
+        "@mcma/azure-logger": "0.13.10-beta2",
+        "@mcma/azure-queue-worker-invoker": "0.13.10-beta2",
+        "@mcma/client": "0.13.10-beta2",
+        "@mcma/core": "0.13.10-beta2",
+        "@mcma/data": "0.13.10-beta2",
+        "@mcma/worker-invoker": "0.13.10-beta2"
+    },
+    "devDependencies": {
+        "@azure/functions": "1.2.2",
+        "@types/node": "^10.17.21"
+    }
+}
