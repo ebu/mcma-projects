@@ -22,11 +22,11 @@ export async function deleteJob(providers: ProviderCollection, workerRequest: Wo
         const executions = await dataController.getExecutions(jobId);
 
         for (const execution of executions.results) {
-            if (execution.jobAssignment) {
+            if (execution.jobAssignmentId) {
                 try {
-                    await resourceManager.delete(execution.jobAssignment);
+                    await resourceManager.delete(execution.jobAssignmentId);
                 } catch (error) {
-                    logger.warn(`Failed to delete job assignment ${execution.jobAssignment}`);
+                    logger.warn(`Failed to delete job assignment ${execution.jobAssignmentId}`);
                     logger.warn(error?.toString());
                 }
             }

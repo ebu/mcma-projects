@@ -115,9 +115,7 @@ export class DataController {
         jobExecution.id = `${jobId}/executions/${executionNumber}`;
         jobExecution.dateCreated = jobExecution.dateModified = new Date();
 
-        await this.dbTable.put(`${jobPath}/executions/${executionNumber}`, jobExecution);
-
-        return jobExecution;
+        return await this.dbTable.put(`${jobPath}/executions/${executionNumber}`, jobExecution);
     }
 
     async updateExecution(jobExecution: JobExecution): Promise<JobExecution> {

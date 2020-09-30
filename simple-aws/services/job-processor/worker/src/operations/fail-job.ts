@@ -26,12 +26,12 @@ export async function failJob(providers: ProviderCollection, workerRequest: Work
 
         const [jobExecution] = (await dataController.getExecutions(jobId)).results;
         if (jobExecution) {
-            if (jobExecution.jobAssignment) {
+            if (jobExecution.jobAssignmentId) {
                 try {
-                    const client = await resourceManager.getResourceEndpointClient(jobExecution.jobAssignment);
-                    await client.post(undefined, `${jobExecution.jobAssignment}/cancel`);
+                    const client = await resourceManager.getResourceEndpointClient(jobExecution.jobAssignmentId);
+                    await client.post(undefined, `${jobExecution.jobAssignmentId}/cancel`);
                 } catch (error) {
-                    logger.warn(`Canceling job assignment '${jobExecution.jobAssignment} failed`);
+                    logger.warn(`Canceling job assignment '${jobExecution.jobAssignmentId} failed`);
                     logger.warn(error?.toString());
                 }
             }

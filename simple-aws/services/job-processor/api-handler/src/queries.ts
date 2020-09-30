@@ -21,11 +21,10 @@ export function buildQueryParameters(queryStringParameters: { [key: string]: any
         limit = undefined;
     }
 
-    if (fallbackLimit) {
+    if ((limit === undefined || limit === null) && fallbackLimit) {
         // setting limit to default value of 100 if no other limitation is set
         if ((from === undefined || from === null) &&
-            (to === undefined || to === null) &&
-            (limit === undefined || limit === null)) {
+            (to === undefined || to === null)) {
             limit = fallbackLimit;
         }
     }

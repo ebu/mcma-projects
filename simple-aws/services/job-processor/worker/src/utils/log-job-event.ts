@@ -4,7 +4,7 @@ import { ResourceManager } from "@mcma/client";
 export async function logJobEvent(logger: Logger, resourceManager: ResourceManager, job: Job, jobExecution: JobExecution) {
     let jobProfile: JobProfile;
     try {
-        jobProfile = await resourceManager.get<JobProfile>(job.jobProfile);
+        jobProfile = await resourceManager.get<JobProfile>(job.jobProfileId);
     } catch (error) {
         logger.warn("Failed to get jobProfile");
         logger.warn(error);
@@ -13,10 +13,10 @@ export async function logJobEvent(logger: Logger, resourceManager: ResourceManag
     const msg = {
         jobId: job.id,
         jobType: job["@type"],
-        jobProfile: job.jobProfile,
+        jobProfileId: job.jobProfileId,
         jobProfileName: jobProfile?.name,
-        jobExecution: jobExecution?.id,
-        jobAssignment: jobExecution?.jobAssignment,
+        jobExecutionId: jobExecution?.id,
+        jobAssignmentId: jobExecution?.jobAssignmentId,
         jobInput: job.jobInput,
         jobStatus: job.status,
         jobError: job.error,

@@ -71,7 +71,7 @@ export async function startExecution(job: Job, dataController: DataController, r
         logger.info("Creating Job Assignment");
 
         // retrieving the jobProfile
-        const jobProfile = await resourceManager.get<JobProfile>(job.jobProfile);
+        const jobProfile = await resourceManager.get<JobProfile>(job.jobProfileId);
 
         // validating job.jobInput with required input parameters of jobProfile
         const jobInput = job.jobInput;
@@ -115,8 +115,8 @@ export async function startExecution(job: Job, dataController: DataController, r
                     continue;
                 }
 
-                if (service.jobProfiles) {
-                    for (let serviceJobProfile of service.jobProfiles) {
+                if (service.jobProfileIds) {
+                    for (let serviceJobProfile of service.jobProfileIds) {
                         if (serviceJobProfile === jobProfile.id) {
                             selectedService = service;
                             break;
@@ -134,7 +134,7 @@ export async function startExecution(job: Job, dataController: DataController, r
         }
 
         let jobAssignment = new JobAssignment({
-            job: job.id,
+            jobId: job.id,
             notificationEndpoint: new NotificationEndpoint({
                 httpEndpoint: `${jobExecution.id}/notifications`
             }),
@@ -162,7 +162,7 @@ export async function startExecution(job: Job, dataController: DataController, r
         logger.info(jobAssignment);
 
         jobExecution.status = JobStatus.Scheduled;
-        jobExecution.jobAssignment = jobAssignment.id;
+        jobExecution.jobAssignmentId = jobAssignment.id;
         jobExecution = await dataController.updateExecution(jobExecution);
 
         logger.info(jobExecution);

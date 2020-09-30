@@ -49,7 +49,7 @@ export async function handler(event: ScheduledEvent, context: Context) {
 
             let defaultTimeout = Number.parseInt(DefaultJobTimeoutInMinutes);
 
-            if (job.deadLine) {
+            if (job.deadline) {
                 defaultTimeout = undefined;
                 if (job.deadline < now) {
                     deadlinePassed = true;
