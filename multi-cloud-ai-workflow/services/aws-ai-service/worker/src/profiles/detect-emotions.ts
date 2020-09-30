@@ -12,13 +12,13 @@ export async function detectEmotions(providers: ProviderCollection, jobAssignmen
 
     const inputFile = jobInput.get<AwsS3FileLocatorProperties>("inputFile");
     const clientToken = crypto.randomBytes(16).toString("hex");
-    const base64JobId = Buffer.from(jobAssignmentHelper.jobAssignmentId).toString("hex");
+    const base64JobId = Buffer.from(jobAssignmentHelper.jobAssignmentDatabaseId).toString("hex");
 
     const params = {
         Video: {
             S3Object: {
-                Bucket: inputFile.awsS3Bucket,
-                Name: inputFile.awsS3Key
+                Bucket: inputFile.bucket,
+                Name: inputFile.key
             }
         },
         ClientRequestToken: clientToken,

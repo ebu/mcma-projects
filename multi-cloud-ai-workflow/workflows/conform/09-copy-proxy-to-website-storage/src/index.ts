@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import * as AWS from "aws-sdk";
 import { Context } from "aws-lambda";
-import { EnvironmentVariableProvider, Job, JobBaseProperties, JobParameterBag, McmaException } from "@mcma/core";
+import { EnvironmentVariableProvider, Job, JobParameterBag, McmaException, McmaTracker, NotificationEndpointProperties } from "@mcma/core";
 import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { AwsS3FileLocator, AwsS3FileLocatorProperties, getS3Url } from "@mcma/aws-s3";
@@ -21,10 +21,13 @@ const TempBucket = process.env.TempBucket;
 
 type InputEvent = {
     data: {
-        bmEssence: string;
+        bmEssence: string
         transformJob: string[]
-    };
-} & JobBaseProperties;
+    }
+    progress?: number
+    tracker?: McmaTracker
+    notificationEndpoint?: NotificationEndpointProperties
+}
 
 /**
  * Lambda function handler
@@ -56,7 +59,7 @@ export async function handler(event: InputEvent, context: Context) {
             let bme = await resourceManager.get<BMEssence>(event.data.bmEssence);
             // copy proxy to website storage
             outputFile = bme.locations[0];
-            copySource = encodeURI(outputFile.awsS3Bucket + "/" + outputFile.awsS3Key);
+            copySource = encodeURI(outputFile.bucket + "/" + outputFile.key);
 
         } else {
             let transformJob = await resourceManager.get<Job>(transformJobId);
@@ -64,7 +67,7 @@ export async function handler(event: InputEvent, context: Context) {
 
             // copy proxy to website storage
             outputFile = jobOutput.get<AwsS3FileLocatorProperties>("outputFile");
-            copySource = encodeURI(outputFile.awsS3Bucket + "/" + outputFile.awsS3Key);
+            copySource = encodeURI(outputFile.bucket + "/" + outputFile.key);
         }
 
         let s3Bucket = WebsiteBucket;
@@ -72,9 +75,9 @@ export async function handler(event: InputEvent, context: Context) {
 //    let s3Key = "media/proxycopy_" + uuidv4();
 
         // addin file extension
-        let idxLastDot = outputFile.awsS3Key.lastIndexOf(".");
+        let idxLastDot = outputFile.key.lastIndexOf(".");
         if (idxLastDot > 0) {
-            s3Key += outputFile.awsS3Key.substring(idxLastDot);
+            s3Key += outputFile.key.substring(idxLastDot);
         }
 
         // execute copy proxy
@@ -92,7 +95,7 @@ export async function handler(event: InputEvent, context: Context) {
         // copy to temp bucket
         let s3Bucket_copy = TempBucket;
         let s3Key_copy = "temp/proxy";
-        s3Key_copy += outputFile.awsS3Key.substring(idxLastDot);
+        s3Key_copy += outputFile.key.substring(idxLastDot);
         try {
             let params_copy = {
                 CopySource: copySource,
@@ -109,8 +112,8 @@ export async function handler(event: InputEvent, context: Context) {
 
         // create BMEssence
 //    let locator = new Locator({
-//        "awsS3Bucket": s3Bucket,
-//        "awsS3Key": s3Key
+//        "bucket": s3Bucket,
+//        "key": s3Key
 //    });
 
 //    let bme = createBMEssence(bmc, locator, "proxy-copy", "proxy-copy");
@@ -129,8 +132,8 @@ export async function handler(event: InputEvent, context: Context) {
 
         // addin ResultPath of StepFunctions
         const s3Locator = new AwsS3FileLocator({
-            awsS3Bucket: s3Bucket,
-            awsS3Key: s3Key
+            bucket: s3Bucket,
+            key: s3Key
         });
 
         await getS3Url(s3Locator, S3);

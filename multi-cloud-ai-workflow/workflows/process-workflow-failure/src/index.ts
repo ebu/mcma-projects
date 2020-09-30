@@ -1,6 +1,6 @@
 import * as AWS from "aws-sdk";
 import { Context } from "aws-lambda";
-import { EnvironmentVariableProvider, JobBaseProperties, JobProperties, JobStatus } from "@mcma/core";
+import { EnvironmentVariableProvider, JobProperties, JobStatus, McmaTracker, NotificationEndpointProperties } from "@mcma/core";
 import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { awsV4Auth } from "@mcma/aws-client";
@@ -12,9 +12,13 @@ const loggerProvider = new AwsCloudWatchLoggerProvider("process-workflow-failure
 
 type InputEvent = {
     error: {
-        Cause?: string;
-    };
-} & JobBaseProperties;
+        Error: string
+        Cause?: string
+    } | ProblemDetail
+    status?: JobStatus
+    tracker?: McmaTracker
+    notificationEndpoint?: NotificationEndpointProperties
+}
 
 export async function handler(event: InputEvent, context: Context) {
     const logger = loggerProvider.get(context.awsRequestId, event.tracker);
@@ -35,9 +39,9 @@ export async function handler(event: InputEvent, context: Context) {
                 let detail;
 
                 try {
-                    detail = JSON.parse(event.error?.Cause).errorMessage ?? event.error?.Cause ?? "Unknown error occurred"
+                    detail = JSON.parse(event.error?.Cause).errorMessage ?? event.error?.Cause ?? "Unknown error occurred";
                 } catch (e) {
-                    detail = event.error?.Cause ?? "Unknown error occurred"
+                    detail = event.error?.Cause ?? "Unknown error occurred";
                 }
 
                 error = new ProblemDetail({
@@ -67,7 +71,6 @@ export async function handler(event: InputEvent, context: Context) {
                     detail: `Job '${job.id} failed due to error '${job.error.title}`,
                     job
                 });
-                event.statusMessage = event.error?.Cause ?? "Execution of Job Canceled";
                 break;
             }
             case "States.Timeout": {

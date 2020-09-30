@@ -1,7 +1,7 @@
 import * as AWS from "aws-sdk";
 import { Context, SNSEvent } from "aws-lambda";
 import { DynamoDbTableProvider } from "@mcma/aws-dynamodb";
-import { EnvironmentVariableProvider, getTableName, JobAssignment, McmaException } from "@mcma/core";
+import { EnvironmentVariableProvider, getTableName, McmaException } from "@mcma/core";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 
 const Lambda = new AWS.Lambda({ apiVersion: "2015-03-31" });
@@ -62,7 +62,7 @@ export async function handler(event: SNSEvent, context: Context) {
                         operationName: "ProcessRekognitionResult",
                         contextVariables: environmentVariableProvider.getAllContextVariables(),
                         input: {
-                            jobAssignmentId: jobAssignmentDatabaseId,
+                            jobAssignmentDatabaseId,
                             jobInfo: {
                                 rekoJobId,
                                 rekoJobType,

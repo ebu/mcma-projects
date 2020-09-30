@@ -5,6 +5,7 @@ import { ResourceManager } from "@mcma/client";
 import { ConfigService } from "../services/config.service";
 import { McmaClientService } from "../services/mcma-client.service";
 import { Subscription } from "rxjs";
+import { QueryResults } from "@mcma/data";
 
 @Component({
     selector: "mcma-services",
@@ -13,8 +14,8 @@ import { Subscription } from "rxjs";
 })
 export class ServicesComponent implements OnInit, OnDestroy {
 
-    services = [];
-    selectedService;
+    services: Service[] = [];
+    selectedService : Service;
 
     jobProfiles = {};
     filteredJobProfiles = [];
@@ -98,7 +99,7 @@ export class ServicesComponent implements OnInit, OnDestroy {
         this.selectService(this.services[0]);
     };
 
-    selectService(row) {
+    selectService(row: Service) {
         this.selectedService = row;
         console.log(row);
 
@@ -106,8 +107,8 @@ export class ServicesComponent implements OnInit, OnDestroy {
         const serviceResources = [];
 
         if (this.selectedService) {
-            if (this.selectedService.jobProfiles) {
-                for (const jobProfileId of this.selectedService.jobProfiles) {
+            if (this.selectedService.jobProfileIds) {
+                for (const jobProfileId of this.selectedService.jobProfileIds) {
                     filteredJobProfiles.push(this.jobProfiles[jobProfileId]);
                 }
             }
@@ -138,8 +139,8 @@ export class ServicesComponent implements OnInit, OnDestroy {
         const resourceEndpoint = await this.resourceManager.getResourceEndpointClient(httpEndpoint);
 
         if (resourceEndpoint) {
-            const response = await resourceEndpoint.get<any[]>(httpEndpoint);
-            this.resources = response.data.sort((a, b) => new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime());
+            const response = await resourceEndpoint.get<QueryResults<any>>(httpEndpoint);
+            this.resources = response.data.results.sort((a, b) => new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime());
         } else {
             this.resources.length = 0;
         }

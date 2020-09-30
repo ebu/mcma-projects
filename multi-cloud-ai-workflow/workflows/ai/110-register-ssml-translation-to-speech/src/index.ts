@@ -1,6 +1,6 @@
 import * as AWS from "aws-sdk";
 import { Context } from "aws-lambda";
-import { EnvironmentVariableProvider, Job, JobBaseProperties, JobParameterBag, McmaException } from "@mcma/core";
+import { EnvironmentVariableProvider, Job, JobParameterBag, McmaException, McmaTracker } from "@mcma/core";
 import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { AwsS3FileLocator, AwsS3FileLocatorProperties, getS3Url } from "@mcma/aws-s3";
@@ -20,12 +20,13 @@ const TempBucket = process.env.TempBucket;
 
 type InputEvent = {
     input: {
-        bmContent: string;
+        bmContent: string
     };
     data: {
-        ssmlTextToSpeechJobId: string[];
-    };
-} & JobBaseProperties;
+        ssmlTextToSpeechJobId: string[]
+    }
+    tracker?: McmaTracker
+}
 
 /**
  * Create New BMEssence Object
@@ -57,15 +58,6 @@ export async function handler(event: InputEvent, context: Context) {
         logger.debug(event);
         logger.debug(context);
 
-        // send update notification
-        try {
-            await resourceManager.sendNotification(event);
-        } catch (error) {
-            logger.warn("Failed to send notification");
-            logger.warn(error.toString());
-        }
-
-
         // get ai job id (first non null entry in array)
         let jobId = event.data.ssmlTextToSpeechJobId.find(id => id);
         if (!jobId) {
@@ -83,8 +75,8 @@ export async function handler(event: InputEvent, context: Context) {
         let outputFile = jobOutput.get<AwsS3FileLocatorProperties>("outputFile");
 
         // destination bucket: AIJob outputlocation
-        let s3Bucket = outputFile.awsS3Bucket;
-        let s3Key = outputFile.awsS3Key;
+        let s3Bucket = outputFile.bucket;
+        let s3Key = outputFile.key;
 
         // identify associated bmContent
         let bmContent = await resourceManager.get<BMContent>(event.input.bmContent);
@@ -98,7 +90,7 @@ export async function handler(event: InputEvent, context: Context) {
         bmContent = await resourceManager.update(bmContent);
 
         // source URI already defined
-        let copySource = encodeURI(outputFile.awsS3Bucket + "/" + outputFile.awsS3Key);
+        let copySource = encodeURI(outputFile.bucket + "/" + outputFile.key);
 
         // destination bucket - temp for ffmpeg assembly
         let s3Bucket_temp = TempBucket;
@@ -131,8 +123,8 @@ export async function handler(event: InputEvent, context: Context) {
         // create BMEssence corresponding to speechToText media file in websiteBucket
         // bmEssence is a locator to the essence and the associated bmContent
         let locator_web = new AwsS3FileLocator({
-            awsS3Bucket: s3Bucket_web,
-            awsS3Key: s3Key_web
+            bucket: s3Bucket_web,
+            key: s3Key_web
         });
         await getS3Url(locator_web, s3SubDomain);
 
@@ -152,8 +144,8 @@ export async function handler(event: InputEvent, context: Context) {
 
         // adding ResultPath of StepFunctions -> CHECK USAGE!!!!!!!!!!!! WITH WEBSITE??
         return new AwsS3FileLocator({
-            awsS3Bucket: s3Bucket_web,
-            awsS3Key: s3Key_web,
+            bucket: s3Bucket_web,
+            key: s3Key_web,
 //       httpEndpoint: httpEndpoint
         });
 

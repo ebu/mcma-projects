@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import * as AWS from "aws-sdk";
-import { getTableName, JobAssignment, McmaException } from "@mcma/core";
+import { getTableName, McmaException, ProblemDetail } from "@mcma/core";
 import { ProcessJobAssignmentHelper, ProviderCollection, WorkerRequest } from "@mcma/worker";
 import { AwsS3FileLocator, AwsS3FileLocatorProperties, AwsS3FolderLocatorProperties } from "@mcma/aws-s3";
 import { PromiseResult } from "aws-sdk/lib/request";
@@ -94,9 +94,9 @@ export async function processRekognitionResult(providers: ProviderCollection, wo
         walkclean(data);
 
         // 3. write Reko output file to output location
-        const s3Bucket = jobInput.get<AwsS3FolderLocatorProperties>("outputLocation").awsS3Bucket;
+        const s3Bucket = jobInput.get<AwsS3FolderLocatorProperties>("outputLocation").bucket;
 
-        let videoFileName = jobInput.get<AwsS3FileLocatorProperties>("inputFile").awsS3Key;
+        let videoFileName = jobInput.get<AwsS3FileLocatorProperties>("inputFile").key;
         videoFileName = videoFileName.replace(".mp4", "").replace("media/", "");
         const newS3Key = "reko_" + "media_" + videoFileName + "_" + rekoJobType + "_" + uuidv4() + ".json";
 
@@ -115,15 +115,19 @@ export async function processRekognitionResult(providers: ProviderCollection, wo
         logger.debug("Wrote Reko result file to S3 bucket : " + s3Bucket + " S3 key : " + newS3Key);
 
         jobAssignmentHelper.jobOutput.set("outputFile", new AwsS3FileLocator({
-            awsS3Bucket: s3Bucket,
-            awsS3Key: newS3Key
+            bucket: s3Bucket,
+            key: newS3Key
         }));
 
         await jobAssignmentHelper.complete();
     } catch (error) {
         logger.error(error.toString());
         try {
-            await jobAssignmentHelper.fail(error.message);
+            await jobAssignmentHelper.fail(new ProblemDetail({
+                type: "uri://mcma.ebu.ch/rfc7807/aws-ai-service/generic-failure",
+                title: "Generic failure",
+                detail: error.message
+            }));
         } catch (error) {
             logger.error(error.toString());
         }

@@ -1,16 +1,14 @@
 export async function uploadWebsiteConfig(AWS: any, terraformOutput: any) {
     const S3 = new AWS.S3();
 
-    const servicesAuthType = terraformOutput.service_registry_auth_type.value;
-    const servicesAuthContext: any = undefined;
-    const servicesUrl = terraformOutput.service_registry_url.value + "/services";
+    const servicesUrl = terraformOutput.service_registry.value.services_url;
+    const servicesAuthType = terraformOutput.service_registry.value.auth_type;
 
     console.log("Uploading deployment configuration to website");
     const config = {
         resourceManager: {
             servicesUrl,
             servicesAuthType,
-            servicesAuthContext,
         },
         aws: {
             region: terraformOutput.aws_region?.value,

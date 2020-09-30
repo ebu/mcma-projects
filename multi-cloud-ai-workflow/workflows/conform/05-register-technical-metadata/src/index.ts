@@ -1,6 +1,6 @@
 import * as AWS from "aws-sdk";
 import { Context } from "aws-lambda";
-import { EnvironmentVariableProvider, Job, JobBaseProperties, JobParameterBag, McmaException } from "@mcma/core";
+import { EnvironmentVariableProvider, Job, JobParameterBag, McmaException, McmaTracker, NotificationEndpointProperties } from "@mcma/core";
 import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { awsV4Auth } from "@mcma/aws-client";
@@ -16,17 +16,20 @@ const loggerProvider = new AwsCloudWatchLoggerProvider("conform-workflow-05-regi
 type InputEvent = {
     input: {
         metadata: {
-            name: string;
-            description: string;
-        };
-        inputFile: AwsS3FileLocator;
-    };
+            name: string
+            description: string
+        }
+        inputFile: AwsS3FileLocator
+    }
     data: {
-        bmContent: string;
-        ameJobId: string[];
-        repositoryFile: AwsS3FileLocator;
-    };
-} & JobBaseProperties;
+        bmContent: string
+        ameJobId: string[]
+        repositoryFile: AwsS3FileLocator
+    }
+    progress?: number
+    tracker?: McmaTracker
+    notificationEndpoint?: NotificationEndpointProperties
+}
 
 /**
  * Create New BMEssence Object
@@ -78,8 +81,8 @@ export async function handler(event: InputEvent, context: Context) {
 
         // get media info
         let outputFile = jobOutput.get<AwsS3FileLocatorProperties>("outputFile");
-        let s3Bucket = outputFile.awsS3Bucket;
-        let s3Key = outputFile.awsS3Key;
+        let s3Bucket = outputFile.bucket;
+        let s3Key = outputFile.key;
         let s3Object;
         try {
             s3Object = await S3.getObject({

@@ -14,7 +14,7 @@ resource "aws_lambda_function" "ame_service_api_handler" {
 
   environment {
     variables = {
-      LogGroupName = var.global_prefix
+      LogGroupName = var.log_group.name
     }
   }
 }
@@ -43,7 +43,7 @@ resource "aws_lambda_function" "ame_service_worker" {
 
   environment {
     variables = {
-      LogGroupName = var.global_prefix
+      LogGroupName = var.log_group.name
     }
   }
 }
@@ -187,8 +187,8 @@ resource "aws_api_gateway_stage" "ame_service_gateway_stage" {
   variables = {
     TableName        = aws_dynamodb_table.ame_service_table.name
     PublicUrl        = local.ame_service_url
-    ServicesUrl      = local.services_url
-    ServicesAuthType = local.service_registry_auth_type
+    ServicesUrl      = var.services_url
+    ServicesAuthType = var.services_auth_type
     WorkerFunctionId = aws_lambda_function.ame_service_worker.function_name
     DeploymentHash   = filesha256("./services/ame-service.tf")
   }

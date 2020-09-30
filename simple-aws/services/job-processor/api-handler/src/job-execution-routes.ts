@@ -38,7 +38,7 @@ export class JobExecutionRoutes extends McmaApiRouteCollection {
         let execution;
 
         if (executionId === "latest") {
-            execution = (await this.dataController.queryExecutions(`${PublicUrl}/jobs/${jobId}`, { limit: 1 }))[0];
+            execution = (await this.dataController.queryExecutions(`${PublicUrl}/jobs/${jobId}`, { limit: 1 })).results[0];
         } else {
             execution = await this.dataController.getExecution(`${PublicUrl}/jobs/${jobId}/executions/${executionId}`);
         }

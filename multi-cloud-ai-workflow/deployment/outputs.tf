@@ -34,20 +34,16 @@ output "website_url" {
   value = module.storage.website_url
 }
 
-output "service_registry_url" {
-  value = module.services.service_registry_url
+output "service_registry" {
+  value = module.service_registry
 }
 
-output "service_registry_auth_type" {
-  value = module.services.service_registry_auth_type
+output "job_processor" {
+  value = module.job_processor
 }
 
 output "media_repository_url" {
   value = module.services.media_repository_url
-}
-
-output "job_processor_url" {
-  value = module.services.job_processor_url
 }
 
 output "ame_service_url" {

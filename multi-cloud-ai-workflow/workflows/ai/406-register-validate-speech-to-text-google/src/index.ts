@@ -1,6 +1,6 @@
 import * as AWS from "aws-sdk";
 import { Context } from "aws-lambda";
-import { EnvironmentVariableProvider, Job, JobBaseProperties, JobParameterBag, McmaException } from "@mcma/core";
+import { EnvironmentVariableProvider, Job, JobParameterBag, McmaException, McmaTracker } from "@mcma/core";
 import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { awsV4Auth } from "@mcma/aws-client";
@@ -15,12 +15,13 @@ const loggerProvider = new AwsCloudWatchLoggerProvider("ai-workflow-406-register
 
 type InputEvent = {
     input: {
-        bmContent: string;
-    };
+        bmContent: string
+    }
     data: {
-        validateSpeechToTextGoogleJobId: string[];
-    };
-} & JobBaseProperties;
+        validateSpeechToTextGoogleJobId: string[]
+    }
+    tracker?: McmaTracker
+}
 
 /**
  * Lambda function handler
@@ -49,8 +50,8 @@ export async function handler(event: InputEvent, context: Context) {
 
         // get service result/outputfile from location bucket+key(prefix+filename)
         let outputFile = jobOutput.get<AwsS3FileLocatorProperties>("outputFile");
-        let s3Bucket = outputFile.awsS3Bucket;
-        let s3Key = outputFile.awsS3Key;
+        let s3Bucket = outputFile.bucket;
+        let s3Key = outputFile.key;
         let s3Object;
         try {
             s3Object = await S3.getObject({

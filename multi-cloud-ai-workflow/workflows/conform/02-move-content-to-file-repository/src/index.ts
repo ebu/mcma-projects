@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import * as AWS from "aws-sdk";
 import { Context } from "aws-lambda";
-import { EnvironmentVariableProvider, JobBaseProperties, McmaException } from "@mcma/core";
+import { EnvironmentVariableProvider, McmaException, McmaTracker, NotificationEndpointProperties } from "@mcma/core";
 import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { AwsS3FileLocator } from "@mcma/aws-s3";
@@ -27,12 +27,15 @@ const yyyymmdd = () => {
 type InputEvent = {
     input: {
         metadata: {
-            name: string;
-            description: string;
+            name: string
+            description: string
         };
-        inputFile: AwsS3FileLocator;
-    };
-} & JobBaseProperties;
+        inputFile: AwsS3FileLocator
+    }
+    progress?: number
+    tracker?: McmaTracker
+    notificationEndpoint?: NotificationEndpointProperties
+}
 
 export async function handler(event: InputEvent, context: Context) {
     const logger = loggerProvider.get(context.awsRequestId, event.tracker);
@@ -52,15 +55,15 @@ export async function handler(event: InputEvent, context: Context) {
 
         let inputFile = event.input.inputFile;
 
-        let copySource = encodeURI(inputFile.awsS3Bucket + "/" + inputFile.awsS3Key);
+        let copySource = encodeURI(inputFile.bucket + "/" + inputFile.key);
 
         let s3Bucket = RepositoryBucket;
         let s3Key = yyyymmdd() + "/" + uuidv4();
 
         // adding file extension
-        let idxLastDot = inputFile.awsS3Key.lastIndexOf(".");
+        let idxLastDot = inputFile.key.lastIndexOf(".");
         if (idxLastDot > 0) {
-            s3Key += inputFile.awsS3Key.substring(idxLastDot);
+            s3Key += inputFile.key.substring(idxLastDot);
         }
 
         try {
@@ -74,8 +77,8 @@ export async function handler(event: InputEvent, context: Context) {
         }
 
         return new AwsS3FileLocator({
-            awsS3Bucket: s3Bucket,
-            awsS3Key: s3Key
+            bucket: s3Bucket,
+            key: s3Key
         });
     } catch (error) {
         logger.error("Failed to move content to file repository");

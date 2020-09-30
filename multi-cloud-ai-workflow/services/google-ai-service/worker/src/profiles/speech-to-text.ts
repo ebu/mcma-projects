@@ -59,8 +59,8 @@ export async function speechToText(providers: ProviderCollection, jobAssignmentH
     const inputFile = jobInput.get<AwsS3FileLocatorProperties>("inputFile");
     const outputLocation = jobInput.get<AwsS3FolderLocatorProperties>("outputLocation");
 
-    if (!inputFile.awsS3Bucket || !inputFile.awsS3Key) {
-        throw new McmaException("Failed to find awsS3Bucket and/or awsS3Key properties on inputFile:\n" + JSON.stringify(inputFile, null, 2));
+    if (!inputFile.bucket || !inputFile.key) {
+        throw new McmaException("Failed to find bucket and/or key properties on inputFile:\n" + JSON.stringify(inputFile, null, 2));
     }
 
     const storage = new Storage({
@@ -91,13 +91,13 @@ export async function speechToText(providers: ProviderCollection, jobAssignmentH
         logger.info("Bucket " + googleBucketName + " already exists.");
     }
 
-    logger.info("Obtain data from s3 object Bucket: " + inputFile.awsS3Bucket + " and Key: " + inputFile.awsS3Key);
+    logger.info("Obtain data from s3 object Bucket: " + inputFile.bucket + " and Key: " + inputFile.key);
     const data = await S3.getObject({
-        Bucket: inputFile.awsS3Bucket,
-        Key: inputFile.awsS3Key,
+        Bucket: inputFile.bucket,
+        Key: inputFile.key,
     }).promise();
 
-    const fileExtension = inputFile.awsS3Key.substring(inputFile.awsS3Key.lastIndexOf(".") + 1);
+    const fileExtension = inputFile.key.substring(inputFile.key.lastIndexOf(".") + 1);
     const tempFileName = uuidv4() + "." + fileExtension;
 
     logger.info("Write file to local tmp storage");
@@ -160,16 +160,16 @@ export async function speechToText(providers: ProviderCollection, jobAssignmentH
         logger.info(projectId);
 
         let s3Params = {
-            Bucket: outputLocation.awsS3Bucket,
-            Key: (outputLocation.awsS3KeyPrefix ?? "") + uuidv4() + ".txt",
+            Bucket: outputLocation.bucket,
+            Key: (outputLocation.keyPrefix ?? "") + uuidv4() + ".txt",
             Body: transcription
         };
         await S3.putObject(s3Params).promise();
 
         logger.info("Updating job assignment with output");
         jobAssignmentHelper.jobOutput.set("outputFile", new AwsS3FileLocator({
-            awsS3Bucket: s3Params.Bucket,
-            awsS3Key: s3Params.Key
+            bucket: s3Params.Bucket,
+            key: s3Params.Key
         }));
 
         await jobAssignmentHelper.complete();

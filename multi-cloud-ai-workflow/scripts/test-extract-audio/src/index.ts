@@ -29,8 +29,8 @@ async function uploadFileToBucket(bucket: string, prefix: string, filename: stri
     await s3.upload(uploadParams).promise();
 
     return new AwsS3FileLocator({
-        awsS3Bucket: uploadParams.Bucket,
-        awsS3Key: uploadParams.Key,
+        bucket: uploadParams.Bucket,
+        key: uploadParams.Key,
     });
 }
 
@@ -42,7 +42,7 @@ async function createTransformJob(resourceManager: ResourceManager, inputFile: A
     }
 
     const transformJob = new TransformJob({
-        jobProfile: jobProfile.id,
+        jobProfileId: jobProfile.id,
         jobInput: new JobParameterBag({
             inputFile,
             outputLocation,
@@ -84,8 +84,8 @@ async function main() {
     const transformInputFile = await uploadFileToBucket(tempBucket, keyPrefix, TEST_FILE);
 
     const transformOutputLocation = new AwsS3FolderLocator({
-        awsS3Bucket: tempBucket,
-        awsS3KeyPrefix: keyPrefix,
+        bucket: tempBucket,
+        keyPrefix: keyPrefix,
     });
 
     console.log("Create TransformJob with Extract Audio job profile");
@@ -106,8 +106,8 @@ async function main() {
     const jobExecution = await resourceManager.get<JobExecution>(`${job.id}/executions/1`);
     console.log(JSON.stringify(jobExecution, null, 2));
 
-    if (jobExecution.jobAssignment) {
-        const jobAssignment = await resourceManager.get<JobAssignment>(jobExecution.jobAssignment);
+    if (jobExecution.jobAssignmentId) {
+        const jobAssignment = await resourceManager.get<JobAssignment>(jobExecution.jobAssignmentId);
         console.log(JSON.stringify(jobAssignment, null, 2));
     }
 }

@@ -1,7 +1,7 @@
 import * as AWS from "aws-sdk";
 import { Context } from "aws-lambda";
 
-import { EnvironmentVariableProvider, Job, JobBaseProperties, JobParameterBag, McmaException } from "@mcma/core";
+import { EnvironmentVariableProvider, Job, JobParameterBag, McmaException, McmaTracker } from "@mcma/core";
 import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { awsV4Auth } from "@mcma/aws-client";
@@ -17,11 +17,12 @@ const loggerProvider = new AwsCloudWatchLoggerProvider("ai-workflow-106-register
 type InputEvent = {
     input: {
         bmContent: string
-    },
+    }
     data: {
         translateJobId: string[]
     }
-} & JobBaseProperties;
+    tracker?: McmaTracker
+}
 
 /**
  * Lambda function handler
@@ -35,14 +36,6 @@ export async function handler(event: InputEvent, context: Context) {
         logger.debug(event);
         logger.debug(context);
 
-        // send update notification
-        try {
-            await resourceManager.sendNotification(event);
-        } catch (error) {
-            logger.warn("Failed to send notification");
-            logger.warn(error.toString());
-        }
-
         // get ai job id (first non null entry in array)
         let jobId = event.data.translateJobId.find(id => id);
         if (!jobId) {
@@ -55,8 +48,8 @@ export async function handler(event: InputEvent, context: Context) {
 
         // get translate-text service results/outputfile from location bucket+key(prefix+filename)
         let outputFile = jobOutput.get<AwsS3FileLocatorProperties>("outputFile");
-        let s3Bucket = outputFile.awsS3Bucket;
-        let s3Key = outputFile.awsS3Key;
+        let s3Bucket = outputFile.bucket;
+        let s3Key = outputFile.key;
         let s3Object;
         try {
             s3Object = await S3.getObject({

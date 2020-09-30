@@ -1,6 +1,6 @@
 import * as AWS from "aws-sdk";
 import { Context } from "aws-lambda";
-import { AIJob, EnvironmentVariableProvider, JobBaseProperties, JobParameterBag, JobProfile, McmaException, NotificationEndpoint } from "@mcma/core";
+import { AIJob, EnvironmentVariableProvider, JobParameterBag, JobProfile, McmaException, McmaTracker, NotificationEndpoint } from "@mcma/core";
 import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { AwsS3FileLocator, AwsS3FolderLocator } from "@mcma/aws-s3";
@@ -24,7 +24,8 @@ const JOB_PROFILE_NAME = "CreateDubbingSrt";
 const JOB_RESULTS_PREFIX = "DubbingSrtJobResults/";
 
 type InputEvent = {
-} & JobBaseProperties;
+    tracker?: McmaTracker
+}
 
 /**
  * Lambda function handler
@@ -38,14 +39,6 @@ export async function handler(event: InputEvent, context: Context) {
         logger.debug(event);
         logger.debug(context);
         logger.info(TempBucket, ActivityCallbackUrl, ActivityArn);
-
-        // send update notification
-        try {
-            await resourceManager.sendNotification(event);
-        } catch (error) {
-            logger.warn("Failed to send notification");
-            logger.warn(error.toString());
-        }
 
         // get activity task
         let data = await StepFunctions.getActivityTask({ activityArn: ActivityArn }).promise();
@@ -74,15 +67,15 @@ export async function handler(event: InputEvent, context: Context) {
 
         // creating the dubbing srt job giving the original mp4 file as input. To be associated with SRT subtitles and dubbing audio track in service
         let job = new AIJob({
-            jobProfile: jobProfileId,
+            jobProfileId: jobProfileId,
             jobInput: new JobParameterBag({
                 inputFile: new AwsS3FileLocator({
-                    awsS3Bucket: TempBucket,
-                    awsS3Key: "temp/proxy.mp4"
+                    bucket: TempBucket,
+                    key: "temp/proxy.mp4"
                 }),
                 outputLocation: new AwsS3FolderLocator({
-                    awsS3Bucket: WebsiteBucket,
-                    awsS3KeyPrefix: JOB_RESULTS_PREFIX
+                    bucket: WebsiteBucket,
+                    keyPrefix: JOB_RESULTS_PREFIX
                 })
             }),
             notificationEndpoint: new NotificationEndpoint({

@@ -1,5 +1,5 @@
 import * as AWS from "aws-sdk";
-import { AIJob, getTableName, JobAssignment, McmaException } from "@mcma/core";
+import { AIJob, getTableName, McmaException, ProblemDetail } from "@mcma/core";
 import { ProcessJobAssignmentHelper, ProviderCollection, WorkerRequest } from "@mcma/worker";
 import { AwsS3FileLocator, AwsS3FileLocatorProperties, AwsS3FolderLocatorProperties, getS3Url } from "@mcma/aws-s3";
 
@@ -11,7 +11,7 @@ export async function transcribeAudio(providers: ProviderCollection, jobAssignme
     const jobInput = jobAssignmentHelper.jobInput;
 
     const inputFile = jobInput.get<AwsS3FileLocatorProperties>("inputFile");
-    const jobAssignmentId = jobAssignmentHelper.jobAssignmentId;
+    const jobAssignmentDatabaseId = jobAssignmentHelper.jobAssignmentDatabaseId;
 
     logger.debug("2. Speech to text transcription service");
 
@@ -34,7 +34,7 @@ export async function transcribeAudio(providers: ProviderCollection, jobAssignme
 
     logger.debug("2.3 initialise and call transcription service");
     const params = {
-        TranscriptionJobName: "TranscriptionJob-" + jobAssignmentId.substring(jobAssignmentId.lastIndexOf("/") + 1),
+        TranscriptionJobName: "TranscriptionJob-" + jobAssignmentDatabaseId.substring(jobAssignmentDatabaseId.lastIndexOf("/") + 1),
         LanguageCode: "en-US",
         Media: {
             MediaFileUri: mediaFileUrl
@@ -69,9 +69,9 @@ export async function processTranscribeJobResult(providers: ProviderCollection, 
         let jobInput = jobAssignmentHelper.jobInput;
 
         logger.debug("2.8. Copy transcribe output file to output location");
-        let copySource = encodeURI(workerRequest.input.outputFile.awsS3Bucket + "/" + workerRequest.input.outputFile.awsS3Key);
-        let s3Bucket = jobInput.get<AwsS3FolderLocatorProperties>("outputLocation").awsS3Bucket;
-        let s3Key = (jobInput.get<AwsS3FolderLocatorProperties>("outputLocation").awsS3KeyPrefix ? jobInput.get<AwsS3FolderLocatorProperties>("outputLocation").awsS3KeyPrefix : "") + workerRequest.input.outputFile.awsS3Key;
+        let copySource = encodeURI(workerRequest.input.outputFile.bucket + "/" + workerRequest.input.outputFile.key);
+        let s3Bucket = jobInput.get<AwsS3FolderLocatorProperties>("outputLocation").bucket;
+        let s3Key = (jobInput.get<AwsS3FolderLocatorProperties>("outputLocation").keyPrefix ? jobInput.get<AwsS3FolderLocatorProperties>("outputLocation").keyPrefix : "") + workerRequest.input.outputFile.key;
         try {
             await S3.copyObject({
                 CopySource: copySource,
@@ -84,8 +84,8 @@ export async function processTranscribeJobResult(providers: ProviderCollection, 
 
         logger.debug("2.9. updating JobAssignment with jobOutput");
         jobAssignmentHelper.jobOutput.set("outputFile", new AwsS3FileLocator({
-            awsS3Bucket: s3Bucket,
-            awsS3Key: s3Key
+            bucket: s3Bucket,
+            key: s3Key
         }));
 
         await jobAssignmentHelper.complete();
@@ -93,7 +93,11 @@ export async function processTranscribeJobResult(providers: ProviderCollection, 
     } catch (error) {
         logger.error(error.toString());
         try {
-            await jobAssignmentHelper.fail(error.message);
+            await jobAssignmentHelper.fail(new ProblemDetail({
+                type: "uri://mcma.ebu.ch/rfc7807/aws-ai-service/generic-failure",
+                title: "Generic failure",
+                detail: error.message
+            }));
         } catch (error) {
             logger.error(error.toString());
         }
@@ -102,8 +106,8 @@ export async function processTranscribeJobResult(providers: ProviderCollection, 
     logger.debug("2.10. Cleanup: Deleting original output file from service");
     try {
         await S3.deleteObject({
-            Bucket: workerRequest.input.outputFile.awsS3Bucket,
-            Key: workerRequest.input.outputFile.awsS3Key,
+            Bucket: workerRequest.input.outputFile.bucket,
+            Key: workerRequest.input.outputFile.key,
         }).promise();
     } catch (error) {
         console.warn("Failed to cleanup transcribe output file");

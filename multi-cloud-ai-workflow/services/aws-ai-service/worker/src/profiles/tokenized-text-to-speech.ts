@@ -1,5 +1,5 @@
 import * as AWS from "aws-sdk";
-import { AIJob, getTableName, JobAssignment, McmaException } from "@mcma/core";
+import { AIJob, getTableName, McmaException, ProblemDetail } from "@mcma/core";
 import { ProcessJobAssignmentHelper, ProviderCollection, WorkerRequest } from "@mcma/worker";
 import { AwsS3FileLocator, AwsS3FileLocatorProperties, AwsS3FolderLocatorProperties } from "@mcma/aws-s3";
 
@@ -66,13 +66,13 @@ export async function tokenizedTextToSpeech(providers: ProviderCollection, jobAs
     const jobInput = jobAssignmentHelper.jobInput;
     const inputFile = jobInput.get<AwsS3FileLocatorProperties>("inputFile");
     const voiceId = jobInput.voiceId;
-    const jobAssignmentId = jobAssignmentHelper.jobAssignmentId;
+    const jobAssignmentDatabaseId = jobAssignmentHelper.jobAssignmentDatabaseId;
 
     logger.debug("14. Generate SSML file for Polly from Tokenized translation");
 
     logger.debug("14.1. get input text file from translation service stored in tempBucket (defined in job initiator in step 14");
-    const s3Bucket = inputFile.awsS3Bucket;
-    const s3Key = inputFile.awsS3Key;
+    const s3Bucket = inputFile.bucket;
+    const s3Key = inputFile.key;
     let s3Object;
     try {
         s3Object = await S3.getObject({
@@ -91,7 +91,7 @@ export async function tokenizedTextToSpeech(providers: ProviderCollection, jobAs
     const params_sm = {
         OutputFormat: "json",
         OutputS3BucketName: jobAssignmentHelper.workerRequest.getRequiredContextVariable<string>("ServiceOutputBucket"),
-        OutputS3KeyPrefix: "000-TextTokensSpeechMarksJob-" + jobAssignmentId.substring(jobAssignmentId.lastIndexOf("/") + 1),
+        OutputS3KeyPrefix: "000-TextTokensSpeechMarksJob-" + jobAssignmentDatabaseId.substring(jobAssignmentDatabaseId.lastIndexOf("/") + 1),
         Text: inputText,
         SpeechMarkTypes: ["sentence"],
         VoiceId: voiceId,
@@ -124,8 +124,8 @@ export async function processTokenizedTextToSpeechJobResult(providers: ProviderC
         let jobInput = jobAssignmentHelper.jobInput;
 
         logger.debug("14.7. retrieve speechmarks");
-        let s3Bucket = workerRequest.input.outputFile.awsS3Bucket;
-        let s3Key = workerRequest.input.outputFile.awsS3Key;
+        let s3Bucket = workerRequest.input.outputFile.bucket;
+        let s3Key = workerRequest.input.outputFile.key;
         const speechmarks = await S3.getObject({ Bucket: s3Bucket, Key: s3Key }).promise();
         logger.debug(speechmarks.Body.toString());
         let speechmarks_json_a = "{ \"results\": { \"items\": [" + speechmarks.Body.toString().replace(/}/g, "},") + "]}}";
@@ -134,8 +134,8 @@ export async function processTokenizedTextToSpeechJobResult(providers: ProviderC
         logger.debug(speechmarks_json);
 
         logger.debug("14.8. copy speechmarks in speechmarks json file");
-        let s3Bucket_sm = jobInput.get<AwsS3FolderLocatorProperties>("outputLocation").awsS3Bucket;
-        let s3Key_sm = jobInput.get<AwsS3FolderLocatorProperties>("outputLocation").awsS3KeyPrefix + "speechmarks.json";
+        let s3Bucket_sm = jobInput.get<AwsS3FolderLocatorProperties>("outputLocation").bucket;
+        let s3Key_sm = jobInput.get<AwsS3FolderLocatorProperties>("outputLocation").keyPrefix + "speechmarks.json";
         let s3Params_sm = {
             Bucket: s3Bucket_sm,
             Key: s3Key_sm,
@@ -176,8 +176,8 @@ export async function processTokenizedTextToSpeechJobResult(providers: ProviderC
         logger.debug(speechmarksrt);
 
         logger.debug("14.10. save speechmarks srt into a speechmarks.srt file under temp/AIResults/SSML");
-        let s3Bucket_smsrt = jobInput.get<AwsS3FolderLocatorProperties>("outputLocation").awsS3Bucket;
-        let s3Key_smsrt = jobInput.get<AwsS3FolderLocatorProperties>("outputLocation").awsS3KeyPrefix + "speechmarks.srt";
+        let s3Bucket_smsrt = jobInput.get<AwsS3FolderLocatorProperties>("outputLocation").bucket;
+        let s3Key_smsrt = jobInput.get<AwsS3FolderLocatorProperties>("outputLocation").keyPrefix + "speechmarks.srt";
         let s3Params_smsrt = {
             Bucket: s3Bucket_smsrt,
             Key: s3Key_smsrt,
@@ -187,7 +187,7 @@ export async function processTokenizedTextToSpeechJobResult(providers: ProviderC
 
 
         logger.debug("14.11. get edited/synched srt of translation after alignment with srt_output_clean from temp/srt bucket and timing adjustment, inserting srt_translation_output(_synched).srt in the workflow");
-        const s3Bucket_syncsrt = jobInput.get<AwsS3FolderLocatorProperties>("outputLocation").awsS3Bucket;
+        const s3Bucket_syncsrt = jobInput.get<AwsS3FolderLocatorProperties>("outputLocation").bucket;
 //        const s3Key_syncsrt = "srt/srt_translation_output_synched.srt";
         const s3Key_syncsrt = "srt/srt_translation_output.srt";
         let s3Object_syncsrt;
@@ -279,8 +279,8 @@ export async function processTokenizedTextToSpeechJobResult(providers: ProviderC
         logger.debug(ssldata);
 
         logger.debug("14.15. save ssml data into a ssml.txt file");
-        let s3Bucket_ssml = jobInput.get<AwsS3FolderLocatorProperties>("outputLocation").awsS3Bucket;
-        let s3Key_ssml = jobInput.get<AwsS3FolderLocatorProperties>("outputLocation").awsS3KeyPrefix + "ssml.txt";
+        let s3Bucket_ssml = jobInput.get<AwsS3FolderLocatorProperties>("outputLocation").bucket;
+        let s3Key_ssml = jobInput.get<AwsS3FolderLocatorProperties>("outputLocation").keyPrefix + "ssml.txt";
         let s3Params_ssml = {
             Bucket: s3Bucket_ssml,
             Key: s3Key_ssml,
@@ -290,8 +290,8 @@ export async function processTokenizedTextToSpeechJobResult(providers: ProviderC
 
         logger.debug("14.16. updating JobAssignment with jobOutput -> ssml txt file");
         jobAssignmentHelper.jobOutput.set("outputFile", new AwsS3FileLocator({
-            awsS3Bucket: s3Bucket_ssml,
-            awsS3Key: s3Key_ssml
+            bucket: s3Bucket_ssml,
+            key: s3Key_ssml
         }));
 
         await jobAssignmentHelper.complete();
@@ -300,7 +300,11 @@ export async function processTokenizedTextToSpeechJobResult(providers: ProviderC
     } catch (error) {
         logger.error(error);
         try {
-            await jobAssignmentHelper.fail(error.message);
+            await jobAssignmentHelper.fail(new ProblemDetail({
+                type: "uri://mcma.ebu.ch/rfc7807/aws-ai-service/generic-failure",
+                title: "Generic failure",
+                detail: error.message
+            }));
         } catch (error) {
             logger.error(error);
         }
@@ -310,8 +314,8 @@ export async function processTokenizedTextToSpeechJobResult(providers: ProviderC
     logger.debug("14.17. clean up service output file");
     try {
         await S3.deleteObject({
-            Bucket: workerRequest.input.outputFile.awsS3Bucket,
-            Key: workerRequest.input.outputFile.awsS3Key,
+            Bucket: workerRequest.input.outputFile.bucket,
+            Key: workerRequest.input.outputFile.key,
         }).promise();
     } catch (error) {
         console.warn("Failed to cleanup ssml translation output file");

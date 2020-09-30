@@ -1,6 +1,6 @@
 import * as AWS from "aws-sdk";
 import { Context } from "aws-lambda";
-import { EnvironmentVariableProvider, Job, JobBaseProperties, JobParameterBag, McmaException } from "@mcma/core";
+import { EnvironmentVariableProvider, Job, JobParameterBag, McmaException, McmaTracker } from "@mcma/core";
 import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { awsV4Auth } from "@mcma/aws-client";
@@ -15,23 +15,24 @@ const loggerProvider = new AwsCloudWatchLoggerProvider("ai-workflow-321-rekognit
 
 type InputEvent = {
     input: {
-        bmContent: string;
-    },
+        bmContent: string
+    }
     data: {
         awsRekognition: {
             "0": {
                 data: {
-                    awsCelebritiesJobId: string[];
+                    awsCelebritiesJobId: string[]
                 };
             };
             "1": {
                 data: {
-                    awsEmotionsJobId: string[];
+                    awsEmotionsJobId: string[]
                 };
             };
         }
     }
-} & JobBaseProperties;
+    tracker?: McmaTracker
+}
 
 /**
  * Lambda function handler
@@ -44,13 +45,7 @@ export async function handler(event: InputEvent, context: Context) {
         logger.functionStart(context.awsRequestId);
         logger.debug(event);
         logger.debug(context);
-        // send update notification
-        try {
-            await resourceManager.sendNotification(event);
-        } catch (error) {
-            logger.warn("Failed to send notification");
-            logger.warn(error.toString());
-        }
+
         // awsCelebrities
         let awsCelebritiesJobId = event.data.awsRekognition["0"].data.awsCelebritiesJobId.find(id => id);
         if (!awsCelebritiesJobId) {
@@ -59,8 +54,8 @@ export async function handler(event: InputEvent, context: Context) {
         let awsCelebritiesJob = await resourceManager.get<Job>(awsCelebritiesJobId);
         let awsCelebritiesJobOutput = new JobParameterBag(awsCelebritiesJob.jobOutput);
         let awsCelebritiesOutputFile = awsCelebritiesJobOutput.get<AwsS3FileLocatorProperties>("outputFile");
-        let awsCelebritiesS3Bucket = awsCelebritiesOutputFile.awsS3Bucket;
-        let awsCelebritiesS3Key = awsCelebritiesOutputFile.awsS3Key;
+        let awsCelebritiesS3Bucket = awsCelebritiesOutputFile.bucket;
+        let awsCelebritiesS3Key = awsCelebritiesOutputFile.key;
         let awsCelebritiesJobS3Object;
         try {
             awsCelebritiesJobS3Object = await S3.getObject({
@@ -79,8 +74,8 @@ export async function handler(event: InputEvent, context: Context) {
         let awsEmotionsJob = await resourceManager.get<Job>(awsEmotionsJobId);
         let awsEmotionsJobOutput = new JobParameterBag(awsEmotionsJob.jobOutput);
         let awsEmotionsOutputFile = awsEmotionsJobOutput.get<AwsS3FileLocatorProperties>("outputFile");
-        let awsEmotionsS3Bucket = awsEmotionsOutputFile.awsS3Bucket;
-        let awsEmotionsS3Key = awsEmotionsOutputFile.awsS3Key;
+        let awsEmotionsS3Bucket = awsEmotionsOutputFile.bucket;
+        let awsEmotionsS3Key = awsEmotionsOutputFile.key;
         let awsEmotionsJobS3Object;
         try {
             awsEmotionsJobS3Object = await S3.getObject({

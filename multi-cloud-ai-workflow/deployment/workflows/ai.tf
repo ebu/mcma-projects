@@ -14,9 +14,9 @@ resource "aws_lambda_function" ai_001_validate_workflow_input {
 
   environment {
     variables = {
-      LogGroupName     = var.global_prefix
+      LogGroupName     = var.log_group.name
       ServicesUrl      = var.services_url
-      ServicesAuthType = var.service_registry_auth_type
+      ServicesAuthType = var.services_auth_type
       RepositoryBucket = var.repository_bucket_name
       TempBucket       = var.temp_bucket_name
       WebsiteBucket    = var.website_bucket_name
@@ -36,9 +36,9 @@ resource "aws_lambda_function" ai_101_extract_speech_to_text {
 
   environment {
     variables = {
-      LogGroupName        = var.global_prefix
+      LogGroupName        = var.log_group.name
       ServicesUrl         = var.services_url
-      ServicesAuthType    = var.service_registry_auth_type
+      ServicesAuthType    = var.services_auth_type
       RepositoryBucket    = var.repository_bucket_name
       TempBucket          = var.temp_bucket_name
       WebsiteBucket       = var.website_bucket_name
@@ -64,9 +64,9 @@ resource "aws_lambda_function" ai_102_register_speech_to_text_output {
 
   environment {
     variables = {
-      LogGroupName     = var.global_prefix
+      LogGroupName     = var.log_group.name
       ServicesUrl      = var.services_url
-      ServicesAuthType = var.service_registry_auth_type
+      ServicesAuthType = var.services_auth_type
       RepositoryBucket = var.repository_bucket_name
       TempBucket       = var.temp_bucket_name
       WebsiteBucket    = var.website_bucket_name
@@ -87,9 +87,9 @@ resource "aws_lambda_function" ai_103_validate_speech_to_text {
 
   environment {
     variables = {
-      LogGroupName        = var.global_prefix
+      LogGroupName        = var.log_group.name
       ServicesUrl         = var.services_url
-      ServicesAuthType    = var.service_registry_auth_type
+      ServicesAuthType    = var.services_auth_type
       RepositoryBucket    = var.repository_bucket_name
       TempBucket          = var.temp_bucket_name
       WebsiteBucket       = var.website_bucket_name
@@ -115,9 +115,9 @@ resource "aws_lambda_function" ai_104_register_validate_speech_to_text {
 
   environment {
     variables = {
-      LogGroupName     = var.global_prefix
+      LogGroupName     = var.log_group.name
       ServicesUrl      = var.services_url
-      ServicesAuthType = var.service_registry_auth_type
+      ServicesAuthType = var.services_auth_type
       RepositoryBucket = var.repository_bucket_name
       TempBucket       = var.temp_bucket_name
       WebsiteBucket    = var.website_bucket_name
@@ -137,9 +137,9 @@ resource "aws_lambda_function" ai_105_translate_speech_transcription {
 
   environment {
     variables = {
-      LogGroupName        = var.global_prefix
+      LogGroupName        = var.log_group.name
       ServicesUrl         = var.services_url
-      ServicesAuthType    = var.service_registry_auth_type
+      ServicesAuthType    = var.services_auth_type
       RepositoryBucket    = var.repository_bucket_name
       TempBucket          = var.temp_bucket_name
       WebsiteBucket       = var.website_bucket_name
@@ -165,9 +165,9 @@ resource "aws_lambda_function" ai_106_register_speech_translation {
 
   environment {
     variables = {
-      LogGroupName     = var.global_prefix
+      LogGroupName     = var.log_group.name
       ServicesUrl      = var.services_url
-      ServicesAuthType = var.service_registry_auth_type
+      ServicesAuthType = var.services_auth_type
       RepositoryBucket = var.repository_bucket_name
       TempBucket       = var.temp_bucket_name
       WebsiteBucket    = var.website_bucket_name
@@ -187,9 +187,9 @@ resource "aws_lambda_function" ai_107_tokenized_translation_to_speech {
 
   environment {
     variables = {
-      LogGroupName        = var.global_prefix
+      LogGroupName        = var.log_group.name
       ServicesUrl         = var.services_url
-      ServicesAuthType    = var.service_registry_auth_type
+      ServicesAuthType    = var.services_auth_type
       RepositoryBucket    = var.repository_bucket_name
       TempBucket          = var.temp_bucket_name
       WebsiteBucket       = var.website_bucket_name
@@ -215,9 +215,9 @@ resource "aws_lambda_function" ai_108_register_tokenized_translation_to_speech {
 
   environment {
     variables = {
-      LogGroupName     = var.global_prefix
+      LogGroupName     = var.log_group.name
       ServicesUrl      = var.services_url
-      ServicesAuthType = var.service_registry_auth_type
+      ServicesAuthType = var.services_auth_type
       RepositoryBucket = var.repository_bucket_name
       TempBucket       = var.temp_bucket_name
       WebsiteBucket    = var.website_bucket_name
@@ -237,9 +237,9 @@ resource "aws_lambda_function" ai_109_ssml_translation_to_speech {
 
   environment {
     variables = {
-      LogGroupName        = var.global_prefix
+      LogGroupName        = var.log_group.name
       ServicesUrl         = var.services_url
-      ServicesAuthType    = var.service_registry_auth_type
+      ServicesAuthType    = var.services_auth_type
       RepositoryBucket    = var.repository_bucket_name
       TempBucket          = var.temp_bucket_name
       WebsiteBucket       = var.website_bucket_name
@@ -265,9 +265,9 @@ resource "aws_lambda_function" ai_110_register_ssml_translation_to_speech {
 
   environment {
     variables = {
-      LogGroupName     = var.global_prefix
+      LogGroupName     = var.log_group.name
       ServicesUrl      = var.services_url
-      ServicesAuthType = var.service_registry_auth_type
+      ServicesAuthType = var.services_auth_type
       RepositoryBucket = var.repository_bucket_name
       TempBucket       = var.temp_bucket_name
       WebsiteBucket    = var.website_bucket_name
@@ -287,9 +287,9 @@ resource "aws_lambda_function" ai_111_dubbing_srt {
 
   environment {
     variables = {
-      LogGroupName        = var.global_prefix
+      LogGroupName        = var.log_group.name
       ServicesUrl         = var.services_url
-      ServicesAuthType    = var.service_registry_auth_type
+      ServicesAuthType    = var.services_auth_type
       RepositoryBucket    = var.repository_bucket_name
       TempBucket          = var.temp_bucket_name
       WebsiteBucket       = var.website_bucket_name
@@ -315,9 +315,9 @@ resource "aws_lambda_function" ai_112_register_dubbing_srt {
 
   environment {
     variables = {
-      LogGroupName     = var.global_prefix
+      LogGroupName     = var.log_group.name
       ServicesUrl      = var.services_url
-      ServicesAuthType = var.service_registry_auth_type
+      ServicesAuthType = var.services_auth_type
       RepositoryBucket = var.repository_bucket_name
       TempBucket       = var.temp_bucket_name
       WebsiteBucket    = var.website_bucket_name
@@ -337,9 +337,9 @@ resource "aws_lambda_function" ai_201_detect_celebrities_azure {
 
   environment {
     variables = {
-      LogGroupName        = var.global_prefix
+      LogGroupName        = var.log_group.name
       ServicesUrl         = var.services_url
-      ServicesAuthType    = var.service_registry_auth_type
+      ServicesAuthType    = var.services_auth_type
       RepositoryBucket    = var.repository_bucket_name
       TempBucket          = var.temp_bucket_name
       WebsiteBucket       = var.website_bucket_name
@@ -365,9 +365,9 @@ resource "aws_lambda_function" ai_202_register_celebrities_info_azure {
 
   environment {
     variables = {
-      LogGroupName     = var.global_prefix
+      LogGroupName     = var.log_group.name
       ServicesUrl      = var.services_url
-      ServicesAuthType = var.service_registry_auth_type
+      ServicesAuthType = var.services_auth_type
       RepositoryBucket = var.repository_bucket_name
       TempBucket       = var.temp_bucket_name
       WebsiteBucket    = var.website_bucket_name
@@ -387,9 +387,9 @@ resource "aws_lambda_function" ai_203_validate_speech_to_text_azure {
 
   environment {
     variables = {
-      LogGroupName        = var.global_prefix
+      LogGroupName        = var.log_group.name
       ServicesUrl         = var.services_url
-      ServicesAuthType    = var.service_registry_auth_type
+      ServicesAuthType    = var.services_auth_type
       RepositoryBucket    = var.repository_bucket_name
       TempBucket          = var.temp_bucket_name
       WebsiteBucket       = var.website_bucket_name
@@ -415,9 +415,9 @@ resource "aws_lambda_function" ai_204_register_validate_speech_to_text_azure {
 
   environment {
     variables = {
-      LogGroupName     = var.global_prefix
+      LogGroupName     = var.log_group.name
       ServicesUrl      = var.services_url
-      ServicesAuthType = var.service_registry_auth_type
+      ServicesAuthType = var.services_auth_type
       RepositoryBucket = var.repository_bucket_name
       TempBucket       = var.temp_bucket_name
       WebsiteBucket    = var.website_bucket_name
@@ -437,9 +437,9 @@ resource "aws_lambda_function" ai_301_detect_celebrities_aws {
 
   environment {
     variables = {
-      LogGroupName        = var.global_prefix
+      LogGroupName        = var.log_group.name
       ServicesUrl         = var.services_url
-      ServicesAuthType    = var.service_registry_auth_type
+      ServicesAuthType    = var.services_auth_type
       RepositoryBucket    = var.repository_bucket_name
       TempBucket          = var.temp_bucket_name
       WebsiteBucket       = var.website_bucket_name
@@ -465,9 +465,9 @@ resource "aws_lambda_function" ai_302_register_celebrities_info_aws {
 
   environment {
     variables = {
-      LogGroupName     = var.global_prefix
+      LogGroupName     = var.log_group.name
       ServicesUrl      = var.services_url
-      ServicesAuthType = var.service_registry_auth_type
+      ServicesAuthType = var.services_auth_type
       RepositoryBucket = var.repository_bucket_name
       TempBucket       = var.temp_bucket_name
       WebsiteBucket    = var.website_bucket_name
@@ -488,9 +488,9 @@ resource "aws_lambda_function" ai_311_detect_emotions_aws {
 
   environment {
     variables = {
-      LogGroupName        = var.global_prefix
+      LogGroupName        = var.log_group.name
       ServicesUrl         = var.services_url
-      ServicesAuthType    = var.service_registry_auth_type
+      ServicesAuthType    = var.services_auth_type
       RepositoryBucket    = var.repository_bucket_name
       TempBucket          = var.temp_bucket_name
       WebsiteBucket       = var.website_bucket_name
@@ -516,9 +516,9 @@ resource "aws_lambda_function" ai_312_register_emotions_info_aws {
 
   environment {
     variables = {
-      LogGroupName     = var.global_prefix
+      LogGroupName     = var.log_group.name
       ServicesUrl      = var.services_url
-      ServicesAuthType = var.service_registry_auth_type
+      ServicesAuthType = var.services_auth_type
       RepositoryBucket = var.repository_bucket_name
       TempBucket       = var.temp_bucket_name
       WebsiteBucket    = var.website_bucket_name
@@ -538,9 +538,9 @@ resource "aws_lambda_function" ai_321_rekognition_aws {
 
   environment {
     variables = {
-      LogGroupName     = var.global_prefix
+      LogGroupName     = var.log_group.name
       ServicesUrl      = var.services_url
-      ServicesAuthType = var.service_registry_auth_type
+      ServicesAuthType = var.services_auth_type
       RepositoryBucket = var.repository_bucket_name
       TempBucket       = var.temp_bucket_name
       WebsiteBucket    = var.website_bucket_name
@@ -560,9 +560,9 @@ resource "aws_lambda_function" ai_401_extract_audio_google {
 
   environment {
     variables = {
-      LogGroupName        = var.global_prefix
+      LogGroupName        = var.log_group.name
       ServicesUrl         = var.services_url
-      ServicesAuthType    = var.service_registry_auth_type
+      ServicesAuthType    = var.services_auth_type
       RepositoryBucket    = var.repository_bucket_name
       TempBucket          = var.temp_bucket_name
       WebsiteBucket       = var.website_bucket_name
@@ -588,9 +588,9 @@ resource "aws_lambda_function" ai_402_register_extract_audio_google {
 
   environment {
     variables = {
-      LogGroupName     = var.global_prefix
+      LogGroupName     = var.log_group.name
       ServicesUrl      = var.services_url
-      ServicesAuthType = var.service_registry_auth_type
+      ServicesAuthType = var.services_auth_type
       RepositoryBucket = var.repository_bucket_name
       TempBucket       = var.temp_bucket_name
       WebsiteBucket    = var.website_bucket_name
@@ -610,9 +610,9 @@ resource "aws_lambda_function" ai_403_speech_to_text_google {
 
   environment {
     variables = {
-      LogGroupName        = var.global_prefix
+      LogGroupName        = var.log_group.name
       ServicesUrl         = var.services_url
-      ServicesAuthType    = var.service_registry_auth_type
+      ServicesAuthType    = var.services_auth_type
       RepositoryBucket    = var.repository_bucket_name
       TempBucket          = var.temp_bucket_name
       WebsiteBucket       = var.website_bucket_name
@@ -638,9 +638,9 @@ resource "aws_lambda_function" ai_404_register_speech_to_text_google {
 
   environment {
     variables = {
-      LogGroupName     = var.global_prefix
+      LogGroupName     = var.log_group.name
       ServicesUrl      = var.services_url
-      ServicesAuthType = var.service_registry_auth_type
+      ServicesAuthType = var.services_auth_type
       RepositoryBucket = var.repository_bucket_name
       TempBucket       = var.temp_bucket_name
       WebsiteBucket    = var.website_bucket_name
@@ -660,9 +660,9 @@ resource "aws_lambda_function" ai_405_validate_speech_to_text_google {
 
   environment {
     variables = {
-      LogGroupName        = var.global_prefix
+      LogGroupName        = var.log_group.name
       ServicesUrl         = var.services_url
-      ServicesAuthType    = var.service_registry_auth_type
+      ServicesAuthType    = var.services_auth_type
       RepositoryBucket    = var.repository_bucket_name
       TempBucket          = var.temp_bucket_name
       WebsiteBucket       = var.website_bucket_name
@@ -688,9 +688,9 @@ resource "aws_lambda_function" ai_406_register_validate_speech_to_text_google {
 
   environment {
     variables = {
-      LogGroupName     = var.global_prefix
+      LogGroupName     = var.log_group.name
       ServicesUrl      = var.services_url
-      ServicesAuthType = var.service_registry_auth_type
+      ServicesAuthType = var.services_auth_type
       RepositoryBucket = var.repository_bucket_name
       TempBucket       = var.temp_bucket_name
       WebsiteBucket    = var.website_bucket_name

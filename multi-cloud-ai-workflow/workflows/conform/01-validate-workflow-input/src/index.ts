@@ -1,6 +1,6 @@
 import * as AWS from "aws-sdk";
 import { Context } from "aws-lambda";
-import { EnvironmentVariableProvider, JobBaseProperties, McmaException } from "@mcma/core";
+import { EnvironmentVariableProvider, McmaException, McmaTracker, NotificationEndpointProperties } from "@mcma/core";
 import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { awsV4Auth } from "@mcma/aws-client";
@@ -22,8 +22,8 @@ const loggerProvider = new AwsCloudWatchLoggerProvider("conform-workflow-01-vali
 //         },
 //         "inputFile": {
 //             "@type": "Locator",
-//             "awsS3Bucket": "bucket_name",
-//             "awsS3Key": "key_name"
+//             "bucket": "bucket_name",
+//             "key": "key_name"
 //         }
 //     },
 //     "notificationEndpoint": {
@@ -37,12 +37,15 @@ const loggerProvider = new AwsCloudWatchLoggerProvider("conform-workflow-01-vali
 type InputEvent = {
     input: {
         metadata: {
-            name: string;
-            description: string;
-        };
-        inputFile: AwsS3FileLocator;
-    };
-} & JobBaseProperties;
+            name: string
+            description: string
+        }
+        inputFile: AwsS3FileLocator
+    }
+    progress?: number
+    tracker?: McmaTracker
+    notificationEndpoint?: NotificationEndpointProperties
+}
 
 export async function handler(event: InputEvent, context: Context) {
     const logger = loggerProvider.get(context.awsRequestId, event.tracker);
@@ -83,8 +86,8 @@ export async function handler(event: InputEvent, context: Context) {
             throw new McmaException("Missing input.inputFile");
         }
 
-        let s3Bucket = input.inputFile.awsS3Bucket;
-        let s3Key = input.inputFile.awsS3Key;
+        let s3Bucket = input.inputFile.bucket;
+        let s3Key = input.inputFile.key;
 
         let data;
 

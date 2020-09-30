@@ -14,7 +14,7 @@ resource "aws_lambda_function" "azure_ai_service_api_handler" {
 
   environment {
     variables = {
-      LogGroupName = var.global_prefix
+      LogGroupName = var.log_group.name
     }
   }
 }
@@ -35,7 +35,7 @@ resource "aws_lambda_function" "azure_ai_service_api_handler_non_secure" {
 
   environment {
     variables = {
-      LogGroupName = var.global_prefix
+      LogGroupName = var.log_group.name
     }
   }
 }
@@ -56,7 +56,7 @@ resource "aws_lambda_function" "azure_ai_service_worker" {
 
   environment {
     variables = {
-      LogGroupName = var.global_prefix
+      LogGroupName = var.log_group.name
     }
   }
 }
@@ -201,8 +201,8 @@ resource "aws_api_gateway_stage" "azure_ai_service_gateway_stage" {
     TableName            = aws_dynamodb_table.azure_ai_service_table.name
     PublicUrl            = local.azure_ai_service_url
     PublicUrlNonSecure   = local.azure_ai_service_non_secure_url
-    ServicesUrl          = local.services_url
-    ServicesAuthType     = local.service_registry_auth_type
+    ServicesUrl          = var.services_url
+    ServicesAuthType     = var.services_auth_type
     WorkerFunctionId     = aws_lambda_function.azure_ai_service_worker.function_name
     AzureApiUrl          = var.azure_api_url
     AzureLocation        = var.azure_location
@@ -271,8 +271,8 @@ resource "aws_api_gateway_stage" "azure_ai_service_gateway_stage_non_secure" {
     TableName            = aws_dynamodb_table.azure_ai_service_table.name
     PublicUrl            = local.azure_ai_service_url
     PublicUrlNonSecure   = local.azure_ai_service_non_secure_url
-    ServicesUrl          = local.services_url
-    ServicesAuthType     = local.service_registry_auth_type
+    ServicesUrl          = var.services_url
+    ServicesAuthType     = var.services_auth_type
     WorkerFunctionId     = aws_lambda_function.azure_ai_service_worker.function_name
     AzureApiUrl          = var.azure_api_url
     AzureLocation        = var.azure_location

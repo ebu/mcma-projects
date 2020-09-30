@@ -1,6 +1,6 @@
 import * as AWS from "aws-sdk";
 import { Context } from "aws-lambda";
-import { EnvironmentVariableProvider, Job, JobBaseProperties, JobParameterBag, McmaException } from "@mcma/core";
+import { EnvironmentVariableProvider, Job, JobParameterBag, McmaException, McmaTracker, NotificationEndpointProperties } from "@mcma/core";
 import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { awsV4Auth } from "@mcma/aws-client";
@@ -14,11 +14,14 @@ const loggerProvider = new AwsCloudWatchLoggerProvider("conform-workflow-08-regi
 
 type InputEvent = {
     data: {
-        bmContent: string;
-        bmEssence: string;
-        transformJob: string[];
-    };
-} & JobBaseProperties;
+        bmContent: string
+        bmEssence: string
+        transformJob: string[]
+    }
+    progress?: number
+    tracker?: McmaTracker
+    notificationEndpoint?: NotificationEndpointProperties
+}
 
 /**
  * Create New BMEssence Object
@@ -73,16 +76,16 @@ export async function handler(event: InputEvent, context: Context) {
 
         // get media info
         let outputFile = jobOutput.get<AwsS3FileLocator>("outputFile");
-        let s3Bucket = outputFile.awsS3Bucket;
-        let s3Key = outputFile.awsS3Key;
+        let s3Bucket = outputFile.bucket;
+        let s3Key = outputFile.key;
 
         // acquire the registered BMContent
         let bmc = await resourceManager.get<BMContent>(event.data.bmContent);
 
         // create BMEssence
         let locator = new AwsS3FileLocator({
-            awsS3Bucket: s3Bucket,
-            awsS3Key: s3Key
+            bucket: s3Bucket,
+            key: s3Key
         });
 
         let bme = createBMEssence(bmc, locator, "proxy-source", "proxy-source");

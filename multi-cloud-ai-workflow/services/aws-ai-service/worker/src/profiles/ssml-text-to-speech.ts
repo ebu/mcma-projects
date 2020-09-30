@@ -1,5 +1,5 @@
 import * as AWS from "aws-sdk";
-import { AIJob, getTableName, JobAssignment, McmaException } from "@mcma/core";
+import { AIJob, getTableName, McmaException, ProblemDetail } from "@mcma/core";
 import { ProcessJobAssignmentHelper, ProviderCollection, WorkerRequest } from "@mcma/worker";
 import { AwsS3FileLocator, AwsS3FileLocatorProperties, AwsS3FolderLocatorProperties } from "@mcma/aws-s3";
 
@@ -14,14 +14,14 @@ export async function ssmlTextToSpeech(providers: ProviderCollection, jobAssignm
     const jobInput = jobAssignmentHelper.jobInput;
     const inputFile = jobInput.get<AwsS3FileLocatorProperties>("inputFile");
     const voiceId = jobInput.voiceId;
-    const jobAssignmentId = jobAssignmentHelper.jobAssignmentId;
+    const jobAssignmentDatabaseId = jobAssignmentHelper.jobAssignmentDatabaseId;
 
     logger.debug("16. generate text to speech using SSML and Polly");
 
     logger.debug("16.1. get input SSML file from tokenized-text-to-speech");
     // get input text file from tokenized ssml service stored in tempBucket AiInput/ssmlTranslation.txt
-    const s3Bucket_ssml = inputFile.awsS3Bucket;
-    const s3Key_ssml = inputFile.awsS3Key;
+    const s3Bucket_ssml = inputFile.bucket;
+    const s3Key_ssml = inputFile.key;
     let s3Object_ssml;
     try {
         s3Object_ssml = await S3.getObject({
@@ -40,7 +40,7 @@ export async function ssmlTextToSpeech(providers: ProviderCollection, jobAssignm
     const params_ssml = {
         OutputFormat: "mp3",
         OutputS3BucketName: jobAssignmentHelper.workerRequest.getRequiredContextVariable<string>("ServiceOutputBucket"),
-        OutputS3KeyPrefix: "ssmlTextToSpeechJob-" + jobAssignmentId.substring(jobAssignmentId.lastIndexOf("/") + 1),
+        OutputS3KeyPrefix: "ssmlTextToSpeechJob-" + jobAssignmentDatabaseId.substring(jobAssignmentDatabaseId.lastIndexOf("/") + 1),
         Text: inputText,
         VoiceId: voiceId,
         TextType: "ssml"
@@ -73,12 +73,12 @@ export async function processSsmlTextToSpeechJobResult(providers: ProviderCollec
 
         logger.debug("16.7. Copy textToSpeech output file to output location defined in Job");
         // request.input.outputFile -> process temporary output file
-        let copySource = encodeURI(workerRequest.input.outputFile.awsS3Bucket + "/" + workerRequest.input.outputFile.awsS3Key);
+        let copySource = encodeURI(workerRequest.input.outputFile.bucket + "/" + workerRequest.input.outputFile.key);
         logger.info(copySource);
 
         let outputLocation = jobInput.get<AwsS3FolderLocatorProperties>("outputLocation");
-        let s3Bucket = outputLocation.awsS3Bucket;
-        let s3Key = (outputLocation.awsS3KeyPrefix ? outputLocation.awsS3KeyPrefix : "") + "ssmlTranslationToSpeech.mp3";
+        let s3Bucket = outputLocation.bucket;
+        let s3Key = (outputLocation.keyPrefix ? outputLocation.keyPrefix : "") + "ssmlTranslationToSpeech.mp3";
 
         try {
             await S3.copyObject({
@@ -92,8 +92,8 @@ export async function processSsmlTextToSpeechJobResult(providers: ProviderCollec
 
         logger.debug("16.8. updating jobAssignment with jobOutput");
         jobAssignmentHelper.jobOutput.set("outputFile", new AwsS3FileLocator({
-            awsS3Bucket: s3Bucket,
-            awsS3Key: s3Key
+            bucket: s3Bucket,
+            key: s3Key
         }));
         await jobAssignmentHelper.complete();
 
@@ -101,7 +101,11 @@ export async function processSsmlTextToSpeechJobResult(providers: ProviderCollec
     } catch (error) {
         logger.error(error.toString());
         try {
-            await jobAssignmentHelper.fail(error.message);
+            await jobAssignmentHelper.fail(new ProblemDetail({
+                type: "uri://mcma.ebu.ch/rfc7807/aws-ai-service/generic-failure",
+                title: "Generic failure",
+                detail: error.message
+            }));
         } catch (error) {
             logger.error(error.toString());
         }
@@ -110,8 +114,8 @@ export async function processSsmlTextToSpeechJobResult(providers: ProviderCollec
     // Cleanup: Deleting original output file
     try {
         await S3.deleteObject({
-            Bucket: workerRequest.input.outputFile.awsS3Bucket,
-            Key: workerRequest.input.outputFile.awsS3Key,
+            Bucket: workerRequest.input.outputFile.bucket,
+            Key: workerRequest.input.outputFile.key,
         }).promise();
     } catch (error) {
         logger.warn("Failed to cleanup transcribe output file");

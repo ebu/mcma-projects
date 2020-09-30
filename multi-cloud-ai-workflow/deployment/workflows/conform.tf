@@ -14,9 +14,9 @@ resource "aws_lambda_function" "conform_01_validate_workflow_input" {
 
   environment {
     variables = {
-      LogGroupName     = var.global_prefix
+      LogGroupName     = var.log_group.name
       ServicesUrl      = var.services_url
-      ServicesAuthType = var.service_registry_auth_type
+      ServicesAuthType = var.services_auth_type
       RepositoryBucket = var.repository_bucket_name
       TempBucket       = var.temp_bucket_name
       WebsiteBucket    = var.website_bucket_name
@@ -36,9 +36,9 @@ resource "aws_lambda_function" "conform_02_move_content_to_file_repository" {
 
   environment {
     variables = {
-      LogGroupName     = var.global_prefix
+      LogGroupName     = var.log_group.name
       ServicesUrl      = var.services_url
-      ServicesAuthType = var.service_registry_auth_type
+      ServicesAuthType = var.services_auth_type
       RepositoryBucket = var.repository_bucket_name
       TempBucket       = var.temp_bucket_name
       WebsiteBucket    = var.website_bucket_name
@@ -58,9 +58,9 @@ resource "aws_lambda_function" "conform_03_create_media_asset" {
 
   environment {
     variables = {
-      LogGroupName     = var.global_prefix
+      LogGroupName     = var.log_group.name
       ServicesUrl      = var.services_url
-      ServicesAuthType = var.service_registry_auth_type
+      ServicesAuthType = var.services_auth_type
       RepositoryBucket = var.repository_bucket_name
       TempBucket       = var.temp_bucket_name
       WebsiteBucket    = var.website_bucket_name
@@ -80,9 +80,9 @@ resource "aws_lambda_function" "conform_04_extract_technical_metadata" {
 
   environment {
     variables = {
-      LogGroupName        = var.global_prefix
+      LogGroupName        = var.log_group.name
       ServicesUrl         = var.services_url
-      ServicesAuthType    = var.service_registry_auth_type
+      ServicesAuthType    = var.services_auth_type
       RepositoryBucket    = var.repository_bucket_name
       TempBucket          = var.temp_bucket_name
       WebsiteBucket       = var.website_bucket_name
@@ -108,9 +108,9 @@ resource "aws_lambda_function" "conform_05_register_technical_metadata" {
 
   environment {
     variables = {
-      LogGroupName     = var.global_prefix
+      LogGroupName     = var.log_group.name
       ServicesUrl      = var.services_url
-      ServicesAuthType = var.service_registry_auth_type
+      ServicesAuthType = var.services_auth_type
       RepositoryBucket = var.repository_bucket_name
       TempBucket       = var.temp_bucket_name
       WebsiteBucket    = var.website_bucket_name
@@ -130,9 +130,9 @@ resource "aws_lambda_function" "conform_06_decide_transcode_requirements" {
 
   environment {
     variables = {
-      LogGroupName     = var.global_prefix
+      LogGroupName     = var.log_group.name
       ServicesUrl      = var.services_url
-      ServicesAuthType = var.service_registry_auth_type
+      ServicesAuthType = var.services_auth_type
       RepositoryBucket = var.repository_bucket_name
       TempBucket       = var.temp_bucket_name
       WebsiteBucket    = var.website_bucket_name
@@ -153,9 +153,9 @@ resource "aws_lambda_function" "conform_07a_short_transcode" {
 
   environment {
     variables = {
-      LogGroupName        = var.global_prefix
+      LogGroupName        = var.log_group.name
       ServicesUrl         = var.services_url
-      ServicesAuthType    = var.service_registry_auth_type
+      ServicesAuthType    = var.services_auth_type
       WebsiteBucket       = var.website_bucket_name
       ActivityCallbackUrl = local.workflow_activity_callback_handler_url
       ActivityArn         = aws_sfn_activity.conform_07a_short_transcode.id
@@ -179,9 +179,9 @@ resource "aws_lambda_function" "conform_07b_long_transcode" {
 
   environment {
     variables = {
-      LogGroupName        = var.global_prefix
+      LogGroupName        = var.log_group.name
       ServicesUrl         = var.services_url
-      ServicesAuthType    = var.service_registry_auth_type
+      ServicesAuthType    = var.services_auth_type
       RepositoryBucket    = var.repository_bucket_name
       TempBucket          = var.temp_bucket_name
       WebsiteBucket       = var.website_bucket_name
@@ -207,9 +207,9 @@ resource "aws_lambda_function" "conform_08_register_proxy_essence" {
 
   environment {
     variables = {
-      LogGroupName     = var.global_prefix
+      LogGroupName     = var.log_group.name
       ServicesUrl      = var.services_url
-      ServicesAuthType = var.service_registry_auth_type
+      ServicesAuthType = var.services_auth_type
       RepositoryBucket = var.repository_bucket_name
       TempBucket       = var.temp_bucket_name
       WebsiteBucket    = var.website_bucket_name
@@ -229,9 +229,9 @@ resource "aws_lambda_function" "conform_09_copy_proxy_to_website_storage" {
 
   environment {
     variables = {
-      LogGroupName     = var.global_prefix
+      LogGroupName     = var.log_group.name
       ServicesUrl      = var.services_url
-      ServicesAuthType = var.service_registry_auth_type
+      ServicesAuthType = var.services_auth_type
       RepositoryBucket = var.repository_bucket_name
       TempBucket       = var.temp_bucket_name
       WebsiteBucket    = var.website_bucket_name
@@ -251,9 +251,9 @@ resource "aws_lambda_function" "conform_10_register_proxy_website_locator" {
 
   environment {
     variables = {
-      LogGroupName     = var.global_prefix
+      LogGroupName     = var.log_group.name
       ServicesUrl      = var.services_url
-      ServicesAuthType = var.service_registry_auth_type
+      ServicesAuthType = var.services_auth_type
       RepositoryBucket = var.repository_bucket_name
       TempBucket       = var.temp_bucket_name
       WebsiteBucket    = var.website_bucket_name
@@ -273,9 +273,9 @@ resource "aws_lambda_function" "conform_11_start_ai_workflow" {
 
   environment {
     variables = {
-      LogGroupName     = var.global_prefix
+      LogGroupName     = var.log_group.name
       ServicesUrl      = var.services_url
-      ServicesAuthType = var.service_registry_auth_type
+      ServicesAuthType = var.services_auth_type
       RepositoryBucket = var.repository_bucket_name
       TempBucket       = var.temp_bucket_name
       WebsiteBucket    = var.website_bucket_name

@@ -14,7 +14,7 @@ resource "aws_lambda_function" "media_repository_api_handler" {
 
   environment {
     variables = {
-      LogGroupName = var.global_prefix
+      LogGroupName = var.log_group.name
     }
   }
 }

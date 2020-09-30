@@ -1,7 +1,7 @@
 import * as AWS from "aws-sdk";
 import { Context } from "aws-lambda";
 
-import { EnvironmentVariableProvider, Job, JobBaseProperties, JobParameterBag, McmaException } from "@mcma/core";
+import { EnvironmentVariableProvider, Job, JobParameterBag, McmaException, McmaTracker } from "@mcma/core";
 import { AwsS3FileLocatorProperties } from "@mcma/aws-s3";
 import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
@@ -18,15 +18,16 @@ const loggerProvider = new AwsCloudWatchLoggerProvider("ai-workflow-404-register
 
 type InputEvent = {
     input: {
-        bmContent: string;
-    };
+        bmContent: string
+    }
     data: {
-        mediaFileLocator: AwsS3FileLocatorProperties;
-        extractAudioJobId: string[];
-        audioFileLocator: AwsS3FileLocatorProperties;
-        speechToTextGoogleJobId: string[];
-    };
-} & JobBaseProperties;
+        mediaFileLocator: AwsS3FileLocatorProperties
+        extractAudioJobId: string[]
+        audioFileLocator: AwsS3FileLocatorProperties
+        speechToTextGoogleJobId: string[]
+    }
+    tracker?: McmaTracker
+}
 
 export async function handler(event: InputEvent, context: Context) {
     const logger = loggerProvider.get(context.awsRequestId, event.tracker);
@@ -53,11 +54,11 @@ export async function handler(event: InputEvent, context: Context) {
         let s3Object;
         try {
             s3Object = await S3.getObject({
-                Bucket: outputFile.awsS3Bucket,
-                Key: outputFile.awsS3Key,
+                Bucket: outputFile.bucket,
+                Key: outputFile.key,
             }).promise();
         } catch (error) {
-            throw new McmaException("Unable to access file in bucket '" + outputFile.awsS3Bucket + "' with key '" + outputFile.awsS3Key + "' due to error: " + error.message);
+            throw new McmaException("Unable to access file in bucket '" + outputFile.bucket + "' with key '" + outputFile.key + "' due to error: " + error.message);
         }
 
         let transcription = s3Object.Body.toString();

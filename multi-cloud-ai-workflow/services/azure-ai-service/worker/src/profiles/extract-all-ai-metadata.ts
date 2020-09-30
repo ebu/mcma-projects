@@ -5,7 +5,7 @@ import * as AWS from "aws-sdk";
 import { ProcessJobAssignmentHelper, ProviderCollection, WorkerRequest } from "@mcma/worker";
 import { HttpClient } from "@mcma/client";
 import { AwsS3FileLocator, AwsS3FileLocatorProperties, AwsS3FolderLocatorProperties, getS3Url } from "@mcma/aws-s3";
-import { AIJob, getTableName, JobAssignment } from "@mcma/core";
+import { AIJob, getTableName, ProblemDetail } from "@mcma/core";
 
 const S3 = new AWS.S3();
 const httpClient = new HttpClient();
@@ -24,7 +24,7 @@ export async function extractAllAiMetadata(providers: ProviderCollection, jobAss
     const jobInput = jobAssignmentHelper.jobInput;
     const jobOutput = jobAssignmentHelper.jobOutput;
 
-    const jobAssignmentId = jobAssignmentHelper.jobAssignmentId;
+    const jobAssignmentId = jobAssignmentHelper.jobAssignment.id;
     const azure = getAzureConfig(jobAssignmentHelper);
 
     let inputFile = jobInput.get<AwsS3FileLocatorProperties>("inputFile");
@@ -76,7 +76,7 @@ export async function extractAllAiMetadata(providers: ProviderCollection, jobAss
 
     logger.debug("Callback url for Video Indexer: " + callbackUrl);
 
-    let postVideoUrl = azure.apiUrl + "/" + azure.location + "/Accounts/" + azure.accountId + "/Videos?accessToken=" + apiToken + "&name=" + inputFile.awsS3Key + "&callbackUrl=" + callbackUrl + "&videoUrl=" + mediaFileUri + "&fileName=" + inputFile.awsS3Key;
+    let postVideoUrl = azure.apiUrl + "/" + azure.location + "/Accounts/" + azure.accountId + "/Videos?accessToken=" + apiToken + "&name=" + inputFile.key + "&callbackUrl=" + callbackUrl + "&videoUrl=" + mediaFileUri + "&fileName=" + inputFile.key;
 
     logger.debug("Call Azure Video Indexer Video API : Doing a POST on  : ", postVideoUrl);
 
@@ -172,8 +172,8 @@ export async function processNotification(providers: ProviderCollection, workerR
         logger.debug("Azure AI video metadata : ", JSON.stringify(videoMetadata, null, 2));
 
         const outputLocation = jobAssignmentHelper.jobInput.get<AwsS3FolderLocatorProperties>("outputLocation");
-        const jobOutputBucket = outputLocation.awsS3Bucket;
-        const jobOutputKeyPrefix = outputLocation.awsS3KeyPrefix ? outputLocation.awsS3KeyPrefix : "";
+        const jobOutputBucket = outputLocation.bucket;
+        const jobOutputKeyPrefix = outputLocation.keyPrefix ? outputLocation.keyPrefix : "";
 
         // get the info about the destination bucket to store the result of the job
         const s3Params = {
@@ -186,8 +186,8 @@ export async function processNotification(providers: ProviderCollection, workerR
 
         //updating JobAssignment with jobOutput
         jobAssignmentHelper.jobOutput.set("outputFile", new AwsS3FileLocator({
-            awsS3Bucket: s3Params.Bucket,
-            awsS3Key: s3Params.Key
+            bucket: s3Params.Bucket,
+            key: s3Params.Key
         }));
 
         await jobAssignmentHelper.complete();
@@ -195,7 +195,11 @@ export async function processNotification(providers: ProviderCollection, workerR
     } catch (error) {
         logger.error(error);
         try {
-            await jobAssignmentHelper.fail(error.message);
+            await jobAssignmentHelper.fail(new ProblemDetail({
+                type: "uri://mcma.ebu.ch/rfc7807/aws-ai-service/generic-failure",
+                title: "Generic failure",
+                detail: error.message
+            }));
         } catch (error) {
             logger.error(error);
         }

@@ -109,12 +109,12 @@ export class WorkflowService {
 
         // creating workflow job
         let workflowJob = new WorkflowJob({
-            jobProfile: jobProfileId,
+            jobProfileId,
             jobInput: new JobParameterBag({
                 metadata: metadata,
                 inputFile: new AwsS3FileLocator({
-                    awsS3Bucket: uploadBucket,
-                    awsS3Key: objectKey
+                    bucket: uploadBucket,
+                    key: objectKey
                 })
             }),
             tracker: new McmaTracker({
@@ -142,7 +142,7 @@ export class WorkflowService {
         const jobs = await resourceManager.query<WorkflowJob>("WorkflowJob");
         console.log("All jobs", jobs);
 
-        const filteredJobs = jobs.filter(j => j["@type"] === this.WORKFLOW_JOB_TYPE && j.jobProfile && j.jobProfile === jobProfileId);
+        const filteredJobs = jobs.filter(j => j["@type"] === this.WORKFLOW_JOB_TYPE && j.jobProfileId && j.jobProfileId === jobProfileId);
         console.log("Filtered jobs", filteredJobs);
 
         filteredJobs.sort((a, b) => new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime());

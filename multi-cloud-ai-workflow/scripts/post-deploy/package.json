@@ -12,15 +12,15 @@
     "main": "build/staging/index.js",
     "license": "Apache-2.0",
     "dependencies": {
-        "@mcma/aws-client": "0.12.1",
-        "@mcma/client": "0.12.1",
-        "@mcma/core": "0.12.1",
+        "@mcma/aws-client": "0.13.8",
+        "@mcma/client": "0.13.8",
+        "@mcma/core": "0.13.8",
         "amazon-cognito-identity-js": "^2.0.30",
-        "aws-sdk": "^2.631.0",
-        "node-fetch": "^2.6.0"
+        "aws-sdk": "^2.755.0",
+        "node-fetch": "^2.6.1"
     },
     "devDependencies": {
-        "@types/node": "^10.17.21",
+        "@types/node": "^10.17.35",
         "@types/node-fetch": "^2.5.7"
     }
 }

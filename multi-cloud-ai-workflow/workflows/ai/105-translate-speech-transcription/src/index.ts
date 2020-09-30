@@ -1,6 +1,6 @@
 import * as AWS from "aws-sdk";
 import { Context } from "aws-lambda";
-import { AIJob, EnvironmentVariableProvider, JobBaseProperties, JobParameterBag, JobProfile, McmaException, NotificationEndpoint } from "@mcma/core";
+import { AIJob, EnvironmentVariableProvider, JobParameterBag, JobProfile, McmaException, McmaTracker, NotificationEndpoint } from "@mcma/core";
 import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { AwsS3FileLocator, AwsS3FolderLocator } from "@mcma/aws-s3";
@@ -26,7 +26,8 @@ type InputEvent = {
     input: {
         bmContent: string
     }
-} & JobBaseProperties;
+    tracker?: McmaTracker
+}
 
 /**
  * Lambda function handler
@@ -40,14 +41,6 @@ export async function handler(event: InputEvent, context: Context) {
         logger.debug(event);
         logger.debug(context);
         logger.info(TempBucket, ActivityCallbackUrl, ActivityArn);
-
-        // send update notification
-        try {
-            await resourceManager.sendNotification(event);
-        } catch (error) {
-            logger.warn("Failed to send notification");
-            logger.warn(error.toString());
-        }
 
         // get activity task
         let data = await StepFunctions.getActivityTask({ activityArn: ActivityArn }).promise();
@@ -93,16 +86,16 @@ export async function handler(event: InputEvent, context: Context) {
 
         // creating job translation of clean transcription
         let job = new AIJob({
-            jobProfile: jobProfileId,
+            jobProfileId: jobProfileId,
             jobInput: new JobParameterBag({
                 inputFile: new AwsS3FileLocator({
-                    awsS3Bucket: s3Params.Bucket,
-                    awsS3Key: s3Params.Key
+                    bucket: s3Params.Bucket,
+                    key: s3Params.Key
                 }),
                 targetLanguageCode: "fr",
                 outputLocation: new AwsS3FolderLocator({
-                    awsS3Bucket: TempBucket,
-                    awsS3KeyPrefix: JOB_RESULTS_PREFIX
+                    bucket: TempBucket,
+                    keyPrefix: JOB_RESULTS_PREFIX
                 })
             }),
             notificationEndpoint: new NotificationEndpoint({

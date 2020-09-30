@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import * as path from "path";
 
 import { config, S3 } from "aws-sdk";
-import { JobAssignment, JobParameterBag, JobExecution, JobProfile, JobStatus, McmaException, McmaTracker, TransformJob, WorkflowJob } from "@mcma/core";
+import { JobAssignment, JobExecution, JobParameterBag, JobProfile, JobStatus, McmaException, McmaTracker, TransformJob, WorkflowJob } from "@mcma/core";
 import { AuthProvider, ResourceManager, ResourceManagerConfig } from "@mcma/client";
 import { AwsS3FileLocator } from "@mcma/aws-s3";
 import { awsV4Auth } from "@mcma/aws-client";
@@ -31,8 +31,8 @@ async function uploadFileToBucket(bucket: string, prefix: string, filename: stri
     await s3.upload(uploadParams).promise();
 
     return new AwsS3FileLocator({
-        awsS3Bucket: uploadParams.Bucket,
-        awsS3Key: uploadParams.Key,
+        bucket: uploadParams.Bucket,
+        key: uploadParams.Key,
     });
 }
 
@@ -65,7 +65,7 @@ async function createWorkflowJob(resourceManager: ResourceManager, inputFile: Aw
     bmContent = await resourceManager.update(bmContent);
 
     const workflowJob = new WorkflowJob({
-        jobProfile: jobProfile.id,
+        jobProfileId: jobProfile.id,
         jobInput: new JobParameterBag({
             bmContent: bmContent.id,
             bmEssence: bmEssence.id,
@@ -124,8 +124,8 @@ async function main() {
     const jobExecution = await resourceManager.get<JobExecution>(`${job.id}/executions/1`);
     console.log(JSON.stringify(jobExecution, null, 2));
 
-    if (jobExecution.jobAssignment) {
-        const jobAssignment = await resourceManager.get<JobAssignment>(jobExecution.jobAssignment);
+    if (jobExecution.jobAssignmentId) {
+        const jobAssignment = await resourceManager.get<JobAssignment>(jobExecution.jobAssignmentId);
         console.log(JSON.stringify(jobAssignment, null, 2));
     }
 }

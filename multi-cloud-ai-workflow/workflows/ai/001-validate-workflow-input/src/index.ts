@@ -1,7 +1,7 @@
 import * as AWS from "aws-sdk";
 import { Context } from "aws-lambda";
 
-import { EnvironmentVariableProvider, JobBaseProperties, McmaException } from "@mcma/core";
+import { EnvironmentVariableProvider, JobBaseProperties, McmaException, McmaTracker } from "@mcma/core";
 import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { awsV4Auth } from "@mcma/aws-client";
@@ -36,10 +36,11 @@ const loggerProvider = new AwsCloudWatchLoggerProvider("ai-workflow-001-validate
 
 type InputEvent = {
     input: {
-        bmContent?: string,
+        bmContent?: string
         bmEssence?: string
     }
-} & JobBaseProperties;
+    tracker?: McmaTracker
+} & JobBaseProperties
 
 /**
  * Lambda function handler
@@ -52,14 +53,6 @@ export async function handler(event: InputEvent, context: Context) {
         logger.functionStart(context.awsRequestId);
         logger.debug(event);
         logger.debug(context);
-
-        // send update notification
-        try {
-            await resourceManager.sendNotification(event);
-        } catch (error) {
-            logger.warn("Failed to send notification");
-            logger.warn(error.toString());
-        }
 
         // check the input and return mediaFileLocator which service as input for the AI workflows
         if (!event || !event.input) {
@@ -86,7 +79,7 @@ export async function handler(event: InputEvent, context: Context) {
 
         // find the media locator in the website bucket with public httpEndpoint
         for (const locator of getAwsS3FileLocations(bmEssence)) {
-            if (locator.awsS3Bucket === WebsiteBucket) {
+            if (locator.bucket === WebsiteBucket) {
                 mediaFileLocator = locator;
             }
         }
