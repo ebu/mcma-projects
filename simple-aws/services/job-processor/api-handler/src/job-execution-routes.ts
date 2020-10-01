@@ -68,7 +68,7 @@ export class JobExecutionRoutes extends McmaApiRouteCollection {
             return;
         }
 
-        if (jobExecution.jobAssignment && jobExecution.jobAssignment !== notification.source) {
+        if (jobExecution.jobAssignmentId && jobExecution.jobAssignmentId !== notification.source) {
             requestContext.response.statusCode = HttpStatusCode.BadRequest;
             requestContext.response.statusMessage = "Unexpected notification from '" + notification.source + "'.";
             return;

@@ -11,7 +11,7 @@
         ],
         "authType": "AWS4",
         "jobType": "TransformJob",
-        "jobProfiles": [
+        "jobProfileIds": [
             "ExtractThumbnail"
         ]
     },
@@ -61,7 +61,7 @@
         ],
         "authType": "AWS4",
         "jobType": "AmeJob",
-        "jobProfiles": [
+        "jobProfileIds": [
             "ExtractTechnicalMetadata"
         ]
     }

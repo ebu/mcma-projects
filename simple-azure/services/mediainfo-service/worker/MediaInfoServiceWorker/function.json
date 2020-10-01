@@ -1,0 +1,11 @@
+{
+  "bindings": [
+    {
+      "type": "queueTrigger",
+      "direction": "in",
+      "name": "queueMessage",
+      "queueName": "mediainfo-service-work-queue",
+      "connection": "WorkQueueStorage"
+    }
+  ]
+}

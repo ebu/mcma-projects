@@ -1,0 +1,5 @@
+﻿.idea
+build
+/deployment/terraform.tfvars.json
+/deployment/terraform.output.json
+local.settings.json

@@ -1,0 +1,56 @@
+﻿
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workflowName": { "type": "string" },
+        "functionUrl": { "type": "string" },
+        "recurrenceFrequency": { "type": "string" },
+        "recurrenceInterval": { "type": "string" }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "[parameters('workflowName')]",
+            "location": "[resourceGroup().location]",
+            "identity": {
+               "type": "SystemAssigned"
+            },
+            "properties": {
+                "state": "Enabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "triggers": {
+                        "Recurrence": {
+                            "recurrence": {
+                                "frequency": "[parameters('recurrenceFrequency')]",
+                                "interval": "[parameters('recurrenceInterval')]"
+                            },
+                            "type": "Recurrence"
+                        }
+                    },
+                    "actions": {
+                        "HTTP": {
+                            "runAfter": {},
+                            "type": "Http",
+                            "inputs": {
+                                "authentication": {
+                                    "type": "ManagedServiceIdentity",
+                                    "audience": "[parameters('functionUrl')]"
+                                },
+                                "method": "POST",
+                                "uri": "[parameters('functionUrl')]"
+                            }
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {}
+            }
+        }
+    ]
+}

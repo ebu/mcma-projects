@@ -1,0 +1,1 @@
+apply from: "${project.rootDir}/gradle-tasks-for-functions.gradle"

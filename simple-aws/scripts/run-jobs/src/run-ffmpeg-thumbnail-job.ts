@@ -14,7 +14,7 @@ export async function runFFmpegThumbnailJob(resourceManager: ResourceManager, in
     }
 
     let transformJob = new TransformJob({
-        jobProfile: jobProfiles[0].id,
+        jobProfileId: jobProfiles[0].id,
         jobInput: new JobParameterBag({
             inputFile,
             outputLocation: new AwsS3FolderLocator({

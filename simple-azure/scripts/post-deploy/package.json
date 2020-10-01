@@ -1,0 +1,25 @@
+{
+    "name": "post-deploy",
+    "version": "0.0.0",
+    "description": "Script to run post deployment actions",
+    "private": true,
+    "scripts": {
+        "start": "node build/staging/index.js"
+    },
+    "engines": {
+        "node": "~10.16.3"
+    },
+    "main": "build/staging/index.js",
+    "license": "Apache-2.0",
+    "dependencies": {
+        "@mcma/azure-client": "0.13.10-beta2",
+        "@mcma/client": "0.13.10-beta2",
+        "@mcma/core": "0.13.10-beta2",
+        "@mcma/encryption": "0.13.10-beta2",
+        "node-fetch": "^2.6.0",
+        "uuid": "8.3.0"
+    },
+    "devDependencies": {
+        "@types/node": "^10.17.21"
+    }
+}

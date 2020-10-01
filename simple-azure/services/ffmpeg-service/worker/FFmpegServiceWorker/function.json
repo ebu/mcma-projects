@@ -1,0 +1,11 @@
+{
+  "bindings": [
+    {
+      "type": "queueTrigger",
+      "direction": "in",
+      "name": "queueMessage",
+      "queueName": "ffmpeg-service-work-queue",
+      "connection": "WorkQueueStorage"
+    }
+  ]
+}

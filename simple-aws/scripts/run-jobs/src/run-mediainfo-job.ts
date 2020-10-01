@@ -14,7 +14,7 @@ export async function runMediaInfoJob(resourceManager: ResourceManager, inputFil
     }
 
     let ameJob = new AmeJob({
-        jobProfile: jobProfiles[0].id,
+        jobProfileId: jobProfiles[0].id,
         jobInput: new JobParameterBag({
             inputFile,
             outputLocation: new AwsS3FolderLocator({

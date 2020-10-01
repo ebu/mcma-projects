@@ -1,0 +1,85 @@
+{
+    "job_processor_api_url": {
+        "@type": "Service",
+        "name": "Job Processor Service",
+        "resources": [
+            {
+                "@type": "ResourceEndpoint",
+                "resourceType": "AmeJob",
+                "httpEndpoint": "/jobs"
+            },
+            {
+                "@type": "ResourceEndpoint",
+                "resourceType": "AIJob",
+                "httpEndpoint": "/jobs"
+            },
+            {
+                "@type": "ResourceEndpoint",
+                "resourceType": "CaptureJob",
+                "httpEndpoint": "/jobs"
+            },
+            {
+                "@type": "ResourceEndpoint",
+                "resourceType": "QAJob",
+                "httpEndpoint": "/jobs"
+            },
+            {
+                "@type": "ResourceEndpoint",
+                "resourceType": "TransferJob",
+                "httpEndpoint": "/jobs"
+            },
+            {
+                "@type": "ResourceEndpoint",
+                "resourceType": "TransformJob",
+                "httpEndpoint": "/jobs"
+            },
+            {
+                "@type": "ResourceEndpoint",
+                "resourceType": "WorkflowJob",
+                "httpEndpoint": "/jobs"
+            }
+        ],
+        "authType": "AzureAD",
+        "authContext": {
+            "scope": "/.default"
+        }
+    },
+    "ffmpeg_service_url": {
+        "@type": "Service",
+        "name": "FFmpeg Transform Service",
+        "resources": [
+            {
+                "@type": "ResourceEndpoint",
+                "resourceType": "JobAssignment",
+                "httpEndpoint": "/job-assignments"
+            }
+        ],
+        "jobType": "TransformJob",
+        "jobProfileIds": [
+            "ExtractThumbnail"
+        ],
+        "authType": "AzureAD",
+        "authContext": {
+            "scope": "/.default"
+        }
+    },
+    "mediainfo_service_url": {
+        "@type": "Service",
+        "name": "MediaInfo AME Service",
+        "resources": [
+            {
+                "@type": "ResourceEndpoint",
+                "resourceType": "JobAssignment",
+                "httpEndpoint": "/job-assignments"
+            }
+        ],
+        "jobType": "AmeJob",
+        "jobProfileIds": [
+            "ExtractTechnicalMetadata"
+        ],
+        "authType": "AzureAD",
+        "authContext": {
+            "scope": "/.default"
+        }
+    }
+}

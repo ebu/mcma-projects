@@ -1,0 +1,13 @@
+apply from: "${project.rootDir}/gradle-tasks-for-npm.gradle"
+
+task run(type: Exec) {
+    dependsOn ":deployment:terraformOutput"
+    dependsOn tsc
+    commandLine npmExecutable
+    args "start"
+    args "--"
+    args "--azureTenantId=${azureTenantId}"
+    args "--azureClientId=${azureClientId}"
+    args "--azureClientSecret=${azureClientSecret}"
+    args "--testFilePath=${testFilePath}"
+}

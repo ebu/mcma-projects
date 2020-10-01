@@ -128,15 +128,15 @@ function createServices(terraformOutput: { [key: string]: any }) {
             resourceEndpoint.httpEndpoint = terraformOutput[prop].value + resourceEndpoint.httpEndpoint;
         }
 
-        if (serviceJson.jobProfiles && serviceJson.jobProfiles.length > 0) {
-            const jobProfiles = [];
-            for (const jobProfileName of serviceJson.jobProfiles) {
+        if (serviceJson.jobProfileIds && serviceJson.jobProfileIds.length > 0) {
+            const jobProfileIds = [];
+            for (const jobProfileName of serviceJson.jobProfileIds) {
                 const jobProfileJson = jobProfileData[jobProfileName];
                 if (jobProfileJson) {
-                    jobProfiles.push(jobProfileJson.id);
+                    jobProfileIds.push(jobProfileJson.id);
                 }
             }
-            serviceJson.jobProfiles = jobProfiles;
+            serviceJson.jobProfileIds = jobProfileIds;
         }
 
         services[serviceJson.name] = serviceJson;
