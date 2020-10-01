@@ -8,11 +8,11 @@
     },
     "license": "Apache-2.0",
     "dependencies": {
-        "@mcma/aws-dynamodb": "0.13.8",
-        "@mcma/aws-logger": "0.13.8",
-        "@mcma/aws-s3": "0.13.8",
-        "@mcma/core": "0.13.8",
-        "@mcma/data": "0.13.8",
+        "@mcma/aws-dynamodb": "0.13.10",
+        "@mcma/aws-logger": "0.13.10",
+        "@mcma/aws-s3": "0.13.10",
+        "@mcma/core": "0.13.10",
+        "@mcma/data": "0.13.10",
         "aws-sdk": "^2.755.0"
     },
     "devDependencies": {
