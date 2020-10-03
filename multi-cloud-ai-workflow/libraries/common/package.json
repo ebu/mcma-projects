@@ -10,8 +10,8 @@
     "types": "index.d.ts",
     "license": "Apache-2.0",
     "dependencies": {
-        "@mcma/aws-s3": "0.13.8",
-        "@mcma/core": "0.13.8",
+        "@mcma/aws-s3": "0.13.10",
+        "@mcma/core": "0.13.10",
         "aws-sdk": "^2.755.0"
     },
     "devDependencies": {
