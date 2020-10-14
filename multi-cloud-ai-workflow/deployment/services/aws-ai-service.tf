@@ -104,7 +104,13 @@ resource "aws_lambda_function" "aws_ai_service_api_handler" {
 
   environment {
     variables = {
-      LogGroupName = var.log_group.name
+      LogGroupName        = var.log_group.name
+      TableName           = aws_dynamodb_table.aws_ai_service_table.name
+      PublicUrl           = local.aws_ai_service_url
+      ServicesUrl         = var.services_url
+      ServicesAuthType    = var.services_auth_type
+      WorkerFunctionId    = aws_lambda_function.aws_ai_service_worker.function_name
+      ServiceOutputBucket = aws_s3_bucket.aws_ai_service_output.id
     }
   }
 }
@@ -204,9 +210,14 @@ resource "aws_lambda_function" "aws_ai_service_worker" {
 
   environment {
     variables = {
-      LogGroupName   = var.log_group.name
-      RekoSnsRoleArn = aws_iam_role.aws_ai_service_reko_to_sns_execution.arn
-      SnsTopicArn    = aws_sns_topic.sns_topic_reko_output.arn
+      LogGroupName        = var.log_group.name
+      TableName           = aws_dynamodb_table.aws_ai_service_table.name
+      PublicUrl           = local.aws_ai_service_url
+      ServicesUrl         = var.services_url
+      ServicesAuthType    = var.services_auth_type
+      ServiceOutputBucket = aws_s3_bucket.aws_ai_service_output.id
+      RekoSnsRoleArn      = aws_iam_role.aws_ai_service_reko_to_sns_execution.arn
+      SnsTopicArn         = aws_sns_topic.sns_topic_reko_output.arn
     }
   }
 }
@@ -376,7 +387,6 @@ resource "aws_api_gateway_stage" "aws_ai_service_gateway_stage" {
     ServicesAuthType    = var.services_auth_type
     WorkerFunctionId    = aws_lambda_function.aws_ai_service_worker.function_name
     ServiceOutputBucket = aws_s3_bucket.aws_ai_service_output.id
-    DeploymentHash      = filesha256("./services/aws-ai-service.tf")
   }
 }
 

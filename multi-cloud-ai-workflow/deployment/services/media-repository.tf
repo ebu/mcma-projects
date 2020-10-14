@@ -15,6 +15,8 @@ resource "aws_lambda_function" "media_repository_api_handler" {
   environment {
     variables = {
       LogGroupName = var.log_group.name
+      TableName    = aws_dynamodb_table.media_repository_table.name
+      PublicUrl    = local.media_repository_url
     }
   }
 }
@@ -156,9 +158,8 @@ resource "aws_api_gateway_stage" "media_repository_gateway_stage" {
   rest_api_id   = aws_api_gateway_rest_api.media_repository_api.id
 
   variables = {
-    TableName      = aws_dynamodb_table.media_repository_table.name
-    PublicUrl      = local.media_repository_url
-    DeploymentHash = filesha256("./services/media-repository.tf")
+    TableName = aws_dynamodb_table.media_repository_table.name
+    PublicUrl = local.media_repository_url
   }
 }
 

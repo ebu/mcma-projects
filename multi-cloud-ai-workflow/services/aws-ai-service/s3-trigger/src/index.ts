@@ -1,11 +1,9 @@
-import * as AWS from "aws-sdk";
 import { Context, S3Event } from "aws-lambda";
 import { DynamoDbTableProvider } from "@mcma/aws-dynamodb";
 import { EnvironmentVariableProvider, getTableName, McmaException } from "@mcma/core";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { AwsS3FileLocator } from "@mcma/aws-s3";
-
-const Lambda = new AWS.Lambda({ apiVersion: "2015-03-31" });
+import { invokeLambdaWorker } from "@mcma/aws-lambda-worker-invoker";
 
 const dbTableProvider = new DynamoDbTableProvider();
 const environmentVariableProvider = new EnvironmentVariableProvider();
@@ -56,22 +54,15 @@ export async function handler(event: S3Event, context: Context) {
                     throw new McmaException("Failed to find JobAssignment with id: " + jobAssignmentDatabaseId);
                 }
 
-                const params = {
-                    FunctionName: environmentVariableProvider.getRequiredContextVariable<string>("WorkerFunctionId"),
-                    InvocationType: "Event",
-                    LogType: "None",
-                    Payload: JSON.stringify({
+                await invokeLambdaWorker(environmentVariableProvider.getRequiredContextVariable<string>("WorkerFunctionId"),
+                    {
                         operationName,
-                        contextVariables: environmentVariableProvider.getAllContextVariables(),
                         input: {
                             jobAssignmentDatabaseId,
                             outputFile: new AwsS3FileLocator({ bucket: bucket, key: key })
                         },
                         tracker: jobAssignment.tracker
-                    })
-                };
-
-                await Lambda.invoke(params).promise();
+                    });
             } catch (error) {
                 logger.error("Failed processing record", record, error);
             }

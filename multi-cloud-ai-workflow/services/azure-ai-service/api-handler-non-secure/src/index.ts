@@ -2,13 +2,12 @@ import { APIGatewayProxyEvent, Context } from "aws-lambda";
 import { getTableName } from "@mcma/core";
 import { getWorkerFunctionId, HttpStatusCode, McmaApiRequestContext, McmaApiRouteCollection } from "@mcma/api";
 import { DynamoDbTableProvider } from "@mcma/aws-dynamodb";
-import { LambdaWorkerInvoker } from "@mcma/aws-lambda-worker-invoker";
+import { invokeLambdaWorker } from "@mcma/aws-lambda-worker-invoker";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { ApiGatewayApiController } from "@mcma/aws-api-gateway";
 
 const dbTableProvider = new DynamoDbTableProvider();
 const loggerProvider = new AwsCloudWatchLoggerProvider("azure-ai-service-api-handler-non-secure", process.env.LogGroupName);
-const workerInvoker = new LambdaWorkerInvoker();
 
 async function processNotification(requestContext: McmaApiRequestContext) {
     const request = requestContext.request;
@@ -29,15 +28,16 @@ async function processNotification(requestContext: McmaApiRequestContext) {
         return;
     }
 
-    await workerInvoker.invoke(
+    await invokeLambdaWorker(
         getWorkerFunctionId(requestContext),
-        "ProcessNotification",
-        requestContext.getAllContextVariables(),
         {
-            jobAssignmentDatabaseId,
-            notification
-        },
-        jobAssignment.tracker,
+            operationName: "ProcessNotification",
+            input: {
+                jobAssignmentDatabaseId,
+                notification
+            },
+            tracker: jobAssignment.tracker
+        }
     );
 }
 

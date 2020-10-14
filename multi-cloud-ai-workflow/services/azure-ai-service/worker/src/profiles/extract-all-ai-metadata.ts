@@ -5,16 +5,16 @@ import * as AWS from "aws-sdk";
 import { ProcessJobAssignmentHelper, ProviderCollection, WorkerRequest } from "@mcma/worker";
 import { HttpClient } from "@mcma/client";
 import { AwsS3FileLocator, AwsS3FileLocatorProperties, AwsS3FolderLocatorProperties, getS3Url } from "@mcma/aws-s3";
-import { AIJob, getTableName, ProblemDetail } from "@mcma/core";
+import { AIJob, ContextVariableProvider, getTableName, ProblemDetail } from "@mcma/core";
 
 const S3 = new AWS.S3();
 const httpClient = new HttpClient();
 
-function getAzureConfig(jobAssignmentHelper: ProcessJobAssignmentHelper<AIJob>) {
-    const apiUrl = jobAssignmentHelper.workerRequest.getRequiredContextVariable<string>("AzureApiUrl"); // "https://api.videoindexer.ai"   
-    const location = jobAssignmentHelper.workerRequest.getRequiredContextVariable<string>("AzureLocation");
-    const accountId = jobAssignmentHelper.workerRequest.getRequiredContextVariable<string>("AzureAccountId");
-    const subscriptionKey = jobAssignmentHelper.workerRequest.getRequiredContextVariable<string>("AzureSubscriptionKey");
+function getAzureConfig(contextVariableProvider: ContextVariableProvider) {
+    const apiUrl = contextVariableProvider.getRequiredContextVariable<string>("AzureApiUrl"); // "https://api.videoindexer.ai"
+    const location = contextVariableProvider.getRequiredContextVariable<string>("AzureLocation");
+    const accountId = contextVariableProvider.getRequiredContextVariable<string>("AzureAccountId");
+    const subscriptionKey = contextVariableProvider.getRequiredContextVariable<string>("AzureSubscriptionKey");
 
     return { apiUrl, location, accountId, subscriptionKey };
 }
@@ -25,7 +25,7 @@ export async function extractAllAiMetadata(providers: ProviderCollection, jobAss
     const jobOutput = jobAssignmentHelper.jobOutput;
 
     const jobAssignmentId = jobAssignmentHelper.jobAssignment.id;
-    const azure = getAzureConfig(jobAssignmentHelper);
+    const azure = getAzureConfig(providers.contextVariableProvider);
 
     let inputFile = jobInput.get<AwsS3FileLocatorProperties>("inputFile");
     let mediaFileUri = await getS3Url(inputFile, S3);
@@ -68,7 +68,7 @@ export async function extractAllAiMetadata(providers: ProviderCollection, jobAss
     // Generate the call back URL leveraging the non secure api gateway endpoint
 
     const secureHost = new URL(jobAssignmentId).host;
-    const nonSecureHost = new URL(jobAssignmentHelper.workerRequest.getRequiredContextVariable("PublicUrlNonSecure")).host;
+    const nonSecureHost = new URL(providers.contextVariableProvider.getRequiredContextVariable("PublicUrlNonSecure")).host;
 
     var callbackUrl = jobAssignmentId.replace(secureHost, nonSecureHost);
     callbackUrl = callbackUrl + "/notifications";
@@ -105,8 +105,8 @@ export async function extractAllAiMetadata(providers: ProviderCollection, jobAss
 
 export async function processNotification(providers: ProviderCollection, workerRequest: WorkerRequest) {
     const jobAssignmentHelper = new ProcessJobAssignmentHelper(
-        await providers.dbTableProvider.get(getTableName(workerRequest)),
-        providers.resourceManagerProvider.get(workerRequest),
+        await providers.dbTableProvider.get(getTableName(providers.contextVariableProvider)),
+        providers.resourceManagerProvider.get(providers.contextVariableProvider),
         workerRequest
     );
 
@@ -114,7 +114,7 @@ export async function processNotification(providers: ProviderCollection, workerR
 
     logger.debug("ProcessNotification", JSON.stringify(workerRequest, null, 2));
     const notification = workerRequest.input.notification;
-    const azure = getAzureConfig(jobAssignmentHelper);
+    const azure = getAzureConfig(providers.contextVariableProvider);
 
     let flagCounter = 0;
     let azureVideoId;

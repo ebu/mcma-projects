@@ -37,7 +37,7 @@ export async function textToSpeech(providers: ProviderCollection, jobAssignmentH
     logger.debug("12.3. configure and call text to speech service");
     const params = {
         OutputFormat: "mp3",
-        OutputS3BucketName: jobAssignmentHelper.workerRequest.getRequiredContextVariable<string>("ServiceOutputBucket"),
+        OutputS3BucketName: providers.contextVariableProvider.getRequiredContextVariable<string>("ServiceOutputBucket"),
         OutputS3KeyPrefix: "TextToSpeechJob-" + jobAssignmentDatabaseId.substring(jobAssignmentDatabaseId.lastIndexOf("/") + 1),
         Text: inputText,
         VoiceId: voiceId,
@@ -56,8 +56,8 @@ export async function textToSpeech(providers: ProviderCollection, jobAssignmentH
 
 export async function processTextToSpeechJobResult(providers: ProviderCollection, workerRequest: WorkerRequest) {
     const jobAssignmentHelper = new ProcessJobAssignmentHelper(
-        await providers.dbTableProvider.get(getTableName(workerRequest)),
-        providers.resourceManagerProvider.get(workerRequest),
+        await providers.dbTableProvider.get(getTableName(providers.contextVariableProvider)),
+        providers.resourceManagerProvider.get(providers.contextVariableProvider),
         workerRequest
     );
 

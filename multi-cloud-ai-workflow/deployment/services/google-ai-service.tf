@@ -57,7 +57,12 @@ resource "aws_lambda_function" "google_ai_service_api_handler" {
 
   environment {
     variables = {
-      LogGroupName = var.log_group.name
+      LogGroupName     = var.log_group.name
+      TableName        = aws_dynamodb_table.google_ai_service_table.name
+      PublicUrl        = local.google_ai_service_url
+      ServicesUrl      = var.services_url
+      ServicesAuthType = var.services_auth_type
+      WorkerFunctionId = aws_lambda_function.google_ai_service_worker.function_name
     }
   }
 }
@@ -79,6 +84,10 @@ resource "aws_lambda_function" "google_ai_service_worker" {
   environment {
     variables = {
       LogGroupName                     = var.log_group.name
+      TableName                        = aws_dynamodb_table.google_ai_service_table.name
+      PublicUrl                        = local.google_ai_service_url
+      ServicesUrl                      = var.services_url
+      ServicesAuthType                 = var.services_auth_type
       GoogleServiceCredentialsS3Bucket = var.config_bucket.id
       GoogleServiceCredentialsS3Key    = local.google_service_credentials_file
       GoogleBucketName                 = var.google_bucket_name
@@ -237,7 +246,6 @@ resource "aws_api_gateway_stage" "google_ai_service_gateway_stage" {
     ServicesUrl      = var.services_url
     ServicesAuthType = var.services_auth_type
     WorkerFunctionId = aws_lambda_function.google_ai_service_worker.function_name
-    DeploymentHash   = filesha256("./services/google-ai-service.tf")
   }
 }
 
