@@ -90,7 +90,7 @@ export async function tokenizedTextToSpeech(providers: ProviderCollection, jobAs
     logger.debug("14.3. setup and call polly service to retrieve speechmarks per sentence");
     const params_sm = {
         OutputFormat: "json",
-        OutputS3BucketName: jobAssignmentHelper.workerRequest.getRequiredContextVariable<string>("ServiceOutputBucket"),
+        OutputS3BucketName: providers.contextVariableProvider.getRequiredContextVariable<string>("ServiceOutputBucket"),
         OutputS3KeyPrefix: "000-TextTokensSpeechMarksJob-" + jobAssignmentDatabaseId.substring(jobAssignmentDatabaseId.lastIndexOf("/") + 1),
         Text: inputText,
         SpeechMarkTypes: ["sentence"],
@@ -111,8 +111,8 @@ export async function tokenizedTextToSpeech(providers: ProviderCollection, jobAs
 
 export async function processTokenizedTextToSpeechJobResult(providers: ProviderCollection, workerRequest: WorkerRequest) {
     const jobAssignmentHelper = new ProcessJobAssignmentHelper(
-        await providers.dbTableProvider.get(getTableName(workerRequest)),
-        providers.resourceManagerProvider.get(workerRequest),
+        await providers.dbTableProvider.get(getTableName(providers.contextVariableProvider)),
+        providers.resourceManagerProvider.get(providers.contextVariableProvider),
         workerRequest
     );
 

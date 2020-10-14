@@ -18,7 +18,7 @@ export async function runWorkflow(providers: ProviderCollection, jobAssignmentHe
 
     const workflowName = jobAssignmentHelper.profile.name;
 
-    const stateMachineArn = jobAssignmentHelper.workerRequest.getOptionalContextVariable<string>(workflowName + "Id");
+    const stateMachineArn = providers.contextVariableProvider.getOptionalContextVariable<string>(workflowName + "Id");
     if (!stateMachineArn) {
         throw new McmaException("No state machine ARN found for workflow '" + workflowName + "'");
     }
@@ -34,7 +34,7 @@ export async function processNotification(providers: ProviderCollection, workerR
     const jobAssignmentDatabaseId = workerRequest.input.jobAssignmentDatabaseId;
     const notification = workerRequest.input.notification;
 
-    const table = await providers.dbTableProvider.get(getTableName(workerRequest));
+    const table = await providers.dbTableProvider.get(getTableName(providers.contextVariableProvider));
 
     const jobAssignment = await table.get(jobAssignmentDatabaseId);
 
@@ -50,7 +50,7 @@ export async function processNotification(providers: ProviderCollection, workerR
 
     await table.put(jobAssignmentDatabaseId, jobAssignment);
 
-    const resourceManager = providers.resourceManagerProvider.get(workerRequest);
+    const resourceManager = providers.resourceManagerProvider.get(providers.contextVariableProvider);
 
     await resourceManager.sendNotification(jobAssignment);
 }

@@ -40,7 +40,7 @@ export async function transcribeAudio(providers: ProviderCollection, jobAssignme
             MediaFileUri: mediaFileUrl
         },
         MediaFormat: mediaFormat,
-        OutputBucketName: jobAssignmentHelper.workerRequest.getRequiredContextVariable<string>("ServiceOutputBucket")
+        OutputBucketName: providers.contextVariableProvider.getRequiredContextVariable<string>("ServiceOutputBucket")
     };
 
     logger.debug("2.4 call speech to text service");
@@ -56,8 +56,8 @@ export async function transcribeAudio(providers: ProviderCollection, jobAssignme
 
 export async function processTranscribeJobResult(providers: ProviderCollection, workerRequest: WorkerRequest) {
     const jobAssignmentHelper = new ProcessJobAssignmentHelper(
-        await providers.dbTableProvider.get(getTableName(workerRequest)),
-        providers.resourceManagerProvider.get(workerRequest),
+        await providers.dbTableProvider.get(getTableName(providers.contextVariableProvider)),
+        providers.resourceManagerProvider.get(providers.contextVariableProvider),
         workerRequest);
 
     const logger = jobAssignmentHelper.logger;
