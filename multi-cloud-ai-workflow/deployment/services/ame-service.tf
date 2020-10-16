@@ -14,7 +14,12 @@ resource "aws_lambda_function" "ame_service_api_handler" {
 
   environment {
     variables = {
-      LogGroupName = var.log_group.name
+      LogGroupName     = var.log_group.name
+      TableName        = aws_dynamodb_table.ame_service_table.name
+      PublicUrl        = local.ame_service_url
+      ServicesUrl      = var.services_url
+      ServicesAuthType = var.services_auth_type
+      WorkerFunctionId = aws_lambda_function.ame_service_worker.function_name
     }
   }
 }
@@ -43,7 +48,11 @@ resource "aws_lambda_function" "ame_service_worker" {
 
   environment {
     variables = {
-      LogGroupName = var.log_group.name
+      LogGroupName     = var.log_group.name
+      TableName        = aws_dynamodb_table.ame_service_table.name
+      PublicUrl        = local.ame_service_url
+      ServicesUrl      = var.services_url
+      ServicesAuthType = var.services_auth_type
     }
   }
 }
@@ -190,7 +199,6 @@ resource "aws_api_gateway_stage" "ame_service_gateway_stage" {
     ServicesUrl      = var.services_url
     ServicesAuthType = var.services_auth_type
     WorkerFunctionId = aws_lambda_function.ame_service_worker.function_name
-    DeploymentHash   = filesha256("./services/ame-service.tf")
   }
 }
 

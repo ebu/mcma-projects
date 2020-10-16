@@ -53,7 +53,12 @@ resource "aws_lambda_function" "benchmarkstt_service_api_handler" {
 
   environment {
     variables = {
-      LogGroupName = var.log_group.name
+      LogGroupName     = var.log_group.name
+      TableName        = aws_dynamodb_table.benchmarkstt_service_table.name
+      PublicUrl        = local.benchmarkstt_service_url
+      ServicesUrl      = var.services_url
+      ServicesAuthType = var.services_auth_type
+      WorkerFunctionId = aws_lambda_function.benchmarkstt_service_worker.function_name
     }
   }
 }
@@ -75,6 +80,10 @@ resource "aws_lambda_function" "benchmarkstt_service_worker" {
   environment {
     variables = {
       LogGroupName               = var.log_group.name
+      TableName                  = aws_dynamodb_table.benchmarkstt_service_table.name
+      PublicUrl                  = local.benchmarkstt_service_url
+      ServicesUrl                = var.services_url
+      ServicesAuthType           = var.services_auth_type
       EcsClusterName             = var.ecs_cluster_name
       EcsBenchmarksttServiceName = var.ecs_benchmarkstt_service_name
     }
@@ -228,7 +237,6 @@ resource "aws_api_gateway_stage" "benchmarkstt_service_gateway_stage" {
     ServicesUrl      = var.services_url
     ServicesAuthType = var.services_auth_type
     WorkerFunctionId = aws_lambda_function.benchmarkstt_service_worker.function_name
-    DeploymentHash   = filesha256("./services/benchmarkstt-service.tf")
   }
 }
 

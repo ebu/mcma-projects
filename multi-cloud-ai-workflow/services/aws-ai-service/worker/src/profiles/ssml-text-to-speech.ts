@@ -39,7 +39,7 @@ export async function ssmlTextToSpeech(providers: ProviderCollection, jobAssignm
     logger.debug("16.3. call text to speech service: Polly with SSML");
     const params_ssml = {
         OutputFormat: "mp3",
-        OutputS3BucketName: jobAssignmentHelper.workerRequest.getRequiredContextVariable<string>("ServiceOutputBucket"),
+        OutputS3BucketName: providers.contextVariableProvider.getRequiredContextVariable<string>("ServiceOutputBucket"),
         OutputS3KeyPrefix: "ssmlTextToSpeechJob-" + jobAssignmentDatabaseId.substring(jobAssignmentDatabaseId.lastIndexOf("/") + 1),
         Text: inputText,
         VoiceId: voiceId,
@@ -58,8 +58,8 @@ export async function ssmlTextToSpeech(providers: ProviderCollection, jobAssignm
 // Process result after s3-trigger
 export async function processSsmlTextToSpeechJobResult(providers: ProviderCollection, workerRequest: WorkerRequest) {
     const jobAssignmentHelper = new ProcessJobAssignmentHelper(
-        await providers.dbTableProvider.get(getTableName(workerRequest)),
-        providers.resourceManagerProvider.get(workerRequest),
+        await providers.dbTableProvider.get(getTableName(providers.contextVariableProvider)),
+        providers.resourceManagerProvider.get(providers.contextVariableProvider),
         workerRequest
     );
 

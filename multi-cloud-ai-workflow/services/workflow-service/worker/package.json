@@ -8,17 +8,17 @@
     },
     "license": "Apache-2.0",
     "dependencies": {
-        "@mcma/aws-client": "0.13.10",
-        "@mcma/aws-dynamodb": "0.13.10",
-        "@mcma/aws-logger": "0.13.10",
-        "@mcma/client": "0.13.10",
-        "@mcma/core": "0.13.10",
-        "@mcma/data": "0.13.10",
-        "@mcma/worker": "0.13.10",
+        "@mcma/aws-client": "0.13.15",
+        "@mcma/aws-dynamodb": "0.13.15",
+        "@mcma/aws-logger": "0.13.15",
+        "@mcma/client": "0.13.15",
+        "@mcma/core": "0.13.15",
+        "@mcma/data": "0.13.15",
+        "@mcma/worker": "0.13.15",
         "aws-sdk": "^2.755.0"
     },
     "devDependencies": {
-        "@types/aws-lambda": "^8.10.62",
+        "@types/aws-lambda": "^8.10.63",
         "@types/node": "^10.17.35"
     }
 }
