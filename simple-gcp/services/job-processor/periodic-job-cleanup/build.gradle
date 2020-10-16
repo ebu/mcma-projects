@@ -1,0 +1,5 @@
+apply from: "${project.rootDir}/gradle-tasks-for-functions.gradle"
+
+npmInstall {
+    dependsOn ":services:job-processor:lib-common:npmPack"
+}

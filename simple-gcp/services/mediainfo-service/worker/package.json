@@ -1,0 +1,27 @@
+{
+    "name": "mediainfo-service-worker",
+    "version": "0.0.0",
+    "description": "Google Cloud Function-based AME service leveraging MediaInfo to extract metadata",
+    "private": true,
+    "engines": {
+        "node": "~10.16.3"
+    },
+    "license": "Apache-2.0",
+    "dependencies": {
+        "@mcma/google-cloud-client": "0.13.15-beta2",
+        "@mcma/google-cloud-firestore": "0.13.15-beta2",
+        "@mcma/google-cloud-logger": "0.13.15-beta2",
+        "@mcma/google-cloud-storage": "0.13.15-beta2",
+        "@mcma/client": "0.13.15-beta2",
+        "@mcma/core": "0.13.15-beta2",
+        "@mcma/data": "0.13.15-beta2",
+        "@mcma/worker": "0.13.15-beta2",
+        "uuid": "^7.0.3"
+    },
+    "devDependencies": {
+        "@google-cloud/functions-framework": "1.7.1",
+        "@google-cloud/pubsub": "2.5.0",
+        "@types/node": "^10.17.39",
+        "@types/uuid": "^7.0.0"
+    }
+}
