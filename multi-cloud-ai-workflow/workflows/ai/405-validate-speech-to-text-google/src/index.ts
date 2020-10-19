@@ -2,7 +2,7 @@ import * as AWS from "aws-sdk";
 import { Context } from "aws-lambda";
 import { v4 as uuidv4 } from "uuid";
 
-import { EnvironmentVariableProvider, JobParameterBag, JobProfile, McmaException, McmaTracker, NotificationEndpoint, QAJob } from "@mcma/core";
+import { JobParameterBag, JobProfile, McmaException, McmaTracker, NotificationEndpoint, QAJob } from "@mcma/core";
 import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { AwsS3FileLocator, AwsS3FolderLocator } from "@mcma/aws-s3";
@@ -12,8 +12,7 @@ import { BMContent } from "@local/common";
 const StepFunctions = new AWS.StepFunctions();
 const S3 = new AWS.S3();
 
-const environmentVariableProvider = new EnvironmentVariableProvider();
-const resourceManager = new ResourceManager(getResourceManagerConfig(environmentVariableProvider), new AuthProvider().add(awsV4Auth(AWS)));
+const resourceManager = new ResourceManager(getResourceManagerConfig(), new AuthProvider().add(awsV4Auth(AWS)));
 const loggerProvider = new AwsCloudWatchLoggerProvider("ai-workflow-405-validate-speech-to-text-google", process.env.LogGroupName);
 
 // Environment Variable(AWS Lambda)

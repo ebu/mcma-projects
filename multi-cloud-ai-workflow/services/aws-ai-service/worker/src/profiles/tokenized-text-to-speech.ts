@@ -1,10 +1,12 @@
 import * as AWS from "aws-sdk";
-import { AIJob, getTableName, McmaException, ProblemDetail } from "@mcma/core";
+import { AIJob, EnvironmentVariables, McmaException, ProblemDetail } from "@mcma/core";
+import { getTableName } from "@mcma/data";
 import { ProcessJobAssignmentHelper, ProviderCollection, WorkerRequest } from "@mcma/worker";
 import { AwsS3FileLocator, AwsS3FileLocatorProperties, AwsS3FolderLocatorProperties } from "@mcma/aws-s3";
 
 const S3 = new AWS.S3();
 const Polly = new AWS.Polly();
+const environmentVariables = EnvironmentVariables.getInstance();
 
 function msToTime(duration: string | number) {
     if (typeof duration === "string") {
@@ -90,7 +92,7 @@ export async function tokenizedTextToSpeech(providers: ProviderCollection, jobAs
     logger.debug("14.3. setup and call polly service to retrieve speechmarks per sentence");
     const params_sm = {
         OutputFormat: "json",
-        OutputS3BucketName: providers.contextVariableProvider.getRequiredContextVariable<string>("ServiceOutputBucket"),
+        OutputS3BucketName: environmentVariables.get("ServiceOutputBucket"),
         OutputS3KeyPrefix: "000-TextTokensSpeechMarksJob-" + jobAssignmentDatabaseId.substring(jobAssignmentDatabaseId.lastIndexOf("/") + 1),
         Text: inputText,
         SpeechMarkTypes: ["sentence"],
@@ -111,8 +113,8 @@ export async function tokenizedTextToSpeech(providers: ProviderCollection, jobAs
 
 export async function processTokenizedTextToSpeechJobResult(providers: ProviderCollection, workerRequest: WorkerRequest) {
     const jobAssignmentHelper = new ProcessJobAssignmentHelper(
-        await providers.dbTableProvider.get(getTableName(providers.contextVariableProvider)),
-        providers.resourceManagerProvider.get(providers.contextVariableProvider),
+        await providers.dbTableProvider.get(getTableName(environmentVariables)),
+        providers.resourceManagerProvider.get(environmentVariables),
         workerRequest
     );
 

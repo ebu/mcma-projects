@@ -192,14 +192,6 @@ resource "aws_api_gateway_stage" "transform_service_gateway_stage" {
   stage_name    = var.environment_type
   deployment_id = aws_api_gateway_deployment.transform_service_deployment.id
   rest_api_id   = aws_api_gateway_rest_api.transform_service_api.id
-
-  variables = {
-    TableName        = aws_dynamodb_table.transform_service_table.name
-    PublicUrl        = local.transform_service_url
-    ServicesUrl      = var.services_url
-    ServicesAuthType = var.services_auth_type
-    WorkerFunctionId = aws_lambda_function.transform_service_worker.function_name
-  }
 }
 
 locals {

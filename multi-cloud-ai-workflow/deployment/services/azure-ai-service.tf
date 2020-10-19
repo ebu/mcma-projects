@@ -14,7 +14,13 @@ resource "aws_lambda_function" "azure_ai_service_api_handler" {
 
   environment {
     variables = {
-      LogGroupName = var.log_group.name
+      LogGroupName         = var.log_group.name
+      TableName            = aws_dynamodb_table.azure_ai_service_table.name
+      PublicUrl            = local.azure_ai_service_url
+      PublicUrlNonSecure   = local.azure_ai_service_non_secure_url
+      ServicesUrl          = var.services_url
+      ServicesAuthType     = var.services_auth_type
+      WorkerFunctionId     = aws_lambda_function.azure_ai_service_worker.function_name
     }
   }
 }
@@ -42,10 +48,6 @@ resource "aws_lambda_function" "azure_ai_service_api_handler_non_secure" {
       ServicesUrl          = var.services_url
       ServicesAuthType     = var.services_auth_type
       WorkerFunctionId     = aws_lambda_function.azure_ai_service_worker.function_name
-      AzureApiUrl          = var.azure_api_url
-      AzureLocation        = var.azure_location
-      AzureAccountID       = var.azure_account_id
-      AzureSubscriptionKey = var.azure_subscription_key
     }
   }
 }
@@ -74,7 +76,7 @@ resource "aws_lambda_function" "azure_ai_service_worker" {
       ServicesAuthType     = var.services_auth_type
       AzureApiUrl          = var.azure_api_url
       AzureLocation        = var.azure_location
-      AzureAccountID       = var.azure_account_id
+      AzureAccountId       = var.azure_account_id
       AzureSubscriptionKey = var.azure_subscription_key
     }
   }
@@ -285,19 +287,6 @@ resource "aws_api_gateway_stage" "azure_ai_service_gateway_stage_non_secure" {
   stage_name    = var.environment_type
   deployment_id = aws_api_gateway_deployment.azure_ai_service_deployment_non_secure.id
   rest_api_id   = aws_api_gateway_rest_api.azure_ai_service_api_non_secure.id
-
-  variables = {
-    TableName            = aws_dynamodb_table.azure_ai_service_table.name
-    PublicUrl            = local.azure_ai_service_url
-    PublicUrlNonSecure   = local.azure_ai_service_non_secure_url
-    ServicesUrl          = var.services_url
-    ServicesAuthType     = var.services_auth_type
-    WorkerFunctionId     = aws_lambda_function.azure_ai_service_worker.function_name
-    AzureApiUrl          = var.azure_api_url
-    AzureLocation        = var.azure_location
-    AzureAccountID       = var.azure_account_id
-    AzureSubscriptionKey = var.azure_subscription_key
-  }
 }
 
 ###########################################################################

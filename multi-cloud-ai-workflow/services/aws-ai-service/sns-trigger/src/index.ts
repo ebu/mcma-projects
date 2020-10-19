@@ -1,11 +1,12 @@
 import { Context, SNSEvent } from "aws-lambda";
 import { DynamoDbTableProvider } from "@mcma/aws-dynamodb";
-import { EnvironmentVariableProvider, getTableName, McmaException } from "@mcma/core";
+import { EnvironmentVariables, McmaException } from "@mcma/core";
+import { getTableName } from "@mcma/data";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { invokeLambdaWorker } from "@mcma/aws-lambda-worker-invoker";
+import { getWorkerFunctionId } from "@mcma/worker-invoker";
 
 const dbTableProvider = new DynamoDbTableProvider();
-const environmentVariableProvider = new EnvironmentVariableProvider();
 const loggerProvider = new AwsCloudWatchLoggerProvider("aws-ai-service-sns-trigger", process.env.LogGroupName);
 
 export async function handler(event: SNSEvent, context: Context) {
@@ -45,14 +46,14 @@ export async function handler(event: SNSEvent, context: Context) {
                 logger.debug("status:", status);
                 logger.debug("jobAssignmentDatabaseId:", jobAssignmentDatabaseId);
 
-                const table = await dbTableProvider.get(getTableName(environmentVariableProvider));
+                const table = await dbTableProvider.get(getTableName(EnvironmentVariables.getInstance()));
                 const jobAssignment = await table.get(jobAssignmentDatabaseId);
                 if (!jobAssignment) {
                     throw new McmaException("Failed to find JobAssignment with id: " + jobAssignmentDatabaseId);
                 }
 
                 // invoking worker lambda function that will process the results of transcription job
-                await invokeLambdaWorker(environmentVariableProvider.getRequiredContextVariable<string>("WorkerFunctionId"),
+                await invokeLambdaWorker(getWorkerFunctionId(EnvironmentVariables.getInstance()),
                     {
                         operationName: "ProcessRekognitionResult",
                         input: {
