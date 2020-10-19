@@ -12,10 +12,10 @@
     "main": "build/staging/index.js",
     "license": "Apache-2.0",
     "dependencies": {
-        "@mcma/google-cloud-client": "0.13.15-beta2",
-        "@mcma/google-cloud-storage": "0.13.15-beta2",
-        "@mcma/client": "0.13.15-beta2",
-        "@mcma/core": "0.13.15-beta2",
+        "@mcma/google-cloud-client": "0.13.16",
+        "@mcma/google-cloud-storage": "0.13.16",
+        "@mcma/client": "0.13.16",
+        "@mcma/core": "0.13.16",
         "node-fetch": "^2.6.0"
     },
     "devDependencies": {

@@ -1,6 +1,6 @@
 ﻿import { v4 as uuidv4 } from "uuid";
 import { HttpStatusCode, McmaApiRequestContext, McmaApiRouteCollection, } from "@mcma/api";
-import { JobProfile, JobStatus, McmaTracker } from "@mcma/core";
+import { EnvironmentVariables, JobProfile, JobStatus, McmaTracker } from "@mcma/core";
 import { ResourceManagerProvider } from "@mcma/client";
 import { WorkerInvoker } from "@mcma/worker-invoker";
 
@@ -38,7 +38,7 @@ export class JobRoutes extends McmaApiRouteCollection {
             let label = job["@type"];
 
             try {
-                const resourceManager = this.resourceManagerProvider.get(requestContext);
+                const resourceManager = this.resourceManagerProvider.get(EnvironmentVariables.getInstance());
                 const jobProfile = await resourceManager.get<JobProfile>(job.jobProfile);
                 label += " with JobProfile " + jobProfile.name;
             } catch (error) {
@@ -58,7 +58,6 @@ export class JobRoutes extends McmaApiRouteCollection {
             input: {
                 jobId: job.id
             },
-            contextVariables: requestContext.getAllContextVariables(),
             tracker: job.tracker,
         });
     }
@@ -100,7 +99,6 @@ export class JobRoutes extends McmaApiRouteCollection {
             input: {
                 jobId: job.id
             },
-            contextVariables: requestContext.getAllContextVariables(),
             tracker: job.tracker,
         });
     }
@@ -129,7 +127,6 @@ export class JobRoutes extends McmaApiRouteCollection {
             input: {
                 jobId: job.id
             },
-            contextVariables: requestContext.getAllContextVariables(),
             tracker: job.tracker,
         });
     }
@@ -156,7 +153,6 @@ export class JobRoutes extends McmaApiRouteCollection {
             input: {
                 jobId: job.id
             },
-            contextVariables: requestContext.getAllContextVariables(),
             tracker: job.tracker,
         });
     }

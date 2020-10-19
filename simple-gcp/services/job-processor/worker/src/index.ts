@@ -1,6 +1,6 @@
 import { EventFunction, Context } from "@google-cloud/functions-framework/build/src/functions";
 
-import { EnvironmentVariableProvider, Utils } from "@mcma/core";
+import { Utils } from "@mcma/core";
 import { AuthProvider, ResourceManagerProvider } from "@mcma/client";
 import { ProviderCollection, Worker, WorkerRequest, WorkerRequestProperties } from "@mcma/worker";
 import { CloudLoggingLoggerProvider } from "@mcma/google-cloud-logger";
@@ -14,7 +14,6 @@ import { Message } from "@google-cloud/pubsub";
 const { TableName, PublicUrl } = process.env;
 
 const authProvider = new AuthProvider().add(googleAuth());
-const contextVariableProvider = new EnvironmentVariableProvider();
 const loggerProvider = new CloudLoggingLoggerProvider("job-processor-worker");
 const resourceManagerProvider = new ResourceManagerProvider(authProvider);
 
@@ -22,7 +21,6 @@ const dataController = new DataController(TableName, PublicUrl);
 
 const providerCollection = new ProviderCollection({
     authProvider,
-    contextVariableProvider,
     loggerProvider,
     resourceManagerProvider
 });

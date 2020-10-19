@@ -8,7 +8,7 @@ export async function failJob(providers: ProviderCollection, workerRequest: Work
     const { jobId, error } = workerRequest.input;
 
     const logger = workerRequest.logger;
-    const resourceManager = providers.resourceManagerProvider.get(providers.contextVariableProvider);
+    const resourceManager = providers.resourceManagerProvider.get();
 
     const dataController = context.dataController;
     const mutex = await dataController.createMutex(jobId, context.eventId);

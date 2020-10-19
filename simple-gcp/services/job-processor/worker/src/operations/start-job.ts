@@ -1,4 +1,17 @@
-import { Job, JobAssignment, JobExecution, JobParameterBag, JobProfile, JobStatus, Logger, McmaException, NotificationEndpoint, ProblemDetail, Service } from "@mcma/core";
+import {
+    EnvironmentVariables,
+    Job,
+    JobAssignment,
+    JobExecution,
+    JobParameterBag,
+    JobProfile,
+    JobStatus,
+    Logger,
+    McmaException,
+    NotificationEndpoint,
+    ProblemDetail,
+    Service
+} from "@mcma/core";
 import { ProviderCollection, WorkerRequest } from "@mcma/worker";
 import { AuthProvider, ResourceManager, ServiceClient } from "@mcma/client";
 import { CloudSchedulerClient } from "@google-cloud/scheduler";
@@ -13,7 +26,7 @@ export async function startJob(providers: ProviderCollection, workerRequest: Wor
     const jobId = workerRequest.input.jobId;
 
     const logger = workerRequest.logger;
-    const resourceManager = providers.resourceManagerProvider.get(providers.contextVariableProvider);
+    const resourceManager = providers.resourceManagerProvider.get(EnvironmentVariables.getInstance());
 
     const dataController = context.dataController;
     const mutex = await dataController.createMutex(jobId, context.eventId);

@@ -1,6 +1,6 @@
 import { EventFunction, Context } from "@google-cloud/functions-framework/build/src/functions";
 import { Message } from "@google-cloud/pubsub";
-import { EnvironmentVariableProvider, Logger, TransformJob, Utils } from "@mcma/core";
+import { Logger, TransformJob, Utils } from "@mcma/core";
 import { AuthProvider, ResourceManagerProvider } from "@mcma/client";
 import { ProcessJobAssignmentOperation, ProviderCollection, Worker, WorkerRequest, WorkerRequestProperties } from "@mcma/worker";
 import { FirestoreTableProvider } from "@mcma/google-cloud-firestore";
@@ -11,14 +11,12 @@ import { extractThumbnail } from "./profiles/extract-thumbnail";
 
 const authProvider = new AuthProvider().add(googleAuth());
 const dbTableProvider = new FirestoreTableProvider();
-const contextVariableProvider = new EnvironmentVariableProvider();
 const loggerProvider = new CloudLoggingLoggerProvider("ffmpeg-service-worker");
 const resourceManagerProvider = new ResourceManagerProvider(authProvider);
 
 const providerCollection = new ProviderCollection({
     authProvider,
     dbTableProvider,
-    contextVariableProvider,
     loggerProvider,
     resourceManagerProvider
 });

@@ -1,4 +1,4 @@
-import { Job, JobExecution, JobStatus, McmaException } from "@mcma/core";
+import { EnvironmentVariables, Job, JobExecution, JobStatus, McmaException } from "@mcma/core";
 import { ProviderCollection, WorkerRequest } from "@mcma/worker";
 
 import { DataController } from "@local/job-processor";
@@ -9,7 +9,7 @@ export async function processNotification(providers: ProviderCollection, workerR
     const { jobId, jobExecutionId, notification } = workerRequest.input;
 
     const logger = workerRequest.logger;
-    const resourceManager = providers.resourceManagerProvider.get(providers.contextVariableProvider);
+    const resourceManager = providers.resourceManagerProvider.get(EnvironmentVariables.getInstance());
 
     const dataController = context.dataController;
     const mutex = await dataController.createMutex(jobId, context.eventId);

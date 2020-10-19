@@ -116,7 +116,6 @@ async function failJob(job: Job, error: ProblemDetail) {
             jobId: job.id,
             error: error,
         },
-        contextVariables: process.env,
         tracker: job.tracker,
     });
 }

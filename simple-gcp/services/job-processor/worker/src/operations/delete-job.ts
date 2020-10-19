@@ -1,4 +1,4 @@
-import { McmaException } from "@mcma/core";
+import { EnvironmentVariables, McmaException } from "@mcma/core";
 import { ProviderCollection, WorkerRequest } from "@mcma/worker";
 
 import { DataController } from "@local/job-processor";
@@ -7,7 +7,7 @@ export async function deleteJob(providers: ProviderCollection, workerRequest: Wo
     const jobId = workerRequest.input.jobId;
 
     const logger = workerRequest.logger;
-    const resourceManager = providers.resourceManagerProvider.get(providers.contextVariableProvider);
+    const resourceManager = providers.resourceManagerProvider.get(EnvironmentVariables.getInstance());
 
     const dataController = context.dataController;
     const mutex = await dataController.createMutex(jobId, context.eventId);

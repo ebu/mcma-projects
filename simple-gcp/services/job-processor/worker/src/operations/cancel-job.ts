@@ -1,5 +1,5 @@
 import { AuthProvider, ResourceManager } from "@mcma/client";
-import { Job, JobStatus, Logger, McmaException } from "@mcma/core";
+import { EnvironmentVariables, Job, JobStatus, Logger, McmaException } from "@mcma/core";
 import { ProviderCollection, WorkerRequest } from "@mcma/worker";
 
 import { DataController } from "@local/job-processor";
@@ -9,7 +9,7 @@ export async function cancelJob(providers: ProviderCollection, workerRequest: Wo
     const jobId = workerRequest.input.jobId;
 
     const logger = workerRequest.logger;
-    const resourceManager = providers.resourceManagerProvider.get(providers.contextVariableProvider);
+    const resourceManager = providers.resourceManagerProvider.get(EnvironmentVariables.getInstance());
 
     const dataController = context.dataController;
     const mutex = await dataController.createMutex(jobId, context.eventId);
