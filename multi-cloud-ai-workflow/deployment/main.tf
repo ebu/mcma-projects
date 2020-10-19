@@ -14,21 +14,21 @@ provider "aws" {
 #########################
 
 module "service_registry" {
-  source = "https://ch-ebu-mcma-module-repository.s3.eu-central-1.amazonaws.com/ebu/service-registry/aws/0.13.10/module.zip"
+  source = "https://ch-ebu-mcma-module-repository.s3.eu-central-1.amazonaws.com/ebu/service-registry/aws/0.13.16/module.zip"
 
   aws_account_id = var.aws_account_id
   aws_region     = var.aws_region
-  log_group_name = module.monitoring.log_group.name
+  log_group      = module.monitoring.log_group
   module_prefix  = "${var.global_prefix}-service-registry"
   stage_name     = var.environment_type
 }
 
 module "job_processor" {
-  source = "https://ch-ebu-mcma-module-repository.s3.eu-central-1.amazonaws.com/ebu/job-processor/aws/0.13.10/module.zip"
+  source = "https://ch-ebu-mcma-module-repository.s3.eu-central-1.amazonaws.com/ebu/job-processor/aws/0.13.16/module.zip"
 
   aws_account_id = var.aws_account_id
   aws_region     = var.aws_region
-  log_group_name = module.monitoring.log_group.name
+  log_group      = module.monitoring.log_group
   module_prefix  = "${var.global_prefix}-job-processor"
   stage_name     = var.environment_type
   dashboard_name = var.global_prefix
