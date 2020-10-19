@@ -1,6 +1,6 @@
 import * as AWS from "aws-sdk";
 import { Context } from "aws-lambda";
-import { EnvironmentVariableProvider, JobParameterBag, JobProfile, McmaException, McmaTracker, NotificationEndpoint, NotificationEndpointProperties, TransformJob } from "@mcma/core";
+import { JobParameterBag, JobProfile, McmaException, McmaTracker, NotificationEndpoint, NotificationEndpointProperties, TransformJob } from "@mcma/core";
 import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { AwsS3FileLocator, AwsS3FolderLocator } from "@mcma/aws-s3";
@@ -8,8 +8,7 @@ import { awsV4Auth } from "@mcma/aws-client";
 
 const StepFunctions = new AWS.StepFunctions();
 
-const environmentVariableProvider = new EnvironmentVariableProvider();
-const resourceManager = new ResourceManager(getResourceManagerConfig(environmentVariableProvider), new AuthProvider().add(awsV4Auth(AWS)));
+const resourceManager = new ResourceManager(getResourceManagerConfig(), new AuthProvider().add(awsV4Auth(AWS)));
 const loggerProvider = new AwsCloudWatchLoggerProvider("conform-workflow-07a-short-transcode", process.env.LogGroupName);
 
 // Environment Variable(AWS Lambda)

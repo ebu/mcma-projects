@@ -188,16 +188,6 @@ resource "aws_api_gateway_stage" "workflow_service_gateway_stage" {
   stage_name    = var.environment_type
   deployment_id = aws_api_gateway_deployment.workflow_service_deployment.id
   rest_api_id   = aws_api_gateway_rest_api.workflow_service_api.id
-
-  variables = {
-    TableName         = aws_dynamodb_table.workflow_service_table.name
-    PublicUrl         = local.workflow_service_url
-    ServicesUrl       = var.services_url
-    ServicesAuthType  = var.services_auth_type
-    WorkerFunctionId  = aws_lambda_function.workflow_service_worker.function_name
-    AiWorkflowId      = var.ai_workflow_id
-    ConformWorkflowId = var.conform_workflow_id
-  }
 }
 
 locals {

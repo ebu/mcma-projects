@@ -156,11 +156,6 @@ resource "aws_api_gateway_stage" "media_repository_gateway_stage" {
   stage_name    = var.environment_type
   deployment_id = aws_api_gateway_deployment.media_repository_deployment.id
   rest_api_id   = aws_api_gateway_rest_api.media_repository_api.id
-
-  variables = {
-    TableName = aws_dynamodb_table.media_repository_table.name
-    PublicUrl = local.media_repository_url
-  }
 }
 
 locals {

@@ -7,7 +7,7 @@ export class WorkflowJobViewModel {
 
     constructor(public workflowJob: WorkflowJob, fakeRunning = false) {
         if (fakeRunning) {
-            workflowJob.status = "RUNNING";
+            workflowJob.status = JobStatus.Running;
         }
     }
 

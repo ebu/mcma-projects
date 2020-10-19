@@ -1,7 +1,7 @@
 import { Context } from "aws-lambda";
 import * as AWS from "aws-sdk";
 
-import { EnvironmentVariableProvider, WorkflowJob } from "@mcma/core";
+import { WorkflowJob } from "@mcma/core";
 import { AuthProvider, ResourceManagerProvider } from "@mcma/client";
 import { ProcessJobAssignmentOperation, ProviderCollection, Worker, WorkerRequest, WorkerRequestProperties } from "@mcma/worker";
 import { DynamoDbTableProvider } from "@mcma/aws-dynamodb";
@@ -12,14 +12,12 @@ import { processNotification, runWorkflow } from "./profiles/run-workflow";
 
 const authProvider = new AuthProvider().add(awsV4Auth(AWS));
 const dbTableProvider = new DynamoDbTableProvider();
-const contextVariableProvider = new EnvironmentVariableProvider();
 const loggerProvider = new AwsCloudWatchLoggerProvider("workflow-service-worker", process.env.LogGroupName);
 const resourceManagerProvider = new ResourceManagerProvider(authProvider);
 
 const providerCollection = new ProviderCollection({
     authProvider,
     dbTableProvider,
-    contextVariableProvider,
     loggerProvider,
     resourceManagerProvider
 });

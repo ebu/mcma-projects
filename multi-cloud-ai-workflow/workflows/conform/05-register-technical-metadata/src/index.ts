@@ -1,6 +1,6 @@
 import * as AWS from "aws-sdk";
 import { Context } from "aws-lambda";
-import { EnvironmentVariableProvider, Job, JobParameterBag, McmaException, McmaTracker, NotificationEndpointProperties } from "@mcma/core";
+import { Job, JobParameterBag, McmaException, McmaTracker, NotificationEndpointProperties } from "@mcma/core";
 import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { awsV4Auth } from "@mcma/aws-client";
@@ -9,8 +9,7 @@ import { BMContent, BMEssence } from "@local/common";
 
 const S3 = new AWS.S3();
 
-const environmentVariableProvider = new EnvironmentVariableProvider();
-const resourceManager = new ResourceManager(getResourceManagerConfig(environmentVariableProvider), new AuthProvider().add(awsV4Auth(AWS)));
+const resourceManager = new ResourceManager(getResourceManagerConfig(), new AuthProvider().add(awsV4Auth(AWS)));
 const loggerProvider = new AwsCloudWatchLoggerProvider("conform-workflow-05-register-technical-metadata", process.env.LogGroupName);
 
 type InputEvent = {

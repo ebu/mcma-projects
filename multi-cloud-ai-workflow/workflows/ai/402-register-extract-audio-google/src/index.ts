@@ -3,7 +3,7 @@ import { Context } from "aws-lambda";
 
 import { v4 as uuidv4 } from "uuid";
 
-import { EnvironmentVariableProvider, Job, JobParameterBag, McmaException, McmaTracker } from "@mcma/core";
+import { Job, JobParameterBag, McmaException, McmaTracker } from "@mcma/core";
 import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { awsV4Auth } from "@mcma/aws-client";
@@ -14,8 +14,7 @@ const { RepositoryBucket } = process.env;
 
 const s3 = new AWS.S3();
 
-const environmentVariableProvider = new EnvironmentVariableProvider();
-const resourceManager = new ResourceManager(getResourceManagerConfig(environmentVariableProvider), new AuthProvider().add(awsV4Auth(AWS)));
+const resourceManager = new ResourceManager(getResourceManagerConfig(), new AuthProvider().add(awsV4Auth(AWS)));
 const loggerProvider = new AwsCloudWatchLoggerProvider("ai-workflow-402-register-extract-audio-google", process.env.LogGroupName);
 
 type InputEvent = {

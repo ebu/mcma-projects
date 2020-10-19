@@ -1,6 +1,6 @@
 import * as AWS from "aws-sdk";
 import { Context } from "aws-lambda";
-import { AIJob, EnvironmentVariableProvider, JobParameterBag, JobProfile, McmaException, McmaTracker, NotificationEndpoint } from "@mcma/core";
+import { AIJob, JobParameterBag, JobProfile, McmaException, McmaTracker, NotificationEndpoint } from "@mcma/core";
 import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { AwsS3FileLocator, AwsS3FolderLocator } from "@mcma/aws-s3";
@@ -8,8 +8,7 @@ import { awsV4Auth } from "@mcma/aws-client";
 
 const StepFunctions = new AWS.StepFunctions();
 
-const environmentVariableProvider = new EnvironmentVariableProvider();
-const resourceManager = new ResourceManager(getResourceManagerConfig(environmentVariableProvider), new AuthProvider().add(awsV4Auth(AWS)));
+const resourceManager = new ResourceManager(getResourceManagerConfig(), new AuthProvider().add(awsV4Auth(AWS)));
 const loggerProvider = new AwsCloudWatchLoggerProvider("ai-workflow-111-dubbing-srt", process.env.LogGroupName);
 
 // Environment Variable(AWS Lambda)

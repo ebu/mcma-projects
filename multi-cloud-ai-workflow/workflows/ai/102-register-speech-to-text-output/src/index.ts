@@ -3,7 +3,7 @@ import { Context } from "aws-lambda";
 // @ts-ignore
 import * as srtConvert from "aws-transcription-to-srt";
 
-import { EnvironmentVariableProvider, Job, JobParameterBag, McmaException, McmaTracker } from "@mcma/core";
+import { Job, JobParameterBag, McmaException, McmaTracker } from "@mcma/core";
 import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { AwsS3FileLocator, AwsS3FileLocatorProperties, getS3Url } from "@mcma/aws-s3";
@@ -13,8 +13,7 @@ import { BMContent, BMEssence } from "@local/common";
 
 const S3 = new AWS.S3();
 
-const environmentVariableProvider = new EnvironmentVariableProvider();
-const resourceManager = new ResourceManager(getResourceManagerConfig(environmentVariableProvider), new AuthProvider().add(awsV4Auth(AWS)));
+const resourceManager = new ResourceManager(getResourceManagerConfig(), new AuthProvider().add(awsV4Auth(AWS)));
 const loggerProvider = new AwsCloudWatchLoggerProvider("ai-workflow-102-register-speech-to-text-output", process.env.LogGroupName);
 
 // Environment Variable(AWS Lambda)

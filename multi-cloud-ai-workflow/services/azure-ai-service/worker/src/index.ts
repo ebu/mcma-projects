@@ -1,6 +1,6 @@
 import { Context } from "aws-lambda";
 import * as AWS from "aws-sdk";
-import { AIJob, EnvironmentVariableProvider } from "@mcma/core";
+import { AIJob } from "@mcma/core";
 import { AuthProvider, ResourceManagerProvider } from "@mcma/client";
 import { ProcessJobAssignmentOperation, ProviderCollection, Worker, WorkerRequest, WorkerRequestProperties } from "@mcma/worker";
 import { DynamoDbTableProvider } from "@mcma/aws-dynamodb";
@@ -11,14 +11,12 @@ import { extractAllAiMetadata, processNotification } from "./profiles/extract-al
 
 const authProvider = new AuthProvider().add(awsV4Auth(AWS));
 const dbTableProvider = new DynamoDbTableProvider();
-const contextVariableProvider = new EnvironmentVariableProvider();
 const loggerProvider = new AwsCloudWatchLoggerProvider("azure-ai-service-worker", process.env.LogGroupName);
 const resourceManagerProvider = new ResourceManagerProvider(authProvider);
 
 const providerCollection = new ProviderCollection({
     authProvider,
     dbTableProvider,
-    contextVariableProvider,
     loggerProvider,
     resourceManagerProvider
 });

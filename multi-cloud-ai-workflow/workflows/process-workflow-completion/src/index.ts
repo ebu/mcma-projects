@@ -1,12 +1,11 @@
 import * as AWS from "aws-sdk";
 import { Context } from "aws-lambda";
-import { EnvironmentVariableProvider, JobStatus, McmaTracker, NotificationEndpointProperties } from "@mcma/core";
+import { JobStatus, McmaTracker, NotificationEndpointProperties } from "@mcma/core";
 import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { awsV4Auth } from "@mcma/aws-client";
 
-const environmentVariableProvider = new EnvironmentVariableProvider();
-const resourceManager = new ResourceManager(getResourceManagerConfig(environmentVariableProvider), new AuthProvider().add(awsV4Auth(AWS)));
+const resourceManager = new ResourceManager(getResourceManagerConfig(), new AuthProvider().add(awsV4Auth(AWS)));
 const loggerProvider = new AwsCloudWatchLoggerProvider("process-workflow-completion", process.env.LogGroupName);
 
 type InputEvent = {

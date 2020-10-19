@@ -43,6 +43,7 @@ task installAngularCLI {
 
 task build(type: Exec) {
     dependsOn npmInstall, installAngularCLI
+    inputs.dir("node_modules")
     inputs.dir("src")
     outputs.dir("dist")
     commandLine ngExecutable
