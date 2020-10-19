@@ -1,10 +1,12 @@
 import * as AWS from "aws-sdk";
-import { AIJob, getTableName, McmaException, ProblemDetail } from "@mcma/core";
+import { AIJob, EnvironmentVariables, McmaException, ProblemDetail } from "@mcma/core";
+import { getTableName } from "@mcma/data";
 import { ProcessJobAssignmentHelper, ProviderCollection, WorkerRequest } from "@mcma/worker";
 import { AwsS3FileLocator, AwsS3FileLocatorProperties, AwsS3FolderLocatorProperties, getS3Url } from "@mcma/aws-s3";
 
 const S3 = new AWS.S3();
 const TranscribeService = new AWS.TranscribeService();
+const environmentVariables = EnvironmentVariables.getInstance();
 
 export async function transcribeAudio(providers: ProviderCollection, jobAssignmentHelper: ProcessJobAssignmentHelper<AIJob>) {
     const logger = jobAssignmentHelper.logger;
@@ -40,7 +42,7 @@ export async function transcribeAudio(providers: ProviderCollection, jobAssignme
             MediaFileUri: mediaFileUrl
         },
         MediaFormat: mediaFormat,
-        OutputBucketName: providers.contextVariableProvider.getRequiredContextVariable<string>("ServiceOutputBucket")
+        OutputBucketName: environmentVariables.get("ServiceOutputBucket")
     };
 
     logger.debug("2.4 call speech to text service");
@@ -56,8 +58,8 @@ export async function transcribeAudio(providers: ProviderCollection, jobAssignme
 
 export async function processTranscribeJobResult(providers: ProviderCollection, workerRequest: WorkerRequest) {
     const jobAssignmentHelper = new ProcessJobAssignmentHelper(
-        await providers.dbTableProvider.get(getTableName(providers.contextVariableProvider)),
-        providers.resourceManagerProvider.get(providers.contextVariableProvider),
+        await providers.dbTableProvider.get(getTableName(environmentVariables)),
+        providers.resourceManagerProvider.get(environmentVariables),
         workerRequest);
 
     const logger = jobAssignmentHelper.logger;

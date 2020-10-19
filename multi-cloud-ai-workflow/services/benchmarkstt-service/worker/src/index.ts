@@ -1,7 +1,7 @@
 import * as AWS from "aws-sdk";
 import { Context } from "aws-lambda";
 
-import { EnvironmentVariableProvider, QAJob } from "@mcma/core";
+import { QAJob } from "@mcma/core";
 import { AuthProvider, ResourceManagerProvider } from "@mcma/client";
 import { ProcessJobAssignmentOperation, ProviderCollection, Worker, WorkerRequest, WorkerRequestProperties } from "@mcma/worker";
 import { DynamoDbTableProvider } from "@mcma/aws-dynamodb";
@@ -11,14 +11,12 @@ import { awsV4Auth } from "@mcma/aws-client";
 
 const authProvider = new AuthProvider().add(awsV4Auth(AWS));
 const dbTableProvider = new DynamoDbTableProvider();
-const contextVariableProvider = new EnvironmentVariableProvider();
 const loggerProvider = new AwsCloudWatchLoggerProvider("benchmarkstt-service-worker", process.env.LogGroupName);
 const resourceManagerProvider = new ResourceManagerProvider(authProvider);
 
 const providerCollection = new ProviderCollection({
     authProvider,
     dbTableProvider,
-    contextVariableProvider,
     loggerProvider,
     resourceManagerProvider
 });

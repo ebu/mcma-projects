@@ -1,10 +1,12 @@
 import * as crypto from "crypto";
 import * as AWS from "aws-sdk";
 import { ProcessJobAssignmentHelper, ProviderCollection } from "@mcma/worker";
-import { AIJob } from "@mcma/core";
+import { AIJob, EnvironmentVariables } from "@mcma/core";
 import { AwsS3FileLocator } from "@mcma/aws-s3";
 
 const Rekognition = new AWS.Rekognition();
+
+const environmentVariables = EnvironmentVariables.getInstance();
 
 export async function detectCelebrities(providers: ProviderCollection, jobAssignmentHelper: ProcessJobAssignmentHelper<AIJob>) {
     const logger = jobAssignmentHelper.logger;
@@ -26,8 +28,8 @@ export async function detectCelebrities(providers: ProviderCollection, jobAssign
         ClientRequestToken: clientToken,
         JobTag: base64JobId,
         NotificationChannel: {
-            RoleArn: providers.contextVariableProvider.getRequiredContextVariable<string>("RekoSnsRoleArn"),
-            SNSTopicArn: providers.contextVariableProvider.getRequiredContextVariable<string>("SnsTopicArn")
+            RoleArn: environmentVariables.get("RekoSnsRoleArn"),
+            SNSTopicArn: environmentVariables.get("SnsTopicArn")
         }
     };
 

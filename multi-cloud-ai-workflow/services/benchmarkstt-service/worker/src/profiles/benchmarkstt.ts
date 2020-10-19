@@ -3,13 +3,14 @@ import { ECS, S3 } from "aws-sdk";
 import { Client as RpcClient } from "node-json-rpc2";
 import { v4 as uuidv4 } from "uuid";
 
-import { ContextVariableProvider, EnvironmentVariableProvider, Logger, McmaException, QAJob } from "@mcma/core";
+import { EnvironmentVariables, Logger, McmaException, QAJob } from "@mcma/core";
 import { ProcessJobAssignmentHelper, ProviderCollection } from "@mcma/worker";
 import { AwsS3FileLocator } from "@mcma/aws-s3";
 
+const environmentVariables = EnvironmentVariables.getInstance();
+
 export async function benchmarkstt(providers: ProviderCollection, jobAssignmentHelper: ProcessJobAssignmentHelper<QAJob>) {
     const logger = jobAssignmentHelper.logger;
-    const contextVariableProvider = providers.contextVariableProvider;
 
     const jobInput = jobAssignmentHelper.jobInput;
     const inputFile = <AwsS3FileLocator>jobInput.inputFile;
@@ -37,11 +38,11 @@ export async function benchmarkstt(providers: ProviderCollection, jobAssignmentH
     const referenceText = referenceFileObject.Body.toString();
 
     logger.info("Obtaining service ip address");
-    const ipAddress = await getServiceIpAddress(contextVariableProvider, logger);
+    const ipAddress = await getServiceIpAddress(logger);
     logger.info("IP Address: " + ipAddress);
 
     logger.info("Sending request to benchmarkstt service");
-    const result = await invokeBenchmarksttService(ipAddress, inputText, referenceText, contextVariableProvider, logger);
+    const result = await invokeBenchmarksttService(ipAddress, inputText, referenceText, logger);
     logger.info(result);
 
     const putObjectParams = {
@@ -61,7 +62,7 @@ export async function benchmarkstt(providers: ProviderCollection, jobAssignmentH
     await jobAssignmentHelper.complete();
 }
 
-async function invokeBenchmarksttService(ipAddress: string, inputText: string, referenceText: string, environmentVariableProvider: EnvironmentVariableProvider, logger: Logger): Promise<string> {
+async function invokeBenchmarksttService(ipAddress: string, inputText: string, referenceText: string, logger: Logger): Promise<string> {
 
     let client = new RpcClient({
         host: ipAddress,
@@ -90,9 +91,9 @@ async function invokeBenchmarksttService(ipAddress: string, inputText: string, r
     });
 }
 
-async function getServiceIpAddress(contextVariableProvider: ContextVariableProvider, logger: Logger): Promise<string> {
-    const clusterName = contextVariableProvider.getRequiredContextVariable<string>("EcsClusterName");
-    const benchmarksttServiceName = contextVariableProvider.getRequiredContextVariable<string>("EcsBenchmarksttServiceName");
+async function getServiceIpAddress(logger: Logger): Promise<string> {
+    const clusterName = environmentVariables.get("EcsClusterName");
+    const benchmarksttServiceName = environmentVariables.get("EcsBenchmarksttServiceName");
 
     const ecs = new ECS();
 

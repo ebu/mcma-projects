@@ -15,7 +15,7 @@ import { QueryResults } from "@mcma/data";
 export class ServicesComponent implements OnInit, OnDestroy {
 
     services: Service[] = [];
-    selectedService : Service;
+    selectedService: Service;
 
     jobProfiles = {};
     filteredJobProfiles = [];

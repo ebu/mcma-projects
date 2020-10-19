@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 import { Storage } from "@google-cloud/storage";
 import speech from "@google-cloud/speech";
 
-import { AIJob, EnvironmentVariableProvider, McmaException } from "@mcma/core";
+import { AIJob, EnvironmentVariables, McmaException } from "@mcma/core";
 import { AwsS3FileLocator, AwsS3FileLocatorProperties, AwsS3FolderLocatorProperties } from "@mcma/aws-s3";
 import { google } from "@google-cloud/speech/build/protos/protos";
 import { ProcessJobAssignmentHelper, ProviderCollection } from "@mcma/worker";
@@ -20,12 +20,12 @@ const fsWriteFile = util.promisify(fs.writeFile);
 const fsUnlink = util.promisify(fs.unlink);
 const S3 = new AWS.S3();
 
-const environmentVariables = new EnvironmentVariableProvider();
+const environmentVariables = EnvironmentVariables.getInstance();
 
 async function getGoogleServiceCredentials(): Promise<any> {
     try {
-        const googleServiceCredentialsS3Bucket = environmentVariables.getRequiredContextVariable<string>("GoogleServiceCredentialsS3Bucket");
-        const googleServiceCredentialsS3Key = environmentVariables.getRequiredContextVariable<string>("GoogleServiceCredentialsS3Key");
+        const googleServiceCredentialsS3Bucket = environmentVariables.get("GoogleServiceCredentialsS3Bucket");
+        const googleServiceCredentialsS3Key = environmentVariables.get("GoogleServiceCredentialsS3Key");
 
         const data = await S3.getObject({
             Bucket: googleServiceCredentialsS3Bucket,
@@ -52,7 +52,7 @@ export async function speechToText(providers: ProviderCollection, jobAssignmentH
     logger.info("Client Email: " + googleClientEmail);
     logger.info("Private Key Id: " + googleCredentials.private_key_id);
 
-    const googleBucketName = environmentVariables.getRequiredContextVariable<string>("GoogleBucketName");
+    const googleBucketName = environmentVariables.get("GoogleBucketName");
     logger.info("Using google bucket with name: " + googleBucketName);
 
     const jobInput = jobAssignmentHelper.jobInput;
