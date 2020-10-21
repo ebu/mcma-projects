@@ -1,7 +1,6 @@
 import { Context } from "aws-lambda";
 import * as AWS from "aws-sdk";
 
-import { EnvironmentVariableProvider } from "@mcma/core";
 import { AuthProvider, ResourceManagerProvider } from "@mcma/client";
 import { ProviderCollection, Worker, WorkerRequest, WorkerRequestProperties } from "@mcma/worker";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
@@ -14,7 +13,6 @@ import { cancelJob, deleteJob, failJob, processNotification, restartJob, startJo
 const { TableName, PublicUrl } = process.env;
 
 const authProvider = new AuthProvider().add(awsV4Auth(AWS));
-const contextVariableProvider = new EnvironmentVariableProvider();
 const loggerProvider = new AwsCloudWatchLoggerProvider("job-processor-worker", process.env.LogGroupName);
 const resourceManagerProvider = new ResourceManagerProvider(authProvider);
 
@@ -22,7 +20,6 @@ const dataController = new DataController(TableName, PublicUrl, true);
 
 const providerCollection = new ProviderCollection({
     authProvider,
-    contextVariableProvider,
     loggerProvider,
     resourceManagerProvider
 });

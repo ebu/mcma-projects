@@ -1,7 +1,7 @@
 ﻿import { v4 as uuidv4 } from "uuid";
 import * as AWS from "aws-sdk";
-import { HttpStatusCode, McmaApiRequestContext, McmaApiRouteCollection, } from "@mcma/api";
 import { JobProfile, JobStatus, McmaTracker } from "@mcma/core";
+import { HttpStatusCode, McmaApiRequestContext, McmaApiRouteCollection } from "@mcma/api";
 import { invokeLambdaWorker } from "@mcma/aws-lambda-worker-invoker";
 import { AuthProvider, ResourceManagerProvider } from "@mcma/client";
 import { awsV4Auth } from "@mcma/aws-client";
@@ -43,7 +43,7 @@ export class JobRoutes extends McmaApiRouteCollection {
             let label = job["@type"];
     
             try {
-                const resourceManager = resourceManagerProvider.get(requestContext);
+                const resourceManager = resourceManagerProvider.get();
                 const jobProfile = await resourceManager.get<JobProfile>(job.jobProfile);
                 label += " with JobProfile " + jobProfile.name;
             } catch (error) {
@@ -63,7 +63,6 @@ export class JobRoutes extends McmaApiRouteCollection {
             input: {
                 jobId: job.id
             },
-            contextVariables: requestContext.getAllContextVariables(),
             tracker: job.tracker,
         });
     }
@@ -105,7 +104,6 @@ export class JobRoutes extends McmaApiRouteCollection {
             input: {
                 jobId: job.id
             },
-            contextVariables: requestContext.getAllContextVariables(),
             tracker: job.tracker,
         });
     }
@@ -134,7 +132,6 @@ export class JobRoutes extends McmaApiRouteCollection {
             input: {
                 jobId: job.id
             },
-            contextVariables: requestContext.getAllContextVariables(),
             tracker: job.tracker,
         });
     }
@@ -161,7 +158,6 @@ export class JobRoutes extends McmaApiRouteCollection {
             input: {
                 jobId: job.id
             },
-            contextVariables: requestContext.getAllContextVariables(),
             tracker: job.tracker,
         });
     }

@@ -14,7 +14,12 @@ resource "aws_lambda_function" "mediainfo_service_api_handler" {
 
   environment {
     variables = {
-      LogGroupName = var.global_prefix
+      LogGroupName     = var.global_prefix
+      TableName        = aws_dynamodb_table.mediainfo_service_table.name
+      PublicUrl        = local.mediainfo_service_url
+      ServicesUrl      = local.services_url
+      ServicesAuthType = local.service_registry_auth_type
+      WorkerFunctionId = aws_lambda_function.mediainfo_service_worker.function_name
     }
   }
 }
@@ -43,7 +48,11 @@ resource "aws_lambda_function" "mediainfo_service_worker" {
 
   environment {
     variables = {
-      LogGroupName = var.global_prefix
+      LogGroupName     = var.global_prefix
+      TableName        = aws_dynamodb_table.mediainfo_service_table.name
+      PublicUrl        = local.mediainfo_service_url
+      ServicesUrl      = local.services_url
+      ServicesAuthType = local.service_registry_auth_type
     }
   }
 }
@@ -188,11 +197,6 @@ resource "aws_api_gateway_stage" "mediainfo_service_gateway_stage" {
   rest_api_id   = aws_api_gateway_rest_api.mediainfo_service_api.id
 
   variables = {
-    TableName        = aws_dynamodb_table.mediainfo_service_table.name
-    PublicUrl        = local.mediainfo_service_url
-    ServicesUrl      = local.services_url
-    ServicesAuthType = local.service_registry_auth_type
-    WorkerFunctionId = aws_lambda_function.mediainfo_service_worker.function_name
     DeploymentHash   = filesha256("./services/mediainfo-service.tf")
   }
 }

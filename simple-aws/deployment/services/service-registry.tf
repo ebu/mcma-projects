@@ -14,7 +14,9 @@ resource "aws_lambda_function" "service_registry_api_handler" {
 
   environment {
     variables = {
-      LogGroupName = var.global_prefix
+      LogGroupName   = var.global_prefix
+      TableName      = aws_dynamodb_table.service_registry_table.name
+      PublicUrl      = local.service_registry_url
     }
   }
 }
@@ -159,9 +161,7 @@ resource "aws_api_gateway_stage" "service_registry_gateway_stage" {
   rest_api_id   = aws_api_gateway_rest_api.service_registry_api.id
 
   variables = {
-    TableName      = aws_dynamodb_table.service_registry_table.name
-    PublicUrl      = local.service_registry_url
-    DeploymentHash = filesha256("${path.module}/service-registry.tf")
+    DeploymentHash   = filesha256("./services/service-registry.tf")
   }
 }
 
