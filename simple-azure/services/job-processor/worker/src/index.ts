@@ -1,6 +1,5 @@
 import { AzureFunction, Context } from "@azure/functions";
 import { AppInsightsLoggerProvider } from "@mcma/azure-logger";
-import { EnvironmentVariableProvider } from "@mcma/core";
 import { AuthProvider, ResourceManagerProvider } from "@mcma/client";
 import { ProviderCollection, Worker, WorkerRequest } from "@mcma/worker";
 import { azureAdManagedIdentityAuth } from "@mcma/azure-client";
@@ -12,16 +11,14 @@ import { cancelJob, deleteJob, failJob, processNotification, restartJob, startJo
 const { TableName, PublicUrl } = process.env;
 
 const authProvider = new AuthProvider().add(azureAdManagedIdentityAuth());
-const contextVariableProvider = new EnvironmentVariableProvider();
 const loggerProvider = new AppInsightsLoggerProvider("job-processor-worker");
 const resourceManagerProvider = new ResourceManagerProvider(authProvider);
 
 const dataController = new DataController(TableName, PublicUrl);
-const periodicJobCheckerCronJob = new PeriodicJobCheckerCronJob(new EnvironmentVariableProvider());
+const periodicJobCheckerCronJob = new PeriodicJobCheckerCronJob();
 
 const providerCollection = new ProviderCollection({
     authProvider,
-    contextVariableProvider,
     loggerProvider,
     resourceManagerProvider
 });

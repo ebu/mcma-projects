@@ -8,17 +8,17 @@
     },
     "license": "Apache-2.0",
     "dependencies": {
-        "@mcma/api": "0.13.12",
-        "@mcma/azure-client": "0.13.12",
-        "@mcma/azure-cosmos-db": "0.13.12",
-        "@mcma/azure-functions-api": "0.13.12",
-        "@mcma/azure-logger": "0.13.12",
-        "@mcma/azure-queue-worker-invoker": "0.13.12",
-        "@mcma/client": "0.13.12",
-        "@mcma/core": "0.13.12",
-        "@mcma/data": "0.13.12",
-        "@mcma/encryption": "0.13.12",
-        "@mcma/worker-invoker": "0.13.12"
+        "@mcma/api": "0.13.16",
+        "@mcma/azure-client": "0.13.16",
+        "@mcma/azure-cosmos-db": "0.13.16",
+        "@mcma/azure-functions-api": "0.13.16",
+        "@mcma/azure-logger": "0.13.16",
+        "@mcma/azure-queue-worker-invoker": "0.13.16",
+        "@mcma/client": "0.13.16",
+        "@mcma/core": "0.13.16",
+        "@mcma/data": "0.13.16",
+        "@mcma/encryption": "0.13.16",
+        "@mcma/worker-invoker": "0.13.16"
     },
     "devDependencies": {
         "@azure/functions": "1.2.2",

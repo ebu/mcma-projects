@@ -2,7 +2,7 @@ import * as util from "util";
 import * as fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 
-import { McmaException, TransformJob } from "@mcma/core";
+import { EnvironmentVariables, McmaException, TransformJob } from "@mcma/core";
 import { ProcessJobAssignmentHelper, ProviderCollection } from "@mcma/worker";
 import {
     BlobStorageFileLocator,
@@ -37,7 +37,7 @@ export async function extractThumbnail(providers: ProviderCollection, jobAssignm
     try {
         logger.info("Get video from location: " + inputFile.container + " " + inputFile.filePath);
 
-        const inputFileProxy = getFileProxy(new BlobStorageFileLocator(inputFile), providers.contextVariableProvider);
+        const inputFileProxy = getFileProxy(new BlobStorageFileLocator(inputFile), EnvironmentVariables.getInstance());
         const data = await inputFileProxy.get();
 
         logger.info("Write video to local storage");
@@ -56,7 +56,7 @@ export async function extractThumbnail(providers: ProviderCollection, jobAssignm
                 outputFilePath
             ]);
 
-        const outputFileProxy = getFolderProxy(new BlobStorageFolderLocator(outputLocation), providers.contextVariableProvider);
+        const outputFileProxy = getFolderProxy(new BlobStorageFolderLocator(outputLocation), EnvironmentVariables.getInstance());
         outputFileReader = fs.createReadStream(outputFilePath);
 
         // 9. updating JobAssignment with jobOutput

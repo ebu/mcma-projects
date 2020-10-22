@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as util from "util";
 import { v4 as uuidv4 } from "uuid";
 
-import { AmeJob, McmaException } from "@mcma/core";
+import { AmeJob, EnvironmentVariables, McmaException } from "@mcma/core";
 import { ProcessJobAssignmentHelper, ProviderCollection } from "@mcma/worker";
 import {
     BlobStorageFileLocator,
@@ -38,7 +38,7 @@ export async function extractTechnicalMetadata(providers: ProviderCollection, jo
     try {
         logger.info("Get video from location: " + inputFile.container + " " + inputFile.filePath);
 
-        const inputFileProxy = getFileProxy(new BlobStorageFileLocator(inputFile), providers.contextVariableProvider);
+        const inputFileProxy = getFileProxy(new BlobStorageFileLocator(inputFile), EnvironmentVariables.getInstance());
         const data = await inputFileProxy.get();
 
         logger.info("Write video to local storage");
@@ -53,7 +53,7 @@ export async function extractTechnicalMetadata(providers: ProviderCollection, jo
         }
 
         logger.info("Writing mediaInfo output to output location");
-        const outputFileProxy = getFolderProxy(new BlobStorageFolderLocator(outputLocation), providers.contextVariableProvider);
+        const outputFileProxy = getFolderProxy(new BlobStorageFolderLocator(outputLocation), EnvironmentVariables.getInstance());
 
         jobAssignmentHelper.jobOutput.set(
             "outputFile",

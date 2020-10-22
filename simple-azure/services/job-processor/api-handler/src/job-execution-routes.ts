@@ -83,7 +83,6 @@ export class JobExecutionRoutes extends McmaApiRouteCollection {
                 jobExecutionId: jobExecution.id,
                 notification,
             },
-            contextVariables: requestContext.getAllContextVariables(),
             tracker: job.tracker,
         });
     }
