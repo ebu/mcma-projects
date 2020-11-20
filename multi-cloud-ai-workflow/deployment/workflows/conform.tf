@@ -8,7 +8,7 @@ resource "aws_lambda_function" "conform_01_validate_workflow_input" {
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
   source_code_hash = filebase64sha256("../workflows/conform/01-validate-workflow-input/build/dist/lambda.zip")
-  runtime          = "nodejs10.x"
+  runtime          = "nodejs12.x"
   timeout          = "900"
   memory_size      = "3008"
 
@@ -30,7 +30,7 @@ resource "aws_lambda_function" "conform_02_move_content_to_file_repository" {
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
   source_code_hash = filebase64sha256("../workflows/conform/02-move-content-to-file-repository/build/dist/lambda.zip")
-  runtime          = "nodejs10.x"
+  runtime          = "nodejs12.x"
   timeout          = "900"
   memory_size      = "3008"
 
@@ -52,7 +52,7 @@ resource "aws_lambda_function" "conform_03_create_media_asset" {
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
   source_code_hash = filebase64sha256("../workflows/conform/03-create-media-asset/build/dist/lambda.zip")
-  runtime          = "nodejs10.x"
+  runtime          = "nodejs12.x"
   timeout          = "900"
   memory_size      = "3008"
 
@@ -74,7 +74,7 @@ resource "aws_lambda_function" "conform_04_extract_technical_metadata" {
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
   source_code_hash = filebase64sha256("../workflows/conform/04-extract-technical-metadata/build/dist/lambda.zip")
-  runtime          = "nodejs10.x"
+  runtime          = "nodejs12.x"
   timeout          = "900"
   memory_size      = "3008"
 
@@ -102,7 +102,7 @@ resource "aws_lambda_function" "conform_05_register_technical_metadata" {
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
   source_code_hash = filebase64sha256("../workflows/conform/05-register-technical-metadata/build/dist/lambda.zip")
-  runtime          = "nodejs10.x"
+  runtime          = "nodejs12.x"
   timeout          = "900"
   memory_size      = "3008"
 
@@ -124,7 +124,7 @@ resource "aws_lambda_function" "conform_06_decide_transcode_requirements" {
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
   source_code_hash = filebase64sha256("../workflows/conform/06-decide-transcode-requirements/build/dist/lambda.zip")
-  runtime          = "nodejs10.x"
+  runtime          = "nodejs12.x"
   timeout          = "900"
   memory_size      = "3008"
 
@@ -147,7 +147,7 @@ resource "aws_lambda_function" "conform_07a_short_transcode" {
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
   source_code_hash = filebase64sha256("../workflows/conform/07a-short-transcode/build/dist/lambda.zip")
-  runtime          = "nodejs10.x"
+  runtime          = "nodejs12.x"
   timeout          = "900"
   memory_size      = "3008"
 
@@ -173,7 +173,7 @@ resource "aws_lambda_function" "conform_07b_long_transcode" {
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
   source_code_hash = filebase64sha256("../workflows/conform/07b-long-transcode/build/dist/lambda.zip")
-  runtime          = "nodejs10.x"
+  runtime          = "nodejs12.x"
   timeout          = "900"
   memory_size      = "3008"
 
@@ -201,7 +201,7 @@ resource "aws_lambda_function" "conform_08_register_proxy_essence" {
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
   source_code_hash = filebase64sha256("../workflows/conform/08-register-proxy-essence/build/dist/lambda.zip")
-  runtime          = "nodejs10.x"
+  runtime          = "nodejs12.x"
   timeout          = "900"
   memory_size      = "3008"
 
@@ -223,7 +223,7 @@ resource "aws_lambda_function" "conform_09_copy_proxy_to_website_storage" {
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
   source_code_hash = filebase64sha256("../workflows/conform/09-copy-proxy-to-website-storage/build/dist/lambda.zip")
-  runtime          = "nodejs10.x"
+  runtime          = "nodejs12.x"
   timeout          = "900"
   memory_size      = "3008"
 
@@ -245,7 +245,7 @@ resource "aws_lambda_function" "conform_10_register_proxy_website_locator" {
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
   source_code_hash = filebase64sha256("../workflows/conform/10-register-proxy-website-locator/build/dist/lambda.zip")
-  runtime          = "nodejs10.x"
+  runtime          = "nodejs12.x"
   timeout          = "900"
   memory_size      = "3008"
 
@@ -267,7 +267,7 @@ resource "aws_lambda_function" "conform_11_start_ai_workflow" {
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
   source_code_hash = filebase64sha256("../workflows/conform/11-start-ai-workflow/build/dist/lambda.zip")
-  runtime          = "nodejs10.x"
+  runtime          = "nodejs12.x"
   timeout          = "900"
   memory_size      = "3008"
 

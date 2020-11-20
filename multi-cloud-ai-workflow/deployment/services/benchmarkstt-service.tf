@@ -47,7 +47,7 @@ resource "aws_lambda_function" "benchmarkstt_service_api_handler" {
   role             = aws_iam_role.benchmarkstt_service_lambda_execution.arn
   handler          = "index.handler"
   source_code_hash = filebase64sha256("../services/benchmarkstt-service/api-handler/build/dist/lambda.zip")
-  runtime          = "nodejs10.x"
+  runtime          = "nodejs12.x"
   timeout          = "30"
   memory_size      = "3008"
 
@@ -73,7 +73,7 @@ resource "aws_lambda_function" "benchmarkstt_service_worker" {
   role             = aws_iam_role.benchmarkstt_service_lambda_execution.arn
   handler          = "index.handler"
   source_code_hash = filebase64sha256("../services/benchmarkstt-service/worker/build/dist/lambda.zip")
-  runtime          = "nodejs10.x"
+  runtime          = "nodejs12.x"
   timeout          = "900"
   memory_size      = "3008"
 

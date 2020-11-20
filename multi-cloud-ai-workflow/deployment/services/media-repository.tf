@@ -8,7 +8,7 @@ resource "aws_lambda_function" "media_repository_api_handler" {
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
   source_code_hash = filebase64sha256("../services/media-repository/api-handler/build/dist/lambda.zip")
-  runtime          = "nodejs10.x"
+  runtime          = "nodejs12.x"
   timeout          = "30"
   memory_size      = "3008"
 

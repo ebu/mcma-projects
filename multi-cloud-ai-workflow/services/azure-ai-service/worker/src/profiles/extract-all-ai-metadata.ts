@@ -5,18 +5,18 @@ import * as AWS from "aws-sdk";
 import { ProcessJobAssignmentHelper, ProviderCollection, WorkerRequest } from "@mcma/worker";
 import { HttpClient } from "@mcma/client";
 import { AwsS3FileLocator, AwsS3FileLocatorProperties, AwsS3FolderLocatorProperties, getS3Url } from "@mcma/aws-s3";
-import { AIJob, EnvironmentVariables, ProblemDetail } from "@mcma/core";
+import { AIJob, ConfigVariables, ProblemDetail } from "@mcma/core";
 import { getTableName } from "@mcma/data";
 
 const S3 = new AWS.S3();
 const httpClient = new HttpClient();
-const environmentVariables = EnvironmentVariables.getInstance();
+const configVariables = ConfigVariables.getInstance();
 
 function getAzureConfig() {
-    const apiUrl = environmentVariables.get("AzureApiUrl"); // "https://api.videoindexer.ai"
-    const location = environmentVariables.get("AzureLocation");
-    const accountId = environmentVariables.get("AzureAccountId");
-    const subscriptionKey = environmentVariables.get("AzureSubscriptionKey");
+    const apiUrl = configVariables.get("AzureApiUrl"); // "https://api.videoindexer.ai"
+    const location = configVariables.get("AzureLocation");
+    const accountId = configVariables.get("AzureAccountId");
+    const subscriptionKey = configVariables.get("AzureSubscriptionKey");
 
     return { apiUrl, location, accountId, subscriptionKey };
 }
@@ -70,7 +70,7 @@ export async function extractAllAiMetadata(providers: ProviderCollection, jobAss
     // Generate the call back URL leveraging the non secure api gateway endpoint
 
     const secureHost = new URL(jobAssignmentId).host;
-    const nonSecureHost = new URL(environmentVariables.get("PublicUrlNonSecure")).host;
+    const nonSecureHost = new URL(configVariables.get("PublicUrlNonSecure")).host;
 
     var callbackUrl = jobAssignmentId.replace(secureHost, nonSecureHost);
     callbackUrl = callbackUrl + "/notifications";
@@ -107,8 +107,8 @@ export async function extractAllAiMetadata(providers: ProviderCollection, jobAss
 
 export async function processNotification(providers: ProviderCollection, workerRequest: WorkerRequest) {
     const jobAssignmentHelper = new ProcessJobAssignmentHelper(
-        await providers.dbTableProvider.get(getTableName(environmentVariables)),
-        providers.resourceManagerProvider.get(environmentVariables),
+        await providers.dbTableProvider.get(getTableName()),
+        providers.resourceManagerProvider.get(),
         workerRequest
     );
 

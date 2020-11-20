@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import * as AWS from "aws-sdk";
-import { EnvironmentVariables, McmaException, ProblemDetail } from "@mcma/core";
+import { ConfigVariables, McmaException, ProblemDetail } from "@mcma/core";
 import { getTableName } from "@mcma/data";
 import { ProcessJobAssignmentHelper, ProviderCollection, WorkerRequest } from "@mcma/worker";
 import { AwsS3FileLocator, AwsS3FileLocatorProperties, AwsS3FolderLocatorProperties } from "@mcma/aws-s3";
@@ -8,12 +8,11 @@ import { PromiseResult } from "aws-sdk/lib/request";
 
 const S3 = new AWS.S3();
 const Rekognition = new AWS.Rekognition();
-const environmentVariables = EnvironmentVariables.getInstance();
 
 export async function processRekognitionResult(providers: ProviderCollection, workerRequest: WorkerRequest) {
     const jobAssignmentHelper = new ProcessJobAssignmentHelper(
-        await providers.dbTableProvider.get(getTableName(environmentVariables)),
-        providers.resourceManagerProvider.get(environmentVariables),
+        await providers.dbTableProvider.get(getTableName()),
+        providers.resourceManagerProvider.get(),
         workerRequest
     );
 

@@ -2,19 +2,19 @@ import { APIGatewayProxyEvent, Context } from "aws-lambda";
 import { getTableName } from "@mcma/data";
 import { HttpStatusCode, McmaApiRequestContext, McmaApiRouteCollection } from "@mcma/api";
 import { DynamoDbTableProvider } from "@mcma/aws-dynamodb";
-import { invokeLambdaWorker } from "@mcma/aws-lambda-worker-invoker";
+import { LambdaWorkerInvoker } from "@mcma/aws-lambda-worker-invoker";
 import { getWorkerFunctionId } from "@mcma/worker-invoker";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { ApiGatewayApiController } from "@mcma/aws-api-gateway";
-import { EnvironmentVariables } from "@mcma/core";
 
 const dbTableProvider = new DynamoDbTableProvider();
 const loggerProvider = new AwsCloudWatchLoggerProvider("azure-ai-service-api-handler-non-secure", process.env.LogGroupName);
+const workerInvoker = new LambdaWorkerInvoker();
 
 async function processNotification(requestContext: McmaApiRequestContext) {
     const request = requestContext.request;
 
-    const table = await dbTableProvider.get(getTableName(EnvironmentVariables.getInstance()));
+    const table = await dbTableProvider.get(getTableName());
 
     const jobAssignmentDatabaseId = "/job-assignments/" + request.pathVariables.id;
 
@@ -30,8 +30,8 @@ async function processNotification(requestContext: McmaApiRequestContext) {
         return;
     }
 
-    await invokeLambdaWorker(
-        getWorkerFunctionId(EnvironmentVariables.getInstance()),
+    await workerInvoker.invoke(
+        getWorkerFunctionId(),
         {
             operationName: "ProcessNotification",
             input: {
@@ -45,7 +45,7 @@ async function processNotification(requestContext: McmaApiRequestContext) {
 
 const restController =
     new ApiGatewayApiController(
-        new McmaApiRouteCollection().addRoute("POST", "/job-assignments/{id}/notifications", processNotification), loggerProvider, EnvironmentVariables.getInstance());
+        new McmaApiRouteCollection().addRoute("POST", "/job-assignments/{id}/notifications", processNotification), loggerProvider);
 
 export async function handler(event: APIGatewayProxyEvent, context: Context) {
     const logger = loggerProvider.get(context.awsRequestId);

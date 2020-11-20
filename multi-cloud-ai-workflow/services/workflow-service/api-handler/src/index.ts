@@ -1,20 +1,20 @@
 import { APIGatewayEvent, Context } from "aws-lambda";
-import { EnvironmentVariables } from "@mcma/core";
 import { getTableName } from "@mcma/data";
 import { DefaultJobRouteCollection, McmaApiRequestContext } from "@mcma/api";
 import { DynamoDbTableProvider } from "@mcma/aws-dynamodb";
-import { invokeLambdaWorker } from "@mcma/aws-lambda-worker-invoker";
+import { LambdaWorkerInvoker } from "@mcma/aws-lambda-worker-invoker";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { ApiGatewayApiController } from "@mcma/aws-api-gateway";
 import { getWorkerFunctionId } from "@mcma/worker-invoker";
 
 const dbTableProvider = new DynamoDbTableProvider();
 const loggerProvider = new AwsCloudWatchLoggerProvider("workflow-service-api-handler", process.env.LogGroupName);
+const workerInvoker = new LambdaWorkerInvoker();
 
 async function processNotification(requestContext: McmaApiRequestContext) {
     const request = requestContext.request;
 
-    const table = await dbTableProvider.get(getTableName(EnvironmentVariables.getInstance()));
+    const table = await dbTableProvider.get(getTableName());
 
     const jobAssignmentDatabaseId = "/job-assignments/" + request.pathVariables.id;
 
@@ -30,8 +30,8 @@ async function processNotification(requestContext: McmaApiRequestContext) {
         return;
     }
 
-    await invokeLambdaWorker(
-        getWorkerFunctionId(EnvironmentVariables.getInstance()),
+    await workerInvoker.invoke(
+        getWorkerFunctionId(),
         {
             operationName: "ProcessNotification",
             input: {
@@ -43,10 +43,10 @@ async function processNotification(requestContext: McmaApiRequestContext) {
     );
 }
 
-const routes = new DefaultJobRouteCollection(dbTableProvider, invokeLambdaWorker)
+const routes = new DefaultJobRouteCollection(dbTableProvider, workerInvoker)
     .addRoute("POST", "/job-assignments/{id}/notifications", processNotification);
 
-const restController = new ApiGatewayApiController(routes, loggerProvider, EnvironmentVariables.getInstance());
+const restController = new ApiGatewayApiController(routes, loggerProvider);
 
 export async function handler(event: APIGatewayEvent, context: Context) {
     const logger = loggerProvider.get(context.awsRequestId);

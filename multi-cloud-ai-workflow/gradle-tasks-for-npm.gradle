@@ -1,7 +1,7 @@
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 
-def McmaVersion = "0.13.16"
+def McmaVersion = "0.13.18"
 
 task setMcmaVersion {
     def packageJson = file("package.json")

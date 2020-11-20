@@ -3,8 +3,8 @@
 This example workflow demonstrates how you can leverage AI technologies from multiple cloud vendors in a single media workflow
 
 ## Requirements for running the example
-* Node.js v10.16.3 installed and accessible in PATH. Recommended is to use a node version manager, which allows you to quickly switch between node versions (see more info at [nvm-windows](https://github.com/coreybutler/nvm-windows) for windows support or [nvm](https://github.com/creationix/nvm) for Mac OS and Linux support)
-* Terraform v0.12.19 installed and available in PATH. See the [Terraform website](https://www.terraform.io/)
+* Node.js 12 installed (version 12.19.0 or higher) and accessible in PATH. Recommended is to use a node version manager, which allows you to quickly switch between node versions (see more info at [nvm-windows](https://github.com/coreybutler/nvm-windows) for windows support or [nvm](https://github.com/creationix/nvm) for Mac OS and Linux support)
+* Terraform 0.13 installed (version 0.13.2 or higher) and available in PATH. See the [Terraform website](https://www.terraform.io/)
 * Java JRE or JDK 1.8 or higher to run Gradle build and deploy scripts
 * AWS account
 * Azure video indexer account, a free account can be used for testing. Follow these instructions: https://docs.microsoft.com/en-us/azure/cognitive-services/video-indexer/video-indexer-use-apis

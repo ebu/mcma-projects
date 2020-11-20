@@ -1,12 +1,12 @@
 import * as AWS from "aws-sdk";
-import { AIJob, EnvironmentVariables, McmaException, ProblemDetail } from "@mcma/core";
+import { AIJob, ConfigVariables, McmaException, ProblemDetail } from "@mcma/core";
 import { getTableName } from "@mcma/data";
 import { ProcessJobAssignmentHelper, ProviderCollection, WorkerRequest } from "@mcma/worker";
 import { AwsS3FileLocator, AwsS3FileLocatorProperties, AwsS3FolderLocatorProperties } from "@mcma/aws-s3";
 
 const S3 = new AWS.S3();
 const Polly = new AWS.Polly();
-const environmentVariables = EnvironmentVariables.getInstance();
+const configVariables = ConfigVariables.getInstance();
 
 // A service to generate text to speech using the SSML language combined with AWS Polly
 
@@ -41,7 +41,7 @@ export async function ssmlTextToSpeech(providers: ProviderCollection, jobAssignm
     logger.debug("16.3. call text to speech service: Polly with SSML");
     const params_ssml = {
         OutputFormat: "mp3",
-        OutputS3BucketName: environmentVariables.get("ServiceOutputBucket"),
+        OutputS3BucketName: configVariables.get("ServiceOutputBucket"),
         OutputS3KeyPrefix: "ssmlTextToSpeechJob-" + jobAssignmentDatabaseId.substring(jobAssignmentDatabaseId.lastIndexOf("/") + 1),
         Text: inputText,
         VoiceId: voiceId,
@@ -60,8 +60,8 @@ export async function ssmlTextToSpeech(providers: ProviderCollection, jobAssignm
 // Process result after s3-trigger
 export async function processSsmlTextToSpeechJobResult(providers: ProviderCollection, workerRequest: WorkerRequest) {
     const jobAssignmentHelper = new ProcessJobAssignmentHelper(
-        await providers.dbTableProvider.get(getTableName(environmentVariables)),
-        providers.resourceManagerProvider.get(environmentVariables),
+        await providers.dbTableProvider.get(getTableName()),
+        providers.resourceManagerProvider.get(),
         workerRequest
     );
 
