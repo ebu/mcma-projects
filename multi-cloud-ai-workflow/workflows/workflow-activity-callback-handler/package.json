@@ -3,18 +3,15 @@
     "version": "0.0.0",
     "description": "Workflow activity callback handler",
     "private": true,
-    "engines": {
-        "node": "~10.16.3"
-    },
     "license": "Apache-2.0",
     "dependencies": {
-        "@mcma/api": "0.13.16",
-        "@mcma/aws-api-gateway": "0.13.16",
-        "@mcma/aws-logger": "0.13.16",
-        "@mcma/client": "0.13.16",
-        "@mcma/core": "0.13.16",
-        "@mcma/data": "0.13.16",
-        "@mcma/worker-invoker": "0.13.16",
+        "@mcma/api": "0.13.18",
+        "@mcma/aws-api-gateway": "0.13.18",
+        "@mcma/aws-logger": "0.13.18",
+        "@mcma/client": "0.13.18",
+        "@mcma/core": "0.13.18",
+        "@mcma/data": "0.13.18",
+        "@mcma/worker-invoker": "0.13.18",
         "aws-sdk": "^2.755.0"
     },
     "devDependencies": {

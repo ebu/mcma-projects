@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import { AzureFunction, Context } from "@azure/functions";
 
-import { EnvironmentVariableProvider, Job, JobStatus, McmaTracker, ProblemDetail } from "@mcma/core";
+import { Job, JobStatus, McmaTracker, ProblemDetail } from "@mcma/core";
 import { AppInsightsLoggerProvider } from "@mcma/azure-logger";
 import { invokeQueueTriggeredWorker } from "@mcma/azure-queue-worker-invoker";
 
@@ -13,7 +13,7 @@ const { TableName, PublicUrl, DefaultJobTimeoutInMinutes, WorkerFunctionId } = p
 const loggerProvider = new AppInsightsLoggerProvider("job-processor-periodic-job-checker");
 
 const dataController = new DataController(TableName, PublicUrl);
-const periodicJobCheckerCronJob = new PeriodicJobCheckerCronJob(new EnvironmentVariableProvider());
+const periodicJobCheckerCronJob = new PeriodicJobCheckerCronJob();
 
 export const handler: AzureFunction = async (context: Context) => {
     const tracker = new McmaTracker({
@@ -110,7 +110,6 @@ async function failJob(job: Job, error: ProblemDetail) {
             jobId: job.id,
             error: error,
         },
-        contextVariables: process.env,
         tracker: job.tracker,
     });
 }

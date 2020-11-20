@@ -59,7 +59,6 @@ async function deleteJob(job: Job) {
         input: {
             jobId: job.id,
         },
-        contextVariables: process.env,
         tracker: job.tracker,
     });
 }

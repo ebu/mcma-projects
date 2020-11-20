@@ -8,7 +8,7 @@ resource "aws_lambda_function" "azure_ai_service_api_handler" {
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
   source_code_hash = filebase64sha256("../services/azure-ai-service/api-handler/build/dist/lambda.zip")
-  runtime          = "nodejs10.x"
+  runtime          = "nodejs12.x"
   timeout          = "30"
   memory_size      = "3008"
 
@@ -35,7 +35,7 @@ resource "aws_lambda_function" "azure_ai_service_api_handler_non_secure" {
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
   source_code_hash = filebase64sha256("../services/azure-ai-service/api-handler-non-secure/build/dist/lambda.zip")
-  runtime          = "nodejs10.x"
+  runtime          = "nodejs12.x"
   timeout          = "900"
   memory_size      = "3008"
 
@@ -62,7 +62,7 @@ resource "aws_lambda_function" "azure_ai_service_worker" {
   role             = aws_iam_role.iam_for_exec_lambda.arn
   handler          = "index.handler"
   source_code_hash = filebase64sha256("../services/azure-ai-service/worker/build/dist/lambda.zip")
-  runtime          = "nodejs10.x"
+  runtime          = "nodejs12.x"
   timeout          = "900"
   memory_size      = "3008"
 

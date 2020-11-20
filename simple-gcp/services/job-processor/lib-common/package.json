@@ -1,0 +1,27 @@
+{
+    "name": "@local/job-processor",
+    "version": "0.0.0",
+    "description": "Local helper library for sharing code between api-handler and worker of the job-processor",
+    "private": true,
+    "engines": {
+        "node": "~10.16.3"
+    },
+    "main": "index.js",
+    "types": "index.d.ts",
+    "license": "Apache-2.0",
+    "dependencies": {
+        "uuid": "^7.0.3"
+    },
+    "devDependencies": {
+        "@mcma/google-cloud-firestore": "0.13.16",
+        "@mcma/core": "0.13.16",
+        "@mcma/data": "0.13.16",
+        "@types/node": "^10.17.21",
+        "@types/uuid": "^7.0.3"
+    },
+    "peerDependencies": {
+        "@mcma/google-cloud-firestore": "0.13.16",
+        "@mcma/core": "0.13.16",
+        "@mcma/data": "0.13.16"
+    }
+}

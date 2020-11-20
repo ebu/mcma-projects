@@ -1,10 +1,10 @@
 import * as AWS from "aws-sdk";
-import { EnvironmentVariables, McmaException, NotificationEndpoint, WorkflowJob } from "@mcma/core";
+import { ConfigVariables, McmaException, NotificationEndpoint, WorkflowJob } from "@mcma/core";
 import { getTableName } from "@mcma/data";
 import { ProcessJobAssignmentHelper, ProviderCollection, WorkerRequest } from "@mcma/worker";
 
 const StepFunctions = new AWS.StepFunctions();
-const environmentVariables = EnvironmentVariables.getInstance();
+const configVariables = ConfigVariables.getInstance();
 
 export async function runWorkflow(providers: ProviderCollection, jobAssignmentHelper: ProcessJobAssignmentHelper<WorkflowJob>) {
     const logger = jobAssignmentHelper.logger;
@@ -20,7 +20,7 @@ export async function runWorkflow(providers: ProviderCollection, jobAssignmentHe
 
     const workflowName = jobAssignmentHelper.profile.name;
 
-    const stateMachineArn = environmentVariables.getOptional(workflowName + "Id");
+    const stateMachineArn = configVariables.getOptional(workflowName + "Id");
     if (!stateMachineArn) {
         throw new McmaException("No state machine ARN found for workflow '" + workflowName + "'");
     }
@@ -36,7 +36,7 @@ export async function processNotification(providers: ProviderCollection, workerR
     const jobAssignmentDatabaseId = workerRequest.input.jobAssignmentDatabaseId;
     const notification = workerRequest.input.notification;
 
-    const table = await providers.dbTableProvider.get(getTableName(environmentVariables));
+    const table = await providers.dbTableProvider.get(getTableName());
 
     const jobAssignment = await table.get(jobAssignmentDatabaseId);
 
@@ -52,7 +52,7 @@ export async function processNotification(providers: ProviderCollection, workerR
 
     await table.put(jobAssignmentDatabaseId, jobAssignment);
 
-    const resourceManager = providers.resourceManagerProvider.get(environmentVariables);
+    const resourceManager = providers.resourceManagerProvider.get();
 
     await resourceManager.sendNotification(jobAssignment);
 }

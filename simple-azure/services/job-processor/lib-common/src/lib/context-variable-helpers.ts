@@ -1,18 +1,18 @@
-import { ContextVariableProvider } from "@mcma/core";
+import { EnvironmentVariables } from "@mcma/core";
 
-export function functionName(contextVariableProvider: ContextVariableProvider): string {
-    return contextVariableProvider.getRequiredContextVariable("WEBSITE_SITE_NAME");
+export function functionName(environmentVariables: EnvironmentVariables): string {
+    return environmentVariables.get("WEBSITE_SITE_NAME");
 }
-export function azureSubscriptionId(contextVariableProvider: ContextVariableProvider): string {
-    return contextVariableProvider.getRequiredContextVariable("AzureSubscriptionId");
+export function azureSubscriptionId(environmentVariables: EnvironmentVariables): string {
+    return environmentVariables.get("AzureSubscriptionId");
 }
-export function azureTenantId(contextVariableProvider: ContextVariableProvider): string {
-    return contextVariableProvider.getRequiredContextVariable("AzureTenantId");
+export function azureTenantId(environmentVariables: EnvironmentVariables): string {
+    return environmentVariables.get("AzureTenantId");
 }
-export function azureResourceGroupName(contextVariableProvider: ContextVariableProvider): string {
-    return contextVariableProvider.getRequiredContextVariable("AzureResourceGroupName");
+export function azureResourceGroupName(environmentVariables: EnvironmentVariables): string {
+    return environmentVariables.get("AzureResourceGroupName");
 }
 
-export function jobCheckerWorkflowName(contextVariableProvider: ContextVariableProvider): string {
-    return contextVariableProvider.getRequiredContextVariable("JobCheckerWorkflowName");
+export function jobCheckerWorkflowName(environmentVariables: EnvironmentVariables): string {
+    return environmentVariables.get("JobCheckerWorkflowName");
 }

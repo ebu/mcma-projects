@@ -9,7 +9,7 @@ export async function cancelJob(providers: ProviderCollection, workerRequest: Wo
     const jobId = workerRequest.input.jobId;
 
     const logger = workerRequest.logger;
-    const resourceManager = providers.resourceManagerProvider.get(workerRequest);
+    const resourceManager = providers.resourceManagerProvider.get();
 
     const dataController = context.dataController;
     const mutex = await dataController.createMutex(jobId, context.requestId);

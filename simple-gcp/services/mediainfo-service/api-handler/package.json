@@ -1,0 +1,26 @@
+{
+    "name": "ame-service-api-handler",
+    "version": "0.0.0",
+    "description": "AWS Lambda based AME service leveraging MediaInfo to extract metadata",
+    "private": true,
+    "engines": {
+        "node": "~10.16.3"
+    },
+    "license": "Apache-2.0",
+    "dependencies": {
+        "@mcma/api": "0.13.16",
+        "@mcma/google-cloud-client": "0.13.16",
+        "@mcma/google-cloud-firestore": "0.13.16",
+        "@mcma/google-cloud-http-functions": "0.13.16",
+        "@mcma/google-cloud-logger": "0.13.16",
+        "@mcma/google-cloud-pubsub-worker-invoker": "0.13.16",
+        "@mcma/core": "0.13.16",
+        "@mcma/client": "0.13.16",
+        "@mcma/data": "0.13.16",
+        "@mcma/worker-invoker": "0.13.16"
+    },
+    "devDependencies": {
+        "@types/express": "^4.17.8",
+        "@types/node": "^10.17.21"
+    }
+}

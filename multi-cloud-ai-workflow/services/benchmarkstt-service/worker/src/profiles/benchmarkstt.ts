@@ -3,11 +3,11 @@ import { ECS, S3 } from "aws-sdk";
 import { Client as RpcClient } from "node-json-rpc2";
 import { v4 as uuidv4 } from "uuid";
 
-import { EnvironmentVariables, Logger, McmaException, QAJob } from "@mcma/core";
+import { ConfigVariables, Logger, McmaException, QAJob } from "@mcma/core";
 import { ProcessJobAssignmentHelper, ProviderCollection } from "@mcma/worker";
 import { AwsS3FileLocator } from "@mcma/aws-s3";
 
-const environmentVariables = EnvironmentVariables.getInstance();
+const configVariables = ConfigVariables.getInstance();
 
 export async function benchmarkstt(providers: ProviderCollection, jobAssignmentHelper: ProcessJobAssignmentHelper<QAJob>) {
     const logger = jobAssignmentHelper.logger;
@@ -92,8 +92,8 @@ async function invokeBenchmarksttService(ipAddress: string, inputText: string, r
 }
 
 async function getServiceIpAddress(logger: Logger): Promise<string> {
-    const clusterName = environmentVariables.get("EcsClusterName");
-    const benchmarksttServiceName = environmentVariables.get("EcsBenchmarksttServiceName");
+    const clusterName = configVariables.get("EcsClusterName");
+    const benchmarksttServiceName = configVariables.get("EcsBenchmarksttServiceName");
 
     const ecs = new ECS();
 

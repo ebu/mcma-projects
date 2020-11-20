@@ -1,5 +1,5 @@
 import { AzureFunction, Context } from "@azure/functions";
-import { EnvironmentVariableProvider, TransformJob } from "@mcma/core";
+import { TransformJob } from "@mcma/core";
 import { AuthProvider, ResourceManagerProvider } from "@mcma/client";
 import { ProcessJobAssignmentOperation, ProviderCollection, Worker, WorkerRequest } from "@mcma/worker";
 import { CosmosDbTableProvider, fillOptionsFromEnvironmentVariables } from "@mcma/azure-cosmos-db";
@@ -11,14 +11,12 @@ import { setHostRootDir } from "./ffmpeg";
 
 const authProvider = new AuthProvider().add(azureAdManagedIdentityAuth());
 const dbTableProvider = new CosmosDbTableProvider(fillOptionsFromEnvironmentVariables());
-const contextVariableProvider = new EnvironmentVariableProvider();
 const loggerProvider = new AppInsightsLoggerProvider("ffmpeg-service-worker");
 const resourceManagerProvider = new ResourceManagerProvider(authProvider);
 
 const providerCollection = new ProviderCollection({
     authProvider,
     dbTableProvider,
-    contextVariableProvider,
     loggerProvider,
     resourceManagerProvider
 });

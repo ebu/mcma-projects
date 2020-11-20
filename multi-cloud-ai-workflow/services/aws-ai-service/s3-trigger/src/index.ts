@@ -1,14 +1,15 @@
 import { Context, S3Event } from "aws-lambda";
 import { DynamoDbTableProvider } from "@mcma/aws-dynamodb";
-import { EnvironmentVariables, McmaException } from "@mcma/core";
+import { McmaException } from "@mcma/core";
 import { getTableName } from "@mcma/data";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { AwsS3FileLocator } from "@mcma/aws-s3";
-import { invokeLambdaWorker } from "@mcma/aws-lambda-worker-invoker";
+import { LambdaWorkerInvoker } from "@mcma/aws-lambda-worker-invoker";
 import { getWorkerFunctionId } from "@mcma/worker-invoker";
 
 const dbTableProvider = new DynamoDbTableProvider();
 const loggerProvider = new AwsCloudWatchLoggerProvider("aws-ai-service-s3-trigger", process.env.LogGroupName);
+const workerInvoker = new LambdaWorkerInvoker();
 
 export async function handler(event: S3Event, context: Context) {
     const logger = loggerProvider.get(context.awsRequestId);
@@ -49,13 +50,14 @@ export async function handler(event: S3Event, context: Context) {
 
                 const jobAssignmentDatabaseId = "/job-assignments/" + jobAssignmentGuid;
 
-                const table = await dbTableProvider.get(getTableName(EnvironmentVariables.getInstance()));
+                const table = await dbTableProvider.get(getTableName());
                 const jobAssignment = await table.get(jobAssignmentDatabaseId);
                 if (!jobAssignment) {
                     throw new McmaException("Failed to find JobAssignment with id: " + jobAssignmentDatabaseId);
                 }
 
-                await invokeLambdaWorker(getWorkerFunctionId(EnvironmentVariables.getInstance()),
+                await workerInvoker.invoke(
+                    getWorkerFunctionId(),
                     {
                         operationName,
                         input: {

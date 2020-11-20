@@ -24,7 +24,7 @@ export function buildQuery<T extends JobBaseProperties>(queryParameters: JobReso
     }
 
     if (to !== null && to !== undefined) {
-        filterExpressions.push(new FilterCriteria("dateCreated", ">=", to));
+        filterExpressions.push(new FilterCriteria("dateCreated", "<=", to));
     }
 
     return {

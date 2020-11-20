@@ -1,12 +1,12 @@
 import * as AWS from "aws-sdk";
-import { AIJob, EnvironmentVariables, McmaException, ProblemDetail } from "@mcma/core";
+import { AIJob, ConfigVariables, McmaException, ProblemDetail } from "@mcma/core";
 import { getTableName } from "@mcma/data";
 import { ProcessJobAssignmentHelper, ProviderCollection, WorkerRequest } from "@mcma/worker";
 import { AwsS3FileLocator, AwsS3FileLocatorProperties, AwsS3FolderLocatorProperties } from "@mcma/aws-s3";
 
 const S3 = new AWS.S3();
 const Polly = new AWS.Polly();
-const environmentVariables = EnvironmentVariables.getInstance();
+const configVariables = ConfigVariables.getInstance();
 
 export async function textToSpeech(providers: ProviderCollection, jobAssignmentHelper: ProcessJobAssignmentHelper<AIJob>) {
     const logger = jobAssignmentHelper.logger;
@@ -39,7 +39,7 @@ export async function textToSpeech(providers: ProviderCollection, jobAssignmentH
     logger.debug("12.3. configure and call text to speech service");
     const params = {
         OutputFormat: "mp3",
-        OutputS3BucketName: environmentVariables.get("ServiceOutputBucket"),
+        OutputS3BucketName: configVariables.get("ServiceOutputBucket"),
         OutputS3KeyPrefix: "TextToSpeechJob-" + jobAssignmentDatabaseId.substring(jobAssignmentDatabaseId.lastIndexOf("/") + 1),
         Text: inputText,
         VoiceId: voiceId,
@@ -58,8 +58,8 @@ export async function textToSpeech(providers: ProviderCollection, jobAssignmentH
 
 export async function processTextToSpeechJobResult(providers: ProviderCollection, workerRequest: WorkerRequest) {
     const jobAssignmentHelper = new ProcessJobAssignmentHelper(
-        await providers.dbTableProvider.get(getTableName(environmentVariables)),
-        providers.resourceManagerProvider.get(environmentVariables),
+        await providers.dbTableProvider.get(getTableName()),
+        providers.resourceManagerProvider.get(),
         workerRequest
     );
 

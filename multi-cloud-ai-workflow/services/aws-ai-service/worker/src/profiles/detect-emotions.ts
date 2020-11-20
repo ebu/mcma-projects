@@ -1,12 +1,12 @@
 import * as crypto from "crypto";
 import * as AWS from "aws-sdk";
-import { AIJob, EnvironmentVariables } from "@mcma/core";
+import { AIJob, ConfigVariables } from "@mcma/core";
 import { ProcessJobAssignmentHelper, ProviderCollection } from "@mcma/worker";
 import { AwsS3FileLocatorProperties } from "@mcma/aws-s3";
 
 const Rekognition = new AWS.Rekognition();
 
-const environmentVariables = EnvironmentVariables.getInstance();
+const configVariables = ConfigVariables.getInstance();
 
 export async function detectEmotions(providers: ProviderCollection, jobAssignmentHelper: ProcessJobAssignmentHelper<AIJob>) {
     const logger = jobAssignmentHelper.logger;
@@ -27,8 +27,8 @@ export async function detectEmotions(providers: ProviderCollection, jobAssignmen
         FaceAttributes: "ALL",
         JobTag: base64JobId,
         NotificationChannel: {
-            RoleArn: environmentVariables.get("RekoSnsRoleArn"),
-            SNSTopicArn: environmentVariables.get("SnsTopicArn")
+            RoleArn: configVariables.get("RekoSnsRoleArn"),
+            SNSTopicArn: configVariables.get("SnsTopicArn")
         }
     };
 

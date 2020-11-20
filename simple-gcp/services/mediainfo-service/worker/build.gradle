@@ -1,0 +1,12 @@
+apply from: "${project.rootDir}/gradle-tasks-for-functions.gradle"
+
+task copyExternals(type: Copy) {
+    mustRunAfter tsc
+    from "externals"
+    into "build/staging"
+}
+
+build {
+    dependsOn copyExternals
+    fileMode 0755
+}

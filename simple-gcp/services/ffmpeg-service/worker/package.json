@@ -1,0 +1,27 @@
+{
+    "name": "ffmpeg-service-worker",
+    "version": "0.0.0",
+    "description": "",
+    "private": true,
+    "engines": {
+        "node": "~10.16.3"
+    },
+    "license": "Apache-2.0",
+    "dependencies": {
+        "@mcma/google-cloud-client": "0.13.16",
+        "@mcma/google-cloud-firestore": "0.13.16",
+        "@mcma/google-cloud-logger": "0.13.16",
+        "@mcma/google-cloud-storage": "0.13.16",
+        "@mcma/client": "0.13.16",
+        "@mcma/core": "0.13.16",
+        "@mcma/data": "0.13.16",
+        "@mcma/worker": "0.13.16",
+        "uuid": "^7.0.3"
+    },
+    "devDependencies": {
+        "@google-cloud/functions-framework": "1.7.1",
+        "@google-cloud/pubsub": "2.5.0",
+        "@types/node": "^10.17.39",
+        "@types/uuid": "^7.0.0"
+    }
+}

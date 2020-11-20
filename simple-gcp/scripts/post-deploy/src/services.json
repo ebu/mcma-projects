@@ -1,0 +1,68 @@
+{
+    "ffmpeg_service": {
+        "@type": "Service",
+        "name": "FFmpeg Transform Service",
+        "resources": [
+            {
+                "@type": "ResourceEndpoint",
+                "resourceType": "JobAssignment",
+                "httpEndpoint": "/job-assignments"
+            }
+        ],
+        "authType": "Google",
+        "jobType": "TransformJob",
+        "jobProfileIds": [
+            "ExtractThumbnail"
+        ]
+    },
+    "job_processor": {
+        "@type": "Service",
+        "name": "Job Processor",
+        "resources": [
+            {
+                "@type": "ResourceEndpoint",
+                "resourceType": "AmeJob",
+                "httpEndpoint": "/jobs"
+            },
+            {
+                "@type": "ResourceEndpoint",
+                "resourceType": "TransformJob",
+                "httpEndpoint": "/jobs"
+            }
+        ],
+        "authType": "Google"
+    },
+    "media_repository": {
+        "@type": "Service",
+        "name": "Media Repository",
+        "resources": [
+            {
+                "@type": "ResourceEndpoint",
+                "resourceType": "BMContent",
+                "httpEndpoint": "/bm-contents"
+            },
+            {
+                "@type": "ResourceEndpoint",
+                "resourceType": "BMEssence",
+                "httpEndpoint": "/bm-essences"
+            }
+        ],
+        "authType": "Google"
+    },
+    "mediainfo_service": {
+        "@type": "Service",
+        "name": "MediaInfo AME Service",
+        "resources": [
+            {
+                "@type": "ResourceEndpoint",
+                "resourceType": "JobAssignment",
+                "httpEndpoint": "/job-assignments"
+            }
+        ],
+        "authType": "Google",
+        "jobType": "AmeJob",
+        "jobProfileIds": [
+            "ExtractTechnicalMetadata"
+        ]
+    }
+}
