@@ -13,7 +13,7 @@ config.loadFromPath("../../deployment/aws-credentials.json");
 
 const s3 = new S3();
 
-const TEST_FILE = "../2015_GF_ORF_00_18_09_conv.flac";
+const TEST_FILE = "../2230FW101920flac.flac";
 
 async function sleep(timeout: number) {
     return new Promise((resolve) => setTimeout(() => resolve(), timeout));
@@ -62,8 +62,8 @@ async function main() {
 
     const terraformOutput = JSON.parse(fs.readFileSync("../../deployment/terraform.output.json", "utf8"));
 
-    let servicesUrl = terraformOutput["service_registry_url"]?.value + "/services";
-    let servicesAuthType = terraformOutput["service_registry_auth_type"]?.value;
+    let servicesUrl = terraformOutput["service_registry"]?.value.services_url;
+    let servicesAuthType = terraformOutput["service_registry"]?.value.auth_type;
     let servicesAuthContext = undefined;
 
     const resourceManagerConfig: ResourceManagerConfig = {

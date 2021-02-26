@@ -124,13 +124,11 @@ export async function speechToText(providers: ProviderCollection, jobAssignmentH
 
         const gcsUri = "gs://" + googleBucketName + "/" + tempFileName;
         const encoding = AudioEncoding.FLAC;
-        const sampleRateHertz = 48000;
         const languageCode = "en-US";
         const audioChannelCount = 2;
 
         const config = new RecognitionConfig({
             encoding: encoding,
-            sampleRateHertz: sampleRateHertz,
             audioChannelCount: audioChannelCount,
             languageCode: languageCode,
             enableAutomaticPunctuation: true,
