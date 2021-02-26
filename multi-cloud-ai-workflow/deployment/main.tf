@@ -14,7 +14,7 @@ provider "aws" {
 #########################
 
 module "service_registry" {
-  source = "https://ch-ebu-mcma-module-repository.s3.eu-central-1.amazonaws.com/ebu/service-registry/aws/0.13.18/module.zip"
+  source = "https://ch-ebu-mcma-module-repository.s3.eu-central-1.amazonaws.com/ebu/service-registry/aws/0.13.23/module.zip"
 
   name = "${var.global_prefix}-service-registry"
 
@@ -25,7 +25,7 @@ module "service_registry" {
 }
 
 module "job_processor" {
-  source = "https://ch-ebu-mcma-module-repository.s3.eu-central-1.amazonaws.com/ebu/job-processor/aws/0.13.18/module.zip"
+  source = "https://ch-ebu-mcma-module-repository.s3.eu-central-1.amazonaws.com/ebu/job-processor/aws/0.13.23/module.zip"
 
   name = "${var.global_prefix}-job-processor"
 

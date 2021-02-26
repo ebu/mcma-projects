@@ -30,7 +30,20 @@
                         "styles": [
                             "src/styles.scss"
                         ],
-                        "scripts": []
+                        "scripts": [],
+                        "allowedCommonJsDependencies": [
+                            "@mcma/aws-client",
+                            "@mcma/client",
+                            "@mcma/aws-s3",
+                            "aws-sdk",
+                            "buffer",
+                            "crypto-js/enc-base64",
+                            "crypto-js/hmac-sha256",
+                            "crypto-js/lib-typedarrays",
+                            "crypto-js/sha256",
+                            "isomorphic-unfetch",
+                            "js-cookie"
+                        ]
                     },
                     "configurations": {
                         "production": {
