@@ -1,0 +1,12 @@
+apply from: "../gradle-tasks-for-npm.gradle"
+
+tsc.enabled = false
+
+task build(type: Exec) {
+  dependsOn npmInstall, ":verifyAngularCLI"
+  inputs.dir("node_modules")
+  inputs.dir("src")
+  outputs.dir("dist")
+  commandLine ngExecutable
+  args "build", "--prod", "--base-href", "./index.html", "--progress", "false"
+}

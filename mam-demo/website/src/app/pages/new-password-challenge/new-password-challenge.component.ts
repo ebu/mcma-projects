@@ -6,7 +6,7 @@ import { Router } from "@angular/router";
 import { CognitoAuthService } from "../../services";
 
 @Component({
-  selector: "app-change-password",
+  selector: "app-new-password-challenge",
   templateUrl: "./new-password-challenge.component.html",
   styleUrls: ["./new-password-challenge.component.scss"]
 })

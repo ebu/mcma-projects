@@ -8,12 +8,14 @@ import { AppRoutingModule } from "./app-routing.module";
 import { AppComponent } from "./app.component";
 import { LoginComponent, NewPasswordChallengeComponent } from "./pages"
 import { MaterialModule } from "./vendor";
+import { HomeComponent } from './pages/home/home.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     LoginComponent,
     NewPasswordChallengeComponent,
+    HomeComponent,
   ],
   imports: [
     AppRoutingModule,

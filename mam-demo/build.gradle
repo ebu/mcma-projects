@@ -1,0 +1,180 @@
+def requiredVersionTerraform = "~0.14.4"
+def requiredVersionNodeJS = "^12.19.0"
+def requiredVersionTsc = "^4.0.0"
+def requiredVersionAngularCLI = "^11.2.2"
+
+allprojects {
+    ext {
+        if (org.gradle.internal.os.OperatingSystem.current().isWindows()) {
+            nodeExecutable = ["node"]
+            ngExecutable = ["cmd", "/c", "ng"]
+            npmExecutable = ["cmd", "/c", "npm"]
+            terraformExecutable = ["cmd", "/c", "terraform"]
+            tscExecutable = ["cmd", "/c", "tsc"]
+            ngExecutable = ["cmd", "/c", "ng"]
+        } else {
+            nodeExecutable = ["node"]
+            ngExecutable = ["ng"]
+            npmExecutable = ["npm"]
+            terraformExecutable = ["terraform"]
+            tscExecutable = ["ng"]
+        }
+
+        awsAvailableLibraries = [".bin", "aws-sdk", "buffer", "dynamodb-doc", "events", "ieee754", "jmespath", "lodash", "punycode", "querystring", "url"]
+    }
+}
+
+static def isSemVerMatching(String actual, String expected) {
+    def beginIndex
+    def equalParts
+
+    if (expected.startsWith("^")) {
+        beginIndex = 1
+        equalParts = 1
+    } else if (expected.startsWith("~")) {
+        beginIndex = 1
+        equalParts = 2
+    } else {
+        beginIndex = 0
+        equalParts = 3
+    }
+
+    def expectedParts = expected.substring(beginIndex).split(/\./).collect { it as int }
+    def actualParts = actual.split(/\./).collect { it as int }
+
+    for (def i = 0; i < expectedParts.size(); i++) {
+        if (i < equalParts) {
+            if (actualParts[i] != expectedParts[i]) {
+                return false
+            }
+        } else {
+            if (actualParts[i] > expectedParts[i]) {
+                return true
+            }
+            if (actualParts[i] < expectedParts[i]) {
+                return false
+            }
+        }
+    }
+
+    return true
+}
+
+def getVersionNodeJS() {
+    def stdout = new ByteArrayOutputStream()
+    def stderr = new ByteArrayOutputStream()
+    try {
+        exec {
+            commandLine nodeExecutable
+            args "--version"
+            standardOutput stdout
+            errorOutput stderr
+        }
+    } catch (Exception ignored) {
+    }
+
+    return stdout.toString().trim().replace("v", "")
+}
+
+def getVersionTerraform() {
+    def stdout = new ByteArrayOutputStream()
+    def stderr = new ByteArrayOutputStream()
+    try {
+        exec {
+            commandLine terraformExecutable
+            args "--version"
+            standardOutput stdout
+            errorOutput stderr
+        }
+    } catch (Exception ignored) {
+    }
+
+    return stdout.toString().split("\n")[0].trim().replace("Terraform v", "")
+}
+
+def getVersionTsc() {
+    def stdout = new ByteArrayOutputStream()
+    def stderr = new ByteArrayOutputStream()
+    try {
+        exec {
+            commandLine tscExecutable
+            args "--v"
+            standardOutput stdout
+            errorOutput stderr
+        }
+    } catch (Exception ignored) {
+    }
+
+    return stdout.toString().trim().replace("Version ", "")
+}
+
+def getVersionAngularCLI() {
+    def stdout = new ByteArrayOutputStream()
+    def stderr = new ByteArrayOutputStream()
+    try {
+        exec {
+            commandLine npmExecutable
+            args "list", "-g", "@angular/cli"
+            standardOutput stdout
+            errorOutput stderr
+        }
+    } catch (Exception ignored) {
+    }
+    def outputParts = stdout.toString().trim().split("@")
+    if (outputParts.length == 3) {
+        return outputParts[2]
+    }
+    return ""
+}
+
+task verifyNodeJS {
+    def actualVersion = getVersionNodeJS()
+
+    inputs.property("VERSION_NODE_JS", requiredVersionNodeJS)
+    outputs.upToDateWhen { isSemVerMatching(actualVersion, requiredVersionNodeJS) }
+    doLast {
+        if (!isSemVerMatching(actualVersion, requiredVersionNodeJS)) {
+            throw new Exception("Required Node version " + requiredVersionNodeJS + " not found. Detected version " + actualVersion)
+        }
+    }
+}
+
+task verifyTerraform {
+    def actualVersion = getVersionTerraform()
+
+    inputs.property("VERSION_TERRAFORM", requiredVersionTerraform)
+    outputs.upToDateWhen { isSemVerMatching(actualVersion, requiredVersionTerraform) }
+    doLast {
+        if (!isSemVerMatching(actualVersion, requiredVersionTerraform)) {
+            throw new Exception("Required Terraform version " + requiredVersionTerraform + " not found. Detected version " + actualVersion)
+        }
+    }
+}
+
+task verifyTsc {
+    def actualVersion = getVersionTsc()
+
+    inputs.property("VERSION_TSC", requiredVersionTsc)
+    outputs.upToDateWhen { isSemVerMatching(actualVersion, requiredVersionTsc) }
+    doLast {
+        if (!isSemVerMatching(actualVersion, requiredVersionTsc)) {
+            throw new Exception("Required tsc version " + requiredVersionTsc + " not found. Detected version " + actualVersion)
+        }
+    }
+}
+
+task verifyAngularCLI {
+    def actualVersion = getVersionAngularCLI()
+
+    inputs.property("VERSION_ANGULAR_CLI", requiredVersionAngularCLI)
+    outputs.upToDateWhen { isSemVerMatching(actualVersion, requiredVersionAngularCLI) }
+    doLast {
+        if (!isSemVerMatching(actualVersion, requiredVersionAngularCLI)) {
+            throw new Exception("Required tsc version " + requiredVersionAngularCLI + " not found. Detected version " + actualVersion)
+        }
+    }
+}
+
+task build {
+    dependsOn "website:build"
+}

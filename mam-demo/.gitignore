@@ -1,2 +1,6 @@
 .idea
 .gradle
+gradle.properties
+/deployment/terraform.tfvars.json
+/deployment/website_files.tf.json
+/website/src/config.json

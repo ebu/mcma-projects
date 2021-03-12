@@ -24,7 +24,7 @@ export class AppComponent {
           this.router.navigate(["login"]);
           break;
         case CognitoAuthStatus.MustCompleteNewPasswordChallenge:
-          this.router.navigate(["change-password"]);
+          this.router.navigate(["new-password-challenge"]);
           break;
         case CognitoAuthStatus.Authenticated:
           this.router.navigate([""]);
