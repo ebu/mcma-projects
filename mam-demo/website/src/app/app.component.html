@@ -1,13 +1,42 @@
-<mat-toolbar color="primary" class="mat-elevation-z8" *ngIf="authenticated">
-  <h1>MCMA Media Asset Management Demo</h1>
-  <span class="toolbar-spacer"></span>
-  <h1>{{user?.name}}</h1>
-  <button mat-icon-button
-          aria-label="Logout"
-          matTooltip="Logout"
-          matTooltipPosition="before"
-          (click)="logout()">
-    <mat-icon>exit_to_app</mat-icon>
-  </button>
-</mat-toolbar>
-<router-outlet></router-outlet>
+<div *ngIf="authenticated">
+  <mat-toolbar color="primary" class="mat-elevation-z8">
+    <h1>MCMA Media Asset Management Demo</h1>
+    <span class="toolbar-spacer"></span>
+    <h1>{{user?.name}}</h1>
+    <button mat-icon-button
+            aria-label="Logout"
+            matTooltip="Logout"
+            matTooltipPosition="before"
+            (click)="logout()">
+      <mat-icon>exit_to_app</mat-icon>
+    </button>
+  </mat-toolbar>
+  <mat-sidenav-container class="sidenav-container">
+    <mat-sidenav class="sidenav" mode="side" opened="true">
+      <mat-nav-list>
+        <mat-list-item>
+          <span class="full-width">Browse</span>
+          <mat-icon mat-list-icon>search</mat-icon>
+        </mat-list-item>
+        <mat-list-item>
+          <span class="full-width">Add Asset</span>
+          <mat-icon mat-list-icon>library_add</mat-icon>
+        </mat-list-item>
+        <mat-list-item>
+          <span class="full-width">Workflows</span>
+          <mat-icon mat-list-icon>construction</mat-icon>
+        </mat-list-item>
+        <mat-list-item>
+          <span class="full-width">Settings</span>
+          <mat-icon mat-list-icon>settings</mat-icon>
+        </mat-list-item>
+      </mat-nav-list>
+    </mat-sidenav>
+  </mat-sidenav-container>
+  <div class="sidenav-content">
+    <router-outlet></router-outlet>
+  </div>
+</div>
+<div *ngIf="!authenticated">
+  <router-outlet></router-outlet>
+</div>

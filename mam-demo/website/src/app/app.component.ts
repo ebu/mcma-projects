@@ -10,8 +10,8 @@ import { User } from "./model";
   styleUrls: ["./app.component.scss"]
 })
 export class AppComponent {
-  authenticated: boolean;
-  user: User | null;
+  authenticated: boolean = false;
+  user: User | null = null;
 
   constructor(
     private auth: CognitoAuthService,
@@ -19,9 +19,6 @@ export class AppComponent {
     private route: ActivatedRoute,
     private logger: LoggerService
   ) {
-    this.authenticated = false;
-    this.user = null;
-
     auth.status$.subscribe(status => {
       this.authenticated = status === AuthStatus.Authenticated;
       this.user = auth.getUser();
