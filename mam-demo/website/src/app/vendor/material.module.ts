@@ -15,6 +15,10 @@ import { MatSortModule } from "@angular/material/sort";
 import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 import { MatProgressBarModule } from "@angular/material/progress-bar";
 import { MatSnackBarModule } from "@angular/material/snack-bar";
+import { MaterialFileInputModule } from "ngx-material-file-input";
+import { MatTreeModule } from "@angular/material/tree";
+import { MatCheckboxModule } from "@angular/material/checkbox";
+import { MatStepperModule } from "@angular/material/stepper"
 
 @NgModule({
   exports: [
@@ -33,6 +37,10 @@ import { MatSnackBarModule } from "@angular/material/snack-bar";
     MatProgressSpinnerModule,
     MatProgressBarModule,
     MatSnackBarModule,
+    MatTreeModule,
+    MaterialFileInputModule,
+    MatCheckboxModule,
+    MatStepperModule,
   ]
 })
 export class MaterialModule {

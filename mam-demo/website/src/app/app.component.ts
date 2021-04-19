@@ -1,7 +1,8 @@
 import { Component } from "@angular/core";
-import { Router } from "@angular/router";
-import { CognitoAuthService, CognitoAuthStatus } from "./services"
-import { User } from "./model"
+import { ActivatedRoute, Router } from "@angular/router";
+
+import { AuthStatus, CognitoAuthActionType, CognitoAuthService, LoggerService } from "./services";
+import { User } from "./model";
 
 @Component({
   selector: "app-root",
@@ -12,22 +13,46 @@ export class AppComponent {
   authenticated: boolean;
   user: User | null;
 
-  constructor(private auth: CognitoAuthService, private router: Router) {
+  constructor(
+    private auth: CognitoAuthService,
+    private router: Router,
+    private route: ActivatedRoute,
+    private logger: LoggerService
+  ) {
     this.authenticated = false;
     this.user = null;
 
     auth.status$.subscribe(status => {
-      this.authenticated = status === CognitoAuthStatus.Authenticated;
+      this.authenticated = status === AuthStatus.Authenticated;
       this.user = auth.getUser();
       switch (status) {
-        case CognitoAuthStatus.NotAuthenticated:
-          this.router.navigate(["login"]);
+        case AuthStatus.NotAuthenticated:
+          if (route.routeConfig?.path !== "login") {
+            this.router.navigate(["login"]);
+          }
           break;
-        case CognitoAuthStatus.MustCompleteNewPasswordChallenge:
-          this.router.navigate(["new-password-challenge"]);
+        case AuthStatus.ActionRequired:
+          const authAction = this.auth.getAuthAction();
+          switch (authAction.type) {
+            case CognitoAuthActionType.NewPasswordChallenge:
+              if (route.routeConfig?.path !== "new-password-challenge") {
+                this.router.navigate(["new-password-challenge"]);
+              }
+              break;
+            case CognitoAuthActionType.ForgotPassword:
+              if (route.routeConfig?.path !== "forgot-password") {
+                this.router.navigate(["forgot-password"], { state: { actionData: authAction.data } });
+              }
+              break;
+            default:
+              this.logger.error(`Unexpected authentication action required '${authAction}'`);
+              break;
+          }
           break;
-        case CognitoAuthStatus.Authenticated:
-          this.router.navigate([""]);
+        case AuthStatus.Authenticated:
+          if (route.routeConfig?.path === "login" || route.routeConfig?.path !== "new-password-challenge") {
+            this.router.navigate([""]);
+          }
           break;
       }
     });

@@ -1,39 +1,55 @@
 import { Injectable } from "@angular/core";
 import { BehaviorSubject, Observable, of, zip } from "rxjs";
-import { catchError, distinctUntilChanged, map, shareReplay, switchMap } from "rxjs/operators";
+import { catchError, map, shareReplay, switchMap } from "rxjs/operators";
 import { fromPromise } from "rxjs/internal-compatibility";
 import { CognitoIdentityCredentials } from "aws-sdk";
 import { AuthenticationDetails, CognitoUser, CognitoUserPool, CognitoUserSession, ICognitoUserPoolData } from "amazon-cognito-identity-js";
 
 import { User } from "../../model";
-import { ConfigService } from "../config";
-import { LoggerService } from "../logger";
+import { ConfigService } from "../../services/config";
+import { LoggerService } from "../../services/logger";
 
-export enum CognitoAuthStatus {
+export enum AuthStatus {
   NotAuthenticated,
   Authenticated,
-  MustCompleteNewPasswordChallenge,
+  ActionRequired,
+}
+
+export interface AuthAction {
+  type: string
+  data?: {[key: string]: any}
+}
+
+export enum CognitoAuthActionType {
+  None = "None",
+  NewPasswordChallenge = "NewPasswordChallenge",
+  ForgotPassword = "ForgotPassword",
 }
 
 @Injectable({
   providedIn: "root"
 })
 export class CognitoAuthService {
-  public status$: Observable<CognitoAuthStatus>;
+  public status$: Observable<AuthStatus>;
 
-  private statusSubject: BehaviorSubject<CognitoAuthStatus>;
+  protected statusSubject: BehaviorSubject<AuthStatus>;
+  protected user: User | null;
+  protected credentials: CognitoIdentityCredentials | null;
+
+  private authAction: AuthAction;
+
   private cognitoUserPool: CognitoUserPool | null;
   private cognitoUser: CognitoUser | null;
-  private user: User | null;
-  private credentials: CognitoIdentityCredentials | null;
 
   constructor(private config: ConfigService, private logger: LoggerService) {
-    this.statusSubject = new BehaviorSubject<CognitoAuthStatus>(CognitoAuthStatus.NotAuthenticated);
-    this.status$ = this.statusSubject.pipe(distinctUntilChanged());
-    this.cognitoUserPool = null;
-    this.cognitoUser = null;
+    this.statusSubject = new BehaviorSubject<AuthStatus>(AuthStatus.NotAuthenticated);
+    this.status$ = this.statusSubject.asObservable();
     this.user = null;
     this.credentials = null;
+
+    this.authAction = { type: CognitoAuthActionType.None };
+    this.cognitoUserPool = null;
+    this.cognitoUser = null;
 
     this.getCurrentSession().subscribe(session => {
       this.onCognitoSession(session, "Cognito session loaded from browser");
@@ -46,46 +62,22 @@ export class CognitoAuthService {
     return this.user;
   }
 
-  logout(): Observable<void> {
-    return this.getCurrentCognitoUser().pipe(
-      switchMap(cognitoUser =>
-        new Promise<void>((resolve) => {
-          try {
-            cognitoUser.globalSignOut({
-              onSuccess: msg => {
-                this.onCognitoLogout("logout.globalSignout.onSuccess: " + msg);
-                resolve();
-              },
-              onFailure: error => {
-                this.onCognitoLogout("logout.globalSignout.onFailure: " + error);
-                resolve();
-              }
-            });
-          } catch (error) {
-            this.onCognitoLogout("logout.promise.catchError: " + error);
-            resolve();
-          }
-        })
-      ),
-      catchError(err => {
-        this.onCognitoLogout("logout.rxjs.catchError: " + err);
-        return of(undefined);
-      })
-    );
+  getAuthAction(): AuthAction {
+    return this.authAction;
   }
 
-  login(username: string, password: string): Observable<void> {
+  login(parameters: { username: string, password: string }): Observable<void> {
     return this.getCognitoUserPool().pipe(
       switchMap(userPool => new Promise<void>((resolve, reject) => {
           try {
             this.cognitoUser = new CognitoUser({
-              Username: username,
+              Username: parameters.username,
               Pool: userPool
             });
 
             const authDetails = new AuthenticationDetails({
-              Username: username,
-              Password: password
+              Username: parameters.username,
+              Password: parameters.password
             });
 
             this.logger.info("Starting cognitoUser.authenticateUser");
@@ -97,14 +89,14 @@ export class CognitoAuthService {
               },
               onFailure: (error: any) => {
                 this.logger.info("cognitoUser.authenticateUser => onFailure");
-                this.logger.error(error);
                 reject(error);
               },
               newPasswordRequired: (userAttributes: any, requiredAttributes: any) => {
                 this.logger.info("cognitoUser.authenticateUser => newPasswordRequired");
                 this.logger.info(JSON.stringify(userAttributes));
                 this.logger.info(JSON.stringify(requiredAttributes));
-                this.statusSubject.next(CognitoAuthStatus.MustCompleteNewPasswordChallenge);
+                this.authAction = { type: CognitoAuthActionType.NewPasswordChallenge };
+                this.statusSubject.next(AuthStatus.ActionRequired);
                 resolve();
               },
               mfaRequired: (challengeName: any, challengeParameters: any) => {
@@ -137,7 +129,36 @@ export class CognitoAuthService {
     );
   }
 
+  logout(): Observable<void> {
+    return this.getCurrentCognitoUser().pipe(
+      switchMap(cognitoUser =>
+        new Promise<void>((resolve) => {
+          try {
+            cognitoUser.globalSignOut({
+              onSuccess: msg => {
+                this.onCognitoLogout("logout.globalSignout.onSuccess: " + msg);
+                resolve();
+              },
+              onFailure: error => {
+                this.onCognitoLogout("logout.globalSignout.onFailure: " + error);
+                resolve();
+              }
+            });
+          } catch (error) {
+            this.onCognitoLogout("logout.promise.catchError: " + error);
+            resolve();
+          }
+        })
+      ),
+      catchError(err => {
+        this.onCognitoLogout("logout.rxjs.catchError: " + err);
+        return of(undefined);
+      })
+    );
+  }
+
   completeNewPasswordChallenge(password: string): Observable<void> {
+    this.authAction = { type: CognitoAuthActionType.None };
     return this.getCurrentCognitoUser().pipe(
       switchMap(cognitoUser => new Promise<void>((resolve, reject) => {
         try {
@@ -170,6 +191,124 @@ export class CognitoAuthService {
           return reject(error);
         }
       }))
+    );
+  }
+
+  forgotPassword(username?: string): Observable<void> {
+    return of(1).pipe(
+      map(() => {
+        this.authAction = { type: CognitoAuthActionType.ForgotPassword, data: { username: username } };
+        this.statusSubject.next(AuthStatus.ActionRequired);
+      })
+    );
+  }
+
+  requestPasswordResetCode(username: string): Observable<any> {
+    this.authAction = { type: CognitoAuthActionType.None };
+
+    return this.getCognitoUserPool().pipe(
+      switchMap(userPool => new Promise<void>(
+        (resolve, reject) => {
+          try {
+            this.cognitoUser = new CognitoUser({
+              Username: username,
+              Pool: userPool
+            });
+
+            this.logger.info("Starting cognitoUser.forgotPassword");
+
+            this.cognitoUser.forgotPassword({
+              onSuccess: data => {
+                this.logger.info("cognitoUser.forgotPassword => onSuccess");
+                this.logger.info(data);
+                return resolve(data);
+              },
+              onFailure: err => {
+                this.logger.info("cognitoUser.forgotPassword => onFailure");
+                return reject(err);
+              },
+              inputVerificationCode: data => {
+                this.logger.info("cognitoUser.forgotPassword => inputVerificationCode");
+                this.logger.info(data);
+                return resolve(data);
+              }
+            });
+          } catch (error) {
+            this.logger.info(error);
+            reject(error);
+          }
+        })
+      )
+    );
+  }
+
+  submitPasswordResetCode(username: string, passwordResetCode: string, password: string): Observable<void> {
+    return this.getCognitoUserPool().pipe(
+      switchMap(userPool => new Promise<void>(
+        (resolve, reject) => {
+          try {
+            this.cognitoUser = new CognitoUser({
+              Username: username,
+              Pool: userPool
+            });
+
+            this.logger.info("Starting cognitoUser.confirmPassword");
+
+            this.cognitoUser.confirmPassword(passwordResetCode, password, {
+              onSuccess: () => {
+                this.logger.info("cognitoUser.confirmPassword => onSuccess");
+                resolve();
+              },
+              onFailure: err => {
+                this.logger.info("cognitoUser.confirmPassword => onFailure");
+                reject(err);
+              }
+            });
+          } catch (error) {
+            this.logger.info(error);
+            reject(error);
+          }
+        })
+      )
+    );
+  }
+
+  changePassword(username: string, oldPassword: string, newPassword: string): Observable<void> {
+    return this.getCognitoUserPool().pipe(
+      switchMap(userPool => new Promise<void>((resolve, reject) => {
+          try {
+            const cognitoUser = this.cognitoUser = new CognitoUser({
+              Username: username,
+              Pool: userPool
+            });
+
+            const authDetails = new AuthenticationDetails({
+              Username: username,
+              Password: oldPassword,
+            });
+
+            this.logger.info("Starting cognitoUser.changePassword");
+            this.cognitoUser.authenticateUser(authDetails, {
+              onSuccess: (session: CognitoUserSession) => {
+                cognitoUser.changePassword(oldPassword, newPassword, (err, result) => {
+                  if (err) {
+                    return reject(err);
+                  }
+                  this.onCognitoSession(session, "cognitoUser.authenticateUser => onSuccess");
+                  resolve();
+                });
+              },
+              onFailure: (error: any) => {
+                this.logger.info("cognitoUser.authenticateUser => onFailure");
+                reject(error);
+              },
+            });
+          } catch (error) {
+            this.logger.info(error);
+            reject(error);
+          }
+        })
+      )
     );
   }
 
@@ -244,7 +383,7 @@ export class CognitoAuthService {
       email: session.getIdToken().payload["email"],
       groups: session.getIdToken().payload["cognito:groups"],
     });
-    this.statusSubject.next(CognitoAuthStatus.Authenticated);
+    this.statusSubject.next(AuthStatus.Authenticated);
   }
 
   private onCognitoLogout(source: string) {
@@ -254,6 +393,6 @@ export class CognitoAuthService {
     this.cognitoUser?.signOut();
     this.cognitoUser = null;
     this.user = null;
-    this.statusSubject.next(CognitoAuthStatus.NotAuthenticated);
+    this.statusSubject.next(AuthStatus.NotAuthenticated);
   }
 }

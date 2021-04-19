@@ -1,9 +1,9 @@
 import { Component } from "@angular/core";
-import { FormBuilder, FormControl, FormGroup, FormGroupDirective, NgForm, Validators } from "@angular/forms";
-import { ErrorStateMatcher } from "@angular/material/core";
+import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 import { Router } from "@angular/router";
 
 import { CognitoAuthService } from "../../services";
+import { PasswordErrorStateMatcher } from "../utils";
 
 @Component({
   selector: "app-new-password-challenge",
@@ -19,7 +19,7 @@ export class NewPasswordChallengeComponent {
   constructor(
     private fb: FormBuilder,
     private router: Router,
-    private authService: CognitoAuthService
+    private auth: CognitoAuthService
   ) {
     this.errorMessage = "";
     this.passwordMatcher = new PasswordErrorStateMatcher();
@@ -43,21 +43,12 @@ export class NewPasswordChallengeComponent {
     if (this.form.valid) {
       const password = this.form.get("password")?.value;
 
-      this.authService.completeNewPasswordChallenge(password).subscribe(
+      this.auth.completeNewPasswordChallenge(password).subscribe(
         () => {
         },
         error => {
           this.errorMessage = error.message;
         });
     }
-  }
-}
-
-export class PasswordErrorStateMatcher implements ErrorStateMatcher {
-  isErrorState(control: FormControl | null, form: FormGroupDirective | NgForm | null): boolean {
-    const invalidCtrl = !!(control?.invalid && control?.parent?.dirty);
-    const invalidParent = !!(control?.parent?.invalid && control?.parent?.dirty);
-
-    return invalidCtrl || invalidParent;
   }
 }

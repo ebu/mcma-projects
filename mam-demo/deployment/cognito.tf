@@ -7,15 +7,32 @@ resource "aws_cognito_user_pool" "main" {
     case_sensitive = false
   }
 
+  password_policy {
+    minimum_length = 8
+    require_lowercase = true
+    require_numbers = true
+    require_symbols = true
+    require_uppercase = true
+    temporary_password_validity_days = 30
+  }
+
+  alias_attributes = ["email"]
+
   admin_create_user_config {
     allow_admin_create_user_only = true
+
+    invite_message_template {
+      email_subject = "Invitation to MCMA MAM Demo"
+      email_message = "<p>An account has been created for you to use the MCMA MAM Demo.</p><p>Please go to the <a href=\"https://${aws_cloudfront_distribution.website.domain_name}\">MCMA MAM Demo website</a> and log in with the following credentials.</p><ul><li>username: {username}</li><li>password: {####}</li></ul><p>The provided password is temporary. Upon first login you'll be requested to set a new password.</p>"
+      sms_message   = "Your username is {username} and temporary password is {####}"
+    }
   }
 
   schema {
-    name = "email"
+    name                = "email"
     attribute_data_type = "String"
-    required = true
-    mutable = true
+    required            = true
+    mutable             = true
     string_attribute_constraints {
       min_length = 0
       max_length = 256
@@ -98,7 +115,7 @@ resource "aws_iam_role_policy" "authenticated" {
         Resource  = ["arn:aws:s3:::${aws_s3_bucket.media.id}"]
         Condition = {
           StringLike = {
-            "s3:prefix" = ["upload"]
+            "s3:prefix" = ["$${cognito-identity.amazonaws.com:sub}"]
           }
         }
       },
@@ -111,10 +128,10 @@ resource "aws_iam_role_policy" "authenticated" {
           "s3:DeleteObject"
         ],
         Resource: [
-          "arn:aws:s3:::${aws_s3_bucket.media.id}/upload",
-          "arn:aws:s3:::${aws_s3_bucket.media.id}/upload/*"
+          "arn:aws:s3:::${aws_s3_bucket.media.id}/$${cognito-identity.amazonaws.com:sub}",
+          "arn:aws:s3:::${aws_s3_bucket.media.id}/$${cognito-identity.amazonaws.com:sub}/*"
         ]
-      }
+      },
     ]
   })
 }

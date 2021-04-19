@@ -6,7 +6,7 @@
         The username and password were not recognised
       </mat-error>
       <mat-form-field class="full-width-input">
-        <mat-label>Username</mat-label>
+        <mat-label>Username or email</mat-label>
         <input matInput formControlName="username" required>
         <mat-error>
           Please provide a valid user name
@@ -19,7 +19,10 @@
           Please provide a valid password
         </mat-error>
       </mat-form-field>
-      <button mat-raised-button color="primary">Login</button>
+      <div class="buttons">
+        <button mat-flat-button type="button" (click)="forgotPassword()">Forgot Password?</button>
+        <button mat-raised-button color="primary">Login</button>
+      </div>
     </form>
   </mat-card-content>
 </mat-card>

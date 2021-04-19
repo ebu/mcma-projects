@@ -31,6 +31,7 @@
             "aot": true,
             "assets": [
               "src/favicon.ico",
+              "src/config.json",
               "src/assets"
             ],
             "styles": [
@@ -45,9 +46,11 @@
               "crypto-js/hmac-sha256",
               "crypto-js/lib-typedarrays",
               "crypto-js/sha256",
+              "generate-password",
               "isomorphic-unfetch",
               "js-cookie",
-              "mime-types"
+              "mime-types",
+              "uuid"
             ]
           },
           "configurations": {

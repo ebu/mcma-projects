@@ -2,7 +2,7 @@ import { Component } from "@angular/core";
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 import { Router } from "@angular/router";
 
-import { LoggerService, CognitoAuthService } from "../../services";
+import { CognitoAuthService, LoggerService } from "../../services";
 
 @Component({
   selector: "app-login",
@@ -16,7 +16,7 @@ export class LoginComponent {
   constructor(
     private fb: FormBuilder,
     private router: Router,
-    private authService: CognitoAuthService,
+    private auth: CognitoAuthService,
     private logger: LoggerService
   ) {
     this.loginInvalid = false;
@@ -27,12 +27,12 @@ export class LoginComponent {
     });
   }
 
-  async submit(): Promise<void> {
+  submit() {
     this.loginInvalid = false;
     if (this.form.valid) {
       const username = this.form.get("username")?.value;
       const password = this.form.get("password")?.value;
-      this.authService.login(username, password).subscribe(
+      this.auth.login({ username, password }).subscribe(
         () => {
         },
         error => {
@@ -41,5 +41,10 @@ export class LoginComponent {
         }
       );
     }
+  }
+
+  forgotPassword() {
+    this.logger.info("Forgot password");
+    this.auth.forgotPassword(this.form.get("username")?.value).subscribe();
   }
 }
