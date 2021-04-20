@@ -19,6 +19,8 @@ export class CognitoAuthGuard implements CanActivate {
     route: ActivatedRouteSnapshot,
     state: RouterStateSnapshot): Observable<boolean | UrlTree> {
 
+    console.log(route);
+
     return this.auth.status$.pipe(
       map(authStatus => {
         if (authStatus === AuthStatus.NotAuthenticated && route?.routeConfig?.path !== "login") {
@@ -43,11 +45,12 @@ export class CognitoAuthGuard implements CanActivate {
               this.logger.error(`Unexpected authentication action required '${authAction}'`);
               return false;
           }
-        } else if (authStatus === AuthStatus.Authenticated && (route?.routeConfig?.path === "login" || route?.routeConfig?.path === "new-password-challenge")) {
+        } else if (authStatus === AuthStatus.Authenticated && (route?.routeConfig?.path === "login" || route?.routeConfig?.path === "new-password-challenge" || route?.routeConfig?.path === "forgot-password")) {
           this.router.navigate([""]);
           return false;
         }
 
+        console.log("yes");
         return true;
       })
     );

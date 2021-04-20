@@ -6,17 +6,20 @@ import { ReactiveFormsModule } from "@angular/forms";
 
 import { AppRoutingModule } from "./app-routing.module";
 import { AppComponent } from "./app.component";
-import { LoginComponent, NewPasswordChallengeComponent } from "./pages"
 import { MaterialModule } from "./vendor";
+import { BrowseComponent } from './pages/browse/browse.component';
+import { AddAssetComponent } from './pages/add-asset/add-asset.component';
+import { WorkflowsComponent } from './pages/workflows/workflows.component';
+import { SettingsComponent } from './pages/settings/settings.component';
 import { HomeComponent } from './pages/home/home.component';
-import { ForgotPasswordComponent } from "./pages/forgot-password";
 
 @NgModule({
   declarations: [
     AppComponent,
-    ForgotPasswordComponent,
-    LoginComponent,
-    NewPasswordChallengeComponent,
+    BrowseComponent,
+    AddAssetComponent,
+    WorkflowsComponent,
+    SettingsComponent,
     HomeComponent,
   ],
   imports: [

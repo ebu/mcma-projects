@@ -2,7 +2,6 @@ import { Component } from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
 
 import { AuthStatus, CognitoAuthActionType, CognitoAuthService, LoggerService } from "./services";
-import { User } from "./model";
 
 @Component({
   selector: "app-root",
@@ -10,9 +9,6 @@ import { User } from "./model";
   styleUrls: ["./app.component.scss"]
 })
 export class AppComponent {
-  authenticated: boolean = false;
-  user: User | null = null;
-
   constructor(
     private auth: CognitoAuthService,
     private router: Router,
@@ -20,8 +16,6 @@ export class AppComponent {
     private logger: LoggerService
   ) {
     auth.status$.subscribe(status => {
-      this.authenticated = status === AuthStatus.Authenticated;
-      this.user = auth.getUser();
       switch (status) {
         case AuthStatus.NotAuthenticated:
           if (route.routeConfig?.path !== "login") {
@@ -53,9 +47,5 @@ export class AppComponent {
           break;
       }
     });
-  }
-
-  logout() {
-    this.auth.logout().subscribe();
   }
 }

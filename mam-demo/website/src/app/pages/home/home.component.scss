@@ -1,0 +1,26 @@
+.toolbar-spacer {
+  flex: 1 1 auto;
+}
+
+.sidenav-container {
+  position: fixed;
+  height: 100%;
+}
+
+.sidenav {
+  user-select: none;
+}
+
+.sidenav-content {
+  margin-left: 140px;
+  padding: 2em 2em 2em 2em
+}
+
+.full-width {
+  width: 100%;
+}
+
+.menu-button {
+  transition: 300ms ease-in-out;
+  transform: rotate(0deg);
+}
