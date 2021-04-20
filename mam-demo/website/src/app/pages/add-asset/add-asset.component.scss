@@ -1,0 +1,27 @@
+
+mat-form-field {
+  max-width: 1000px;
+  display: block;
+}
+
+.form {
+  width: 100%;
+}
+
+.horizontal {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+}
+
+.vertical {
+  width: 100%;
+  max-width: 800px;
+  margin-right: 20px;
+}
+
+.align-right {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+}

@@ -1,1 +1,61 @@
-<p>add-asset works!</p>
+<h1>Add new asset</h1>
+<form [formGroup]="form" (ngSubmit)="submit()" class="form">
+  <div class="horizontal">
+    <div class="vertical">
+      <mat-form-field appearance="outline">
+        <mat-label>Title</mat-label>
+        <input matInput formControlName="title" required>
+        <mat-error>
+          Please provide a title
+        </mat-error>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Description</mat-label>
+        <textarea matInput formControlName="description" rows="11"></textarea>
+        <mat-error>
+          Please provide a Description
+        </mat-error>
+      </mat-form-field>
+    </div>
+    <div class="vertical">
+      <mat-form-field appearance="outline">
+        <mat-label>Video File</mat-label>
+        <ngx-mat-file-input formControlName="videoFile" accept=".mxf,.mp4" [required]="true"></ngx-mat-file-input>
+        <mat-icon matSuffix class="attach-file">attach_file</mat-icon>
+        <mat-error>
+          Please select a MP4, MOV or MXF file
+        </mat-error>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Thumbnail File</mat-label>
+        <ngx-mat-file-input #thumbnail formControlName="thumbnailFile" accept=".jpg,.jpeg,.png"></ngx-mat-file-input>
+        <mat-icon matSuffix class="attach-file" *ngIf="thumbnail.empty">attach_file</mat-icon>
+        <mat-icon matSuffix class="clear" *ngIf="!thumbnail.empty" (click)="thumbnail.clear($event)">clear</mat-icon>
+        <mat-error>
+          Please select a JPG or PNG file
+        </mat-error>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Closed Captions File</mat-label>
+        <ngx-mat-file-input #closedCaptions formControlName="closedCaptionsFile" accept=".dfxp"></ngx-mat-file-input>
+        <mat-icon matSuffix class="attach-file" *ngIf="closedCaptions.empty">attach_file</mat-icon>
+        <mat-icon matSuffix class="clear" *ngIf="!closedCaptions.empty" (click)="closedCaptions.clear($event)">clear</mat-icon>
+        <mat-error>
+          Please select a DFXP file
+        </mat-error>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Transcript File</mat-label>
+        <ngx-mat-file-input #transcript formControlName="transcriptFile" accept=".txt"></ngx-mat-file-input>
+        <mat-icon matSuffix class="attach-file" *ngIf="transcript.empty">attach_file</mat-icon>
+        <mat-icon matSuffix class="clear" *ngIf="!transcript.empty" (click)="transcript.clear($event)">clear</mat-icon>
+        <mat-error>
+          Please select a TXT file
+        </mat-error>
+      </mat-form-field>
+      <div class="align-right">
+        <button mat-raised-button color="primary">Submit</button>
+      </div>
+    </div>
+  </div>
+</form>
