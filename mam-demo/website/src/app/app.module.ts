@@ -12,6 +12,7 @@ import { AddAssetComponent } from './pages/add-asset/add-asset.component';
 import { WorkflowsComponent } from './pages/workflows/workflows.component';
 import { SettingsComponent } from './pages/settings/settings.component';
 import { HomeComponent } from './pages/home/home.component';
+import { DialogsModule } from "./dialogs/dialogs.module";
 
 @NgModule({
   declarations: [
@@ -26,6 +27,7 @@ import { HomeComponent } from './pages/home/home.component';
     AppRoutingModule,
     BrowserAnimationsModule,
     BrowserModule,
+    DialogsModule,
     HttpClientModule,
     MaterialModule,
     ReactiveFormsModule

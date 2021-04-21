@@ -1,0 +1,14 @@
+<h1 mat-dialog-title>Uploading {{title}}</h1>
+<div mat-dialog-content>
+  <div class="row">
+    <div>{{percentage | number: "1.1-1"}}% complete</div>
+    <div class="right-column">Upload speed: {{uploadSpeedText}}</div>
+  </div>
+  <mat-progress-bar [value]="percentage"></mat-progress-bar>
+  <div class="below">Name: {{filename}}</div>
+  <div>Time remaining: {{timeRemainingText}}</div>
+  <div>Items remaining: {{filesRemaining}} ({{bytesRemaining | filesize }})</div>
+</div>
+<div mat-dialog-actions>
+  <button mat-raised-button color="warn" (click)="cancel()" class="centered">Cancel</button>
+</div>

@@ -1,0 +1,11 @@
+.button-spacer {
+  flex: 1 1 auto;
+}
+
+.centered {
+  margin: 0 auto 0 auto;
+}
+
+::ng-deep.hide-dialog {
+  visibility: hidden;
+}

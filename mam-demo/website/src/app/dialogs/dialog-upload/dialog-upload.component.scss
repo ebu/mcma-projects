@@ -1,0 +1,16 @@
+.centered {
+  margin: 0 auto 0 auto;
+}
+
+.below {
+  margin-top: 1em;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.right-column {
+  width: 12em;
+}

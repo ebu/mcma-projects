@@ -9,18 +9,18 @@ import { BrowseComponent } from "./pages/browse/browse.component";
 import { HomeComponent } from "./pages/home/home.component";
 
 const routes: Routes = [
-  { path: "login", canActivate: [CognitoAuthGuard], component: LoginComponent },
-  { path: "new-password-challenge", canActivate: [CognitoAuthGuard], component: NewPasswordChallengeComponent },
-  { path: "forgot-password", canActivate: [CognitoAuthGuard], component: ForgotPasswordComponent },
+  { path: "login", component: LoginComponent, canActivate: [CognitoAuthGuard] },
+  { path: "new-password-challenge", component: NewPasswordChallengeComponent, canActivate: [CognitoAuthGuard] },
+  { path: "forgot-password", component: ForgotPasswordComponent, canActivate: [CognitoAuthGuard] },
   {
-    path: "", canActivate: [CognitoAuthGuard], component: HomeComponent,
+    path: "", component: HomeComponent, canActivate: [CognitoAuthGuard],
     children: [
-      { path: "browse", component: BrowseComponent, canActivate: [CognitoAuthGuard] },
-      { path: "add-asset", component: AddAssetComponent, canActivate: [CognitoAuthGuard] },
+      { path: "assets", component: BrowseComponent, canActivate: [CognitoAuthGuard] },
+      { path: "assets/add", component: AddAssetComponent, canActivate: [CognitoAuthGuard] },
       { path: "workflows", component: WorkflowsComponent, canActivate: [CognitoAuthGuard] },
       { path: "settings", component: SettingsComponent, canActivate: [CognitoAuthGuard] },
 
-      { path: "**", redirectTo: "add-asset"}
+      { path: "**", redirectTo: "assets/add"}
     ]
   },
 ];
