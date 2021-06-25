@@ -1,9 +1,9 @@
 locals {
-  config_bucket_name     = "${var.environment_name}.${var.aws_region}.${var.environment_type}.config"
-  upload_bucket_name     = "${var.environment_name}.${var.aws_region}.${var.environment_type}.upload"
-  temp_bucket_name       = "${var.environment_name}.${var.aws_region}.${var.environment_type}.temp"
-  repository_bucket_name = "${var.environment_name}.${var.aws_region}.${var.environment_type}.repository"
-  website_bucket_name    = "${var.environment_name}.${var.aws_region}.${var.environment_type}.website"
+  config_bucket_name     = "${var.environment_name}-${var.environment_type}-config-${var.aws_region}"
+  upload_bucket_name     = "${var.environment_name}-${var.environment_type}-upload-${var.aws_region}"
+  temp_bucket_name       = "${var.environment_name}-${var.environment_type}-temp-${var.aws_region}"
+  repository_bucket_name = "${var.environment_name}-${var.environment_type}-repository-${var.aws_region}"
+  website_bucket_name    = "${var.environment_name}-${var.environment_type}-website-${var.aws_region}"
 }
 
 resource "aws_kms_key" "config" {

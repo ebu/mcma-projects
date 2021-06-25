@@ -24,7 +24,7 @@ resource "aws_iam_role_policy_attachment" "aws_ai_service_allow_full_s3" {
 
 resource "aws_iam_role_policy_attachment" "aws_ai_service_allow_invoke_lambda" {
   role       = aws_iam_role.aws_ai_service_lambda_execution.id
-  policy_arn = "arn:aws:iam::aws:policy/AWSLambdaFullAccess"
+  policy_arn = "arn:aws:iam::aws:policy/AWSLambda_FullAccess"
 }
 
 resource "aws_iam_role_policy_attachment" "aws_ai_service_allow_invoke_api_gateway" {
