@@ -184,7 +184,7 @@ task terraformDestroy(type: Exec) {
     dependsOn generateTerraformTFVars
     dependsOn generateTerraformWebsiteTF
     commandLine terraformExecutable
-    args "destroy", "-force"
+    args "destroy", "-auto-approve"
 }
 
 task terraformOutput(type: Exec) {
