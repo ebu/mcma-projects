@@ -77,7 +77,7 @@ export async function handler(event: InputEvent, context: Context) {
             throw new McmaException("Missing input.metadata.name");
         }
 
-        if (!input.metadata.description) {
+        if (input.metadata.description === undefined || input.metadata.description === null) {
             throw new McmaException("Missing input.metadata.description");
         }
 

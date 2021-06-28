@@ -22,6 +22,11 @@ resource "aws_iam_role_policy_attachment" "aws_ai_service_allow_full_s3" {
   policy_arn = aws_iam_policy.allow_full_s3.arn
 }
 
+resource "aws_iam_role_policy_attachment" "aws_ai_service_allow_iam_pass_role" {
+  role       = aws_iam_role.aws_ai_service_lambda_execution.id
+  policy_arn = aws_iam_policy.allow_iam_pass_role.arn
+}
+
 resource "aws_iam_role_policy_attachment" "aws_ai_service_allow_invoke_lambda" {
   role       = aws_iam_role.aws_ai_service_lambda_execution.id
   policy_arn = "arn:aws:iam::aws:policy/AWSLambda_FullAccess"

@@ -38,6 +38,12 @@ resource "aws_iam_policy" "allow_full_step_functions" {
   policy      = file("policies/allow-full-step-functions.json")
 }
 
+resource "aws_iam_policy" "allow_iam_pass_role" {
+  name        = "${var.global_prefix}.${var.aws_region}.services.allow-iam-pass-role"
+  description = "Policy to allow lambda functions to pass roles"
+  policy      = file("policies/allow-iam-pass-role.json")
+}
+
 resource "aws_iam_policy" "allow_read_only_ecs" {
   name        = "${var.global_prefix}.${var.aws_region}.services.allow-read-only-ecs"
   description = "Policy to allow read only access to ECS"
