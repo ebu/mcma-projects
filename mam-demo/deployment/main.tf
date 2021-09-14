@@ -83,7 +83,7 @@ module "mediainfo_ame_service" {
 ########################################
 
 module "stepfunctions_workflow_service" {
-  source = "https://ch-ebu-mcma-module-repository.s3.eu-central-1.amazonaws.com/ebu/step-functions-workflow-service/aws/0.0.1/module.zip"
+  source = "https://modules-us-east-1-dev.mcma.io/api/modules/ebu/step-functions-workflow-service/AWS/0.0.2"
 
   prefix = "${var.global_prefix}-stepfunctions-workflow-service"
 
