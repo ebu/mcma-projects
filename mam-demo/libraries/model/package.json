@@ -1,0 +1,16 @@
+{
+    "name": "@local/model",
+    "version": "0.0.0",
+    "description": "Library with type definitions",
+    "private": true,
+    "main": "index.js",
+    "types": "index.d.ts",
+    "license": "UNLICENSED",
+    "devDependencies": {
+        "@mcma/core": "0.13.28",
+        "@types/node": "^14.17.24"
+    },
+    "peerDependencies": {
+        "@mcma/core": "0.13.28"
+    }
+}
