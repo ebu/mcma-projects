@@ -1,11 +1,11 @@
 import { Component, OnInit } from "@angular/core";
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 import { FormValidationUtils } from "../utils";
-import { FileInput } from "ngx-material-file-input";
 import { DialogUploadComponent } from "../../dialogs/dialog-upload/dialog-upload.component";
 import { MatDialog } from "@angular/material/dialog";
 import { Router } from "@angular/router";
 import { DialogAssetIngestComponent } from "../../dialogs/dialog-asset-ingest/dialog-asset-ingest.component";
+import { FileInput } from "../../vendor/material-file-input/model/file-input.model";
 
 @Component({
   selector: "app-add-asset",
