@@ -1,16 +1,16 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from "@angular/core/testing";
 
-import { DialogUploadComponent } from './dialog-upload.component';
+import { DialogUploadComponent } from "./dialog-upload.component";
 
-describe('DialogUploadComponent', () => {
+describe("DialogUploadComponent", () => {
   let component: DialogUploadComponent;
   let fixture: ComponentFixture<DialogUploadComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ DialogUploadComponent ]
+      declarations: [DialogUploadComponent]
     })
-    .compileComponents();
+      .compileComponents();
   });
 
   beforeEach(() => {
@@ -19,7 +19,7 @@ describe('DialogUploadComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it("should create", () => {
     expect(component).toBeTruthy();
   });
 });

@@ -1,1 +1,1 @@
-export * from "./filesize"
+export * from "./filesize";

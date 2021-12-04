@@ -1,10 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit } from "@angular/core";
 import { MatDialog, MatDialogRef } from "@angular/material/dialog";
 
 @Component({
-  selector: 'app-dialog-asset-ingest',
-  templateUrl: './dialog-asset-ingest.component.html',
-  styleUrls: ['./dialog-asset-ingest.component.scss']
+  selector: "app-dialog-asset-ingest",
+  templateUrl: "./dialog-asset-ingest.component.html",
+  styleUrls: ["./dialog-asset-ingest.component.scss"]
 })
 export class DialogAssetIngestComponent implements OnInit {
 

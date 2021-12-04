@@ -18,7 +18,7 @@ import { MatSnackBarModule } from "@angular/material/snack-bar";
 import { MaterialFileInputModule } from "ngx-material-file-input";
 import { MatTreeModule } from "@angular/material/tree";
 import { MatCheckboxModule } from "@angular/material/checkbox";
-import { MatStepperModule } from "@angular/material/stepper"
+import { MatStepperModule } from "@angular/material/stepper";
 import { CdkTableModule } from "@angular/cdk/table";
 import { MatAutocompleteModule } from "@angular/material/autocomplete";
 import { MatButtonToggleModule } from "@angular/material/button-toggle";

@@ -1,16 +1,16 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from "@angular/core/testing";
 
-import { DialogAssetIngestComponent } from './dialog-asset-ingest.component';
+import { DialogAssetIngestComponent } from "./dialog-asset-ingest.component";
 
-describe('DialogAssetIngestComponent', () => {
+describe("DialogAssetIngestComponent", () => {
   let component: DialogAssetIngestComponent;
   let fixture: ComponentFixture<DialogAssetIngestComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ DialogAssetIngestComponent ]
+      declarations: [DialogAssetIngestComponent]
     })
-    .compileComponents();
+      .compileComponents();
   });
 
   beforeEach(() => {
@@ -19,7 +19,7 @@ describe('DialogAssetIngestComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it("should create", () => {
     expect(component).toBeTruthy();
   });
 });

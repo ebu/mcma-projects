@@ -19,10 +19,10 @@ export class LoggerService {
   }
 
   get warn() {
-      return console.warn.bind(console);
+    return console.warn.bind(console);
   }
 
   get error() {
-      return console.error.bind(console);
+    return console.error.bind(console);
   }
 }

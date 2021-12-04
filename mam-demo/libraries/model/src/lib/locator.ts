@@ -3,7 +3,7 @@
 import { McmaObject, McmaObjectProperties } from "@mcma/core";
 
 export interface LocatorProperties extends McmaObjectProperties {
-    url: string
+    url: string;
 }
 
 export abstract class Locator extends McmaObject implements LocatorProperties {

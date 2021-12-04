@@ -1,7 +1,7 @@
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 
-def McmaVersion = "0.13.22"
+def McmaVersion = "0.13.28"
 
 task setMcmaVersion {
     def packageJson = file("package.json")
@@ -49,7 +49,7 @@ task npmInstall(type: Exec) {
     def localLibraries = []
     afterEvaluate {
         dependsOn.collect().each {
-            if (it.endsWith(":npmPack")) {
+            if (it instanceof String && it.endsWith(":npmPack")) {
                 def parts = it.toString().split(":")
 
                 def directory = "${project.rootDir}/"

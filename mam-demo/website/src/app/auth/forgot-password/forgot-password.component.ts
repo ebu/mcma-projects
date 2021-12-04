@@ -103,7 +103,7 @@ export class ForgotPasswordComponent {
       this.auth.submitPasswordResetCode(username, passwordResetCode, this.tempPassword).subscribe(() => {
         this.passwordResetCodeCompleted = true;
         stepper.next();
-      })
+      });
     }
   }
 

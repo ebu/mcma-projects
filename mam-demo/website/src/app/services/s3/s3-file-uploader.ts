@@ -18,37 +18,37 @@ enum WorkType {
 }
 
 interface MultipartSegment {
-  partNumber: number
-  start: number
-  end: number
-  length: number
-  uploaded: number
-  etag?: string
+  partNumber: number;
+  start: number;
+  end: number;
+  length: number;
+  uploaded: number;
+  etag?: string;
 }
 
 interface WorkItem {
-  type: WorkType
-  path: string
-  key: string
-  contentType: string
-  file: File
+  type: WorkType;
+  path: string;
+  key: string;
+  contentType: string;
+  file: File;
   singleData?: {
     length: number
     uploaded: number
-  }
+  };
   multipartData?: {
     uploadId: string
     segment?: MultipartSegment
     segments?: MultipartSegment[]
-  }
+  };
 }
 
 interface ActiveWorkItem {
-  workItem: WorkItem
-  request: Request<any, any>
-  promise: Promise<any>
-  result?: any
-  error?: any
+  workItem: WorkItem;
+  request: Request<any, any>;
+  promise: Promise<any>;
+  result?: any;
+  error?: any;
 }
 
 export class S3FileUploader {

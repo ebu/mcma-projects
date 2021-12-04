@@ -7,11 +7,11 @@ import { ReactiveFormsModule } from "@angular/forms";
 import { AppRoutingModule } from "./app-routing.module";
 import { AppComponent } from "./app.component";
 import { MaterialModule } from "./vendor";
-import { BrowseComponent } from './pages/browse/browse.component';
-import { AddAssetComponent } from './pages/add-asset/add-asset.component';
-import { WorkflowsComponent } from './pages/workflows/workflows.component';
-import { SettingsComponent } from './pages/settings/settings.component';
-import { HomeComponent } from './pages/home/home.component';
+import { BrowseComponent } from "./pages/browse/browse.component";
+import { AddAssetComponent } from "./pages/add-asset/add-asset.component";
+import { WorkflowsComponent } from "./pages/workflows/workflows.component";
+import { SettingsComponent } from "./pages/settings/settings.component";
+import { HomeComponent } from "./pages/home/home.component";
 import { DialogsModule } from "./dialogs/dialogs.module";
 
 @NgModule({

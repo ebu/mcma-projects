@@ -1,0 +1,10 @@
+{
+    "compilerOptions": {
+        "module": "CommonJS",
+        "moduleResolution": "node",
+        "target": "ES2019",
+        "downlevelIteration": true,
+        "noImplicitAny": true,
+        "noImplicitReturns": true
+    }
+}

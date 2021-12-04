@@ -71,44 +71,44 @@ export class DialogUploadComponent implements OnInit {
         this.filesRemaining = status.totalFiles - status.uploadedFiles;
         this.bytesRemaining = status.totalBytes - status.uploadedBytes;
 
-          const now = Date.now();
+        const now = Date.now();
 
-          const timeElapsed = now - this.timeRemainingStartTime;
-          const timeSinceLastChange = now - this.timeRemainingTimestamp;
-          if (timeElapsed > 5000 && timeSinceLastChange > 5000) {
-            const bytesPerMs = status.uploadedBytes / timeElapsed;
-            let secondsRemaining = this.bytesRemaining / bytesPerMs / 1000 << 0;
+        const timeElapsed = now - this.timeRemainingStartTime;
+        const timeSinceLastChange = now - this.timeRemainingTimestamp;
+        if (timeElapsed > 5000 && timeSinceLastChange > 5000) {
+          const bytesPerMs = status.uploadedBytes / timeElapsed;
+          let secondsRemaining = this.bytesRemaining / bytesPerMs / 1000 << 0;
 
-            this.timeRemainingTimestamp = now;
+          this.timeRemainingTimestamp = now;
 
-            let text;
-            if (secondsRemaining > 60) {
-              let minutesRemaining = secondsRemaining / 60 << 0;
+          let text;
+          if (secondsRemaining > 60) {
+            let minutesRemaining = secondsRemaining / 60 << 0;
 
-              if (minutesRemaining > 60) {
-                const hoursRemaining = minutesRemaining / 60 << 0;
+            if (minutesRemaining > 60) {
+              const hoursRemaining = minutesRemaining / 60 << 0;
 
-                minutesRemaining = minutesRemaining % 60;
+              minutesRemaining = minutesRemaining % 60;
 
-                text = `About ${hoursRemaining} ` + (hoursRemaining > 1 ? "hours" : "hour");
+              text = `About ${hoursRemaining} ` + (hoursRemaining > 1 ? "hours" : "hour");
 
-                if (minutesRemaining > 0) {
-                  text += ` and ${minutesRemaining} ` + (minutesRemaining > 1 ? "minutes" : "minute");
-                }
-              } else {
-                text = `About ${minutesRemaining} ` + (minutesRemaining > 1 ? "minutes" : "minute");
+              if (minutesRemaining > 0) {
+                text += ` and ${minutesRemaining} ` + (minutesRemaining > 1 ? "minutes" : "minute");
               }
             } else {
-              secondsRemaining = ((secondsRemaining / 5 << 0) + 1) * 5;
-
-              text = `About ${secondsRemaining} seconds`;
+              text = `About ${minutesRemaining} ` + (minutesRemaining > 1 ? "minutes" : "minute");
             }
+          } else {
+            secondsRemaining = ((secondsRemaining / 5 << 0) + 1) * 5;
 
-            if (text !== this.timeRemainingText) {
-              this.timeRemainingText = text;
-              this.timeRemainingTimestamp = now;
-            }
+            text = `About ${secondsRemaining} seconds`;
           }
+
+          if (text !== this.timeRemainingText) {
+            this.timeRemainingText = text;
+            this.timeRemainingTimestamp = now;
+          }
+        }
       }, error => {
         this.logger.error(error);
       }, () => {
@@ -120,7 +120,7 @@ export class DialogUploadComponent implements OnInit {
           if (!targetFolder.endsWith("/")) {
             targetFolder = targetFolder + "/";
           }
-          this.statusSubject.next({ success: true, bucket: s3FileUploader.bucket, filesPrefix: s3FileUploader.identityId + targetFolder});
+          this.statusSubject.next({ success: true, bucket: s3FileUploader.bucket, filesPrefix: s3FileUploader.identityId + targetFolder });
         }, 1);
       });
     });

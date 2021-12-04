@@ -1,7 +1,13 @@
 def requiredVersionTerraform = "~1.0.0"
-def requiredVersionNodeJS = "^12.19.0"
-def requiredVersionTsc = "^4.0.0"
+def requiredVersionNodeJS = "^14.17.4"
+def requiredVersionTsc = "^4.3.5"
 def requiredVersionAngularCLI = "^11.2.2"
+
+buildscript {
+    dependencies {
+        classpath localGroovy()
+    }
+}
 
 allprojects {
     ext {
@@ -177,4 +183,6 @@ task verifyAngularCLI {
 
 task build {
     dependsOn "website:build"
+    dependsOn "service:build"
+    dependsOn "workflows:build"
 }

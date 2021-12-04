@@ -1,2 +1,8 @@
 include "deployment",
-        "website"
+        "libraries:data",
+        "libraries:model",
+        "service:api-handler",
+        "service:worker",
+        "website",
+        "workflows:media-ingest",
+        "workflows:media-ingest:01-validate-input"

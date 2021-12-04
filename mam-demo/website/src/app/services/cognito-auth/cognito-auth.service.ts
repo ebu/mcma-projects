@@ -16,8 +16,8 @@ export enum AuthStatus {
 }
 
 export interface AuthAction {
-  type: string
-  data?: {[key: string]: any}
+  type: string;
+  data?: { [key: string]: any };
 }
 
 export enum CognitoAuthActionType {

@@ -1,0 +1,26 @@
+{
+    "name": "@local/data",
+    "version": "0.0.0",
+    "description": "Library with data controller",
+    "private": true,
+    "main": "index.js",
+    "types": "index.d.ts",
+    "license": "UNLICENSED",
+    "dependencies": {
+        "uuid": "^8.3.2"
+    },
+    "devDependencies": {
+        "@mcma/aws-dynamodb": "0.13.28",
+        "@mcma/core": "0.13.28",
+        "@mcma/data": "0.13.28",
+        "@types/node": "^14.17.24",
+        "@types/uuid": "^8.3.0",
+        "aws-sdk": "^2.1000.0"
+    },
+    "peerDependencies": {
+        "@mcma/aws-dynamodb": "0.13.28",
+        "@mcma/core": "0.13.28",
+        "@mcma/data": "0.13.28",
+        "aws-sdk": "^2.1000.0"
+    }
+}

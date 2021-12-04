@@ -1,7 +1,7 @@
 .idea
 .gradle
 gradle.properties
-/deployment/terraform.tfvars.json
-/deployment/website_files.tf.json
+terraform.tfvars.json
+website_files.tf.json
 /website/src/config.json
-/deployment/.terraform.tfstate.lock.info
+.terraform.tfstate.lock.info
