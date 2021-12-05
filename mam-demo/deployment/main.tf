@@ -45,7 +45,7 @@ module "service" {
 module "website" {
   source = "../website"
 
-  prefix = "${var.global_prefix}-website"
+  prefix = var.global_prefix
 
   environment_type = var.environment_type
 

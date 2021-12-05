@@ -1,5 +1,5 @@
 locals {
-  website_bucket_name = "${var.prefix}-${var.aws_region}"
+  website_bucket_name = "${var.prefix}-website-${var.aws_region}"
 }
 
 ###########

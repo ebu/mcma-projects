@@ -89,14 +89,19 @@ task clean(type: Delete) {
     delete "${projectDir}/terraform.tfvars.json"
 }
 
-task plan {}
-plan.dependsOn(terraformPlan)
+task plan {
+    dependsOn terraformPlan
+}
 
-task apply {}
-apply.dependsOn(terraformApply)
+task apply {
+    dependsOn terraformApply
+}
 
-task deploy {}
-deploy.dependsOn(apply)
+task deploy {
+    dependsOn apply
+    dependsOn ":scripts:post-deploy:run"
+}
 
-task destroy {}
-destroy.dependsOn(terraformDestroy)
+task destroy {
+    dependsOn terraformDestroy
+}

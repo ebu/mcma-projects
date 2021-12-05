@@ -1,5 +1,5 @@
 import { AbstractControl, ValidationErrors, ValidatorFn } from "@angular/forms";
-import { FileInput } from "../../vendor/material-file-input/model/file-input.model";
+import { FileInput } from "ngx-material-file-input";
 
 export namespace FormValidationUtils {
   export function fileExtensions(extensions: string[]): ValidatorFn {

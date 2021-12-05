@@ -34,7 +34,7 @@ import { MatSidenavModule } from "@angular/material/sidenav";
 import { MatSlideToggleModule } from "@angular/material/slide-toggle";
 import { MatSliderModule } from "@angular/material/slider";
 import { MatTabsModule } from "@angular/material/tabs";
-import { MaterialFileInputModule } from "./material-file-input";
+import { MaterialFileInputModule } from "ngx-material-file-input";
 
 @NgModule({
   exports: [

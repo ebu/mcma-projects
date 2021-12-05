@@ -1,7 +1,7 @@
 def requiredVersionTerraform = "~1.0.0"
 def requiredVersionNodeJS = "^14.17.4"
 def requiredVersionTsc = "^4.3.5"
-def requiredVersionAngularCLI = "^11.2.2"
+def requiredVersionAngularCLI = "^13.0.3"
 
 buildscript {
     dependencies {

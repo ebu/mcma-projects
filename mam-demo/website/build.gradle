@@ -4,13 +4,17 @@ apply from: "${project.rootDir}/gradle-tasks-for-npm.gradle"
 
 tsc.enabled = false
 
+npmInstall {
+  dependsOn ":libraries:model:npmPack"
+}
+
 task buildWebsite(type: Exec) {
   dependsOn npmInstall, ":verifyAngularCLI"
   inputs.dir "node_modules"
   inputs.dir "src"
   outputs.dir "dist/website"
   commandLine ngExecutable
-  args "build", "--prod", "--base-href", "./index.html", "--progress", "false"
+  args "build", "--configuration", "production", "--base-href", "./index.html", "--progress", "false"
 }
 
 task generateTerraformWebsiteTF {

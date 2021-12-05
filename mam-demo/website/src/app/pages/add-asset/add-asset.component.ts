@@ -5,7 +5,7 @@ import { DialogUploadComponent } from "../../dialogs/dialog-upload/dialog-upload
 import { MatDialog } from "@angular/material/dialog";
 import { Router } from "@angular/router";
 import { DialogAssetIngestComponent } from "../../dialogs/dialog-asset-ingest/dialog-asset-ingest.component";
-import { FileInput } from "../../vendor/material-file-input/model/file-input.model";
+import { FileInput } from "ngx-material-file-input";
 
 @Component({
   selector: "app-add-asset",
@@ -41,21 +41,9 @@ export class AddAssetComponent implements OnInit {
   submit() {
     if (this.form.valid) {
       const videoFileInput = this.form.get("videoFile")?.value as FileInput;
-      const thumbnailFileInput = this.form.get("thumbnailFile")?.value as FileInput;
-      const closedCaptionsFileInput = this.form.get("closedCaptionsFile")?.value as FileInput;
-      const transcriptFileInput = this.form.get("transcriptFile")?.value as FileInput;
 
       const files: File[] = [];
       files.push(...videoFileInput.files);
-      if (thumbnailFileInput) {
-        files.push(...thumbnailFileInput.files);
-      }
-      if (closedCaptionsFileInput) {
-        files.push(...closedCaptionsFileInput.files);
-      }
-      if (transcriptFileInput) {
-        files.push(...transcriptFileInput.files);
-      }
 
       const fileDescriptors = files.map(f => {
         return { path: f.name, file: f };
@@ -70,17 +58,6 @@ export class AddAssetComponent implements OnInit {
         if (success) {
           const video = filesPrefix + this.form.get("videoFile")?.value?.files[0]?.name;
 
-          let thumbnail, closedCaptions, transcript;
-          if (this.form.get("thumbnailFile")?.value?.files?.length) {
-            thumbnail = filesPrefix + this.form.get("thumbnailFile")?.value?.files[0]?.name;
-          }
-          if (this.form.get("closedCaptionsFile")?.value?.files?.length) {
-            closedCaptions = filesPrefix + this.form.get("closedCaptionsFile")?.value?.files[0]?.name;
-          }
-          if (this.form.get("transcriptFile")?.value?.files?.length) {
-            transcript = filesPrefix + this.form.get("transcriptFile")?.value?.files[0]?.name;
-          }
-
           successDialogRef.afterClosed().subscribe(() => {
             this.router.navigate(["assets"]);
           });
@@ -91,6 +68,5 @@ export class AddAssetComponent implements OnInit {
         }
       });
     }
-
   }
 }

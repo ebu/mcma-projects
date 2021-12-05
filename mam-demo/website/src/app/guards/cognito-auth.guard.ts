@@ -19,8 +19,6 @@ export class CognitoAuthGuard implements CanActivate {
     route: ActivatedRouteSnapshot,
     state: RouterStateSnapshot): Observable<boolean | UrlTree> {
 
-    console.log(route);
-
     return this.auth.status$.pipe(
       map(authStatus => {
         if (authStatus === AuthStatus.NotAuthenticated && route?.routeConfig?.path !== "login") {
@@ -50,7 +48,6 @@ export class CognitoAuthGuard implements CanActivate {
           return false;
         }
 
-        console.log("yes");
         return true;
       })
     );

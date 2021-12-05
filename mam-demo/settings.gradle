@@ -1,6 +1,7 @@
 include "deployment",
         "libraries:data",
         "libraries:model",
+        "scripts:post-deploy",
         "service:api-handler",
         "service:worker",
         "website",

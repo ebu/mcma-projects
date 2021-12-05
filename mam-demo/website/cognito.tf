@@ -23,7 +23,7 @@ resource "aws_cognito_user_pool" "main" {
 
     invite_message_template {
       email_subject = "Invitation to MCMA MAM Demo"
-      email_message = "<p>An account has been created for you to use the MCMA MAM Demo.</p><p>Please go to the <a href=\"https://${local.website_url}\">MCMA MAM Demo website</a> and log in with the following credentials.</p><ul><li>username: {username}</li><li>password: {####}</li></ul><p>The provided password is temporary. Upon first login you'll be requested to set a new password.</p>"
+      email_message = "<p>An account has been created for you to use the MCMA MAM Demo.</p><p>Please go to the <a href=\"${local.website_url}\">MCMA MAM Demo website</a> and log in with the following credentials.</p><ul><li>username: {username}</li><li>password: {####}</li></ul><p>The provided password is temporary. Upon first login you'll be requested to set a new password.</p>"
       sms_message   = "Your username is {username} and temporary password is {####}"
     }
   }
