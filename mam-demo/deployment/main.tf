@@ -26,7 +26,7 @@ resource "aws_cloudwatch_log_group" "main" {
 module "service" {
   source = "../service"
 
-  prefix = "${var.global_prefix}-service"
+  prefix = "${var.global_prefix}-mam-service"
 
   aws_account_id = data.aws_caller_identity.current.account_id
   aws_region     = var.aws_region
@@ -53,6 +53,7 @@ module "website" {
   aws_region     = var.aws_region
 
   media_bucket = aws_s3_bucket.media
+  mam_service  = module.service
 }
 
 #########################

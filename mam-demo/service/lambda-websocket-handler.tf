@@ -1,13 +1,13 @@
 ##############################
-# Lambda api-handler
+# Lambda websocket_handler
 ##############################
 
 locals {
-  lambda_name_api_handler = format("%.64s", replace("${var.prefix}-api-handler", "/[^a-zA-Z0-9_]+/", "-" ))
+  lambda_name_websocket_handler = format("%.64s", replace("${var.prefix}-websocket-handler", "/[^a-zA-Z0-9_]+/", "-" ))
 }
 
-resource "aws_iam_role" "api_handler" {
-  name = format("%.64s", replace("${var.prefix}-${var.aws_region}-api-handler", "/[^a-zA-Z0-9_]+/", "-" ))
+resource "aws_iam_role" "websocket_handler" {
+  name = format("%.64s", replace("${var.prefix}-${var.aws_region}-websocket-handler", "/[^a-zA-Z0-9_]+/", "-" ))
 
   assume_role_policy = jsonencode({
     Version   = "2012-10-17",
@@ -24,9 +24,9 @@ resource "aws_iam_role" "api_handler" {
   })
 }
 
-resource "aws_iam_role_policy" "api_handler" {
-  name = aws_iam_role.api_handler.name
-  role = aws_iam_role.api_handler.id
+resource "aws_iam_role_policy" "websocket_handler" {
+  name = aws_iam_role.websocket_handler.name
+  role = aws_iam_role.websocket_handler.id
 
   policy = jsonencode({
     Version   = "2012-10-17",
@@ -47,7 +47,7 @@ resource "aws_iam_role_policy" "api_handler" {
         ],
         Resource = concat([
           "arn:aws:logs:${var.aws_region}:${var.aws_account_id}:log-group:${var.log_group.name}:*",
-          "arn:aws:logs:${var.aws_region}:${var.aws_account_id}:log-group:/aws/lambda/${local.lambda_name_api_handler}:*",
+          "arn:aws:logs:${var.aws_region}:${var.aws_account_id}:log-group:/aws/lambda/${local.lambda_name_websocket_handler}:*",
         ], var.enhanced_monitoring_enabled ? [
           "arn:aws:logs:${var.aws_region}:${var.aws_account_id}:log-group:/aws/lambda-insights:*"
         ] : [])
@@ -80,15 +80,16 @@ resource "aws_iam_role_policy" "api_handler" {
           "dynamodb:PutItem"
         ],
         Resource = [
-          aws_dynamodb_table.service_table.arn
+          aws_dynamodb_table.service_table.arn,
+          "${aws_dynamodb_table.service_table.arn}/index/*"
         ]
       },
       {
-        Sid      = "AllowInvokingWorkerLambda",
-        Effect   = "Allow",
-        Action   = "lambda:InvokeFunction",
-        Resource = "arn:aws:lambda:${var.aws_region}:${var.aws_account_id}:function:${local.lambda_name_worker}"
-      }
+        Sid      = "AllowManagingWebsocketConnections"
+        Effect   = "Allow"
+        Action   = "execute-api:ManageConnections"
+        Resource = "${aws_apigatewayv2_api.websocket.execution_arn}/${var.stage_name}/*/*"
+      },
     ],
     var.xray_tracing_enabled ?
     [
@@ -104,20 +105,29 @@ resource "aws_iam_role_policy" "api_handler" {
         ],
         Resource = "*"
       }
+    ] : [],
+    var.dead_letter_config_target != null ?
+    [
+      {
+        Sid      = "AllowLambdaToSendToDLQ"
+        Effect   = "Allow",
+        Action   = "sqs:SendMessage",
+        Resource = var.dead_letter_config_target
+      }
     ] : [])
   })
 }
 
-resource "aws_lambda_function" "api_handler" {
+resource "aws_lambda_function" "websocket_handler" {
   depends_on = [
-    aws_iam_role_policy.api_handler
+    aws_iam_role_policy.websocket_handler
   ]
 
-  filename         = "${path.module}/api-handler/build/dist/lambda.zip"
-  function_name    = local.lambda_name_api_handler
-  role             = aws_iam_role.api_handler.arn
+  filename         = "${path.module}/websocket-handler/build/dist/lambda.zip"
+  function_name    = local.lambda_name_websocket_handler
+  role             = aws_iam_role.websocket_handler.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("${path.module}/api-handler/build/dist/lambda.zip")
+  source_code_hash = filebase64sha256("${path.module}/websocket-handler/build/dist/lambda.zip")
   runtime          = "nodejs14.x"
   timeout          = "30"
   memory_size      = "2048"
@@ -126,10 +136,17 @@ resource "aws_lambda_function" "api_handler" {
 
   environment {
     variables = {
-      LogGroupName     = var.log_group.name
-      TableName        = aws_dynamodb_table.service_table.name
-      PublicUrl        = local.rest_api_url
-      WorkerFunctionId = aws_lambda_function.worker.function_name
+      LogGroupName = var.log_group.name
+      TableName    = aws_dynamodb_table.service_table.name
+      PublicUrl    = local.rest_api_url
+    }
+  }
+
+  dynamic "dead_letter_config" {
+    for_each = var.dead_letter_config_target != null ? toset([1]) : toset([])
+
+    content {
+      target_arn = var.dead_letter_config_target
     }
   }
 

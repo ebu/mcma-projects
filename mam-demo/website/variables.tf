@@ -41,3 +41,10 @@ variable "media_bucket" {
   })
   description = "Media bucket for Upload and Storage"
 }
+
+variable "mam_service" {
+  type = object({
+    rest_api_url  = string
+    websocket_url = string
+  })
+}

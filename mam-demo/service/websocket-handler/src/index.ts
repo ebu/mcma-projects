@@ -1,25 +1,13 @@
 import { APIGatewayProxyEvent, Context } from "aws-lambda";
 import * as AWSXRay from "aws-xray-sdk-core";
+
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
-import { ApiGatewayApiController } from "@mcma/aws-api-gateway";
-import { McmaApiRouteCollection } from "@mcma/api";
-import { DynamoDbTableProvider } from "@mcma/aws-dynamodb";
-import { buildAssetEssenceRoutes, buildAssetRoutes, buildAssetWorkflowRoutes, buildWorkflowRoutes } from "./routes";
 
 const { LogGroupName } = process.env;
 
 const AWS = AWSXRay.captureAWS(require("aws-sdk"));
 
-const loggerProvider = new AwsCloudWatchLoggerProvider("service-api-handler", LogGroupName, new AWS.CloudWatchLogs());
-const dbTableProvider = new DynamoDbTableProvider({}, new AWS.DynamoDB());
-
-const routes = new McmaApiRouteCollection();
-routes.addRoutes(buildAssetRoutes(dbTableProvider));
-routes.addRoutes(buildAssetEssenceRoutes(dbTableProvider));
-routes.addRoutes(buildAssetWorkflowRoutes(dbTableProvider));
-routes.addRoutes(buildWorkflowRoutes(dbTableProvider));
-
-const restController = new ApiGatewayApiController(routes, loggerProvider);
+const loggerProvider = new AwsCloudWatchLoggerProvider("service-websocket-handler", LogGroupName, new AWS.CloudWatchLogs());
 
 export async function handler(event: APIGatewayProxyEvent, context: Context) {
     console.log(JSON.stringify(event, null, 2));
@@ -31,7 +19,24 @@ export async function handler(event: APIGatewayProxyEvent, context: Context) {
         logger.debug(event);
         logger.debug(context);
 
-        return await restController.handleRequest(event, context);
+        switch (event.requestContext.routeKey) {
+            case "$connect":
+                break;
+            case "$disconnect":
+                break;
+            case "message":
+                break;
+            default:
+                logger.warn(`Unexpected route: ${event.requestContext.routeKey}`);
+                break;
+        }
+
+        return {
+            statusCode: 200
+        };
+    } catch (error) {
+        logger.error(error?.toString());
+        throw error;
     } finally {
         logger.functionEnd(context.awsRequestId);
 
@@ -42,3 +47,5 @@ export async function handler(event: APIGatewayProxyEvent, context: Context) {
         console.log("LoggerProvider.flush - END   - " + new Date().toISOString() + " - flush took " + (t2 - t1) + " ms");
     }
 }
+
+

@@ -99,5 +99,7 @@ resource "aws_s3_bucket_object" "config" {
       ClientId   = aws_cognito_user_pool_client.main.id
     }
     MediaBucket           = var.media_bucket.id
+    RestApiUrl            = var.mam_service.rest_api_url
+    WebSocketUrl          = var.mam_service.websocket_url
   })
 }

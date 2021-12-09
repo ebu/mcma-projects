@@ -1,19 +1,14 @@
 {
-    "name": "service-api-handler",
+    "name": "websocket-handler",
     "version": "0.0.0",
     "private": true,
     "license": "Apache-2.0",
     "dependencies": {
-        "@mcma/api": "0.13.28",
-        "@mcma/aws-api-gateway": "0.13.28",
-        "@mcma/aws-client": "0.13.28",
         "@mcma/aws-dynamodb": "0.13.28",
-        "@mcma/aws-lambda-worker-invoker": "0.13.28",
         "@mcma/aws-logger": "0.13.28",
         "@mcma/client": "0.13.28",
         "@mcma/core": "0.13.28",
         "@mcma/data": "0.13.28",
-        "@mcma/worker-invoker": "0.13.28",
         "aws-sdk": "^2.1000.0",
         "aws-xray-sdk": "^3.3.3"
     },

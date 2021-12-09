@@ -1,4 +1,5 @@
 task build {
     dependsOn "api-handler:build"
+    dependsOn "websocket-handler:build"
     dependsOn "worker:build"
 }

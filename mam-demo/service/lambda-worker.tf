@@ -139,7 +139,7 @@ resource "aws_lambda_function" "worker" {
     variables = {
       LogGroupName        = var.log_group.name
       TableName           = aws_dynamodb_table.service_table.name
-      PublicUrl           = local.service_url
+      PublicUrl           = local.rest_api_url
       ServicesUrl         = var.service_registry.services_url
       ServicesAuthType    = var.service_registry.auth_type
     }
