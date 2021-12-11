@@ -6,6 +6,7 @@ import { MatDialog } from "@angular/material/dialog";
 import { Router } from "@angular/router";
 import { DialogAssetIngestComponent } from "../../dialogs/dialog-asset-ingest/dialog-asset-ingest.component";
 import { FileInput } from "ngx-material-file-input";
+import { LoggerService } from "../../services";
 
 @Component({
   selector: "app-add-asset",
@@ -19,6 +20,7 @@ export class AddAssetComponent implements OnInit {
     private router: Router,
     private dialog: MatDialog,
     private fb: FormBuilder,
+    private logger: LoggerService,
   ) {
     this.form = this.fb.group({
       title: ["", Validators.required],
@@ -56,7 +58,9 @@ export class AddAssetComponent implements OnInit {
       uploadDialogRef.componentInstance.status$.subscribe(({ success, bucket, filesPrefix }) => {
         DialogUploadComponent.closeDialog(uploadDialogRef);
         if (success) {
-          const video = filesPrefix + this.form.get("videoFile")?.value?.files[0]?.name;
+          const videoFileName = filesPrefix + this.form.get("videoFile")?.value?.files[0]?.name;
+
+          this.logger.info(videoFileName);
 
           successDialogRef.afterClosed().subscribe(() => {
             this.router.navigate(["assets"]);

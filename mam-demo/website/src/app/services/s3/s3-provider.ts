@@ -28,9 +28,7 @@ export class S3Provider {
 
     this.generating = true;
     return this.auth.getCredentials().pipe(
-      map((credentials) => {
-        return this.generateS3(credentials);
-      })
+      map((credentials) => this.generateS3(credentials))
     ).toPromise().finally(() => {
       this.generating = false;
     });

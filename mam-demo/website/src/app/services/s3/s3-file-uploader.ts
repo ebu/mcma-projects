@@ -5,7 +5,7 @@ import { LoggerService } from "../../services";
 import { FileDescriptor, UploadStatus } from "../../model";
 import { S3Provider } from "./s3-provider";
 
-const MIN_MULTIPART_SIZE = 67108864; //64 MB
+const MIN_MULTIPART_SIZE = 67108864; // 64 MB
 const MAX_NUMBER_PARTS = 10000;
 
 enum WorkType {
@@ -254,25 +254,34 @@ export class S3FileUploader {
 
         if (this.queuedWorkItems.length > 0 && this.activeWorkItems.length < this._maxConcurrentRequests) {
           const workItem = this.queuedWorkItems.shift();
-          switch (workItem?.type) {
-            case WorkType.Prepare:
-              await this.processWorkItemPrepare(workItem);
-              break;
-            case WorkType.Single:
-              await this.processWorkItemSingle(workItem);
-              break;
-            case WorkType.MultipartStart:
-              await this.processWorkItemMultipartStart(workItem);
-              break;
-            case WorkType.MultipartSegment:
-              await this.processWorkItemMultipartSegment(workItem);
-              break;
-            case WorkType.MultipartComplete:
-              await this.processWorkItemMultipartComplete(workItem);
-              break;
-            case WorkType.MultipartAbort:
-              await this.processWorkItemMultipartAbort(workItem);
-              break;
+          try {
+            switch (workItem?.type) {
+              case WorkType.Prepare:
+                await this.processWorkItemPrepare(workItem);
+                break;
+              case WorkType.Single:
+                await this.processWorkItemSingle(workItem);
+                break;
+              case WorkType.MultipartStart:
+                await this.processWorkItemMultipartStart(workItem);
+                break;
+              case WorkType.MultipartSegment:
+                await this.processWorkItemMultipartSegment(workItem);
+                break;
+              case WorkType.MultipartComplete:
+                await this.processWorkItemMultipartComplete(workItem);
+                break;
+              case WorkType.MultipartAbort:
+                await this.processWorkItemMultipartAbort(workItem);
+                break;
+            }
+          } catch (error) {
+            this.logger.error("Detected error in S3FileUploader.process()");
+            this.logger.error(error);
+            this._maxConcurrentRequests = 0;
+            if (workItem) {
+              this.queuedWorkItems.unshift(workItem);
+            }
           }
         } else {
           await new Promise<void>(resolve => setTimeout(resolve, 250));

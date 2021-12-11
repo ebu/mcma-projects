@@ -1,5 +1,6 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, OnInit, ViewChild } from "@angular/core";
 import { MatDialog, MatDialogRef } from "@angular/material/dialog";
+import { MatButton } from "@angular/material/button";
 
 @Component({
   selector: "app-dialog-asset-ingest",
@@ -7,6 +8,9 @@ import { MatDialog, MatDialogRef } from "@angular/material/dialog";
   styleUrls: ["./dialog-asset-ingest.component.scss"]
 })
 export class DialogAssetIngestComponent implements OnInit {
+
+  @ViewChild("btnOK")
+  public btnOK: MatButton | undefined;
 
   constructor() {
   }
@@ -18,6 +22,8 @@ export class DialogAssetIngestComponent implements OnInit {
     return dialog.open(DialogAssetIngestComponent, {
       disableClose: true,
       panelClass: hidden ? "hide-dialog" : undefined,
+      autoFocus: false,
+      restoreFocus: false,
     });
   }
 
@@ -27,6 +33,7 @@ export class DialogAssetIngestComponent implements OnInit {
 
   static showDialog(uploadDialogRef: MatDialogRef<DialogAssetIngestComponent>) {
     uploadDialogRef.removePanelClass("hide-dialog");
+    uploadDialogRef.componentInstance.btnOK?.focus();
   }
 
   static closeDialog(uploadDialogRef: MatDialogRef<DialogAssetIngestComponent>) {

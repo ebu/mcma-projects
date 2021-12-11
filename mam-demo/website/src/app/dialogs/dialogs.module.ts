@@ -3,12 +3,14 @@ import { CommonModule } from "@angular/common";
 import { MaterialModule } from "../vendor";
 import { FilesizeModule } from "../pipes";
 
-import { DialogAssetIngestComponent } from "./dialog-asset-ingest/dialog-asset-ingest.component";
-import { DialogUploadComponent } from "./dialog-upload/dialog-upload.component";
+import { DialogAssetIngestComponent } from "./dialog-asset-ingest";
+import { DialogSessionExpiredComponent } from "./dialog-session-expired";
+import { DialogUploadComponent } from "./dialog-upload";
 
 @NgModule({
   declarations: [
     DialogAssetIngestComponent,
+    DialogSessionExpiredComponent,
     DialogUploadComponent,
   ],
   imports: [
@@ -18,6 +20,7 @@ import { DialogUploadComponent } from "./dialog-upload/dialog-upload.component";
   ],
   exports: [
     DialogUploadComponent,
+    DialogSessionExpiredComponent,
     DialogAssetIngestComponent,
   ]
 })

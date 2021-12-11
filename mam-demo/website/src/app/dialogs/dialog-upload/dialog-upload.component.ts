@@ -4,8 +4,14 @@ import { Observable, Subject, Subscription } from "rxjs";
 import * as filesize from "filesize";
 import { LoggerService, S3FileUploader, S3Service } from "../../services";
 import { FileDescriptor } from "../../model";
+import { DialogSessionExpiredComponent } from "../dialog-session-expired";
 
 const average = (arr: number[]) => arr.reduce((p, c) => p + c, 0) / arr.length;
+
+enum Status {
+  Uploading = "Uploading",
+  ErrorSessionTimeout = "Error - Session Timeout",
+}
 
 @Component({
   selector: "app-dialog-upload",
@@ -34,18 +40,20 @@ export class DialogUploadComponent implements OnInit {
   private subscription?: Subscription;
   private s3FileUploader?: S3FileUploader;
 
-  constructor(private dialogRef: MatDialogRef<DialogUploadComponent>,
+  status: Status = Status.Uploading;
+
+  constructor(private dialog: MatDialog,
+              private dialogRef: MatDialogRef<DialogUploadComponent>,
               @Inject(MAT_DIALOG_DATA) private data: { targetFolder: string, files: FileDescriptor[] },
               private s3: S3Service,
               private logger: LoggerService) {
   }
 
   ngOnInit(): void {
-
     this.s3.getS3FileUploader().subscribe(s3FileUploader => {
       this.s3FileUploader = s3FileUploader;
 
-      let status$ = this.s3FileUploader.uploadFiles(this.data.targetFolder, this.data.files);
+      const status$ = this.s3FileUploader.uploadFiles(this.data.targetFolder, this.data.files);
 
       this.timeRemainingStartTime = Date.now();
 
@@ -58,6 +66,13 @@ export class DialogUploadComponent implements OnInit {
           }
           this.uploadSpeedText = `${filesize(uploadedBytesLastSecond, { round: 0 })}/s`;
           this.uploadedBytes.shift();
+
+          // when file uploader suddenly stops it's because there was an error detected
+          // This is expected whenever the session times out.
+          if (this.status === Status.Uploading && s3FileUploader.maxConcurrentRequests === 0) {
+            this.status = Status.ErrorSessionTimeout;
+            DialogSessionExpiredComponent.createDialog(this.dialog);
+          }
         }
 
         if (this.totalFiles !== status.totalFiles) {
@@ -66,47 +81,51 @@ export class DialogUploadComponent implements OnInit {
         }
 
         this.filename = status.filename;
-        this.percentage = ((status.uploadedBytes / status.totalBytes * 1000) << 0) / 10;
+        this.percentage = (Math.floor(status.uploadedBytes / status.totalBytes * 1000)) / 10;
 
         this.filesRemaining = status.totalFiles - status.uploadedFiles;
         this.bytesRemaining = status.totalBytes - status.uploadedBytes;
 
-        const now = Date.now();
+        if (this.status !== Status.Uploading) {
+          this.timeRemainingText = this.status;
+        } else {
+          const now = Date.now();
 
-        const timeElapsed = now - this.timeRemainingStartTime;
-        const timeSinceLastChange = now - this.timeRemainingTimestamp;
-        if (timeElapsed > 5000 && timeSinceLastChange > 5000) {
-          const bytesPerMs = status.uploadedBytes / timeElapsed;
-          let secondsRemaining = this.bytesRemaining / bytesPerMs / 1000 << 0;
+          const timeElapsed = now - this.timeRemainingStartTime;
+          const timeSinceLastChange = now - this.timeRemainingTimestamp;
+          if (timeElapsed > 5000 && timeSinceLastChange > 5000) {
+            const bytesPerMs = status.uploadedBytes / timeElapsed;
+            let secondsRemaining = Math.floor(this.bytesRemaining / bytesPerMs / 1000);
 
-          this.timeRemainingTimestamp = now;
+            this.timeRemainingTimestamp = now;
 
-          let text;
-          if (secondsRemaining > 60) {
-            let minutesRemaining = secondsRemaining / 60 << 0;
+            let text;
+            if (secondsRemaining > 60) {
+              let minutesRemaining = Math.floor(secondsRemaining / 60);
 
-            if (minutesRemaining > 60) {
-              const hoursRemaining = minutesRemaining / 60 << 0;
+              if (minutesRemaining > 60) {
+                const hoursRemaining = Math.floor(minutesRemaining / 60);
 
-              minutesRemaining = minutesRemaining % 60;
+                minutesRemaining = minutesRemaining % 60;
 
-              text = `About ${hoursRemaining} ` + (hoursRemaining > 1 ? "hours" : "hour");
+                text = `About ${hoursRemaining} ` + (hoursRemaining > 1 ? "hours" : "hour");
 
-              if (minutesRemaining > 0) {
-                text += ` and ${minutesRemaining} ` + (minutesRemaining > 1 ? "minutes" : "minute");
+                if (minutesRemaining > 0) {
+                  text += ` and ${minutesRemaining} ` + (minutesRemaining > 1 ? "minutes" : "minute");
+                }
+              } else {
+                text = `About ${minutesRemaining} ` + (minutesRemaining > 1 ? "minutes" : "minute");
               }
             } else {
-              text = `About ${minutesRemaining} ` + (minutesRemaining > 1 ? "minutes" : "minute");
+              secondsRemaining = (Math.floor(secondsRemaining / 5) + 1) * 5;
+
+              text = `About ${secondsRemaining} seconds`;
             }
-          } else {
-            secondsRemaining = ((secondsRemaining / 5 << 0) + 1) * 5;
 
-            text = `About ${secondsRemaining} seconds`;
-          }
-
-          if (text !== this.timeRemainingText) {
-            this.timeRemainingText = text;
-            this.timeRemainingTimestamp = now;
+            if (text !== this.timeRemainingText) {
+              this.timeRemainingText = text;
+              this.timeRemainingTimestamp = now;
+            }
           }
         }
       }, error => {
@@ -123,6 +142,11 @@ export class DialogUploadComponent implements OnInit {
           this.statusSubject.next({ success: true, bucket: s3FileUploader.bucket, filesPrefix: s3FileUploader.identityId + targetFolder });
         }, 1);
       });
+    }, error => {
+      this.logger.error("DialogUploadComponent.onInit error");
+      this.logger.error(error);
+      this.cancel();
+      DialogSessionExpiredComponent.createDialog(this.dialog);
     });
   }
 
@@ -135,12 +159,13 @@ export class DialogUploadComponent implements OnInit {
     return dialog.open(DialogUploadComponent, {
       width: "500px",
       autoFocus: false,
+      restoreFocus: false,
       disableClose: true,
       hasBackdrop: hasBackdrop,
       data: {
         targetFolder,
         files
-      }
+      },
     });
   }
 
