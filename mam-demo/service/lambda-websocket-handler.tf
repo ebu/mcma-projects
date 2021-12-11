@@ -10,12 +10,12 @@ resource "aws_iam_role" "websocket_handler" {
   name = format("%.64s", replace("${var.prefix}-${var.aws_region}-websocket-handler", "/[^a-zA-Z0-9_]+/", "-" ))
 
   assume_role_policy = jsonencode({
-    Version   = "2012-10-17",
+    Version   = "2012-10-17"
     Statement = [
       {
         Sid       = "AllowLambdaAssumingRole"
         Effect    = "Allow"
-        Action    = "sts:AssumeRole",
+        Action    = "sts:AssumeRole"
         Principal = {
           "Service" = "lambda.amazonaws.com"
         }
@@ -29,7 +29,7 @@ resource "aws_iam_role_policy" "websocket_handler" {
   role = aws_iam_role.websocket_handler.id
 
   policy = jsonencode({
-    Version   = "2012-10-17",
+    Version   = "2012-10-17"
     Statement = concat([
       {
         Sid      = "DescribeCloudWatchLogs"
@@ -53,56 +53,56 @@ resource "aws_iam_role_policy" "websocket_handler" {
         ] : [])
       },
       {
-        Sid      = "ListAndDescribeDynamoDBTables",
-        Effect   = "Allow",
+        Sid      = "ListAndDescribeDynamoDBTables"
+        Effect   = "Allow"
         Action   = [
           "dynamodb:List*",
           "dynamodb:DescribeReservedCapacity*",
           "dynamodb:DescribeLimits",
-          "dynamodb:DescribeTimeToLive"
-        ],
+          "dynamodb:DescribeTimeToLive",
+        ]
         Resource = "*"
       },
       {
-        Sid      = "SpecificTable",
-        Effect   = "Allow",
+        Sid      = "AllowTableOperations"
+        Effect   = "Allow"
         Action   = [
-          "dynamodb:BatchGet*",
-          "dynamodb:DescribeStream",
+          "dynamodb:BatchGetItem",
+          "dynamodb:BatchWriteItem",
+          "dynamodb:DeleteItem",
           "dynamodb:DescribeTable",
-          "dynamodb:Get*",
+          "dynamodb:GetItem",
+          "dynamodb:PutItem",
           "dynamodb:Query",
           "dynamodb:Scan",
-          "dynamodb:BatchWrite*",
-          "dynamodb:CreateTable",
-          "dynamodb:Delete*",
-          "dynamodb:Update*",
-          "dynamodb:PutItem"
-        ],
+          "dynamodb:UpdateItem",
+        ]
         Resource = [
-          aws_dynamodb_table.service_table.arn,
-          "${aws_dynamodb_table.service_table.arn}/index/*"
+          aws_dynamodb_table.service_table.arn
         ]
       },
       {
-        Sid      = "AllowManagingWebsocketConnections"
+        Sid      = "AllowEnablingDisablingEventRule"
         Effect   = "Allow"
-        Action   = "execute-api:ManageConnections"
-        Resource = "${aws_apigatewayv2_api.websocket.execution_arn}/${var.stage_name}/*/*"
-      },
+        Action   = [
+          "events:EnableRule",
+          "events:DisableRule",
+        ]
+        Resource = aws_cloudwatch_event_rule.websocket_ping.arn
+      }
     ],
     var.xray_tracing_enabled ?
     [
       {
         Sid      = "AllowLambdaWritingToXRay"
-        Effect   = "Allow",
+        Effect   = "Allow"
         Action   = [
           "xray:PutTraceSegments",
           "xray:PutTelemetryRecords",
           "xray:GetSamplingRules",
           "xray:GetSamplingTargets",
           "xray:GetSamplingStatisticSummaries",
-        ],
+        ]
         Resource = "*"
       }
     ] : [],
@@ -136,9 +136,9 @@ resource "aws_lambda_function" "websocket_handler" {
 
   environment {
     variables = {
-      LogGroupName = var.log_group.name
-      TableName    = aws_dynamodb_table.service_table.name
-      PublicUrl    = local.rest_api_url
+      LogGroupName        = var.log_group.name
+      TableName           = aws_dynamodb_table.service_table.name
+      CloudWatchEventRule = aws_cloudwatch_event_rule.websocket_ping.name
     }
   }
 

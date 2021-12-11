@@ -1,22 +1,18 @@
 {
-    "name": "worker",
+    "name": "websocket-ping",
     "version": "0.0.0",
     "private": true,
     "license": "Apache-2.0",
     "dependencies": {
-        "@mcma/aws-client": "0.13.28",
         "@mcma/aws-dynamodb": "0.13.28",
         "@mcma/aws-logger": "0.13.28",
-        "@mcma/aws-s3": "0.13.28",
         "@mcma/core": "0.13.28",
-        "@mcma/client": "0.13.28",
         "@mcma/data": "0.13.28",
-        "@mcma/worker": "0.13.28",
         "aws-sdk": "^2.1000.0",
-        "aws-xray-sdk": "^3.3.4"
+        "aws-xray-sdk-core": "^3.3.3"
     },
     "devDependencies": {
-        "@types/aws-lambda": "^8.10.51",
-        "@types/node": "^14.17.34"
+        "@types/aws-lambda": "^8.10.85",
+        "@types/node": "^14.17.24"
     }
 }

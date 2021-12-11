@@ -1,13 +1,13 @@
-#################################
-#  lambda worker
-#################################
+##############################
+# Lambda db-trigger
+##############################
 
 locals {
-  lambda_name_worker = format("%.64s", replace("${var.prefix}-worker", "/[^a-zA-Z0-9_]+/", "-" ))
+  lambda_name_db_trigger = format("%.64s", replace("${var.prefix}-db-trigger", "/[^a-zA-Z0-9_]+/", "-" ))
 }
 
-resource "aws_iam_role" "worker" {
-  name = format("%.64s", replace("${var.prefix}-${var.aws_region}-worker", "/[^a-zA-Z0-9_]+/", "-" ))
+resource "aws_iam_role" "db_trigger" {
+  name = format("%.64s", replace("${var.prefix}-${var.aws_region}-db-trigger", "/[^a-zA-Z0-9_]+/", "-" ))
 
   assume_role_policy = jsonencode({
     Version   = "2012-10-17"
@@ -24,9 +24,9 @@ resource "aws_iam_role" "worker" {
   })
 }
 
-resource "aws_iam_role_policy" "worker" {
-  name = aws_iam_role.worker.name
-  role = aws_iam_role.worker.id
+resource "aws_iam_role_policy" "db_trigger" {
+  name = aws_iam_role.db_trigger.name
+  role = aws_iam_role.db_trigger.id
 
   policy = jsonencode({
     Version   = "2012-10-17"
@@ -44,10 +44,10 @@ resource "aws_iam_role_policy" "worker" {
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
           "logs:PutLogEvents",
-        ]
+        ],
         Resource = concat([
           "arn:aws:logs:${var.aws_region}:${var.aws_account_id}:log-group:${var.log_group.name}:*",
-          "arn:aws:logs:${var.aws_region}:${var.aws_account_id}:log-group:/aws/lambda/${local.lambda_name_worker}:*",
+          "arn:aws:logs:${var.aws_region}:${var.aws_account_id}:log-group:/aws/lambda/${local.lambda_name_db_trigger}:*",
         ], var.enhanced_monitoring_enabled ? [
           "arn:aws:logs:${var.aws_region}:${var.aws_account_id}:log-group:/aws/lambda-insights:*"
         ] : [])
@@ -67,28 +67,33 @@ resource "aws_iam_role_policy" "worker" {
         Sid      = "AllowTableOperations"
         Effect   = "Allow"
         Action   = [
-          "dynamodb:BatchGet*",
-          "dynamodb:DescribeStream",
+          "dynamodb:BatchGetItem",
+          "dynamodb:BatchWriteItem",
+          "dynamodb:DeleteItem",
           "dynamodb:DescribeTable",
-          "dynamodb:Get*",
+          "dynamodb:GetItem",
+          "dynamodb:PutItem",
           "dynamodb:Query",
           "dynamodb:Scan",
-          "dynamodb:BatchWrite*",
-          "dynamodb:CreateTable",
-          "dynamodb:Delete*",
-          "dynamodb:Update*",
-          "dynamodb:PutItem",
+          "dynamodb:UpdateItem",
         ]
         Resource = aws_dynamodb_table.service_table.arn
       },
       {
-        Sid      = "AllowInvokingApiGateway"
+        Sid      = "AllowTableStreamOperations"
         Effect   = "Allow"
-        Action   = "execute-api:Invoke"
-        Resource = [
-          "${var.service_registry.aws_apigatewayv2_stage.service_api.execution_arn}/*/*",
-          "${var.job_processor.aws_apigatewayv2_stage.service_api.execution_arn}/*/*",
+        Action   = [
+          "dynamodb:DescribeStream",
+          "dynamodb:GetRecords",
+          "dynamodb:GetShardIterator",
         ]
+        Resource = aws_dynamodb_table.service_table.stream_arn
+      },
+      {
+        Sid      = "AllowPostingToWebSockets"
+        Effect   = "Allow"
+        Action   = "execute-api:ManageConnections"
+        Resource = "${aws_apigatewayv2_api.websocket.execution_arn}/${var.stage_name}/*/*"
       },
     ],
     var.xray_tracing_enabled ?
@@ -105,49 +110,30 @@ resource "aws_iam_role_policy" "worker" {
         ]
         Resource = "*"
       }
-    ] : [],
-    var.dead_letter_config_target != null ?
-    [
-      {
-        Effect : "Allow",
-        Action : "sqs:SendMessage",
-        Resource : var.dead_letter_config_target
-      }
     ] : [])
   })
 }
 
-resource "aws_lambda_function" "worker" {
+resource "aws_lambda_function" "db_trigger" {
   depends_on = [
-    aws_iam_role_policy.worker
+    aws_iam_role_policy.db_trigger
   ]
 
-  filename         = "${path.module}/worker/build/dist/lambda.zip"
-  function_name    = local.lambda_name_worker
-  role             = aws_iam_role.worker.arn
+  filename         = "${path.module}/db-trigger/build/dist/lambda.zip"
+  function_name    = local.lambda_name_db_trigger
+  role             = aws_iam_role.db_trigger.arn
   handler          = "index.handler"
-  source_code_hash = filebase64sha256("${path.module}/worker/build/dist/lambda.zip")
+  source_code_hash = filebase64sha256("${path.module}/db-trigger/build/dist/lambda.zip")
   runtime          = "nodejs14.x"
-  timeout          = "900"
+  timeout          = "30"
   memory_size      = "2048"
 
   layers = var.enhanced_monitoring_enabled ? ["arn:aws:lambda:${var.aws_region}:580247275435:layer:LambdaInsightsExtension:14"] : []
 
   environment {
     variables = {
-      LogGroupName     = var.log_group.name
-      TableName        = aws_dynamodb_table.service_table.name
-      PublicUrl        = local.rest_api_url
-      ServicesUrl      = var.service_registry.services_url
-      ServicesAuthType = var.service_registry.auth_type
-    }
-  }
-
-  dynamic "dead_letter_config" {
-    for_each = var.dead_letter_config_target != null ? toset([1]) : toset([])
-
-    content {
-      target_arn = var.dead_letter_config_target
+      LogGroupName = var.log_group.name
+      TableName    = aws_dynamodb_table.service_table.name
     }
   }
 

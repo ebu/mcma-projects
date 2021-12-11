@@ -12,15 +12,21 @@ output "websocket_url" {
 
 output "aws_iam_role" {
   value = {
-    api_handler = aws_iam_role.api_handler
-    worker      = aws_iam_role.worker
+    api_handler       = aws_iam_role.api_handler
+    db_trigger        = aws_iam_role.db_trigger
+    websocket_handler = aws_iam_role.websocket_handler
+    websocket_ping    = aws_iam_role.websocket_ping
+    worker            = aws_iam_role.worker
   }
 }
 
 output "aws_iam_role_policy" {
   value = {
-    api_handler = aws_iam_role_policy.api_handler
-    worker      = aws_iam_role_policy.worker
+    api_handler       = aws_iam_role_policy.api_handler
+    db_trigger        = aws_iam_role_policy.db_trigger
+    websocket_handler = aws_iam_role_policy.websocket_handler
+    websocket_ping    = aws_iam_role_policy.websocket_ping
+    worker            = aws_iam_role_policy.worker
   }
 }
 
@@ -32,8 +38,11 @@ output "aws_dynamodb_table" {
 
 output "aws_lambda_function" {
   value = {
-    api_handler = aws_lambda_function.api_handler
-    worker      = aws_lambda_function.worker
+    api_handler       = aws_lambda_function.api_handler
+    db_trigger        = aws_lambda_function.db_trigger
+    websocket_handler = aws_lambda_function.websocket_handler
+    websocket_ping    = aws_lambda_function.websocket_ping
+    worker            = aws_lambda_function.worker
   }
 }
 
@@ -46,36 +55,37 @@ output "aws_apigatewayv2_api" {
 
 output "aws_apigatewayv2_integration" {
   value = {
-    rest_api = aws_apigatewayv2_integration.rest_api
-    websocket_connect = aws_apigatewayv2_integration.websocket_connect
-    websocket_default = aws_apigatewayv2_integration.websocket_default
+    rest_api             = aws_apigatewayv2_integration.rest_api
+    websocket_connect    = aws_apigatewayv2_integration.websocket_connect
+    websocket_default    = aws_apigatewayv2_integration.websocket_default
     websocket_disconnect = aws_apigatewayv2_integration.websocket_disconnect
   }
 }
 
 output "aws_apigatewayv2_route" {
   value = {
-    rest_api_default = aws_apigatewayv2_route.rest_api_default
-    rest_api_options = aws_apigatewayv2_route.rest_api_options
-    websocket_connect = aws_apigatewayv2_route.websocket_connect
-    websocket_default = aws_apigatewayv2_route.websocket_default
+    rest_api_default     = aws_apigatewayv2_route.rest_api_default
+    rest_api_options     = aws_apigatewayv2_route.rest_api_options
+    websocket_connect    = aws_apigatewayv2_route.websocket_connect
+    websocket_default    = aws_apigatewayv2_route.websocket_default
     websocket_disconnect = aws_apigatewayv2_route.websocket_disconnect
   }
 }
 
 output "aws_lambda_permission" {
   value = {
-    rest_api_default = aws_lambda_permission.rest_api_default
-    rest_api_options = aws_lambda_permission.rest_api_options
-    websocket_connect = aws_lambda_permission.websocket_connect
-    websocket_default = aws_lambda_permission.websocket_default
+    rest_api_default     = aws_lambda_permission.rest_api_default
+    rest_api_options     = aws_lambda_permission.rest_api_options
+    websocket_connect    = aws_lambda_permission.websocket_connect
+    websocket_default    = aws_lambda_permission.websocket_default
     websocket_disconnect = aws_lambda_permission.websocket_disconnect
+    websocket_ping       = aws_lambda_permission.websocket_ping
   }
 }
 
 output "aws_apigatewayv2_stage" {
   value = {
-    rest_api = aws_apigatewayv2_stage.rest_api
+    rest_api  = aws_apigatewayv2_stage.rest_api
     websocket = aws_apigatewayv2_stage.websocket
   }
 }

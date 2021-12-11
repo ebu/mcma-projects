@@ -10,7 +10,7 @@ const { LogGroupName } = process.env;
 
 const AWS = AWSXRay.captureAWS(require("aws-sdk"));
 
-const loggerProvider = new AwsCloudWatchLoggerProvider("service-api-handler", LogGroupName, new AWS.CloudWatchLogs());
+const loggerProvider = new AwsCloudWatchLoggerProvider("mam-service-api-handler", LogGroupName, new AWS.CloudWatchLogs());
 const dbTableProvider = new DynamoDbTableProvider({}, new AWS.DynamoDB());
 
 const routes = new McmaApiRouteCollection();

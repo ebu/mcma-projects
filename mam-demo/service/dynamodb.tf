@@ -17,5 +17,7 @@ resource "aws_dynamodb_table" "service_table" {
     name = "resource_skey"
     type = "S"
   }
-}
 
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+}

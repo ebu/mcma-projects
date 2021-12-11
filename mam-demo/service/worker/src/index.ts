@@ -14,7 +14,7 @@ const AWS = AWSXRay.captureAWS(require("aws-sdk"));
 
 const authProvider = new AuthProvider().add(awsV4Auth(AWS));
 const dbTableProvider = new DynamoDbTableProvider();
-const loggerProvider = new AwsCloudWatchLoggerProvider("mediainfo-ame-service-worker", LogGroupName);
+const loggerProvider = new AwsCloudWatchLoggerProvider("mam-service-worker", LogGroupName);
 const resourceManagerProvider = new ResourceManagerProvider(authProvider);
 
 const providerCollection = new ProviderCollection({

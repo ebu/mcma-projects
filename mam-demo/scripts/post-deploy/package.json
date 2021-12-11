@@ -7,7 +7,7 @@
         "start": "node build/staging/index.js"
     },
     "main": "build/staging/index.js",
-    "license": "UNLICENSED",
+    "license": "Apache-2.0",
     "dependencies": {
         "@mcma/core": "0.13.28",
         "aws-sdk": "^2.1000.0"
