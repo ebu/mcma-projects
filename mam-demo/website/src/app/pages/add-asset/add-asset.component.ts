@@ -1,12 +1,14 @@
 import { Component, OnInit } from "@angular/core";
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
-import { FormValidationUtils } from "../utils";
-import { DialogUploadComponent } from "../../dialogs/dialog-upload/dialog-upload.component";
 import { MatDialog } from "@angular/material/dialog";
 import { Router } from "@angular/router";
-import { DialogAssetIngestComponent } from "../../dialogs/dialog-asset-ingest/dialog-asset-ingest.component";
 import { FileInput } from "ngx-material-file-input";
-import { LoggerService } from "../../services";
+
+import { MediaWorkflow, MediaWorkflowType } from "@local/model";
+
+import { DialogAssetIngestComponent, DialogUploadComponent } from "../../dialogs";
+import { DataService, LoggerService } from "../../services";
+import { FormValidationUtils } from "../utils";
 
 @Component({
   selector: "app-add-asset",
@@ -20,6 +22,7 @@ export class AddAssetComponent implements OnInit {
     private router: Router,
     private dialog: MatDialog,
     private fb: FormBuilder,
+    private data: DataService,
     private logger: LoggerService,
   ) {
     this.form = this.fb.group({
@@ -62,11 +65,23 @@ export class AddAssetComponent implements OnInit {
 
           this.logger.info(videoFileName);
 
-          successDialogRef.afterClosed().subscribe(() => {
-            this.router.navigate(["assets"]);
+          const workflow = new MediaWorkflow({
+            type: MediaWorkflowType.MediaIngest,
+            input: {
+              title: this.form.get("title")?.value,
+              description: this.form.get("description")?.value,
+              bucket: bucket,
+              videoFile: videoFileName,
+            }
           });
-          DialogAssetIngestComponent.showDialog(successDialogRef);
 
+          this.data.createWorkflow(workflow).subscribe(result => {
+            this.logger.info(result);
+            successDialogRef.afterClosed().subscribe(() => {
+              this.router.navigate(["assets"]);
+            });
+            DialogAssetIngestComponent.showDialog(successDialogRef);
+          });
         } else {
           DialogAssetIngestComponent.closeDialog(successDialogRef);
         }

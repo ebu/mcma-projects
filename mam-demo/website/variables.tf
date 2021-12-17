@@ -44,7 +44,15 @@ variable "media_bucket" {
 
 variable "mam_service" {
   type = object({
-    rest_api_url  = string
-    websocket_url = string
+    rest_api_url           = string
+    websocket_url          = string
+    aws_apigatewayv2_stage = object({
+      rest_api  = object({
+        execution_arn = string
+      })
+      websocket = object({
+        execution_arn = string
+      })
+    })
   })
 }

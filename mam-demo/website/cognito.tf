@@ -108,18 +108,27 @@ resource "aws_iam_role_policy" "authenticated" {
         }
       },
       {
-        Sid : "ReadWriteDeleteYourObjects",
-        Effect : "Allow",
-        Action : [
+        Sid      = "ReadWriteDeleteYourObjects"
+        Effect   = "Allow"
+        Action   = [
           "s3:GetObject",
           "s3:PutObject",
           "s3:DeleteObject",
-        ],
-        Resource : [
+        ]
+        Resource = [
           "arn:aws:s3:::${var.media_bucket.id}/$${cognito-identity.amazonaws.com:sub}",
-          "arn:aws:s3:::${var.media_bucket.id}/$${cognito-identity.amazonaws.com:sub}/*"
+          "arn:aws:s3:::${var.media_bucket.id}/$${cognito-identity.amazonaws.com:sub}/*",
         ]
       },
+      {
+        Sid      = "AllowInvokingAPI"
+        Effect   = "Allow"
+        Action   = "execute-api:Invoke"
+        Resource = [
+          "${var.mam_service.aws_apigatewayv2_stage.rest_api.execution_arn}/*/*",
+          "${var.mam_service.aws_apigatewayv2_stage.websocket.execution_arn}/*/*",
+        ]
+      }
     ]
   })
 }

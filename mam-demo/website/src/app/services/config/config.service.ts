@@ -12,8 +12,8 @@ export class ConfigService {
 
   private readonly config: Observable<any>;
 
-  constructor(private httpClient: HttpClient, private logger: LoggerService) {
-    this.config = this.httpClient.get("config.json").pipe(
+  constructor(private http: HttpClient, private logger: LoggerService) {
+    this.config = this.http.get("config.json").pipe(
       tap(_ => this.logger.info("Loaded config.json")),
       shareReplay(1)
     );

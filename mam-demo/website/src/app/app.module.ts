@@ -13,6 +13,7 @@ import { WorkflowsComponent } from "./pages/workflows/workflows.component";
 import { SettingsComponent } from "./pages/settings/settings.component";
 import { HomeComponent } from "./pages/home/home.component";
 import { DialogsModule } from "./dialogs/dialogs.module";
+import { httpInterceptorProviders } from "./http-interceptors";
 
 @NgModule({
   declarations: [
@@ -32,7 +33,9 @@ import { DialogsModule } from "./dialogs/dialogs.module";
     MaterialModule,
     ReactiveFormsModule
   ],
-  providers: [],
+  providers: [
+    httpInterceptorProviders
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule {

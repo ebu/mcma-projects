@@ -1,4 +1,6 @@
 import { Component, OnInit } from "@angular/core";
+import { DataService } from "../../services/data";
+import { LoggerService } from "../../services";
 
 @Component({
   selector: "app-browse",
@@ -7,12 +9,11 @@ import { Component, OnInit } from "@angular/core";
 })
 export class BrowseComponent implements OnInit {
 
-  constructor() {
-    console.log("ctr browse component");
+  constructor(private data: DataService, private logger: LoggerService) {
   }
 
   ngOnInit(): void {
-    console.log("init browse component");
+    this.data.listWorkflows().subscribe(x => this.logger.info(x));
   }
 
 }
