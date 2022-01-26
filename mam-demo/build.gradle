@@ -1,4 +1,4 @@
-def requiredVersionTerraform = "~1.0.0"
+def requiredVersionTerraform = "^1.1.4"
 def requiredVersionNodeJS = "^14.17.4"
 def requiredVersionTsc = "^4.3.5"
 def requiredVersionAngularCLI = "^13.0.3"
