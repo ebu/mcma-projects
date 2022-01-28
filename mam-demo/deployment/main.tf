@@ -136,5 +136,20 @@ module "stepfunctions_workflow_service" {
 
   log_group = aws_cloudwatch_log_group.main
 
-  workflows = []
+  workflows = [
+    module.media_ingest_workflow.workflow_definition
+  ]
+}
+
+module "media_ingest_workflow" {
+  source = "../workflows/media-ingest"
+
+  prefix = "${var.global_prefix}-wf-media-ingest"
+
+  aws_account_id   = data.aws_caller_identity.current.account_id
+  aws_region       = var.aws_region
+  service_registry = module.service_registry
+  media_bucket     = aws_s3_bucket.media
+
+  log_group = aws_cloudwatch_log_group.main
 }

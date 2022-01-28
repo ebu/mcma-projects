@@ -1,0 +1,19 @@
+{
+    "name": "01-validate-input",
+    "version": "0.0.0",
+    "description": "",
+    "private": true,
+    "license": "Apache-2.0",
+    "dependencies": {
+        "@mcma/aws-client": "0.13.28",
+        "@mcma/aws-logger": "0.13.28",
+        "@mcma/aws-s3": "0.13.28",
+        "@mcma/client": "0.13.28",
+        "@mcma/core": "0.13.28",
+        "aws-sdk": "^2.1000.0"
+    },
+    "devDependencies": {
+        "@types/aws-lambda": "^8.10.63",
+        "@types/node": "^14.17.34"
+    }
+}

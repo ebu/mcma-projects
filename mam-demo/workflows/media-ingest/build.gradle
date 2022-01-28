@@ -1,0 +1,10 @@
+task build {
+    dependsOn "01-validate-input:build"
+    dependsOn "02-create-media-asset:build"
+    dependsOn "03-extract-technical-metadata:build"
+    dependsOn "04-register-original-media:build"
+    dependsOn "05-create-thumbnail:build"
+    dependsOn "06-register-thumbnail:build"
+    dependsOn "07-create-web-version:build"
+    dependsOn "08-register-web-version:build"
+}
