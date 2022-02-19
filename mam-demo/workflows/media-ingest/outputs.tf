@@ -3,6 +3,14 @@ output "workflow_definition" {
     name                      = var.name
     input_parameters          = [
       {
+        parameter_name : "title"
+        parameter_type : "string"
+      },
+      {
+        parameter_name : "description"
+        parameter_type : "string"
+      },
+      {
         parameter_name : "inputFile"
         parameter_type : "S3Locator"
       }

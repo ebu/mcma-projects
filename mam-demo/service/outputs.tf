@@ -10,6 +10,20 @@ output "websocket_url" {
   value = local.websocket_url
 }
 
+output "service_definition" {
+  value = {
+    name      = var.name
+    auth_type = local.service_auth_type
+    resources = [
+      {
+        resource_type = "MediaWorkflow"
+        http_endpoint = "${local.rest_api_url}/workflows"
+      }
+    ]
+    job_profiles = []
+  }
+}
+
 output "aws_iam_role" {
   value = {
     api_handler       = aws_iam_role.api_handler

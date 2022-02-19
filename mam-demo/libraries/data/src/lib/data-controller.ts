@@ -1,11 +1,26 @@
-import { DocumentDatabaseTable, DocumentDatabaseTableProvider, QueryResults } from "@mcma/data";
+import { DocumentDatabaseTable, QueryResults } from "@mcma/data";
+import { DynamoDB } from "aws-sdk";
 
-import { McmaResource, McmaResourceProperties } from "@mcma/core";
+import { McmaResourceProperties } from "@mcma/core";
+import { DynamoDbTableOptions, DynamoDbTableProvider } from "@mcma/aws-dynamodb";
+
+export function getDynamoDbOptions(consistentRead: boolean): DynamoDbTableOptions {
+    return {
+        topLevelAttributeMappings: {
+            dateCreated: (partitionKey, sortKey, resource) => new Date(resource.dateCreated).getTime()
+        },
+        consistentGet: consistentRead,
+        consistentQuery: consistentRead
+    };
+}
 
 export class DataController {
+    private dbTableProvider: DynamoDbTableProvider;
     private dbTable: DocumentDatabaseTable;
 
-    constructor(private tableName: string, private publicUrl: string, private dbTableProvider: DocumentDatabaseTableProvider) {}
+    constructor(private tableName: string, private publicUrl: string, consistentRead: boolean, dynamoDB: DynamoDB) {
+        this.dbTableProvider = new DynamoDbTableProvider(getDynamoDbOptions(consistentRead), dynamoDB);
+    }
 
     private async init() {
         if (!this.dbTable) {
@@ -30,7 +45,7 @@ export class DataController {
         return this.dbTable.get<T>(id);
     }
 
-    async put<T extends McmaResource>(id: string, resource: T): Promise<T> {
+    async put<T extends McmaResourceProperties>(id: string, resource: T): Promise<T> {
         await this.init();
         if (id.startsWith(this.publicUrl)) {
             id = id.substring(this.publicUrl.length);

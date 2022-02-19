@@ -77,7 +77,10 @@ resource "aws_iam_role_policy" "websocket_ping" {
           "dynamodb:Scan",
           "dynamodb:UpdateItem",
         ]
-        Resource = aws_dynamodb_table.service_table.arn
+        Resource = [
+          aws_dynamodb_table.service_table.arn,
+          "${aws_dynamodb_table.service_table.arn}/index/*",
+        ]
       },
       {
         Sid      = "AllowPostingToWebSockets"

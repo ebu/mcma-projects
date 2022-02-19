@@ -6,9 +6,13 @@ import { ProviderCollection, Worker, WorkerRequest, WorkerRequestProperties } fr
 import { DynamoDbTableProvider } from "@mcma/aws-dynamodb";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { awsV4Auth } from "@mcma/aws-client";
-import { startWorkflow } from "./operations";
 
-const { LogGroupName } = process.env;
+import { DataController } from "@local/data";
+
+import { startWorkflow } from "./operations";
+import { processNotification } from "./operations/process-notification";
+
+const { LogGroupName, PublicUrl, TableName } = process.env;
 
 const AWS = AWSXRay.captureAWS(require("aws-sdk"));
 
@@ -16,6 +20,8 @@ const authProvider = new AuthProvider().add(awsV4Auth(AWS));
 const dbTableProvider = new DynamoDbTableProvider();
 const loggerProvider = new AwsCloudWatchLoggerProvider("mam-service-worker", LogGroupName);
 const resourceManagerProvider = new ResourceManagerProvider(authProvider);
+
+const dataController = new DataController(TableName, PublicUrl, false, new AWS.DynamoDB());
 
 const providerCollection = new ProviderCollection({
     authProvider,
@@ -26,6 +32,7 @@ const providerCollection = new ProviderCollection({
 
 const worker =
     new Worker(providerCollection)
+        .addOperation("ProcessNotification", processNotification)
         .addOperation("StartWorkflow", startWorkflow);
 
 export async function handler(event: WorkerRequestProperties, context: Context) {
@@ -38,7 +45,7 @@ export async function handler(event: WorkerRequestProperties, context: Context) 
 
         await worker.doWork(new WorkerRequest(event, logger), {
             awsRequestId: context.awsRequestId,
-            s3: new AWS.S3(),
+            dataController
         });
     } catch (error) {
         logger.error("Error occurred when handling operation '" + event.operationName + "'");

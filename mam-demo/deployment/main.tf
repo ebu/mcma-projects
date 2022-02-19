@@ -61,7 +61,7 @@ module "website" {
 #########################
 
 module "service_registry" {
-  source = "https://ch-ebu-mcma-module-repository.s3.eu-central-1.amazonaws.com/ebu/service-registry/aws/0.13.27/module.zip"
+  source = "https://ch-ebu-mcma-module-repository.s3.eu-central-1.amazonaws.com/ebu/service-registry/aws/0.13.28/module.zip"
 
   prefix = "${var.global_prefix}-service-registry"
 
@@ -73,6 +73,7 @@ module "service_registry" {
   log_group = aws_cloudwatch_log_group.main
 
   services = [
+    module.service.service_definition,
     module.job_processor.service_definition,
     module.mediainfo_ame_service.service_definition,
     module.stepfunctions_workflow_service.service_definition,
@@ -84,7 +85,7 @@ module "service_registry" {
 #########################
 
 module "job_processor" {
-  source = "https://ch-ebu-mcma-module-repository.s3.eu-central-1.amazonaws.com/ebu/job-processor/aws/0.13.27/module.zip"
+  source = "https://ch-ebu-mcma-module-repository.s3.eu-central-1.amazonaws.com/ebu/job-processor/aws/0.13.28/module.zip"
 
   prefix = "${var.global_prefix}-job-processor"
 
@@ -97,6 +98,13 @@ module "job_processor" {
   service_registry = module.service_registry
 
   log_group = aws_cloudwatch_log_group.main
+
+  execute_api_arns = [
+    "${module.service_registry.aws_apigatewayv2_api.service_api.execution_arn}/${var.environment_type}/GET/*",
+    "${module.mediainfo_ame_service.aws_apigatewayv2_api.service_api.execution_arn}/${var.environment_type}/*/*",
+    "${module.stepfunctions_workflow_service.aws_apigatewayv2_api.service_api.execution_arn}/${var.environment_type}/*/*",
+    "${module.service.aws_apigatewayv2_api.rest_api.execution_arn}/${var.environment_type}/*/*",
+  ]
 }
 
 #########################

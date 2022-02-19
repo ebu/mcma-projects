@@ -13,7 +13,7 @@ terraform {
 variable "name" {
   type        = string
   description = "Optional variable to set a custom name for this service in the service registry"
-  default     = "StepFunctions Workflow Service"
+  default     = "MAM Service"
 }
 
 variable "prefix" {

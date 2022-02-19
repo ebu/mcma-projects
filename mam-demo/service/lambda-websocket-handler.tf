@@ -78,7 +78,8 @@ resource "aws_iam_role_policy" "websocket_handler" {
           "dynamodb:UpdateItem",
         ]
         Resource = [
-          aws_dynamodb_table.service_table.arn
+          aws_dynamodb_table.service_table.arn,
+          "${aws_dynamodb_table.service_table.arn}/index/*",
         ]
       },
       {

@@ -39,6 +39,7 @@
             ],
             "scripts": [],
             "allowedCommonJsDependencies": [
+              "@local/model",
               "@mcma/aws-client",
               "aws-sdk",
               "buffer",

@@ -28,15 +28,12 @@ export class AddAssetComponent implements OnInit {
     this.form = this.fb.group({
       title: ["", Validators.required],
       description: [""],
-      videoFile: ["",
+      inputFile: ["",
         Validators.compose([
           Validators.required,
           FormValidationUtils.fileExtensions(["mp4", "mxf", "mov"]),
         ])
       ],
-      thumbnailFile: ["", FormValidationUtils.fileExtensions(["jpeg", "jpg", "png"])],
-      closedCaptionsFile: ["", FormValidationUtils.fileExtensions(["dfxp"])],
-      transcriptFile: ["", FormValidationUtils.fileExtensions(["txt"])],
     });
   }
 
@@ -45,10 +42,10 @@ export class AddAssetComponent implements OnInit {
 
   submit() {
     if (this.form.valid) {
-      const videoFileInput = this.form.get("videoFile")?.value as FileInput;
+      const inputFileInput = this.form.get("inputFile")?.value as FileInput;
 
       const files: File[] = [];
-      files.push(...videoFileInput.files);
+      files.push(...inputFileInput.files);
 
       const fileDescriptors = files.map(f => {
         return { path: f.name, file: f };
@@ -61,9 +58,9 @@ export class AddAssetComponent implements OnInit {
       uploadDialogRef.componentInstance.status$.subscribe(({ success, bucket, filesPrefix }) => {
         DialogUploadComponent.closeDialog(uploadDialogRef);
         if (success) {
-          const videoFileName = filesPrefix + this.form.get("videoFile")?.value?.files[0]?.name;
+          const inputFileKey = filesPrefix + this.form.get("inputFile")?.value?.files[0]?.name;
 
-          this.logger.info(videoFileName);
+          this.logger.info(inputFileKey);
 
           const workflow = new MediaWorkflow({
             type: MediaWorkflowType.MediaIngest,
@@ -71,7 +68,7 @@ export class AddAssetComponent implements OnInit {
               title: this.form.get("title")?.value,
               description: this.form.get("description")?.value,
               bucket: bucket,
-              videoFile: videoFileName,
+              inputFile: inputFileKey,
             }
           });
 

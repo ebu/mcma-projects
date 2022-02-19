@@ -5,17 +5,21 @@ import { McmaApiRouteCollection } from "@mcma/api";
 import { DynamoDbTableProvider } from "@mcma/aws-dynamodb";
 import { buildAssetEssenceRoutes, buildAssetRoutes, buildAssetWorkflowRoutes, buildWorkflowRoutes } from "./routes";
 import { ConsoleLoggerProvider } from "@mcma/core";
+import { LambdaWorkerInvoker } from "@mcma/aws-lambda-worker-invoker";
+
+import { getDynamoDbOptions } from "@local/data";
 
 const AWS = AWSXRay.captureAWS(require("aws-sdk"));
 
 const loggerProvider = new ConsoleLoggerProvider("mam-service-api-handler");
-const dbTableProvider = new DynamoDbTableProvider({}, new AWS.DynamoDB());
+const dbTableProvider = new DynamoDbTableProvider(getDynamoDbOptions(false), new AWS.DynamoDB());
+const workerInvoker = new LambdaWorkerInvoker(new AWS.Lambda());
 
 const routes = new McmaApiRouteCollection();
 routes.addRoutes(buildAssetRoutes(dbTableProvider));
 routes.addRoutes(buildAssetEssenceRoutes(dbTableProvider));
 routes.addRoutes(buildAssetWorkflowRoutes(dbTableProvider));
-routes.addRoutes(buildWorkflowRoutes(dbTableProvider));
+routes.addRoutes(buildWorkflowRoutes(dbTableProvider, workerInvoker));
 
 const restController = new ApiGatewayApiController(routes, loggerProvider);
 

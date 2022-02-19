@@ -1,6 +1,6 @@
 apply from: "${project.rootDir}/gradle-tasks-for-npm.gradle"
 
-def awsAvailableLibraries = [".bin", "aws-sdk", "buffer", "dynamodb-doc", "events", "ieee754", "jmespath", "lodash", "punycode", "querystring", "url"]
+def awsAvailableLibraries = [".bin", "aws-sdk", "buffer", "dynamodb-doc", "events", "ieee754", "lodash", "punycode", "querystring", "url"]
 
 task copyNodeModules(type: Copy) {
     dependsOn npmInstall
