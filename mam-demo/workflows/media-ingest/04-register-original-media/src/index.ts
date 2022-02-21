@@ -2,13 +2,13 @@ import { Context } from "aws-lambda";
 
 import { McmaException, McmaTracker } from "@mcma/core";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
-import { AwsS3FileLocator } from "@mcma/aws-s3";
+import { S3Locator } from "@mcma/aws-s3";
 
 const loggerProvider = new AwsCloudWatchLoggerProvider("media-ingest-04-register-original-media", process.env.LogGroupName);
 
 type InputEvent = {
     input?: {
-        inputFile?: AwsS3FileLocator
+        inputFile?: S3Locator
     }
     tracker?: McmaTracker
 }
@@ -23,7 +23,7 @@ export async function handler(event: InputEvent, context: Context) {
 
     } catch (error) {
         logger.error("Failed to register original media");
-        logger.error(error.toString());
+        logger.error(error);
         throw new McmaException("Failed to register original media", error);
     } finally {
         logger.functionEnd(context.awsRequestId);

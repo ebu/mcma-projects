@@ -44,7 +44,7 @@ export async function handler(event: APIGatewayProxyEvent, context: Context) {
             statusCode: 200
         };
     } catch (error) {
-        logger.error(error?.toString());
+        logger.error(error);
         throw error;
     } finally {
         logger.functionEnd(context.awsRequestId);

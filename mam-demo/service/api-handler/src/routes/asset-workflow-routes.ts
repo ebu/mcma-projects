@@ -36,7 +36,7 @@ export function buildAssetWorkflowRoutes(dbTableProvider: DynamoDbTableProvider)
             resource = new MediaAssetWorkflow(properties);
         } catch (error) {
             requestContext.getLogger()?.error(error);
-            requestContext.setResponseStatusCode(HttpStatusCode.BadRequest, error.message);
+            requestContext.setResponseError(HttpStatusCode.BadRequest, error.message);
             return false;
         }
 

@@ -1,6 +1,6 @@
-import { McmaResource, McmaResourceProperties } from "@mcma/core";
-import { Locator, LocatorProperties } from "./locator";
-import { S3Locator, S3LocatorProperties } from "./s3-locator";
+import { Locator, LocatorProperties, McmaResource, McmaResourceProperties } from "@mcma/core";
+import { S3Locator, S3LocatorProperties } from "@mcma/aws-s3";
+
 import {
     AudioTechnicalMetadata,
     AudioTechnicalMetadataProperties,

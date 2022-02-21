@@ -40,7 +40,9 @@
             "scripts": [],
             "allowedCommonJsDependencies": [
               "@local/model",
+              "@mcma/aws-s3",
               "@mcma/aws-client",
+              "@mcma/core",
               "aws-sdk",
               "buffer",
               "crypto-js/enc-base64",

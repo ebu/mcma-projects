@@ -10,17 +10,19 @@
         "uuid": "^8.3.2"
     },
     "devDependencies": {
-        "@mcma/aws-dynamodb": "0.13.28",
-        "@mcma/core": "0.13.28",
-        "@mcma/data": "0.13.28",
+        "@mcma/aws-dynamodb": "0.14.1",
+        "@mcma/aws-s3": "0.14.1",
+        "@mcma/core": "0.14.1",
+        "@mcma/data": "0.14.1",
         "@types/node": "^14.17.24",
         "@types/uuid": "^8.3.0",
         "aws-sdk": "^2.1000.0"
     },
     "peerDependencies": {
-        "@mcma/aws-dynamodb": "0.13.28",
-        "@mcma/core": "0.13.28",
-        "@mcma/data": "0.13.28",
+        "@mcma/aws-dynamodb": "0.14.1",
+        "@mcma/aws-s3": "0.14.1",
+        "@mcma/core": "0.14.1",
+        "@mcma/data": "0.14.1",
         "aws-sdk": "^2.1000.0"
     }
 }

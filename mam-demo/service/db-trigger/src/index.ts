@@ -106,7 +106,7 @@ export async function handler(event: DynamoDBStreamEvent, context: Context) {
             }
         }
     } catch (error) {
-        logger.error(error?.toString());
+        logger.error(error);
         throw error;
     } finally {
         logger.functionEnd(context.awsRequestId);

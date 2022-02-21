@@ -1,15 +1,21 @@
 import { Context } from "aws-lambda";
+import * as AWSXRay from "aws-xray-sdk-core";
 
 import { McmaException, McmaTracker } from "@mcma/core";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
-import { AwsS3FileLocator } from "@mcma/aws-s3";
-import { default as axios } from "axios";
+import { S3Locator } from "@mcma/aws-s3";
+
+const AWS = AWSXRay.captureAWS(require("aws-sdk"));
 
 const loggerProvider = new AwsCloudWatchLoggerProvider("media-ingest-01-validate-input", process.env.LogGroupName);
 
+const s3 = new AWS.S3();
+
 type InputEvent = {
     input?: {
-        inputFile?: AwsS3FileLocator
+        title?: string
+        description?: string
+        inputFile?: S3Locator
     }
     tracker?: McmaTracker
 }
@@ -25,7 +31,12 @@ export async function handler(event: InputEvent, context: Context) {
         if (!event?.input) {
             throw new McmaException("Missing workflow input");
         }
-
+        if (!event.input.title) {
+            throw new McmaException("Missing 'title' parameter in workflow input");
+        }
+        if (!event.input.description) {
+            throw new McmaException("Missing 'description' parameter in workflow input");
+        }
         if (!event.input.inputFile) {
             throw new McmaException("Missing inputFile parameter in workflow input");
         }
@@ -33,7 +44,10 @@ export async function handler(event: InputEvent, context: Context) {
         const { inputFile } = event.input;
 
         try {
-            const result = await axios.get(inputFile.url, { headers: { Range: "bytes=0-0" } });
+            const result = await s3.headObject({
+                Bucket: inputFile.bucket,
+                Key: inputFile.key,
+            }).promise();
 
             logger.info(result);
         } catch (error) {
@@ -41,7 +55,7 @@ export async function handler(event: InputEvent, context: Context) {
         }
     } catch (error) {
         logger.error("Failed to validate workflow input");
-        logger.error(error.toString());
+        logger.error(error);
         throw new McmaException("Failed to validate workflow input", error);
     } finally {
         logger.functionEnd(context.awsRequestId);

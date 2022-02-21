@@ -50,7 +50,7 @@ export function buildAssetEssenceRoutes(dbTableProvider: DynamoDbTableProvider) 
             }
         } catch (error) {
             requestContext.getLogger()?.error(error);
-            requestContext.setResponseStatusCode(HttpStatusCode.BadRequest, error.message);
+            requestContext.setResponseError(HttpStatusCode.BadRequest, error.message);
             return false;
         }
 

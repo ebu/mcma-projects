@@ -7,10 +7,12 @@
     "types": "index.d.ts",
     "license": "Apache-2.0",
     "devDependencies": {
-        "@mcma/core": "0.13.28",
+        "@mcma/core": "0.14.1",
+        "@mcma/aws-s3": "0.14.1",
         "@types/node": "^14.17.24"
     },
     "peerDependencies": {
-        "@mcma/core": "0.13.28"
+        "@mcma/core": "0.14.1",
+        "@mcma/aws-s3": "0.14.1"
     }
 }

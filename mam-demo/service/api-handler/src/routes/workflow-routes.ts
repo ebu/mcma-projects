@@ -20,7 +20,7 @@ export function buildWorkflowRoutes(dbTableProvider: DynamoDbTableProvider, work
             resource = new MediaWorkflow(properties);
         } catch (error) {
             requestContext.getLogger()?.error(error);
-            requestContext.setResponseStatusCode(HttpStatusCode.BadRequest, error.message);
+            requestContext.setResponseError(HttpStatusCode.BadRequest, error.message);
             return false;
         }
 

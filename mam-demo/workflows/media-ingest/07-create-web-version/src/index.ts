@@ -2,13 +2,13 @@ import { Context } from "aws-lambda";
 
 import { McmaException, McmaTracker } from "@mcma/core";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
-import { AwsS3FileLocator } from "@mcma/aws-s3";
+import { S3Locator } from "@mcma/aws-s3";
 
 const loggerProvider = new AwsCloudWatchLoggerProvider("media-ingest-07-create-web-version", process.env.LogGroupName);
 
 type InputEvent = {
     input?: {
-        inputFile?: AwsS3FileLocator
+        inputFile?: S3Locator
     }
     tracker?: McmaTracker
 }
@@ -23,7 +23,7 @@ export async function handler(event: InputEvent, context: Context) {
 
     } catch (error) {
         logger.error("Failed to create web version");
-        logger.error(error.toString());
+        logger.error(error);
         throw new McmaException("Failed to create web version", error);
     } finally {
         logger.functionEnd(context.awsRequestId);

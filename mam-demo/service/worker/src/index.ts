@@ -49,7 +49,7 @@ export async function handler(event: WorkerRequestProperties, context: Context) 
         });
     } catch (error) {
         logger.error("Error occurred when handling operation '" + event.operationName + "'");
-        logger.error(error.toString());
+        logger.error(error);
     } finally {
         logger.functionEnd(context.awsRequestId);
         await loggerProvider.flush();

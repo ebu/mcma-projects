@@ -7,8 +7,10 @@ import { FileInput } from "ngx-material-file-input";
 import { MediaWorkflow, MediaWorkflowType } from "@local/model";
 
 import { DialogAssetIngestComponent, DialogUploadComponent } from "../../dialogs";
-import { DataService, LoggerService } from "../../services";
+import { ConfigService, DataService, LoggerService } from "../../services";
 import { FormValidationUtils } from "../utils";
+import { S3Locator } from "@mcma/aws-s3";
+import { zip } from "rxjs";
 
 @Component({
   selector: "app-add-asset",
@@ -22,6 +24,7 @@ export class AddAssetComponent implements OnInit {
     private router: Router,
     private dialog: MatDialog,
     private fb: FormBuilder,
+    private config: ConfigService,
     private data: DataService,
     private logger: LoggerService,
   ) {
@@ -55,20 +58,25 @@ export class AddAssetComponent implements OnInit {
 
       const successDialogRef = DialogAssetIngestComponent.createDialog(this.dialog, true);
       const uploadDialogRef = DialogUploadComponent.createDialog(this.dialog, dirname, fileDescriptors, false);
-      uploadDialogRef.componentInstance.status$.subscribe(({ success, bucket, filesPrefix }) => {
+
+      zip(
+        this.config.get("AwsRegion").pipe(),
+        uploadDialogRef.componentInstance.status$,
+      ).subscribe(([region, { success, bucket, filesPrefix }]) => {
         DialogUploadComponent.closeDialog(uploadDialogRef);
         if (success) {
-          const inputFileKey = filesPrefix + this.form.get("inputFile")?.value?.files[0]?.name;
+          const key = filesPrefix + this.form.get("inputFile")?.value?.files[0]?.name;
 
-          this.logger.info(inputFileKey);
+          this.logger.info(key);
 
           const workflow = new MediaWorkflow({
             type: MediaWorkflowType.MediaIngest,
             input: {
               title: this.form.get("title")?.value,
               description: this.form.get("description")?.value,
-              bucket: bucket,
-              inputFile: inputFileKey,
+              inputFile: new S3Locator({
+                url: `https://${bucket}.s3.${region}.amazonaws.com/${key}`
+              }),
             }
           });
 
