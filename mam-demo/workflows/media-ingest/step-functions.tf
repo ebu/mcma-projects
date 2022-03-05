@@ -64,7 +64,7 @@ resource "aws_sfn_state_machine" "workflow" {
       "Create media asset"         = {
         Type       = "Task"
         Resource   = aws_lambda_function.step_02_create_media_asset.arn
-        ResultPath = "$.data.mediaAssetId"
+        ResultPath = "$.data"
         Next       = "Extract technical metadata"
       }
       "Extract technical metadata" = {

@@ -1,14 +1,26 @@
 import { Context } from "aws-lambda";
+import * as AWSXRay from "aws-xray-sdk-core";
 
 import { McmaException, McmaTracker } from "@mcma/core";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { S3Locator } from "@mcma/aws-s3";
 
+import { MediaAsset, MediaAssetWorkflow, MediaWorkflowProperties } from "@local/model";
+import { DataController } from "@local/data";
+
+const AWS = AWSXRay.captureAWS(require("aws-sdk"));
+
+const { TableName, PublicUrl } = process.env;
+
 const loggerProvider = new AwsCloudWatchLoggerProvider("media-ingest-02-create-media-asset", process.env.LogGroupName);
+const dataController = new DataController(TableName, PublicUrl, true, new AWS.DynamoDB());
 
 type InputEvent = {
-    input?: {
-        inputFile?: S3Locator
+    input: {
+        mediaWorkflowId: string
+        title: string
+        description: string
+        inputFile: S3Locator
     }
     tracker?: McmaTracker
 }
@@ -20,8 +32,34 @@ export async function handler(event: InputEvent, context: Context) {
         logger.debug(event);
         logger.debug(context);
 
-        throw new McmaException("Not Implemented");
+        const mediaAsset = await dataController.createMediaAsset(new MediaAsset({
+            title: event.input.title,
+            description: event.input.description
+        }));
 
+        const mutex = await dataController.createMutex({ name: event.input.mediaWorkflowId, holder: context.awsRequestId, logger });
+        await mutex.lock();
+        try {
+            const mediaWorkflow = await dataController.get<MediaWorkflowProperties>(event.input.mediaWorkflowId);
+
+            const mediaAssetWorkflow = await dataController.createMediaAssetWorkflow(mediaAsset.id, new MediaAssetWorkflow({
+                mediaWorkflowId: mediaWorkflow.id,
+                mediaWorkflowType: mediaWorkflow.type,
+                data: {}
+            }));
+
+            mediaWorkflow.mediaAssetId = mediaAsset.id;
+            mediaWorkflow.mediaAssetWorkflowId = mediaAssetWorkflow.id;
+
+            await dataController.put(mediaWorkflow.id, mediaWorkflow);
+
+            return {
+                mediaAssetId: mediaAsset.id,
+                mediaAssetWorkflowId: mediaAssetWorkflow.id,
+            };
+        } finally {
+            await mutex.unlock();
+        }
     } catch (error) {
         logger.error("Failed to create media asset");
         logger.error(error);

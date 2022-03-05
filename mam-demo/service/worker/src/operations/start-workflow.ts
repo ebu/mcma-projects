@@ -21,7 +21,7 @@ export async function startWorkflow(providers: ProviderCollection, workerRequest
     let job = new WorkflowJob({
         parentId: mediaWorkflow.id,
         jobProfileId: await getJobProfileId(resourceManager, mediaWorkflow.type + "Workflow"),
-        jobInput: new JobParameterBag(mediaWorkflow.input),
+        jobInput: new JobParameterBag(Object.assign({ mediaWorkflowId: mediaWorkflow.id }, mediaWorkflow.input)),
         tracker: new McmaTracker({
             id: uuidv4(),
             label

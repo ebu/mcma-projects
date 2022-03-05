@@ -50,7 +50,7 @@ variable "iam_policy_path" {
 #########################
 
 variable "log_group" {
-  type        = object({
+  type = object({
     id   = string
     arn  = string
     name = string
@@ -76,15 +76,42 @@ variable "enhanced_monitoring_enabled" {
 
 variable "service_registry" {
   type = object({
-    auth_type    = string,
-    services_url = string,
+    auth_type              = string,
+    services_url           = string,
+    aws_apigatewayv2_stage = object({
+      service_api = object({
+        execution_arn = string
+      })
+    })
+  })
+}
+
+variable "job_processor" {
+  type = object({
+    aws_apigatewayv2_stage = object({
+      service_api = object({
+        execution_arn = string
+      })
+    })
   })
 }
 
 variable "media_bucket" {
-  type        = object({
+  type = object({
     id  = string
     arn = string
   })
   description = "Media bucket for Upload and Storage"
+}
+
+variable "mam_service" {
+  type = object({
+    rest_api_url       = string
+    aws_dynamodb_table = object({
+      service_table = object({
+        id  = string
+        arn = string
+      })
+    })
+  })
 }

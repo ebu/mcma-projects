@@ -154,10 +154,14 @@ module "media_ingest_workflow" {
 
   prefix = "${var.global_prefix}-wf-media-ingest"
 
-  aws_account_id   = data.aws_caller_identity.current.account_id
-  aws_region       = var.aws_region
+  aws_account_id = data.aws_caller_identity.current.account_id
+  aws_region     = var.aws_region
+
   service_registry = module.service_registry
-  media_bucket     = aws_s3_bucket.media
+  job_processor    = module.job_processor
+  mam_service      = module.service
+
+  media_bucket = aws_s3_bucket.media
 
   log_group = aws_cloudwatch_log_group.main
 }

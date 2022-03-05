@@ -35,9 +35,9 @@ resource "aws_iam_role_policy" "step_02_create_media_asset" {
         Resource = "*"
       },
       {
-        Sid      = "WriteToCloudWatchLogs"
-        Effect   = "Allow"
-        Action   = [
+        Sid    = "WriteToCloudWatchLogs"
+        Effect = "Allow"
+        Action = [
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
           "logs:PutLogEvents",
@@ -49,9 +49,39 @@ resource "aws_iam_role_policy" "step_02_create_media_asset" {
         ]
       },
       {
-        Sid      = "XRay"
+        Sid      = "ListAndDescribeDynamoDBTables"
         Effect   = "Allow"
         Action   = [
+          "dynamodb:List*",
+          "dynamodb:DescribeReservedCapacity*",
+          "dynamodb:DescribeLimits",
+          "dynamodb:DescribeTimeToLive",
+        ]
+        Resource = "*"
+      },
+      {
+        Sid      = "AllowTableOperations"
+        Effect   = "Allow"
+        Action   = [
+          "dynamodb:BatchGetItem",
+          "dynamodb:BatchWriteItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:DescribeTable",
+          "dynamodb:GetItem",
+          "dynamodb:PutItem",
+          "dynamodb:Query",
+          "dynamodb:Scan",
+          "dynamodb:UpdateItem",
+        ]
+        Resource = [
+          var.mam_service.aws_dynamodb_table.service_table.arn,
+          "${var.mam_service.aws_dynamodb_table.service_table.arn}/index/*",
+        ]
+      },
+      {
+        Sid    = "XRay"
+        Effect = "Allow"
+        Action = [
           "xray:PutTraceSegments",
           "xray:PutTelemetryRecords",
           "xray:GetSamplingRules",
@@ -85,6 +115,8 @@ resource "aws_lambda_function" "step_02_create_media_asset" {
   environment {
     variables = {
       LogGroupName = var.log_group.name
+      TableName    = var.mam_service.aws_dynamodb_table.service_table.id
+      PublicUrl    = var.mam_service.rest_api_url
     }
   }
 

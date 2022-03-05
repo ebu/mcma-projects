@@ -12,7 +12,7 @@ export async function processNotification(providers: ProviderCollection, workerR
     const notification: Notification = workerRequest.input.notification;
     const workflowJob = notification.content;
 
-    let mediaWorkflow = await dataController.get<MediaWorkflowProperties>(mediaWorkflowDatabaseId);
+    const mediaWorkflow = await dataController.get<MediaWorkflowProperties>(mediaWorkflowDatabaseId);
 
     mediaWorkflow.status = workflowJob.status;
     mediaWorkflow.error = workflowJob.error;

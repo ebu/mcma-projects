@@ -7,8 +7,15 @@ import { S3Locator } from "@mcma/aws-s3";
 const loggerProvider = new AwsCloudWatchLoggerProvider("media-ingest-03-extract-technical-metadata", process.env.LogGroupName);
 
 type InputEvent = {
-    input?: {
-        inputFile?: S3Locator
+    input: {
+        mediaWorkflowId: string
+        title: string
+        description: string
+        inputFile: S3Locator
+    }
+    data: {
+        mediaAssetId: string
+        mediaAssetWorkflowId: string
     }
     tracker?: McmaTracker
 }
@@ -20,6 +27,7 @@ export async function handler(event: InputEvent, context: Context) {
         logger.debug(event);
         logger.debug(context);
 
+        throw new McmaException("Not Implemented");
 
     } catch (error) {
         logger.error("Failed to extract technical metadata");

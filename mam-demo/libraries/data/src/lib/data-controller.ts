@@ -1,8 +1,11 @@
-import { DocumentDatabaseTable, QueryResults } from "@mcma/data";
+import { DocumentDatabaseMutex, DocumentDatabaseTable, MutexProperties, QueryResults } from "@mcma/data";
 import { DynamoDB } from "aws-sdk";
+import { v4 as uuidv4 } from "uuid";
 
 import { McmaResourceProperties } from "@mcma/core";
 import { DynamoDbTableOptions, DynamoDbTableProvider } from "@mcma/aws-dynamodb";
+
+import { MediaAssetProperties, MediaAssetWorkflowProperties, MediaWorkflowProperties } from "@local/model";
 
 export function getDynamoDbOptions(consistentRead: boolean): DynamoDbTableOptions {
     return {
@@ -27,6 +30,11 @@ export class DataController {
             this.dbTable = await this.dbTableProvider.get(this.tableName);
         }
         return this.dbTable;
+    }
+
+    async createMutex(mutexProperties: MutexProperties): Promise<DocumentDatabaseMutex> {
+        await this.init();
+        return this.dbTable.createMutex(mutexProperties);
     }
 
     async query<T extends McmaResourceProperties>(path: string, pageSize?: number, pageStartToken?: string): Promise<QueryResults<T>> {
@@ -64,5 +72,17 @@ export class DataController {
             id = id.substring(this.publicUrl.length);
         }
         return this.dbTable.delete(id);
+    }
+
+    async createMediaAsset<T extends MediaAssetProperties>(mediaAsset: T): Promise<T> {
+        return this.put(`/assets/${uuidv4()}`, mediaAsset);
+    }
+
+    async createMediaAssetWorkflow<T extends MediaAssetWorkflowProperties>(mediaAssetId: string, mediaAssetWorkflow: T): Promise<T> {
+        return this.put(`${mediaAssetId}/workflows/${uuidv4()}`, mediaAssetWorkflow);
+    }
+
+    async createMediaWorkflow<T extends MediaWorkflowProperties>(mediaWorkflow: T): Promise<T> {
+        return this.put(`/workflows/${uuidv4()}`, mediaWorkflow);
     }
 }

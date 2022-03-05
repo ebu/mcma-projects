@@ -13,6 +13,7 @@ const s3 = new AWS.S3();
 
 type InputEvent = {
     input?: {
+        mediaWorkflowId?: string
         title?: string
         description?: string
         inputFile?: S3Locator
@@ -30,6 +31,9 @@ export async function handler(event: InputEvent, context: Context) {
         // check the input and return mediaFileLocator which service as input for the AI workflows
         if (!event?.input) {
             throw new McmaException("Missing workflow input");
+        }
+        if (!event.input.mediaWorkflowId) {
+            throw new McmaException("Missing 'mediaWorkflowId' parameter in workflow input");
         }
         if (!event.input.title) {
             throw new McmaException("Missing 'title' parameter in workflow input");
