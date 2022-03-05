@@ -14,14 +14,18 @@ export interface MediaEssenceProperties extends McmaResourceProperties {
     filename?: string;
     extension?: string;
     size?: number;
+    duration?: number;
     locators?: LocatorProperties[];
+    tags?: string[];
 }
 
 export class MediaEssence extends McmaResource implements MediaEssenceProperties {
     filename?: string;
     extension?: string;
-    size: number;
+    size?: number;
+    duration?: number;
     locators: Locator[];
+    tags: string[];
 
     constructor(properties: MediaEssenceProperties);
     constructor(type: string, properties: MediaEssenceProperties);
@@ -31,6 +35,15 @@ export class MediaEssence extends McmaResource implements MediaEssenceProperties
             typeOrProperties = "MediaEssence";
         }
         super(<string>typeOrProperties, properties);
+
+        this.checkProperty("filename", "string", false);
+        this.checkProperty("extension", "string", false);
+        this.checkProperty("size", "number", false);
+        this.checkProperty("duration", "number", false);
+
+        if (this.extension) {
+            this.extension = this.extension.toLowerCase();
+        }
 
         if (!Array.isArray(this.locators)) {
             this.locators = [];
@@ -44,8 +57,8 @@ export class MediaEssence extends McmaResource implements MediaEssenceProperties
             }
         });
 
-        if (!this.size) {
-            this.size = 0;
+        if (!Array.isArray(this.tags)) {
+            this.tags = [];
         }
     }
 }

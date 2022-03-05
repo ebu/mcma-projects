@@ -5,12 +5,12 @@ export interface TechnicalMetadataProperties extends McmaObjectProperties {
 }
 
 export class TechnicalMetadata extends McmaObject implements TechnicalMetadataProperties {
-    codec: string;
+    codec?: string;
 
     constructor(type: string, properties: TechnicalMetadataProperties) {
         super(type, properties);
 
-        this.codec = this.codec ?? null;
+        this.checkProperty("codec", "string", false);
     }
 }
 
@@ -21,22 +21,22 @@ export interface ImageTechnicalMetadataProperties extends TechnicalMetadataPrope
 }
 
 export class ImageTechnicalMetadata extends TechnicalMetadata implements ImageTechnicalMetadataProperties {
-    width: number;
-    height: number;
-    aspectRatio: string;
+    width?: number;
+    height?: number;
+    aspectRatio?: string;
 
     constructor(properties: ImageTechnicalMetadataProperties);
     constructor(type: string, properties: ImageTechnicalMetadataProperties);
     constructor(typeOrProperties: string | ImageTechnicalMetadataProperties, properties?: ImageTechnicalMetadataProperties) {
         if (!properties && typeof typeOrProperties !== "string") {
             properties = typeOrProperties;
-            typeOrProperties = "ImageTechnicalProperties";
+            typeOrProperties = "ImageTechnicalMetadata";
         }
         super(typeOrProperties as string, properties);
 
-        this.width = this.width ?? null;
-        this.height = this.height ?? null;
-        this.aspectRatio = this.aspectRatio ?? null;
+        this.checkProperty("width", "number", false);
+        this.checkProperty("height", "number", false);
+        this.checkProperty("aspectRatio", "string", false);
     }
 }
 
@@ -55,7 +55,6 @@ export enum BitRateMode {
 }
 
 export interface VideoTechnicalMetadataProperties extends ImageTechnicalMetadataProperties {
-    duration?: number;
     frameRate?: number;
     bitRate?: number;
     bitRateMode?: BitRateMode;
@@ -63,45 +62,45 @@ export interface VideoTechnicalMetadataProperties extends ImageTechnicalMetadata
 }
 
 export class VideoTechnicalMetadata extends ImageTechnicalMetadata implements VideoTechnicalMetadataProperties {
-    duration: number;
-    frameRate: number;
-    bitRate: number;
+    frameRate?: number;
+    bitRate?: number;
     bitRateMode: BitRateMode;
     scanType: VideoScanType;
 
     constructor(properties: VideoTechnicalMetadataProperties) {
-        super("VideoTechnicalMetadataProperties", properties);
+        super("VideoTechnicalMetadata", properties);
 
-        this.duration = this.duration ?? null;
-        this.frameRate = this.frameRate ?? null;
-        this.bitRate = this.bitRate ?? null;
+        this.checkProperty("frameRate", "number", false);
+        this.checkProperty("bitRate", "number", false);
+
         this.bitRateMode = this.bitRateMode ?? BitRateMode.Unknown;
         this.scanType = this.scanType ?? VideoScanType.Unknown;
     }
 }
 
 export interface AudioTechnicalMetadataProperties extends TechnicalMetadataProperties {
-    duration?: number;
     channels?: number;
     samplingRate?: number;
     sampleSize?: number;
     bitRate?: number;
+    bitRateMode?: BitRateMode;
 }
 
 export class AudioTechnicalMetadata extends TechnicalMetadata implements AudioTechnicalMetadataProperties {
-    duration: number;
-    channels: number;
-    samplingRate: number;
-    sampleSize: number;
-    bitRate: number;
+    channels?: number;
+    samplingRate?: number;
+    sampleSize?: number;
+    bitRate?: number;
+    bitRateMode?: BitRateMode;
 
     constructor(properties: AudioTechnicalMetadataProperties) {
-        super("AudioTechnicalMetadataProperties", properties);
+        super("AudioTechnicalMetadata", properties);
 
-        this.duration = this.duration ?? null;
-        this.channels = this.channels ?? null;
-        this.samplingRate = this.samplingRate ?? null;
-        this.sampleSize = this.sampleSize ?? null;
-        this.bitRate = this.bitRate ?? null;
+        this.checkProperty("channels", "number", false);
+        this.checkProperty("samplingRate", "number", false);
+        this.checkProperty("sampleSize", "number", false);
+        this.checkProperty("bitRate", "number", false);
+
+        this.bitRateMode = this.bitRateMode ?? BitRateMode.Unknown;
     }
 }

@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import { McmaResourceProperties } from "@mcma/core";
 import { DynamoDbTableOptions, DynamoDbTableProvider } from "@mcma/aws-dynamodb";
 
-import { MediaAssetProperties, MediaAssetWorkflowProperties, MediaWorkflowProperties } from "@local/model";
+import { MediaAssetProperties, MediaAssetWorkflowProperties, MediaEssenceProperties, MediaWorkflowProperties } from "@local/model";
 
 export function getDynamoDbOptions(consistentRead: boolean): DynamoDbTableOptions {
     return {
@@ -80,6 +80,10 @@ export class DataController {
 
     async createMediaAssetWorkflow<T extends MediaAssetWorkflowProperties>(mediaAssetId: string, mediaAssetWorkflow: T): Promise<T> {
         return this.put(`${mediaAssetId}/workflows/${uuidv4()}`, mediaAssetWorkflow);
+    }
+
+    async createMediaEssence<T extends MediaEssenceProperties>(mediaAssetId: string, mediaEssence: T): Promise<T> {
+        return this.put(`${mediaAssetId}/essences/${uuidv4()}`, mediaEssence);
     }
 
     async createMediaWorkflow<T extends MediaWorkflowProperties>(mediaWorkflow: T): Promise<T> {

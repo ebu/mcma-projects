@@ -49,6 +49,18 @@ resource "aws_iam_role_policy" "step_02_create_media_asset" {
         ]
       },
       {
+        Sid    = "XRay"
+        Effect = "Allow"
+        Action = [
+          "xray:PutTraceSegments",
+          "xray:PutTelemetryRecords",
+          "xray:GetSamplingRules",
+          "xray:GetSamplingTargets",
+          "xray:GetSamplingStatisticSummaries",
+        ]
+        Resource = "*"
+      },
+      {
         Sid      = "ListAndDescribeDynamoDBTables"
         Effect   = "Allow"
         Action   = [
@@ -77,24 +89,6 @@ resource "aws_iam_role_policy" "step_02_create_media_asset" {
           var.mam_service.aws_dynamodb_table.service_table.arn,
           "${var.mam_service.aws_dynamodb_table.service_table.arn}/index/*",
         ]
-      },
-      {
-        Sid    = "XRay"
-        Effect = "Allow"
-        Action = [
-          "xray:PutTraceSegments",
-          "xray:PutTelemetryRecords",
-          "xray:GetSamplingRules",
-          "xray:GetSamplingTargets",
-          "xray:GetSamplingStatisticSummaries",
-        ]
-        Resource = "*"
-      },
-      {
-        Sid      = "S3ReadFromMediaBucket"
-        Effect   = "Allow"
-        Action   = "s3:GetObject"
-        Resource = "${var.media_bucket.arn}/*"
       },
     ]
   })

@@ -35,9 +35,9 @@ resource "aws_iam_role_policy" "step_03_extract_technical_metadata" {
         Resource = "*"
       },
       {
-        Sid      = "WriteToCloudWatchLogs"
-        Effect   = "Allow"
-        Action   = [
+        Sid    = "WriteToCloudWatchLogs"
+        Effect = "Allow"
+        Action = [
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
           "logs:PutLogEvents",
@@ -49,9 +49,9 @@ resource "aws_iam_role_policy" "step_03_extract_technical_metadata" {
         ]
       },
       {
-        Sid      = "XRay"
-        Effect   = "Allow"
-        Action   = [
+        Sid    = "XRay"
+        Effect = "Allow"
+        Action = [
           "xray:PutTraceSegments",
           "xray:PutTelemetryRecords",
           "xray:GetSamplingRules",
@@ -61,10 +61,25 @@ resource "aws_iam_role_policy" "step_03_extract_technical_metadata" {
         Resource = "*"
       },
       {
-        Sid      = "S3ReadFromMediaBucket"
+        Sid      = "AllowInvokingApiGateway"
+        Effect   = "Allow"
+        Action   = "execute-api:Invoke"
+        Resource = [
+          "${var.service_registry.aws_apigatewayv2_stage.service_api.execution_arn}/GET/*",
+          "${var.job_processor.aws_apigatewayv2_stage.service_api.execution_arn}/*/*",
+        ]
+      },
+      {
+        Sid      = "AllowReadingFromMediaBucket"
         Effect   = "Allow"
         Action   = "s3:GetObject"
         Resource = "${var.media_bucket.arn}/*"
+      },
+      {
+        Sid      = "AllowGettingActivityTask"
+        Effect   = "Allow"
+        Action   = "states:GetActivityTask"
+        Resource = aws_sfn_activity.step_03_extract_technical_metadata.id
       },
     ]
   })
@@ -84,7 +99,10 @@ resource "aws_lambda_function" "step_03_extract_technical_metadata" {
 
   environment {
     variables = {
-      LogGroupName = var.log_group.name
+      LogGroupName     = var.log_group.name
+      ServicesUrl      = var.service_registry.services_url
+      ServicesAuthType = var.service_registry.auth_type
+      ActivityArn      = aws_sfn_activity.step_03_extract_technical_metadata.id
     }
   }
 

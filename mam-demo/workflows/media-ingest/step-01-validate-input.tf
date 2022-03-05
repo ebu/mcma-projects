@@ -61,7 +61,7 @@ resource "aws_iam_role_policy" "step_01_validate_input" {
         Resource = "*"
       },
       {
-        Sid      = "S3ReadFromMediaBucket"
+        Sid      = "AllowReadingFromMediaBucket"
         Effect   = "Allow"
         Action   = "s3:GetObject"
         Resource = "${var.media_bucket.arn}/*"

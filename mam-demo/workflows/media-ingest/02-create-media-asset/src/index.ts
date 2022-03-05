@@ -1,7 +1,7 @@
 import { Context } from "aws-lambda";
 import * as AWSXRay from "aws-xray-sdk-core";
 
-import { McmaException, McmaTracker } from "@mcma/core";
+import { McmaException, McmaTracker, NotificationEndpointProperties } from "@mcma/core";
 import { AwsCloudWatchLoggerProvider } from "@mcma/aws-logger";
 import { S3Locator } from "@mcma/aws-s3";
 
@@ -23,6 +23,7 @@ type InputEvent = {
         inputFile: S3Locator
     }
     tracker?: McmaTracker
+    notificationEndpoint: NotificationEndpointProperties
 }
 
 export async function handler(event: InputEvent, context: Context) {

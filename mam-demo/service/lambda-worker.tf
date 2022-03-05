@@ -87,7 +87,7 @@ resource "aws_iam_role_policy" "worker" {
         Effect   = "Allow"
         Action   = "execute-api:Invoke"
         Resource = [
-          "${var.service_registry.aws_apigatewayv2_stage.service_api.execution_arn}/*/*",
+          "${var.service_registry.aws_apigatewayv2_stage.service_api.execution_arn}/GET/*",
           "${var.job_processor.aws_apigatewayv2_stage.service_api.execution_arn}/*/*",
         ]
       },
