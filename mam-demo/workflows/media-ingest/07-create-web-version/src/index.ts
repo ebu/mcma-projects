@@ -20,6 +20,7 @@ export async function handler(event: InputEvent, context: Context) {
         logger.debug(event);
         logger.debug(context);
 
+        throw new McmaException("Not implemented")
 
     } catch (error) {
         logger.error("Failed to create web version");

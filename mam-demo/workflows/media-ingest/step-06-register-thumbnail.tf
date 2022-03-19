@@ -61,10 +61,55 @@ resource "aws_iam_role_policy" "step_06_register_thumbnail" {
         Resource = "*"
       },
       {
-        Sid      = "S3ReadFromMediaBucket"
+        Sid      = "AllowInvokingApiGateway"
         Effect   = "Allow"
-        Action   = "s3:GetObject"
+        Action   = "execute-api:Invoke"
+        Resource = [
+          "${var.service_registry.aws_apigatewayv2_stage.service_api.execution_arn}/GET/*",
+          "${var.job_processor.aws_apigatewayv2_stage.service_api.execution_arn}/*/*",
+        ]
+      },
+      {
+        Sid      = "AllowBucketLocation"
+        Effect   = "Allow"
+        Action   = "s3:GetBucketLocation"
+        Resource = var.media_bucket.arn
+      },
+      {
+        Sid      = "AllowReadingWritingMediaBucket"
+        Effect   = "Allow"
+        Action   = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]
         Resource = "${var.media_bucket.arn}/*"
+      },
+      {
+        Sid      = "ListAndDescribeDynamoDBTables"
+        Effect   = "Allow"
+        Action   = [
+          "dynamodb:List*",
+          "dynamodb:DescribeReservedCapacity*",
+          "dynamodb:DescribeLimits",
+          "dynamodb:DescribeTimeToLive",
+        ]
+        Resource = "*"
+      },
+      {
+        Sid      = "AllowTableOperations"
+        Effect   = "Allow"
+        Action   = [
+          "dynamodb:BatchGetItem",
+          "dynamodb:BatchWriteItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:DescribeTable",
+          "dynamodb:GetItem",
+          "dynamodb:PutItem",
+          "dynamodb:Query",
+          "dynamodb:Scan",
+          "dynamodb:UpdateItem",
+        ]
+        Resource = [
+          var.mam_service.aws_dynamodb_table.service_table.arn,
+          "${var.mam_service.aws_dynamodb_table.service_table.arn}/index/*",
+        ]
       },
     ]
   })
@@ -84,7 +129,12 @@ resource "aws_lambda_function" "step_06_register_thumbnail" {
 
   environment {
     variables = {
-      LogGroupName = var.log_group.name
+      LogGroupName     = var.log_group.name
+      MediaBucket      = var.media_bucket.id
+      TableName        = var.mam_service.aws_dynamodb_table.service_table.id
+      PublicUrl        = var.mam_service.rest_api_url
+      ServicesUrl      = var.service_registry.services_url
+      ServicesAuthType = var.service_registry.auth_type
     }
   }
 

@@ -63,9 +63,6 @@ export async function handler(event: InputEvent, context: Context) {
         };
         await S3Utils.multipartCopy(event.input.inputFile, target, s3);
 
-        logger.info("Deleting media file from temp location");
-        await s3.deleteObject({ Bucket: event.input.inputFile.bucket, Key: event.input.inputFile.key }).promise();
-
         const tags: string[] = ["Original"];
 
         const ebucoreVideoFormat = extractMetadata(metadata, "ebucore:videoFormat", logger);
