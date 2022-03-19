@@ -76,6 +76,7 @@ module "service_registry" {
     module.service.service_definition,
     module.job_processor.service_definition,
     module.mediainfo_ame_service.service_definition,
+    module.ffmpeg_service.service_definition,
     module.stepfunctions_workflow_service.service_definition,
   ]
 }
@@ -101,6 +102,7 @@ module "job_processor" {
 
   execute_api_arns = [
     "${module.service_registry.aws_apigatewayv2_api.service_api.execution_arn}/${var.environment_type}/GET/*",
+    "${module.ffmpeg_service.aws_apigatewayv2_api.service_api.execution_arn}/${var.environment_type}/*/*",
     "${module.mediainfo_ame_service.aws_apigatewayv2_api.service_api.execution_arn}/${var.environment_type}/*/*",
     "${module.stepfunctions_workflow_service.aws_apigatewayv2_api.service_api.execution_arn}/${var.environment_type}/*/*",
     "${module.service.aws_apigatewayv2_api.rest_api.execution_arn}/${var.environment_type}/*/*",
@@ -122,6 +124,24 @@ module "mediainfo_ame_service" {
   aws_region     = var.aws_region
 
   service_registry = module.service_registry
+
+  log_group = aws_cloudwatch_log_group.main
+}
+
+#########################
+# FFmpeg service
+#########################
+
+module "ffmpeg_service" {
+  source = "https://ch-ebu-mcma-module-repository.s3.eu-central-1.amazonaws.com/ebu/ffmpeg-service/aws/0.0.1/module.zip"
+
+  prefix = "${var.global_prefix}-ffmpeg-service"
+
+  stage_name = var.environment_type
+  aws_region = var.aws_region
+
+  service_registry = module.service_registry
+  job_processor    = module.job_processor
 
   log_group = aws_cloudwatch_log_group.main
 }

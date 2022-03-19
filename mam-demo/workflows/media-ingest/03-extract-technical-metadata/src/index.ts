@@ -47,9 +47,10 @@ export async function handler(event: InputEvent, context: Context) {
         logger.debug(context);
 
         const data = await stepFunctions.getActivityTask({ activityArn: ActivityArn }).promise();
+        logger.info(data);
+
         const taskToken = data.taskToken;
         if (!taskToken) {
-            logger.debug(data);
             throw new McmaException("Failed to obtain activity task");
         }
 
