@@ -58,7 +58,10 @@ export async function handler(event: InputEvent, context: Context) {
 
         const response = await axios.get(outputFile.url, { responseType: "stream" });
         logger.info(response.headers);
-        const size = Number.parseInt(response.headers["content-length"]);
+        let size = Number.parseInt(response.headers["content-length"]);
+        if (Number.isNaN(size)) {
+            size = undefined;
+        }
         const contentType = response.headers["content-type"];
 
         const uploadParams: AWS.S3.Types.PutObjectRequest = {
