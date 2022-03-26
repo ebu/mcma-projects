@@ -8,7 +8,7 @@ import { buildS3Url, S3Locator } from "@mcma/aws-s3";
 import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { awsV4Auth } from "@mcma/aws-client";
 
-import { ImageEssence, ImageTechnicalMetadata } from "@local/model";
+import { ImageEssence, ImageTechnicalMetadata, MediaAssetProperties } from "@local/model";
 import { DataController } from "@local/data";
 
 const { MediaBucket, TableName, PublicUrl } = process.env;
@@ -79,7 +79,10 @@ export async function handler(event: InputEvent, context: Context) {
             codec: "JPEG",
             aspectRatio: "16/9",
         });
-        const locators = [new S3Locator({ url: await buildS3Url(uploadParams.Bucket, uploadParams.Key, s3) })];
+
+        const thumbnailUrl = await buildS3Url(uploadParams.Bucket, uploadParams.Key, s3);
+
+        const locators = [new S3Locator({ url: thumbnailUrl })];
         const tags: string[] = ["Thumbnail"];
 
         const imageEssence = await dataController.createMediaEssence(event.data.mediaAssetId, new ImageEssence({
@@ -91,6 +94,16 @@ export async function handler(event: InputEvent, context: Context) {
             tags,
         }));
         logger.info(imageEssence);
+
+        const mutex = await dataController.createMutex({ name: event.data.mediaAssetId, holder: context.awsRequestId, logger });
+        await mutex.lock();
+        try {
+            const mediaAsset = await dataController.get<MediaAssetProperties>(event.data.mediaAssetId);
+            mediaAsset.thumbnailUrl = thumbnailUrl;
+            await dataController.put(mediaAsset.id, mediaAsset);
+        } finally {
+            await mutex.unlock();
+        }
 
         //Move this to new last step of workflow
         logger.info("Deleting media file from temp location");

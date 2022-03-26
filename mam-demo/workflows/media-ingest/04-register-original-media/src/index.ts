@@ -9,7 +9,7 @@ import { buildS3Url, S3Locator } from "@mcma/aws-s3";
 import { AuthProvider, getResourceManagerConfig, ResourceManager } from "@mcma/client";
 import { awsV4Auth } from "@mcma/aws-client";
 
-import { AudioTechnicalMetadata, BitRateMode, VideoEssence, VideoScanType, VideoTechnicalMetadata } from "@local/model";
+import { AudioTechnicalMetadata, BitRateMode, MediaAssetProperties, VideoEssence, VideoScanType, VideoTechnicalMetadata } from "@local/model";
 import { DataController, S3Utils } from "@local/data";
 
 const { MediaBucket, TableName, PublicUrl } = process.env;
@@ -78,7 +78,9 @@ export async function handler(event: InputEvent, context: Context) {
             size = undefined;
         }
 
-        const locators = [new S3Locator({ url: await buildS3Url(target.bucket, target.key, s3) })];
+        const videoUrl = await buildS3Url(target.bucket, target.key, s3);
+
+        const locators = [new S3Locator({ url: videoUrl })];
 
         if (ebucoreVideoFormat) {
             const videoTechnicalMetadata = createVideoTechnicalMetadata(ebucoreVideoFormat);
@@ -106,6 +108,18 @@ export async function handler(event: InputEvent, context: Context) {
             }));
 
             logger.info(videoEssence);
+
+            if (!createWebVersion) {
+                const mutex = await dataController.createMutex({ name: event.data.mediaAssetId, holder: context.awsRequestId, logger });
+                await mutex.lock();
+                try {
+                    const mediaAsset = await dataController.get<MediaAssetProperties>(event.data.mediaAssetId);
+                    mediaAsset.videoUrl = videoUrl;
+                    await dataController.put(mediaAsset.id, mediaAsset);
+                } finally {
+                    await mutex.unlock();
+                }
+            }
 
             return createWebVersion;
         } else {

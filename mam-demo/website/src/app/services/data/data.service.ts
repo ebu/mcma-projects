@@ -3,7 +3,8 @@ import { HttpClient } from "@angular/common/http";
 import { switchMap } from "rxjs/operators";
 import { QueryResults } from "@mcma/data";
 
-import { MediaWorkflow } from "@local/model";
+import { MediaAsset, MediaWorkflow } from "@local/model";
+
 import { ConfigService } from "../config";
 
 @Injectable({
@@ -27,6 +28,22 @@ export class DataService {
   listWorkflows() {
     return this.getRestApiUrl().pipe(
       switchMap(url => this.http.get<QueryResults<MediaWorkflow>>(`${url}/workflows`))
+    );
+  }
+
+  listMediaAssets(pageSize: number, pageStartToken?: string) {
+    const params: any = {
+      sortBy: "dateCreated",
+      sortOrder: "desc",
+      pageSize: pageSize,
+    };
+    if (pageStartToken) {
+      params.pageStartToken = pageStartToken;
+    }
+    return this.getRestApiUrl().pipe(
+      switchMap(url => this.http.get<QueryResults<MediaAsset>>(`${url}/assets`, {
+        params: params
+      }))
     );
   }
 }

@@ -87,7 +87,13 @@ resource "aws_iam_role_policy" "api_handler" {
         Effect   = "Allow"
         Action   = "lambda:InvokeFunction"
         Resource = "arn:aws:lambda:${var.aws_region}:${var.aws_account_id}:function:${local.lambda_name_worker}"
-      }
+      },
+      {
+        Sid      = "AllowReadingMediaBucket"
+        Effect   = "Allow"
+        Action   = "s3:GetObject"
+        Resource = "${var.media_bucket.arn}/*"
+      },
     ],
     var.xray_tracing_enabled ?
     [

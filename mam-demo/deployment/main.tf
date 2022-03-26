@@ -28,13 +28,14 @@ module "service" {
 
   prefix = "${var.global_prefix}-mam-service"
 
+  stage_name = var.environment_type
+
   aws_account_id = data.aws_caller_identity.current.account_id
   aws_region     = var.aws_region
 
+  media_bucket = aws_s3_bucket.media
   service_registry = module.service_registry
   job_processor    = module.job_processor
-
-  stage_name = var.environment_type
 
   log_group = aws_cloudwatch_log_group.main
 }

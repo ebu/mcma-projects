@@ -39,12 +39,6 @@ variable "iam_role_path" {
   default     = "/"
 }
 
-variable "iam_policy_path" {
-  type        = string
-  description = "Path for creation of access policy"
-  default     = "/"
-}
-
 #########################
 # Logging
 #########################

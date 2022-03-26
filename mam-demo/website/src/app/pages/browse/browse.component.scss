@@ -1,0 +1,38 @@
+.container {
+  position: relative;
+}
+
+.loading-shade {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 56px;
+  right: 0;
+  background: rgba(0, 0, 0, 0.15);
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+table {
+  width: 100%;
+}
+
+img {
+  display: block;
+}
+
+.mat-column-thumbnail {
+  width: 160px;
+  padding: 0 24px 0 0;
+}
+
+.mat-column-title {
+  width: 30%;
+  padding: 0 24px 0 0;
+}
+
+.mat-column-description {
+  padding: 0;
+}

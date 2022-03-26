@@ -49,6 +49,12 @@ variable "aws_region" {
 #########################
 # Dependencies
 #########################
+variable "media_bucket" {
+  type        = object({
+    arn = string
+  })
+  description = "Media bucket for Upload and Storage"
+}
 
 variable "service_registry" {
   type = object({

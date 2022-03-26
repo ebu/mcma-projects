@@ -10,13 +10,14 @@ import { LambdaWorkerInvoker } from "@mcma/aws-lambda-worker-invoker";
 import { getDynamoDbOptions } from "@local/data";
 
 const AWS = AWSXRay.captureAWS(require("aws-sdk"));
+const s3 = new AWS.S3({ signatureVersion: "v4" });
 
 const loggerProvider = new ConsoleLoggerProvider("mam-service-api-handler");
 const dbTableProvider = new DynamoDbTableProvider(getDynamoDbOptions(false), new AWS.DynamoDB());
 const workerInvoker = new LambdaWorkerInvoker(new AWS.Lambda());
 
 const routes = new McmaApiRouteCollection();
-routes.addRoutes(buildAssetRoutes(dbTableProvider));
+routes.addRoutes(buildAssetRoutes(dbTableProvider, s3));
 routes.addRoutes(buildAssetEssenceRoutes(dbTableProvider));
 routes.addRoutes(buildAssetWorkflowRoutes(dbTableProvider));
 routes.addRoutes(buildWorkflowRoutes(dbTableProvider, workerInvoker));

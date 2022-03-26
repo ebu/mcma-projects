@@ -1,6 +1,6 @@
 locals {
   website_origin_id = aws_s3_bucket.website.bucket_regional_domain_name
-  comment           = "${upper(var.environment_type)} - MCMA MAM Demo"
+  comment           = "${upper(var.environment_type)} - MCMA Media Asset Management Tool"
   website_url       = "https://${var.domain_name != null && var.domain_name != "" ? var.domain_name : aws_cloudfront_distribution.website.domain_name}"
 }
 
