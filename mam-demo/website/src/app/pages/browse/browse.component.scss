@@ -36,3 +36,11 @@ img {
 .mat-column-description {
   padding: 0;
 }
+
+.mat-row .mat-cell {
+  cursor: pointer;
+}
+
+.mat-row:hover .mat-cell {
+  background-color: #eeeeee;
+}

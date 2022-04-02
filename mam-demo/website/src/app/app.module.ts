@@ -14,6 +14,7 @@ import { SettingsComponent } from "./pages/settings/settings.component";
 import { HomeComponent } from "./pages/home/home.component";
 import { DialogsModule } from "./dialogs/dialogs.module";
 import { httpInterceptorProviders } from "./http-interceptors";
+import { AssetComponent } from './pages/asset/asset.component';
 
 @NgModule({
   declarations: [
@@ -23,6 +24,7 @@ import { httpInterceptorProviders } from "./http-interceptors";
     WorkflowsComponent,
     SettingsComponent,
     HomeComponent,
+    AssetComponent,
   ],
   imports: [
     AppRoutingModule,

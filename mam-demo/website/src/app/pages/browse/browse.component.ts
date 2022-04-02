@@ -2,10 +2,11 @@ import { AfterViewChecked, AfterViewInit, Component, ViewChild } from "@angular/
 import { DataService } from "../../services/data";
 import { LoggerService } from "../../services";
 
-import { MediaAsset } from "@local/model";
+import { MediaAssetProperties } from "@local/model";
 import { MatPaginator, PageEvent } from "@angular/material/paginator";
 import { map, startWith, switchMap } from "rxjs/operators";
 import { of, zip } from "rxjs";
+import { Router } from "@angular/router";
 
 const PageSize = 10;
 
@@ -16,7 +17,7 @@ const PageSize = 10;
 })
 export class BrowseComponent implements AfterViewInit, AfterViewChecked {
   displayedColumns: string[] = ["thumbnail", "title", "description"];
-  mediaAssets: MediaAsset[] = [];
+  mediaAssets: MediaAssetProperties[] = [];
 
   resultsLength = 0;
   nextPageTokens: string[] = [];
@@ -24,7 +25,9 @@ export class BrowseComponent implements AfterViewInit, AfterViewChecked {
 
   @ViewChild(MatPaginator) paginator: MatPaginator | undefined;
 
-  constructor(private data: DataService, private logger: LoggerService) {
+  constructor(private router: Router,
+              private data: DataService,
+              private logger: LoggerService) {
   }
 
   ngAfterViewInit(): void {
@@ -50,6 +53,14 @@ export class BrowseComponent implements AfterViewInit, AfterViewChecked {
   ngAfterViewChecked(): void {
     const list = document.getElementsByClassName("mat-paginator-range-label");
     list[0].innerHTML = "Page: " + (this.paginator!.pageIndex + 1);
+  }
+
+  openAsset(mediaAsset: MediaAssetProperties) {
+    this.logger.info(mediaAsset);
+
+    const assetGuid = mediaAsset.id!.substring(mediaAsset.id!.lastIndexOf("/") + 1);
+
+    this.router.navigate([`assets/${assetGuid}`]);
   }
 }
 

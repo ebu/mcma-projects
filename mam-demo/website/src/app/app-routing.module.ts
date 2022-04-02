@@ -7,6 +7,7 @@ import { WorkflowsComponent } from "./pages/workflows/workflows.component";
 import { SettingsComponent } from "./pages/settings/settings.component";
 import { BrowseComponent } from "./pages/browse/browse.component";
 import { HomeComponent } from "./pages/home/home.component";
+import { AssetComponent } from "./pages/asset/asset.component";
 
 const routes: Routes = [
   { path: "login", component: LoginComponent, canActivate: [CognitoAuthGuard] },
@@ -17,6 +18,7 @@ const routes: Routes = [
     children: [
       { path: "assets", component: BrowseComponent, canActivate: [CognitoAuthGuard] },
       { path: "assets/add", component: AddAssetComponent, canActivate: [CognitoAuthGuard] },
+      { path: "assets/:id", component: AssetComponent, canActivate: [CognitoAuthGuard] },
       { path: "workflows", component: WorkflowsComponent, canActivate: [CognitoAuthGuard] },
       { path: "settings", component: SettingsComponent, canActivate: [CognitoAuthGuard] },
 
