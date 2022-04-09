@@ -1,9 +1,0 @@
-.idea
-.gradle
-.terraform.tfstate.lock.info
-build
-gradle.properties
-terraform.tfvars.json
-terraform.output.json
-website_files.tf.json
-/website/src/config.json

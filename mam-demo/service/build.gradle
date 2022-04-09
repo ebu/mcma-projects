@@ -1,7 +1,0 @@
-task build {
-    dependsOn "api-handler:build"
-    dependsOn "db-trigger:build"
-    dependsOn "websocket-handler:build"
-    dependsOn "websocket-ping:build"
-    dependsOn "worker:build"
-}
